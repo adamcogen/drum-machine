@@ -1,539 +1,8 @@
-/**
- * Start of linked list implementation
- */
-
-class PriorityLinkedListNode {
-    constructor(label, priority, data = {}, next = null, previous = null) {
-        this.label = label
-        this.priority = priority
-        this.data = data
-        this.next = next
-        this.previous = previous
-    }
-    
-    toString() {
-        return "{label: '" + this.label + "'; priority: '" + this.priority + "'}"
-    }
-
-    hasNext() {
-        return this.next !== null
-    }
-}
-
-class PriorityLinkedList {
-    constructor() {
-        this.head = null
-        this.size = 0
-    }
-
-    getSize() {
-        return this.size
-    }
-
-    clear() {
-        this.head = null;
-    }
-
-    getLast() {
-        let lastNode = this.head;
-        if (lastNode) {
-            while (lastNode.next) {
-                lastNode = lastNode.next
-            }
-        }
-        return lastNode
-    }
-
-    getFirst() {
-        return this.head;
-    }
-
-    toString() {
-        let result = ""
-        let node = this.head;
-        while (node) {
-            result += node + ", ";
-            node = node.next
-        }
-        return result
-    }
-
-    // this isn't super useful until we implement an array comparison method.. for now [1,2] === [1,2] returns false
-    getAllLabelsAsList() {
-        let current = this.head
-        let result = []
-        while (current) {
-            result.push(current.label)
-            current = current.next
-        }
-        return result
-    }
-
-    // Given a particular priority, determine what index a node with that priority would be inserted at.
-    // nodes with priorities that are already in the list will be inserted at the beginning of that priority's
-    // nodes, rather than at the end, but that's an arbitrary choice.
-    getIndexOfPriority(priority) {
-        let index = 0
-        if (this.head === null) {
-            return index
-        } else {
-            let node = this.head
-            while (node) {
-                if (node.priority < priority) {
-                    if (node.hasNext()) {
-                        index += 1
-                        node = node.next
-                    } else {
-                        index += 1
-                        return index
-                    }
-                } else {
-                    return index
-                }
-            }
-        }
-    }
-
-    // this method ignores the requirement for the linked list to remain in sorted order.
-    // I intend to use this as a helper method -- I will first retrieve the index to insert at
-    // based on the new node's priority, then this method will perform the actual insert.
-    insertNodeAtIndex(nodeToInsert, insertAtIndex) {
-        let size = this.getSize()
-        if (size === 0 && insertAtIndex !== 0) {
-            throw "You're trying to insert into an empty list at an index other than 0! That can't be done. You tried to insert at index: " + insertAtIndex + "."
-        }
-        if (insertAtIndex > size + 1) { // for example, list with 2 items is size 2. to insert a 3rd item, pass in index '3'. passing in '4' will throw an error.
-            throw "You're trying to insert into a list at index " + insertAtIndex + ", but list is only size " + size + ". You can only insert at an index from 0 to " + (size + 1) + " (inclsuive)."
-        }
-        if (this.head === null) { // list is empty. we already verified that in this case we are always inserting to index 0. so just set 'nodeToInsert' to be 'head'.
-            this.head = nodeToInsert
-            this.head.next = null
-            this.head.previous = null
-        } else { // list is _not_ empty. iterate through nodes until we get to the index we're inserting at, then insert there. 
-            if (insertAtIndex === 0) { // insert at index 0 now if that's what we're doing
-                // new arrangement: null -> head (nodeToInsert) -> oldHead
-                let oldHead = this.head
-                this.head = nodeToInsert
-                this.head.previous = null
-                this.head.next = oldHead
-                oldHead.previous = this.head
-            } else { // we now know we're not inserting to an empty list, or inserting at index 0.
-                // we also know we are either inserting into the middle of the list somewhere, or adding an item to the end (i.e. the provided index is valid).
-                let current = this.head
-                let counter = 0
-                // iterate until we get to the place we want to insert at
-                while (counter < insertAtIndex - 1) {
-                    counter += 1
-                    current = current.next
-                }
-                // old expected list order: [...] -> current -> current.next -> [...]
-                // new expected list order: [...] -> current -> nodeToInsert -> current.next -> [...]
-                // aka current -> nodeToInsert -> oldNext
-                let oldNext = current.next
-                current.next = nodeToInsert
-                nodeToInsert.previous = current
-                nodeToInsert.next = oldNext
-                if (oldNext !== null) {
-                    oldNext.previous = nodeToInsert
-                }
-            }
-        }
-        this.size += 1
-    }
-
-    // insert a node in the right place based on its priority, maintaining the sorted order of the linked list
-    insertNode(nodeToInsert) {
-        let indexToInsertAt = this.getIndexOfPriority(nodeToInsert.priority)
-        this.insertNodeAtIndex(nodeToInsert, indexToInsertAt)
-    }
-
-    // get the index of the _first_ node in the list has the given label.
-    // if no node in the list has that label, return -1. 
-    // this is intended to be used as a helper method that will be called before
-    // 'removeNodeAtIndex', so that we can remove the first node with a given label
-    // from our list.
-    getIndexOfLabel(label) {
-        if (this.size === 0) { // empty list, return -1 without needing to search thru.
-            return -1
-        }
-        let index = 0
-        let current = this.head
-        while (true) {
-            if (current.label === label) {
-                return index
-            } else {
-                if (current.hasNext()) {
-                    current = current.next
-                    index += 1
-                } else {
-                    return -1
-                }
-            }
-        }
-    }
-
-    // remove the node at the specified index.
-    // return the node that was removed, so that we can easily re-insert it or insert it into another list if we want to
-    removeNodeAtIndex(removeAtIndex) {
-        let size = this.getSize()
-        if (this.head === null) {
-            throw "problem: you're trying to remove a node from an empty list. the list size: " + size + ". you tried to remove index: " + removeAtIndex + "."
-        }
-        if (removeAtIndex < 0) {
-            throw "problem: you're trying to remove a node at an index that is < 0. i'd guess this PROBABLY means you're trying to remove a node with a label that wasn't found in the list (index -1 means specified label was not found). tried to remove at index: " + removeAtIndex
-        }
-        if (removeAtIndex >= size) {
-            throw "problem: you're trying to remove a node at an index that is >= the size of the list. index: " + removeAtIndex + ". list size: " + size + "."
-        }
-        // at this point we know a few things cause of our pre-checks:
-        //   - the list is not empty
-        //   - we are trying to remove an index that is in the list (it's not less than zero, and it's not greater than or equal to 'size')
-        
-        let current = this.head
-        let counter = 0
-
-        while (counter < removeAtIndex) {
-            if (current.hasNext()) {
-                current = current.next
-                counter += 1
-            } else {
-                throw "this is supposed to be an 'unreachable' safety check :( we've gotten to the end of list while trying to remove an item with index: " + removeAtIndex + ". list size is: " + size + ". we never found the right item."
-            }
-        }
-        // now 'counter' should === 'removeAtIndex', and 'current' should be the node to remove!
-        // old orientation: current.previous -> current -> current.next
-        // new orientation: current.previous -> current.next
-        // store nodes adjacent to the one we are removing
-        let previous = current.previous
-        let next = current.next
-        // update pointers of nodes adjacent to the one we're removing, such that the one we're removing is cut out of the list
-        if (previous !== null) { // if 'previous' is null, don't bother changing any of its pointers!
-            previous.next = next
-            // console.log("we're in the prev part. removeAtIndex: " + removeAtIndex + ". current: " + current + ". next: " + next + ". previous: " + previous + ".")
-        } else { // if 'previous' _is_ null, 'current' must have been the first element ('head'). so set a new 'head'.
-            this.head = next
-        }
-        if (next !== null) { // if 'next' is null, don't bother changing any of its pointers!
-            next.previous = previous
-        }
-        // disconnext 'current' from the list completely, just for fun / safety
-        current.next = null
-        current.previous = null
-        this.size -= 1
-        return current
-    }
-
-    // remove the _first_ node that appears in the list with the given label.
-    // meaning, if there are multiple nodes in the list with the same label,
-    // on the first one of those will be removed by this method!
-    removeNode(label) {
-        let removeAtIndex = this.getIndexOfLabel(label)
-        return this.removeNodeAtIndex(removeAtIndex)
-    }
-}
-
-function assertEquals(expected, actual, message) {
-    if (expected !== actual){
-        throw "assertion failed: '" + message + "'. expected: '" + expected + "'; actual '" + actual + "'"
-    }
-}
-
-// test 'insertNodeAtIndex' and 'getIndexOfPriority' methods (for now just verify results manually in console..)
-function testInsertNodeAtIndex() {
-    let list = new PriorityLinkedList()
-    assertEquals(0, list.getSize(), "assert empty list size is 0")
-    let firstInsertedNode = new PriorityLinkedListNode("3", 3)
-    list.insertNodeAtIndex(firstInsertedNode, 0)
-    assertEquals(1, list.getSize(), "assert list size is as expected")
-    let secondInsertedNode = new PriorityLinkedListNode("5", 5)
-    list.insertNodeAtIndex(secondInsertedNode, 1)
-    assertEquals(2, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfPriority(2), "check index of priority on small list")
-    assertEquals(0, list.getIndexOfPriority(3), "check index of priority on small list")
-    assertEquals(1, list.getIndexOfPriority(4), "check index of priority on small list")
-    let thirdInsertedNode = new PriorityLinkedListNode("1", 1)
-    list.insertNodeAtIndex(thirdInsertedNode, 0)
-    assertEquals(3, list.getSize(), "assert list size is as expected")
-    let fourthInsertedNode = new PriorityLinkedListNode("2", 2)
-    list.insertNodeAtIndex(fourthInsertedNode, 1)
-    assertEquals(4, list.getSize(), "assert list size is as expected")
-    let fifthInsertedNode = new PriorityLinkedListNode("4", 4)
-    list.insertNodeAtIndex(fifthInsertedNode, 3)
-    assertEquals(5, list.getSize(), "assert list size is as expected")
-    let sixthInsertedNode = new PriorityLinkedListNode("6", 6)
-    list.insertNodeAtIndex(sixthInsertedNode, 5)
-    assertEquals(6, list.getSize(), "assert list size is as expected")
-    assertEquals(-1, list.getIndexOfLabel("0"), "assert label is found where expected")
-    assertEquals(0, list.getIndexOfLabel("1"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("3"), "assert label is found where expected")
-    assertEquals(3, list.getIndexOfLabel("4"), "assert label is found where expected")
-    assertEquals(4, list.getIndexOfLabel("5"), "assert label is found where expected")
-    assertEquals(5, list.getIndexOfLabel("6"), "assert label is found where expected")
-    assertEquals(-1, list.getIndexOfLabel("7"), "assert label is found where expected")
-    assertEquals(6, list.getSize(), "check list size after inserting all nodes")
-    assertEquals(0, list.getIndexOfPriority(0), "check index of priority on full list")
-    assertEquals(0, list.getIndexOfPriority(1), "check index of priority on full list")
-    assertEquals(1, list.getIndexOfPriority(2), "check index of priority on full list")
-    assertEquals(2, list.getIndexOfPriority(3), "check index of priority on full list")
-    assertEquals(3, list.getIndexOfPriority(4), "check index of priority on full list")
-    assertEquals(4, list.getIndexOfPriority(5), "check index of priority on full list")
-    assertEquals(5, list.getIndexOfPriority(6), "check index of priority on full list")
-    assertEquals(6, list.getIndexOfPriority(7), "check index of priority on full list")
-}
-
-function testInsertNodeWithPriority() {
-    // insert items and check list size as we go
-    let list = new PriorityLinkedList()
-    assertEquals(0, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfPriority(3), "check index of priority of first element that we are about to insert")
-    let firstInsertedNode = new PriorityLinkedListNode("3", 3)
-    list.insertNode(firstInsertedNode)
-    assertEquals(1, list.getSize(), "assert list size is as expected")
-    let secondInsertedNode = new PriorityLinkedListNode("5", 5)
-    list.insertNode(secondInsertedNode)
-    assertEquals(2, list.getSize(), "assert list size is as expected")
-    let thirdInsertedNode = new PriorityLinkedListNode("1", 1)
-    list.insertNode(thirdInsertedNode)
-    assertEquals(3, list.getSize(), "assert list size is as expected")
-    let fourthInsertedNode = new PriorityLinkedListNode("2", 2)
-    list.insertNode(fourthInsertedNode)
-    assertEquals(4, list.getSize(), "assert list size is as expected")
-    let fifthInsertedNode = new PriorityLinkedListNode("4", 4)
-    list.insertNode(fifthInsertedNode)
-    assertEquals(5, list.getSize(), "assert list size is as expected")
-    let sixthInsertedNode = new PriorityLinkedListNode("6", 6)
-    list.insertNode(sixthInsertedNode)
-    assertEquals(6, list.getSize(), "assert list size is as expected")
-    // check final list order (check labels only)
-    assertEquals(0, list.getIndexOfLabel("1"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("3"), "assert label is found where expected")
-    assertEquals(3, list.getIndexOfLabel("4"), "assert label is found where expected")
-    assertEquals(4, list.getIndexOfLabel("5"), "assert label is found where expected")
-    assertEquals(5, list.getIndexOfLabel("6"), "assert label is found where expected")
-    // test that all .next and .previous are right
-    // console.log("checking that all .next and .previous are right. current list order is: " + list)
-    // check element 1 (head)
-    let current = list.head
-    assertEquals("1", current.label, "assert head label is right")
-    assertEquals(null, current.previous, "assert head.previous is right")
-    assertEquals("2", current.next.label, "assert head.next is right")
-    // check element 2
-    current = current.next
-    assertEquals("2", current.label, "assert label is right")
-    assertEquals("1", current.previous.label, "assert .previous is right")
-    assertEquals("3", current.next.label, "assert .next is right")
-    // check element 3
-    current = current.next
-    assertEquals("3", current.label, "assert label is right")
-    assertEquals("2", current.previous.label, "assert .previous is right")
-    assertEquals("4", current.next.label, "assert .next is right")
-    // check element 4
-    current = current.next
-    assertEquals("4", current.label, "assert label is right")
-    assertEquals("3", current.previous.label, "assert .previous is right")
-    assertEquals("5", current.next.label, "assert .next is right")
-    // check element 5
-    current = current.next
-    assertEquals("5", current.label, "assert label is right")
-    assertEquals("4", current.previous.label, "assert .previous is right")
-    assertEquals("6", current.next.label, "assert .next is right")
-    // check element 6
-    current = current.next
-    assertEquals("6", current.label, "assert label is right")
-    assertEquals("5", current.previous.label, "assert .previous is right")
-    assertEquals(null, current.next, "assert .next is right")
-    // todo: test inserting multiple nodes with the same priority
-    
-}
-
-function testRemoveNode() {
-    let list = new PriorityLinkedList()
-    let node1 = new PriorityLinkedListNode("3", 3)
-    let node2 = new PriorityLinkedListNode("5", 5)
-    let node3 = new PriorityLinkedListNode("1", 1)
-    let node4 = new PriorityLinkedListNode("2", 2)
-    let node5 = new PriorityLinkedListNode("4", 4)
-    let node6 = new PriorityLinkedListNode("6", 6)
-    list.insertNode(node1)
-    list.insertNode(node2)
-    list.insertNode(node3)
-    list.insertNode(node4)
-    list.insertNode(node5)
-    list.insertNode(node6)
-    assertEquals(6, list.getSize(), "assert list size is as expected")
-    // check final list order (check labels only)
-    assertEquals(0, list.getIndexOfLabel("1"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("3"), "assert label is found where expected")
-    assertEquals(3, list.getIndexOfLabel("4"), "assert label is found where expected")
-    assertEquals(4, list.getIndexOfLabel("5"), "assert label is found where expected")
-    assertEquals(5, list.getIndexOfLabel("6"), "assert label is found where expected")
-    // console.log("starting list: " + list)
-    // remove first element
-    list.removeNode("1")
-    // console.log("after removing first element: " + list)
-    assertEquals(5, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("3"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("4"), "assert label is found where expected")
-    assertEquals(3, list.getIndexOfLabel("5"), "assert label is found where expected")
-    assertEquals(4, list.getIndexOfLabel("6"), "assert label is found where expected")
-    // remove last element
-    list.removeNode("6")
-    // console.log("after removing last element: " + list)
-    assertEquals(4, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("3"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("4"), "assert label is found where expected")
-    assertEquals(3, list.getIndexOfLabel("5"), "assert label is found where expected")
-    // remove a middle element
-    list.removeNode("3")
-    // console.log("after removing middle element (labelled '3'): " + list)
-    assertEquals(3, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("4"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("5"), "assert label is found where expected")
-    // add a double element and test that the first occurrence of it is removed
-    let node7 = new PriorityLinkedListNode("4", 6)
-    let node8 = new PriorityLinkedListNode("4", 8)
-    list.insertNode(node7)
-    list.insertNode(node8)
-    // console.log("after inserting some duplicalte-label elements (labelled '4'): " + list)
-    assertEquals(5, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("4"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("5"), "assert label is found where expected")
-    // remove first '4'
-    list.removeNode("4")
-    // console.log("after removing first duplicate-label '4': " + list)
-    assertEquals(4, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("5"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("4"), "assert label is found where expected")
-    // remove second '4'
-    list.removeNode("4")
-    // console.log("after removing second duplicate-label '4': " + list)
-    assertEquals(3, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("5"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("4"), "assert label is found where expected")
-    // remove last '4'
-    list.removeNode("4")
-    // console.log("after removing second duplicate-label '4': " + list)
-    assertEquals(2, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("5"), "assert label is found where expected")
-    // todo: test that .next and .previous are correct in all of these cases
-}
-
-// 'insert' method tests
-testInsertNodeAtIndex()
-testInsertNodeWithPriority()
-// 'remove' method tests
-testRemoveNode()
-
-// generate a unique id number.
-// just increments a counter by 1 and returns the counter value each time you ask for a new id.
-class IdGenerator {
-    constructor() {
-        this.idCounter = 0
-    }
-
-    getNextId() {
-        let id = this.idCounter
-        this.idCounter += 1
-        // console.log("returning generated ID: " + id)
-        return id
-    }
-}
-
-class Sample {
-    constructor(file, color) {
-        this.file = file
-        this.color = color
-    }
-}
-
-class SampleBank {
-    constructor(idGenerator, sampleNameList = []) {
-        this.idGenerator = idGenerator
-        this.sampleNameList = sampleNameList
-    }
-
-    createNewNodeForSample(sampleName) {
-        if (this.sampleNameList.includes(sampleName)) {
-            return new PriorityLinkedListNode(this.idGenerator.getNextId(), -1, {
-                lastScheduledOnIteration: -1,
-                sampleName: sampleName
-            })
-        } else {
-            throw "requested a sample name from the sample bank that doesn't exist! requested sample name: " + sampleName + ". sample list: " + sampleList + "."
-        }
-    }
-
-}
-
-// a drum sequencer, which is made up of multiple rows that can have notes placed onto them.
-class Sequencer {
-    constructor(numberOfRows = 4, loopLengthInMillis = 1000, sampleBank = []) {
-        this.numberOfRows = numberOfRows
-        this.loopLengthInMillis = loopLengthInMillis
-        this.rows = this.initializeEmptySequencerRows()
-        this.sampleBank = sampleBank
-    }
-
-    initializeEmptySequencerRows(){
-        let rows = []
-        let rowCount = 0
-        while (rowCount < this.numberOfRows) {
-            let row = new SequencerRow(this.loopLengthInMillis)
-            rows.push(row)
-            rowCount++
-        }
-        return rows
-    }
-
-    // add a new empty row to the end of the drum sequencer
-    addRow() {
-        // todo: implement this
-    }
-
-    // delete a particular drum sequencer row, at the the specified index
-    deleteRowAtIndex() {
-        // todo: implement this
-    }
-
-    // move an existing row to a new place in the drum sequencer, i.e. changing the order of the existing rows.
-    changeRowIndex() {
-        // todo: implement this
-    }
-
-    // todo: add getters and setters for class fields. setters will take a bit of logic to adjust everything whenever we make changes to values.
-}
-
-// a drum sequencer row. each drum sequencer can have any number of rows, which can have notes placed onto them.
-class SequencerRow {
-    constructor(loopLengthInMillis) {
-        this.loopLengthInMillis = loopLengthInMillis
-        this.notesList = new PriorityLinkedList()
-    }
-}
-
-/**
- * End of linked list implementation
- * 
- * Start of drum machine backend implementation
- */
-
 window.onload = () => {
 
     // Initialize Two.js
     let elem = document.getElementById('draw-shapes');
     let two = new Two({
-        width: 500,
-        height: 500,
         fullscreen: true,
         type: Two.Types.svg
     }).appendTo(elem);
@@ -546,14 +15,14 @@ window.onload = () => {
     const SNARE = 'snare';
     const WAV_EXTENSION = '.wav';
     let samples = {}
-    samples[HI_HAT_HIGH] = new Sample(loadSample(HI_HAT_HIGH, SOUND_FILES_PATH + HI_HAT_HIGH + WAV_EXTENSION), '#b58f04')
-    samples[HI_HAT_LOW] = new Sample(loadSample(HI_HAT_LOW, SOUND_FILES_PATH + HI_HAT_LOW + WAV_EXTENSION), '#bf3d5e')
-    samples[SNARE] = new Sample(loadSample(SNARE, SOUND_FILES_PATH + SNARE + WAV_EXTENSION), '#0e6e21')
-    samples[BASS_DRUM] = new Sample(loadSample(BASS_DRUM, SOUND_FILES_PATH + BASS_DRUM + WAV_EXTENSION), '#1b617a')
+    samples[HI_HAT_HIGH] = new SampleBankNoteInfo(loadSample(HI_HAT_HIGH, SOUND_FILES_PATH + HI_HAT_HIGH + WAV_EXTENSION), '#b58f04')
+    samples[HI_HAT_LOW] = new SampleBankNoteInfo(loadSample(HI_HAT_LOW, SOUND_FILES_PATH + HI_HAT_LOW + WAV_EXTENSION), '#bf3d5e')
+    samples[SNARE] = new SampleBankNoteInfo(loadSample(SNARE, SOUND_FILES_PATH + SNARE + WAV_EXTENSION), '#0e6e21')
+    samples[BASS_DRUM] = new SampleBankNoteInfo(loadSample(BASS_DRUM, SOUND_FILES_PATH + BASS_DRUM + WAV_EXTENSION), '#1b617a')
 
     let idGenerator = new IdGenerator()
     let sampleNameList = [HI_HAT_HIGH, HI_HAT_LOW, SNARE, BASS_DRUM]
-    let sampleBank = new SampleBank(idGenerator, sampleNameList)
+    let sampleBankNodeGenerator = new SampleBankNodeGenerator(idGenerator, sampleNameList)
 
     // initialize web audio context
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -836,7 +305,7 @@ window.onload = () => {
                  * then if we pull off a note with row -1, we could add back a note with
                  * the same attributes but a new (incremented) label.
                  */
-                node = sampleBank.createNewNodeForSample(circleBeingMoved.guiData.sampleName)
+                node = sampleBankNodeGenerator.createNewNodeForSample(circleBeingMoved.guiData.sampleName)
                 circleBeingMoved.guiData.label = node.label
             } else {
                 // console.log("remove node from row: " + circleBeingMovedOldRow + " with label: " + circleBeingMoved.guiData.label + ".")
@@ -1196,4 +665,103 @@ window.onload = () => {
         }
     }
 
+}
+
+/**
+ * Class definitions for note bank, sequencer, id generator, etc.
+ */
+
+// generate a unique id number.
+// just increments a counter by 1 and returns the counter value each time you ask for a new id.
+// could add capacity for a larger number of IDs by using hex, or just including letters in IDs
+// as well. could also consider padding with a specified number of 0s and returning as a string
+// if we wanted ID generation to be a little more uniform. none of that matters for now.
+class IdGenerator {
+    constructor() {
+        this.idCounter = 0
+    }
+
+    getNextId() {
+        let id = this.idCounter
+        this.idCounter += 1
+        // console.log("returning generated ID: " + id)
+        return id
+    }
+}
+
+// store info about a particular drum sound (i.e. sample), such as its file and its color
+class SampleBankNoteInfo {
+    constructor(file, color) {
+        this.file = file
+        this.color = color
+    }
+}
+
+// class to generate new nodes for notes that have been pulled off the sample bank
+// to be placed onto the sequencer. this class also accepts an ID generator so we
+// can keep track of which IDs have already been used as node labels in the drum
+// sequencer.
+class SampleBankNodeGenerator {
+    constructor(idGenerator, sampleNameList = []) {
+        this.idGenerator = idGenerator
+        this.sampleNameList = sampleNameList
+    }
+
+    createNewNodeForSample(sampleName) {
+        if (this.sampleNameList.includes(sampleName)) {
+            return new PriorityLinkedListNode(this.idGenerator.getNextId(), -1, {
+                lastScheduledOnIteration: -1,
+                sampleName: sampleName
+            })
+        } else {
+            throw "requested a sample name from the sample bank that doesn't exist! requested sample name: " + sampleName + ". sample list: " + sampleList + "."
+        }
+    }
+
+}
+
+// a drum sequencer, which is made up of multiple rows that can have notes placed onto them.
+class Sequencer {
+    constructor(numberOfRows = 4, loopLengthInMillis = 1000, sampleBank = []) {
+        this.numberOfRows = numberOfRows
+        this.loopLengthInMillis = loopLengthInMillis
+        this.rows = this.initializeEmptySequencerRows()
+        this.sampleBank = sampleBank
+    }
+
+    initializeEmptySequencerRows(){
+        let rows = []
+        let rowCount = 0
+        while (rowCount < this.numberOfRows) {
+            let row = new SequencerRow(this.loopLengthInMillis)
+            rows.push(row)
+            rowCount++
+        }
+        return rows
+    }
+
+    // add a new empty row to the end of the drum sequencer
+    addRow() {
+        // todo: implement this
+    }
+
+    // delete a particular drum sequencer row, at the the specified index
+    deleteRowAtIndex() {
+        // todo: implement this
+    }
+
+    // move an existing row to a new place in the drum sequencer, i.e. changing the order of the existing rows.
+    changeRowIndex() {
+        // todo: implement this
+    }
+
+    // todo: add getters and setters for class fields. setters will take a bit of logic to adjust everything whenever we make changes to values.
+}
+
+// a drum sequencer row. each drum sequencer can have any number of rows, which can have notes placed onto them.
+class SequencerRow {
+    constructor(loopLengthInMillis) {
+        this.loopLengthInMillis = loopLengthInMillis
+        this.notesList = new PriorityLinkedList()
+    }
 }
