@@ -1,45 +1,49 @@
 window.onload = () => {
 
-    // Initialize Two.js
-    let elem = document.getElementById('draw-shapes');
-    let two = new Two({
-        fullscreen: true,
-        type: Two.Types.svg
-    }).appendTo(elem);
+    // Initialize Two.js library
+    let two = initializeTwoJs(document.getElementById('draw-shapes'))
 
-    // load all sound samples
+    // initialize sound file constants
     const SOUND_FILES_PATH = './sounds/';
     const BASS_DRUM = "bass-drum";
-    const HI_HAT_HIGH = 'hi-hat-high';
-    const HI_HAT_LOW = 'hi-hat-low';
+    const HI_HAT_CLOSED = 'hi-hat-closed';
+    const HI_HAT_OPEN = 'hi-hat-open';
     const SNARE = 'snare';
     const WAV_EXTENSION = '.wav';
-    let samples = {}
-    samples[HI_HAT_HIGH] = new SampleBankNoteInfo(loadSample(HI_HAT_HIGH, SOUND_FILES_PATH + HI_HAT_HIGH + WAV_EXTENSION), '#b58f04')
-    samples[HI_HAT_LOW] = new SampleBankNoteInfo(loadSample(HI_HAT_LOW, SOUND_FILES_PATH + HI_HAT_LOW + WAV_EXTENSION), '#bf3d5e')
-    samples[SNARE] = new SampleBankNoteInfo(loadSample(SNARE, SOUND_FILES_PATH + SNARE + WAV_EXTENSION), '#0e6e21')
-    samples[BASS_DRUM] = new SampleBankNoteInfo(loadSample(BASS_DRUM, SOUND_FILES_PATH + BASS_DRUM + WAV_EXTENSION), '#1b617a')
 
-    let idGenerator = new IdGenerator()
-    let sampleNameList = [HI_HAT_HIGH, HI_HAT_LOW, SNARE, BASS_DRUM]
-    let sampleBankNodeGenerator = new SampleBankNodeGenerator(idGenerator, sampleNameList)
+    // load all sound files
+    let samples = {}
+    samples[HI_HAT_CLOSED] = new DrumSoundInfo(loadSample(HI_HAT_CLOSED, SOUND_FILES_PATH + HI_HAT_CLOSED + WAV_EXTENSION), '#b58f04')
+    samples[HI_HAT_OPEN] = new DrumSoundInfo(loadSample(HI_HAT_OPEN, SOUND_FILES_PATH + HI_HAT_OPEN + WAV_EXTENSION), '#bf3d5e')
+    samples[SNARE] = new DrumSoundInfo(loadSample(SNARE, SOUND_FILES_PATH + SNARE + WAV_EXTENSION), '#0e6e21')
+    samples[BASS_DRUM] = new DrumSoundInfo(loadSample(BASS_DRUM, SOUND_FILES_PATH + BASS_DRUM + WAV_EXTENSION), '#1b617a')
+
+    // initialize the list of sample names we will use. the order of this list determines the order of sounds on the sound bank
+    let sampleNameList = [HI_HAT_CLOSED, HI_HAT_OPEN, SNARE, BASS_DRUM]
+
+    // initialize ID generator for node / note labels, and node generator for notes taken from the sample bank.
+    let idGenerator = new IdGenerator() // we will use this same ID generator everywhere we need IDs, to make sure we track which IDs have already been generated
+    let sampleBankNodeGenerator = new SampleBankNodeGenerator(idGenerator, sampleNameList) // generates a new sequencer list node whenever we pull a note off the sound bank
 
     // initialize web audio context
-    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    setUpAudioAndAnimationForWebAudioApi()
     let audioContext = new AudioContext();
 
-    // Shim the requestAnimationFrame API, with a setTimeout fallback
-    window.requestAnimationFrameShim = (function(){
-        return  window.requestAnimationFrame ||
-        window.webkitRequestAnimationFrame ||
-        window.mozRequestAnimationFrame ||
-        window.oRequestAnimationFrame ||
-        window.msRequestAnimationFrame ||
-        function(callback){
-            window.setTimeout(callback, 1000 / 60);
-        };
-    })();
+    // wait until the first click before resuming the audio context (this is required by Chrome browser)
+    let audioContextStarted = false
+    window.onclick = () => {
+        if (!audioContextStarted) {
+            // console.log("Starting ('resuming') audio context..")
+            audioContext.resume()
+            audioContextStarted = true
+        }
+    }
 
+    /**
+     * drum machine configurations
+     */
+     let loopLengthInMillis = 1200; // length of the whole drum sequence (loop), in millliseconds
+     const LOOK_AHEAD_MILLIS = 20; // number of milliseconds to look ahead when scheduling notes to play. note bigger value means that there is a longer delay for sounds to stop after the 'pause' button is hit.
     /**
      * gui settings: sequencer
      */
@@ -59,7 +63,6 @@ window.onload = () => {
     let spaceBetweenNoteBankNotes = 40
     let numberOfNotesInNoteBank = 4
     let noteBankPadding = 20
-
     /**
      * gui settings: note trash bin
      */
@@ -67,7 +70,6 @@ window.onload = () => {
     let noteTrashBinHorizontalOffset = 40
     let noteTrashBinWidth = 48
     let noteTrashBinHeight = 48
-
     /**
      * gui settings: colors
      */
@@ -75,131 +77,29 @@ window.onload = () => {
     let sequencerAndToolsLineWidth = 3
     let trashBinColor = 'red'
 
-    /**
-     * Drum machine configurations
-     */
-    let loopLengthInMillis = 1200; // length of the whole drum sequence (loop), in millliseconds
-    const LOOK_AHEAD_MILLIS = 20; // number of milliseconds to look ahead when scheduling notes to play
-
+    // initialize sequencer data structure
     let sequencer = new Sequencer(4, loopLengthInMillis)
-    let sequencerRowLines = []
-    let drumTriggerLines = []
 
-    /**
-     * Draw sequencer rows
-     */
-    for (let rowsDrawn = 0; rowsDrawn < sequencer.numberOfRows; rowsDrawn++) {
-        let sequencerRowLine = two.makePath(
-            [
-                new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset + (rowsDrawn * spaceBetweenSequencerRows)),
-                new Two.Anchor(sequencerHorizontalOffset + sequencerWidth, sequencerVerticalOffset + (rowsDrawn * spaceBetweenSequencerRows)),
-            ], 
-            false
-        );
-        sequencerRowLine.linewidth = sequencerAndToolsLineWidth;
-        sequencerRowLine.stroke = sequencerAndToolsLineColor
-
-        sequencerRowLines.push(sequencerRowLine)
-    }
-
-    /**
-     * Draw sequencer drum triggers (the things that move as time goes on to show where we are in the loop)
-     */
-    for (let drumTriggersDrawn = 0; drumTriggersDrawn < sequencer.numberOfRows; drumTriggersDrawn++) {
-        let triggerLine = two.makePath(
-            [
-                new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset + 1 + (drumTriggersDrawn * spaceBetweenSequencerRows)),
-                new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset - drumTriggerHeight + (drumTriggersDrawn * spaceBetweenSequencerRows)),
-            ], 
-            false
-        );
-        triggerLine.linewidth = sequencerAndToolsLineWidth;
-        triggerLine.stroke = sequencerAndToolsLineColor
-
-        drumTriggerLines.push(triggerLine)
-    }
-
-    /**
-     * Draw note bank
-     */
-    let noteBankContainer = two.makePath(
-        [
-            new Two.Anchor(noteBankHorizontalOffset, noteBankVerticalOffset),
-            new Two.Anchor(noteBankHorizontalOffset + unplayedCircleRadius + (noteBankPadding * 2), noteBankVerticalOffset),
-            new Two.Anchor(noteBankHorizontalOffset + unplayedCircleRadius + (noteBankPadding * 2), noteBankVerticalOffset + (unplayedCircleRadius * (numberOfNotesInNoteBank - 1)) + ((numberOfNotesInNoteBank - 1) * spaceBetweenNoteBankNotes) + (noteBankPadding * 2)),
-            new Two.Anchor(noteBankHorizontalOffset, noteBankVerticalOffset + (unplayedCircleRadius * (numberOfNotesInNoteBank - 1)) + ((numberOfNotesInNoteBank - 1) * spaceBetweenNoteBankNotes) + (noteBankPadding * 2)),
-        ], 
-        false
-    );
-    noteBankContainer.linewidth = sequencerAndToolsLineWidth;
-    noteBankContainer.stroke = sequencerAndToolsLineColor
-    noteBankContainer.fill = 'transparent'
-
-    /**
-     * Draw note trash bin
-     */
-    let noteTrashBinContainer = two.makePath(
-        [
-            new Two.Anchor(noteTrashBinHorizontalOffset, noteTrashBinVerticalOffset),
-            new Two.Anchor(noteTrashBinHorizontalOffset + noteTrashBinWidth, noteTrashBinVerticalOffset),
-            new Two.Anchor(noteTrashBinHorizontalOffset + noteTrashBinWidth, noteTrashBinVerticalOffset + noteTrashBinHeight),
-            new Two.Anchor(noteTrashBinHorizontalOffset, noteTrashBinVerticalOffset + noteTrashBinHeight),
-        ],
-        false
-    );
-    noteTrashBinContainer.linewidth = sequencerAndToolsLineWidth
-    noteTrashBinContainer.stroke = 'transparent'
-    noteTrashBinContainer.fill = 'transparent'
-    setNoteTrashBinVisibility(false)
+    // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
+    let sequencerRowLines = initializeSequencerRowLines() // list of sequencer row lines
+    let drumTriggerLines = initializeDrumTriggerLines() // list of lines that move to represent the current time within the loop
+    let noteBankContainer = initializeNoteBankContainer() // a rectangle that goes around the note bank
+    let noteTrashBinContainer = initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
+    setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
 
     two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
 
-    let audioContextStarted = false
-
+    // create variables which will be used to track info about the note that is being clicked and dragged
     let circleBeingMoved = null
     let circleBeingMovedStartingPositionX = null
     let circleBeingMovedStartingPositionY = null
     let circleBeingMovedOldRow = null
     let circleBeingMovedNewRow = null
 
-    window.onclick = () => {
-        if (!audioContextStarted) {
-            // console.log("Starting ('resuming') audio context..")
-            audioContext.resume()
-            audioContextStarted = true
-        }
-    }
+    // set up a default / test / initial pattern on the drum sequencer
+    initializeDefaultSequencerPattern()
 
-    // set up a test sequence with some notes in it
-    sequencer.rows[0].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), 0, 
-        {
-            lastScheduledOnIteration: -1,
-            // frequency: 880,
-            sampleName: HI_HAT_HIGH,
-        }
-    ))
-    sequencer.rows[1].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 1, 
-        {
-            lastScheduledOnIteration: -1,
-            // frequency: 880,
-            sampleName: HI_HAT_LOW,
-        }
-    ))
-    sequencer.rows[2].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), ((loopLengthInMillis / 4) * 2), 
-        {
-            lastScheduledOnIteration: -1,
-            // frequency: 880,
-            sampleName: SNARE,
-        }
-    ))
-    sequencer.rows[3].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 3, 
-        {
-            lastScheduledOnIteration: -1,
-            // frequency: 880,
-            sampleName: BASS_DRUM
-        }
-    ))
-
+    // keep a list of all the circles (i.e. notes) that have been drawn on the screen
     let allDrawnCircles = []
 
     // lifting your mouse anywhere means you're no longer click-dragging
@@ -340,120 +240,48 @@ window.onload = () => {
         }
     });
 
-    // draw note bank notes
+    // draw the circles (i.e. notes) that are in the note bank
     for (noteBankSampleName of sampleNameList) {
         drawNoteBankCircleForSample(noteBankSampleName)
     }
 
-    // remove a circle from the 'allDrawnCircles' list, based on its label.
-    // this is meant to be used during deletion of notes from the sequencer, with the idea being that deleting
-    // them from this list and maybe from a few other places will clear up clutter, and hopefully allow the 
-    // deleted circles to get garbage collected.
-    function removeCircleFromAllDrawnCirclesList(label){
-        let indexOfListItemToRemove = allDrawnCircles.findIndex(elementFromList => elementFromList.guiData.label === label);
-        if (indexOfListItemToRemove === -1) { //  we don't expect to reach this case, where a circle with the given label isn't found in the list
-            throw "unexpected problem: couldn't find the circle with the given label in the list of all drawn circles, when trying to delete it. the given label was: " + label + ". full list (labels only) (sorry for printing annoying thing): " + allDrawnCircles.map((item) => item.guiData.label) + "."
-        }
-        allDrawnCircles.splice(indexOfListItemToRemove, 1) // this should go in and delete the element we want to delete!
-    }
-
-    // create a circle in the note bank for the sample with the given name.
-    // this method figures out where in the note bank the circle should go, what color it gets, etc. based on
-    // the sample name, which it maps to relevant info using constants defined elsewhere in the code.
-    function drawNoteBankCircleForSample(sampleName) {
-        // figure out which index in the 'sampleNameList' the given sample name is. this will be used to determine physical positioning of the circle within the sample bank
-        let indexOfSampleInNoteBank = sampleNameList.findIndex(elementFromList => elementFromList === sampleName);
-        if (indexOfSampleInNoteBank === -1) { // we don't expect to reach this case, where the given sample isn't found in the sample names list
-            throw "unexpected problem: couldn't find the given sample in the sample list when trying to add it to the note bank. was looking for sample name: " + sampleName + ". expected sample name to be one of: " + sampleNameList + "."
-        }
-        let circle = two.makeCircle(noteBankHorizontalOffset + noteBankPadding + (unplayedCircleRadius / 2), noteBankVerticalOffset + noteBankPadding + (indexOfSampleInNoteBank * unplayedCircleRadius) + (indexOfSampleInNoteBank * spaceBetweenNoteBankNotes), unplayedCircleRadius)
-        circle.fill = samples[sampleName].color
-        circle.stroke = 'transparent'
-        two.update()
-        // add border to circle on mouseover
-        circle._renderer.elem.addEventListener('mouseenter', (event) => {
-            circle.stroke = 'black'
-            circle.linewidth = 2
-        });
-        // remove border from circle when mouse is no longer over it
-        circle._renderer.elem.addEventListener('mouseleave', (event) => {
-            circle.stroke = 'transparent'
-        });
-        // select circle (for moving) if we click it
-        circle._renderer.elem.addEventListener('mousedown', (event) => {
-            circleBeingMoved = circle
-            circleBeingMovedStartingPositionX = circleBeingMoved.translation.x
-            circleBeingMovedStartingPositionY = circleBeingMoved.translation.y
-            // console.log("original position of the circle bing moved: " + circleBeingMovedStartingPositionX + ", " + circleBeingMovedStartingPositionY)
-            setNoteTrashBinVisibility(true)
-            playNote(circleBeingMoved.guiData.sampleName)
-        });
-        circle.guiData = {}
-        circle.guiData.sampleName = sampleName
-        circle.guiData.row = -2 // circle is not in a row yet, use -2 as a placeholder
-        circle.guiData.label = (indexOfSampleInNoteBank + 1) * -1 // this is a placeholder value so the notes have _some_ unique label before the real one is generated. I added 1 so that these labels start at -1 instead of at 0
-        // console.log("creating preset circle: row: " + circle.guiData.row + ". label: " + circle.guiData.label + ".")
-        allDrawnCircles.push(circle)
-    }
-
-    // draw all notes that are in the sequencer before the sequencer starts (aka draw notes in the default/test pattern)
-    let sequencerRowIndex = 0
-    while (sequencerRowIndex < sequencer.numberOfRows) {
+    // draw all notes that are in the sequencer before the sequencer starts (aka the notes of the default/test/initial pattern)
+    for(let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
         noteToDraw = sequencer.rows[sequencerRowIndex].notesList.head
         while (noteToDraw !== null) {
-            let circle = two.makeCircle(sequencerHorizontalOffset + (sequencerWidth * (noteToDraw.priority / sequencer.loopLengthInMillis)), sequencerVerticalOffset + (sequencerRowIndex * spaceBetweenSequencerRows), unplayedCircleRadius)
-            circle.fill = samples[noteToDraw.data.sampleName].color
-            // console.log("sample name for preset note: " + noteToDraw.data.sampleName + ". color for preset note: " + samples[noteToDraw.data.sampleName].color + ".")
-            circle.stroke = 'transparent' // 'black'
-            two.update()
-            // add border to circle on mouseover
-            circle._renderer.elem.addEventListener('mouseenter', (event) => {
-                circle.stroke = 'black'
-                circle.linewidth = 2
-            });
-            // remove border from circle when mouse is no longer over it
-            circle._renderer.elem.addEventListener('mouseleave', (event) => {
-                circle.stroke = 'transparent'
-            });
-            // select circle (for moving) if we click it
-            circle._renderer.elem.addEventListener('mousedown', (event) => {
-                circleBeingMoved = circle
-                circleBeingMovedStartingPositionX = circleBeingMoved.translation.x
-                circleBeingMovedStartingPositionY = circleBeingMoved.translation.y
-                // console.log("original position of the circle bing moved: " + circleBeingMovedStartingPositionX + ", " + circleBeingMovedStartingPositionY)
-                setNoteTrashBinVisibility(true)
-                playNote(circle.guiData.sampleName)
-            });
-            circle.guiData = {}
-            circle.guiData.label = noteToDraw.label
-            circle.guiData.row = sequencerRowIndex
-            circle.guiData.sampleName = noteToDraw.data.sampleName
-            // console.log("creating preset circle: row: " + circle.guiData.row + ". label: " + circle.guiData.label + ".")
-            allDrawnCircles.push(circle)
+            let xPosition = sequencerHorizontalOffset + (sequencerWidth * (noteToDraw.priority / sequencer.loopLengthInMillis))
+            let yPosition = sequencerVerticalOffset + (sequencerRowIndex * spaceBetweenSequencerRows)
+            let sampleName = noteToDraw.data.sampleName
+            let row = sequencerRowIndex
+            let label = noteToDraw.label
+            drawNewNoteCircle(xPosition, yPosition, sampleName, label, row)
             noteToDraw = noteToDraw.next
         }
-        sequencerRowIndex += 1
     }
 
     requestAnimationFrameShim(draw)
 
-    // get the 'head' of each notes list (one for each row) and store them in a list so we can keep accessing them easily
+    // get the 'head' of each row's notes-list and store them in a list so we can keep accessing them easily
     let nextNoteToScheduleForEachRow = []
     for (let nextNotesInitializedSoFarCount = 0; nextNotesInitializedSoFarCount < sequencer.numberOfRows; nextNotesInitializedSoFarCount++) {
         nextNoteToScheduleForEachRow.push(sequencer.rows[nextNotesInitializedSoFarCount].notesList.head)
     }
 
+    // this method is the 'update' loop that will keep updating the page. after first invocation, this method calls itself recursively forever.
     function draw() {
-        // let currentTime = audioContext.currentTime * 1000;
+        let currentTime = audioContext.currentTime * 1000;
         // console.log("" + audioContext.currentTime * 1000)
 
         // todo: need to handle a weird case: if the next scheduled note gets deleted, what do we do? :|
         // hm maybe we can mark deleted nodes as deleted, then if a node is deleted at this point,
-        // we can just call getNodeWithPriority for the current time, then get that node instead? makes sense to me
+        // we can just call getNodeWithPriority for the current time, then get that node instead? makes sense to me.
+        // actually, i think in this case, the next node will be null, so we will pick up the front of the list (list.head).
+        // then, we will iterate thru and see that all the earlier notes have already been played on the current iteration, 
+        // so will skip till we get to the right place. this is already handled correctly.
 
-        // let currentTimeWithinCurrentLoop = currentTime % loopLengthInMillis
+        let currentTimeWithinCurrentLoop = currentTime % loopLengthInMillis
 
-        drumTriggersXPosition = sequencerHorizontalOffset + (sequencerWidth * ((audioContext.currentTime * 1000 % loopLengthInMillis) / loopLengthInMillis))
+        drumTriggersXPosition = sequencerHorizontalOffset + (sequencerWidth * (currentTimeWithinCurrentLoop / loopLengthInMillis))
 
         for (drumTriggerLine of drumTriggerLines) {
             drumTriggerLine.position.x = drumTriggersXPosition
@@ -473,11 +301,6 @@ window.onload = () => {
             }
         }
 
-        /**
-         * there's currently a bad bug, where putting a note at the front of a sequence causes all other notes not to play.
-         * no clue why, need to figure it out.
-         */
-
         // iterate through each sequencer, scheduling upcoming notes for all of them
         for (let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
             if (nextNoteToScheduleForEachRow[sequencerRowIndex] === null) {
@@ -487,12 +310,12 @@ window.onload = () => {
             }
 
             if (nextNoteToScheduleForEachRow[sequencerRowIndex] !== null) { // still will be null if note list is still empty
-                nextNoteToScheduleForEachRow[sequencerRowIndex] = scheduleNotes(nextNoteToScheduleForEachRow[sequencerRowIndex], sequencerRowIndex, audioContext.currentTime * 1000)
+                nextNoteToScheduleForEachRow[sequencerRowIndex] = scheduleNotes(nextNoteToScheduleForEachRow[sequencerRowIndex], sequencerRowIndex, currentTime)
             }
         }
 
-        two.update()
-        requestAnimationFrameShim(draw);
+        two.update() // update the GUI display
+        requestAnimationFrameShim(draw); // call this 'draw' method again recursively
     }
 
     function setNoteTrashBinVisibility(visible) {
@@ -665,6 +488,216 @@ window.onload = () => {
         }
     }
 
+    // set up a default initial drum sequence with some notes in it
+    function initializeDefaultSequencerPattern(){
+        sequencer.rows[0].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), 0, 
+        {
+            lastScheduledOnIteration: -1,
+            // frequency: 880,
+            sampleName: HI_HAT_CLOSED,
+        }
+        ))
+        sequencer.rows[1].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 1, 
+            {
+                lastScheduledOnIteration: -1,
+                // frequency: 880,
+                sampleName: HI_HAT_OPEN,
+            }
+        ))
+        sequencer.rows[2].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), ((loopLengthInMillis / 4) * 2), 
+            {
+                lastScheduledOnIteration: -1,
+                // frequency: 880,
+                sampleName: SNARE,
+            }
+        ))
+        sequencer.rows[3].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 3, 
+            {
+                lastScheduledOnIteration: -1,
+                // frequency: 880,
+                sampleName: BASS_DRUM
+            }
+        ))
+    }
+
+    // initialize Two.js library object and append it to the given DOM element
+    function initializeTwoJs(twoJsDomElement) {
+        return new Two({
+            fullscreen: true,
+            type: Two.Types.svg
+        }).appendTo(twoJsDomElement);
+    }
+
+    // set up AudioContext and requestAnimationFrame, so that they will work nicely
+    // with the 'AudioContextMonkeyPatch.js' library. contents of this method were 
+    // taken and adjusted from the 'Web Audio Metronome' repo by cwilso on GitHub: 
+    // https://github.com/cwilso/metronome
+    function setUpAudioAndAnimationForWebAudioApi() {
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        
+        // Shim the requestAnimationFrame API, with a setTimeout fallback
+        window.requestAnimationFrameShim = (function(){
+            return  window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            window.oRequestAnimationFrame ||
+            window.msRequestAnimationFrame ||
+            function(callback){
+                window.setTimeout(callback, 1000 / 60);
+            };
+        })();
+    }
+
+    // draw a new circle in the note bank based on its sampleName.
+    // this is called when initializing the starting set of cirlces (i.e. notes) in the 
+    // notes bank, and also called when a note from the note bank is placed on a row and 
+    // we need to refill the note bank for the note that was just placed.
+    function drawNoteBankCircleForSample(sampleName) {
+        // figure out which index in the 'sampleNameList' the given sample name is. this will be used to determine physical positioning of the circle within the sample bank
+        let indexOfSampleInNoteBank = sampleNameList.findIndex(elementFromList => elementFromList === sampleName);
+        if (indexOfSampleInNoteBank === -1) { // we don't expect to reach this case, where the given sample isn't found in the sample names list
+            throw "unexpected problem: couldn't find the given sample in the sample list when trying to add it to the note bank. was looking for sample name: " + sampleName + ". expected sample name to be one of: " + sampleNameList + "."
+        }
+        let xPosition = noteBankHorizontalOffset + noteBankPadding + (unplayedCircleRadius / 2)
+        let yPosition = noteBankVerticalOffset + noteBankPadding + (indexOfSampleInNoteBank * unplayedCircleRadius) + (indexOfSampleInNoteBank * spaceBetweenNoteBankNotes)
+        let row = -2 // for cirlces on the note bank, the circle is not in a real row yet, so use -2 as a placeholder row number
+        /**
+         * the top note in the note bank will have label '-1', next one down will be '-2', etc.
+         * these negative number labels will still be unique to a particular circle in the note bank,
+         * and these IDs will be replaced with a real, normal label (a generated ID) once each note
+         * bank circle is taken fom the note bank and placed onto a real row.
+         */
+        let label = (indexOfSampleInNoteBank + 1) * -1
+        drawNewNoteCircle(xPosition, yPosition, sampleName, label, row)
+    }
+
+    // create a new circle (i.e. note) on the screen, with the specified x and y position. color is determined by sample name. 
+    // values given for sample name, label, and row number are stored in the circle object to help the GUI keep track of things.
+    // add the newly created circle to the list of all drawn cricles.
+    function drawNewNoteCircle(xPosition, yPosition, sampleName, label, row) {
+        // initialize the new circle and set its colors
+        let circle = two.makeCircle(xPosition, yPosition, unplayedCircleRadius)
+        circle.fill = samples[sampleName].color
+        circle.stroke = 'transparent'
+
+        // add mouse events to the new circle
+        two.update() // this 'update' needs to go here because it is what generates the new circle's _renderer.elem 
+        // add border to circle on mouseover
+        circle._renderer.elem.addEventListener('mouseenter', (event) => {
+            circle.stroke = 'black'
+            circle.linewidth = 2
+        });
+        // remove border from circle when mouse is no longer over it
+        circle._renderer.elem.addEventListener('mouseleave', (event) => {
+            circle.stroke = 'transparent'
+        });
+        // select circle (for moving) if we click it
+        circle._renderer.elem.addEventListener('mousedown', (event) => {
+            circleBeingMoved = circle
+            circleBeingMovedStartingPositionX = circleBeingMoved.translation.x
+            circleBeingMovedStartingPositionY = circleBeingMoved.translation.y
+            setNoteTrashBinVisibility(true)
+            playNote(circleBeingMoved.guiData.sampleName)
+        });
+
+        // add info to the circle object that the gui uses to keep track of things
+        circle.guiData = {}
+        circle.guiData.sampleName = sampleName
+        circle.guiData.row = row
+        circle.guiData.label = label
+
+        // add circle to list of all drawn circles
+        allDrawnCircles.push(circle)
+    }
+
+    // remove a circle from the 'allDrawnCircles' list, based on its label.
+    // this is meant to be used during deletion of notes from the sequencer, with the idea being that deleting
+    // them from this list and maybe from a few other places will clear up clutter, and hopefully allow the 
+    // deleted circles to get garbage collected.
+    function removeCircleFromAllDrawnCirclesList(label){
+        let indexOfListItemToRemove = allDrawnCircles.findIndex(elementFromList => elementFromList.guiData.label === label);
+        if (indexOfListItemToRemove === -1) { //  we don't expect to reach this case, where a circle with the given label isn't found in the list
+            throw "unexpected problem: couldn't find the circle with the given label in the list of all drawn circles, when trying to delete it. the given label was: " + label + ". full list (labels only) (sorry for printing annoying thing): " + allDrawnCircles.map((item) => item.guiData.label) + "."
+        }
+        allDrawnCircles.splice(indexOfListItemToRemove, 1) // this should go in and delete the element we want to delete!
+    }
+
+    // draw lines for sequencer rows. return a list of the drawn lines. these will be Two.js 'path' objects.
+    function initializeSequencerRowLines() {
+        let sequencerRowLines = []
+        for (let rowsDrawn = 0; rowsDrawn < sequencer.numberOfRows; rowsDrawn++) {
+            let sequencerRowLine = two.makePath(
+                [
+                    new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset + (rowsDrawn * spaceBetweenSequencerRows)),
+                    new Two.Anchor(sequencerHorizontalOffset + sequencerWidth, sequencerVerticalOffset + (rowsDrawn * spaceBetweenSequencerRows)),
+                ], 
+                false
+            );
+            sequencerRowLine.linewidth = sequencerAndToolsLineWidth;
+            sequencerRowLine.stroke = sequencerAndToolsLineColor
+    
+            sequencerRowLines.push(sequencerRowLine)
+        }
+        return sequencerRowLines
+    }
+
+    // draw lines for the 'drum triggers' for each sequencer row.
+    // these are the little lines above each sequencer line that track the current time within the loop.
+    // return a list of the drawn lines. these will be Two.js 'path' objects.
+    function initializeDrumTriggerLines() {
+        let drumTriggerLines = []
+        for (let drumTriggersDrawn = 0; drumTriggersDrawn < sequencer.numberOfRows; drumTriggersDrawn++) {
+            let triggerLine = two.makePath(
+                [
+                    new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset + 1 + (drumTriggersDrawn * spaceBetweenSequencerRows)),
+                    new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset - drumTriggerHeight + (drumTriggersDrawn * spaceBetweenSequencerRows)),
+                ], 
+                false
+            );
+            triggerLine.linewidth = sequencerAndToolsLineWidth;
+            triggerLine.stroke = sequencerAndToolsLineColor
+    
+            drumTriggerLines.push(triggerLine)
+        }
+        return drumTriggerLines
+    }
+
+    // draw the physical note bank container on the screen. for now that's just a rectangle.
+    // return the note bank shape. this will be a Two.js path object.
+    function initializeNoteBankContainer() {
+        let noteBankContainer = two.makePath(
+            [
+                new Two.Anchor(noteBankHorizontalOffset, noteBankVerticalOffset),
+                new Two.Anchor(noteBankHorizontalOffset + unplayedCircleRadius + (noteBankPadding * 2), noteBankVerticalOffset),
+                new Two.Anchor(noteBankHorizontalOffset + unplayedCircleRadius + (noteBankPadding * 2), noteBankVerticalOffset + (unplayedCircleRadius * (numberOfNotesInNoteBank - 1)) + ((numberOfNotesInNoteBank - 1) * spaceBetweenNoteBankNotes) + (noteBankPadding * 2)),
+                new Two.Anchor(noteBankHorizontalOffset, noteBankVerticalOffset + (unplayedCircleRadius * (numberOfNotesInNoteBank - 1)) + ((numberOfNotesInNoteBank - 1) * spaceBetweenNoteBankNotes) + (noteBankPadding * 2)),
+            ], 
+            false
+        );
+        noteBankContainer.linewidth = sequencerAndToolsLineWidth;
+        noteBankContainer.stroke = sequencerAndToolsLineColor
+        noteBankContainer.fill = 'transparent'
+        return noteBankContainer
+    }
+
+    // draw the 'trash bin' for throwing out (deleting) notes. for now it's just
+    // a red rectangle, will make it something better for user experience later.
+    function initializeNoteTrashBinContainer() {
+        let noteTrashBinContainer = two.makePath(
+            [
+                new Two.Anchor(noteTrashBinHorizontalOffset, noteTrashBinVerticalOffset),
+                new Two.Anchor(noteTrashBinHorizontalOffset + noteTrashBinWidth, noteTrashBinVerticalOffset),
+                new Two.Anchor(noteTrashBinHorizontalOffset + noteTrashBinWidth, noteTrashBinVerticalOffset + noteTrashBinHeight),
+                new Two.Anchor(noteTrashBinHorizontalOffset, noteTrashBinVerticalOffset + noteTrashBinHeight),
+            ],
+            false
+        );
+        noteTrashBinContainer.linewidth = sequencerAndToolsLineWidth
+        noteTrashBinContainer.stroke = 'transparent'
+        noteTrashBinContainer.fill = 'transparent'
+        return noteTrashBinContainer
+    }
+
 }
 
 /**
@@ -690,7 +723,7 @@ class IdGenerator {
 }
 
 // store info about a particular drum sound (i.e. sample), such as its file and its color
-class SampleBankNoteInfo {
+class DrumSoundInfo {
     constructor(file, color) {
         this.file = file
         this.color = color
