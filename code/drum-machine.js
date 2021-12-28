@@ -13,8 +13,8 @@ window.onload = () => {
 
     // load all sound files
     let samples = {}
-    samples[HI_HAT_CLOSED] = new DrumSoundInfo(loadSample(HI_HAT_CLOSED, SOUND_FILES_PATH + HI_HAT_CLOSED + WAV_EXTENSION), '#b58f04')
-    samples[HI_HAT_OPEN] = new DrumSoundInfo(loadSample(HI_HAT_OPEN, SOUND_FILES_PATH + HI_HAT_OPEN + WAV_EXTENSION), '#bf3d5e')
+    samples[HI_HAT_CLOSED] = new DrumSoundInfo(loadSample(HI_HAT_CLOSED, SOUND_FILES_PATH + HI_HAT_CLOSED + WAV_EXTENSION), '#bd3b07') // #b58f04 , this was yellow before
+    samples[HI_HAT_OPEN] = new DrumSoundInfo(loadSample(HI_HAT_OPEN, SOUND_FILES_PATH + HI_HAT_OPEN + WAV_EXTENSION), '#b8961c') // #bf3d5e , this was red before
     samples[SNARE] = new DrumSoundInfo(loadSample(SNARE, SOUND_FILES_PATH + SNARE + WAV_EXTENSION), '#0e6e21')
     samples[BASS_DRUM] = new DrumSoundInfo(loadSample(BASS_DRUM, SOUND_FILES_PATH + BASS_DRUM + WAV_EXTENSION), '#1b617a')
 
@@ -96,66 +96,93 @@ window.onload = () => {
     let circleBeingMovedOldRow = null
     let circleBeingMovedNewRow = null
 
-    // set up a default / test / initial pattern on the drum sequencer
+    // set up a initial example drum sequence
     initializeDefaultSequencerPattern()
 
     // keep a list of all the circles (i.e. notes) that have been drawn on the screen
     let allDrawnCircles = []
 
+    // draw the circles (i.e. notes) that are in the note bank
+    for (noteBankSampleName of sampleNameList) {
+        drawNoteBankCircleForSample(noteBankSampleName)
+    }
+
+    // draw all notes that are in the sequencer before the sequencer starts (aka the notes of the initial example drum sequence)
+    for(let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
+        noteToDraw = sequencer.rows[sequencerRowIndex].notesList.head
+        while (noteToDraw !== null) {
+            let xPosition = sequencerHorizontalOffset + (sequencerWidth * (noteToDraw.priority / sequencer.loopLengthInMillis))
+            let yPosition = sequencerVerticalOffset + (sequencerRowIndex * spaceBetweenSequencerRows)
+            let sampleName = noteToDraw.data.sampleName
+            let row = sequencerRowIndex
+            let label = noteToDraw.label
+            drawNewNoteCircle(xPosition, yPosition, sampleName, label, row)
+            noteToDraw = noteToDraw.next
+        }
+    }
+
+    // get the 'head' of each row's notes-list and store them in a list so we can keep accessing them easily
+    let nextNoteToScheduleForEachRow = []
+    for (let nextNotesInitializedSoFarCount = 0; nextNotesInitializedSoFarCount < sequencer.numberOfRows; nextNotesInitializedSoFarCount++) {
+        nextNoteToScheduleForEachRow.push(sequencer.rows[nextNotesInitializedSoFarCount].notesList.head)
+    }
+
+    // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
+    window.addEventListener('mousemove', (event) => {
+        if (circleBeingMoved !== null) {
+            adjustEventCoordinates(event)
+            mouseX = event.pageX
+            mouseY = event.pageY
+            circleBeingMoved.translation.x = mouseX
+            circleBeingMoved.translation.y = mouseY
+        }
+    });
+
     // lifting your mouse anywhere means you're no longer click-dragging
     window.addEventListener('mouseup', (event) => {
         if (circleBeingMoved !== null) {
-            /** 
-             * need to impement logic here that will determine if the current mouse position is within n pixels of any of our sequencer lines,
-             * and if it is within n pixels of one, which one? then remove the circle that is being moved from the row it started on, and add
-             * it to the row it is being moved to (the one it is within n pixels of). 
-             *
-             * also though to be fair, maybe eventually we should have some of that logic be used in mousemove events, and remove / add notes
-             * from / to lists while they are still being moved, not just after they get placed. that will probably be a problem for later though.
-             */ 
-            // if the circle is _not_ being placed in an acceptable new position, put it back to where it came from.
+            /**
+             * this is the workflow for determining where to put a circle that we were click-dragging once we release the mouse.
+             * how this workflow works:
+             * - note down initial information about circle starting state and current state.
+             * - check for collision with the trash bin. if colliding, new row is < 0.
+             * - check for collision with a sequencer row. if colliding, new row is > 0.
+             * - how to handle states:
+             *   - if the note isn't colliding with a row or the trash bin, put it back where it came from, no change.
+             *   - if old row is >= 0, remove the note from its old row
+             *   - of old row is < 0, do NOT remove the note from its old row
+             *   - if new row is >= 0, place the note into its new row
+             *   - if new row < 0, do NOT place the note into a new row
+             *   - this means: 
+             *     - old row >= 0, new row < 0: is a delete operation. delete a note from its old row, without adding it back anywhere.
+             *     - old row >= 0, new row >= 0: is a move-note operation. move note from one row to another or to a new place in the same row.
+             *     - old row < 0, new row < 0: means a note was removed from the note bank but didn't end up on a row. there will be no change.
+             *     - old row < 0, new row >= 0: takes a note from the note bank and adds it to a new row, without removing it from an old row.
+             */
+            // note down starting state, current state
             circleBeingMovedOldRow = circleBeingMoved.guiData.row
-            circleBeingMovedNewRow = circleBeingMovedOldRow
-            circleNewXPosition = circleBeingMovedStartingPositionX
+            circleBeingMovedNewRow = circleBeingMovedOldRow // we will determine whether we need a new value for this later
+            circleNewXPosition = circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle
             circleNewYPosition = circleBeingMovedStartingPositionY
             adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
-            placementPadding = 10 // give a little leeway so we don't have to place it _precisely_ on the line. give this many pixels of padding on either side.
+            placementPadding = 10 // give this many pixels of padding on either side so we don't have to place the circle _precisely_ on its new line
             // check if the note is being placed in the trash bin. if so, delete the circle and its associated node if there is one
             let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= noteTrashBinHorizontalOffset - placementPadding) && (mouseX <= noteTrashBinHorizontalOffset + noteTrashBinWidth + placementPadding)
             let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= noteTrashBinVerticalOffset - placementPadding) && (mouseY <= noteTrashBinVerticalOffset + noteTrashBinHeight + placementPadding)
             if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
-                if (circleBeingMoved.guiData.row >= 0) {
-                    // console.log("toss it! throwing note in the trash: " + circleBeingMoved.guiData.label + ", from row: " + circleBeingMoved.guiData.row + ".")
-                    circleBeingMoved.remove()
-                    removeCircleFromAllDrawnCirclesList(circleBeingMoved.guiData.label)
-                    circleBeingMovedNewRow = -3 // placeholder row number, which for now means "put it in the trash"
-                    /**
-                     * the thing that happens here to delete a note is a bit counter-intuitive..
-                     * for a note to make into this inner if statement, it must have come from a
-                     * real sequencer row (not the note bank). this means that during our other
-                     * logic checks below, we will determine that the note needs to be removed
-                     * from whichever row it is currently in, so that it can then be placed into
-                     * its new row. BUT, by setting its new row to a negative number, we tell the
-                     * logic checks below to also not add it to a new row... this is the same case
-                     * we hit when a note taken from the soundbank is not successfully placed onto
-                     * an actual row. basically it will just get placed back to its starting position.
-                     * BUT, since we are also 'remove()'ing the circle from the renderer above, it will
-                     * not show up in its old position. then, we remove the deleted circle from the 
-                     * 'allDrawnCircles' list, and set 'circleBeingDrawn' to null at the end of this method
-                     * like we always do, and that gets rid of the last pointer to the deleted node,
-                     * then it gets garbage collected? need to double check about the garbage collection
-                     * to make sure the deleted node isn't being referenced anywhere else.
-                     * maybe this whole method needs a refactor.
-                     */
-                } // else do nothing.. it will just be returned back to the note bank on its own
+                if (circleBeingMoved.guiData.row >= 0) { // only bother trowing away things that came from a row. throwing away note bank notes is pointless
+                    // console.log("throwing note in the trash: " + circleBeingMoved.guiData.label + ", from row: " + circleBeingMoved.guiData.row + ".")
+                    circleBeingMoved.remove() // remove the circle from the Two.js display
+                    removeCircleFromAllDrawnCirclesList(circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles
+                    circleBeingMovedNewRow = -3 // set a placeholder row number reserved for notes in the trash
+                }
             }
-            // check if the note is being placed onto a sequencer row. if so, determine which, set everything up, etc.
+            // check if the note is being placed onto a sequencer row. if so, determine which row, and add it to the row line and data structure, etc.
             let withinHorizonalBoundaryOfSequencer = (mouseX >= sequencerHorizontalOffset - placementPadding) && (mouseX <= (sequencerHorizontalOffset + sequencerWidth) + placementPadding)
             let withinVerticalBoundaryOfSequencer = (mouseY >= sequencerVerticalOffset - placementPadding) && (mouseY <= sequencerVerticalOffset + ((sequencer.numberOfRows - 1) * spaceBetweenSequencerRows) + placementPadding)
             if (withinHorizonalBoundaryOfSequencer && withinVerticalBoundaryOfSequencer) {
-                // if the circle is being placed in an acceptable new position, apply the position change.
                 // if we get here, we know the circle is being placed within the vertical and horizontal boundaries of the sequencer.
                 // next we want to do a more fine-grained calculation, for whether it is close to one of the sequencer lines.
                 // console.log("the circle was placed within the vertical and horizonal boundaries of the sequencer")
@@ -170,49 +197,51 @@ window.onload = () => {
                     rowRightLimit = rowActualRightBound + placementPadding
                     if (mouseX >= rowLeftLimit && mouseX <= rowRightLimit && mouseY >= rowTopLimit && mouseY <= rowBottomLimit) {
                         // console.log("would place on row: " + rowIndex)
-                        // correct the padding so the circle falls precisely on an actual sequencer line
-                        if (mouseX < rowActualLeftBound) { // snap to left side
+                        // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
+                        if (mouseX < rowActualLeftBound) { // snap to left side of row
                             circleNewXPosition = rowActualLeftBound
                             // console.log("new x positon is out of bounds. row actual left bound: " + rowActualLeftBound + ". circle new x: " + circleNewXPosition + ". mouseX: " + mouseX + ".")
-                        } else if (mouseX > rowActualRightBound) { // snap to right side
+                        } else if (mouseX > rowActualRightBound) { // snap to right side of row
                             circleNewXPosition = rowActualRightBound
                             // console.log("new x positon is out of bounds. row actual right bound: " + rowActualRightBound + ". circle new x: " + circleNewXPosition + ". mouseX: " + mouseX + ".")
                         } else {
                             circleNewXPosition = mouseX
                             // console.log("new x position is in bounds.")
                         }
-                        // snap down from top or up from bottom
+                        // snap down from top or up from bottom of row
                         if (mouseY !== rowActualVerticalLocation) {
                             circleNewYPosition = rowActualVerticalLocation
                         } else {
                             circleNewYPosition = mouseY
                         }
                         circleBeingMovedNewRow = rowIndex
-                        break; // we found the row that the note will be placed on, so stop iterating throws rows early
+                        break; // we found the row that the note will be placed on, so stop iterating thru rows early
                     }
                 }
             }
+            // we are done checking for collisions with things, so now move on to updating data
             // console.log("setting position of circle that was being moved. new x: " + circleNewXPosition + ". new y: " + circleNewYPosition)
             circleBeingMoved.translation.x = circleNewXPosition
             circleBeingMoved.translation.y = circleNewYPosition
             circleBeingMoved.guiData.row = circleBeingMovedNewRow
             let node = null
-            // remove the moved note from its old sequencer row. todo: change this logic to just update node's priority if it isn't switching rows.
-            if (circleBeingMovedOldRow < 0) { // -2 is the 'row' given to notes that are in the note bank! treat them differently than notes that were in a real row
-                /**
-                 * need a way to determine which sample this note should have.
-                 * maybe we can have a linked list that represents the note bank, and have its nodes already instantiated?
-                 * then if we pull off a note with row -1, we could add back a note with
-                 * the same attributes but a new (incremented) label.
-                 */
-                node = sampleBankNodeGenerator.createNewNodeForSample(circleBeingMoved.guiData.sampleName)
-                circleBeingMoved.guiData.label = node.label
-            } else {
+            // remove the moved note from its old sequencer row. todo: consider changing this logic to just update node's priority if it isn't switching rows.)
+            if (circleBeingMovedOldRow >= 0) { // -2 is the 'row' given to notes that are in the note bank. if old row is < 0, we don't need to remove it from any sequencer row.
                 // console.log("remove node from row: " + circleBeingMovedOldRow + " with label: " + circleBeingMoved.guiData.label + ".")
                 node = sequencer.rows[circleBeingMovedOldRow].notesList.removeNode(circleBeingMoved.guiData.label)
                 // console.log("removed node after moving circle: " + node)
             }
             if (circleBeingMovedNewRow >= 0) {
+                if (node === null) { // this should just mean the circle was pulled from the note bank, so we need to create a node for it
+                    if (circleBeingMovedOldRow >= 0) { // should be an unreachable case, just checking for safety
+                        throw "unexpected case: node was null but 'circleBeingMovedOldRow' was not < 0. circleBeingMovedOldRow: " + circleBeingMovedNewRow + ". node: " + node + "."
+                    }
+                    // create a new node for the sample that this note bank circle was for. note bank circles have a sample in their GUI data, 
+                    // but no real node that can be added to the drum sequencer's data structure, so we need to create one.
+                    node = sampleBankNodeGenerator.createNewNodeForSample(circleBeingMoved.guiData.sampleName)
+                    circleBeingMoved.guiData.label = node.label // the newly generated node will also have a real generated ID (label), use that
+                    drawNoteBankCircleForSample(circleBeingMoved.guiData.sampleName) // if the note was taken from the sound bank, refill the sound bank
+                }
                 // convert the note's new y position into a sequencer timestamp, and set the node's 'priority' to its new timestamp
                 let newNodeTimestampMillis = loopLengthInMillis * ((circleNewXPosition - sequencerHorizontalOffset) / sequencerWidth)
                 // console.log("New timestamp for node that was moved: " + newNodeTimestampMillis)
@@ -220,52 +249,17 @@ window.onload = () => {
                 // add the moved note to its new sequencer row
                 // console.log("insert node into row: " + circleBeingMovedNewRow + " with label: " + circleBeingMoved.guiData.label + ".")
                 sequencer.rows[circleBeingMovedNewRow].notesList.insertNode(node, circleBeingMoved.guiData.label)
-                if (circleBeingMovedOldRow < 0) { // if the note was taken from the sound bank, refill the sound bank
-                    drawNoteBankCircleForSample(circleBeingMoved.guiData.sampleName)
-                }
             } // else the new row is < 0, i.e. the note was not successfully moved out of the sound bank, or it is being deleted, so don't add it to any new row
         }
         circleBeingMoved = null
         setNoteTrashBinVisibility(false)
     });
 
-    // lifting your mouse anywhere means you're no longer click-dragging
-    window.addEventListener('mousemove', (event) => {
-        if (circleBeingMoved !== null) {
-            adjustEventCoordinates(event)
-            mouseX = event.pageX
-            mouseY = event.pageY
-            circleBeingMoved.translation.x = mouseX
-            circleBeingMoved.translation.y = mouseY
-        }
-    });
-
-    // draw the circles (i.e. notes) that are in the note bank
-    for (noteBankSampleName of sampleNameList) {
-        drawNoteBankCircleForSample(noteBankSampleName)
-    }
-
-    // draw all notes that are in the sequencer before the sequencer starts (aka the notes of the default/test/initial pattern)
-    for(let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
-        noteToDraw = sequencer.rows[sequencerRowIndex].notesList.head
-        while (noteToDraw !== null) {
-            let xPosition = sequencerHorizontalOffset + (sequencerWidth * (noteToDraw.priority / sequencer.loopLengthInMillis))
-            let yPosition = sequencerVerticalOffset + (sequencerRowIndex * spaceBetweenSequencerRows)
-            let sampleName = noteToDraw.data.sampleName
-            let row = sequencerRowIndex
-            let label = noteToDraw.label
-            drawNewNoteCircle(xPosition, yPosition, sampleName, label, row)
-            noteToDraw = noteToDraw.next
-        }
-    }
-
     requestAnimationFrameShim(draw)
 
-    // get the 'head' of each row's notes-list and store them in a list so we can keep accessing them easily
-    let nextNoteToScheduleForEachRow = []
-    for (let nextNotesInitializedSoFarCount = 0; nextNotesInitializedSoFarCount < sequencer.numberOfRows; nextNotesInitializedSoFarCount++) {
-        nextNoteToScheduleForEachRow.push(sequencer.rows[nextNotesInitializedSoFarCount].notesList.head)
-    }
+    /**
+     * end of main logic, start of function definitions.
+     */
 
     // this method is the 'update' loop that will keep updating the page. after first invocation, this method calls itself recursively forever.
     function draw() {
@@ -277,7 +271,9 @@ window.onload = () => {
         // we can just call getNodeWithPriority for the current time, then get that node instead? makes sense to me.
         // actually, i think in this case, the next node will be null, so we will pick up the front of the list (list.head).
         // then, we will iterate thru and see that all the earlier notes have already been played on the current iteration, 
-        // so will skip till we get to the right place. this is already handled correctly.
+        // so will skip till we get to the right place. so this may already be handled correctly. need to test.
+        // another option could be to not reset deletedNode.next to null, that way we can just go to the next node in the
+        // list like normal even if the current one is deleted.. is there a downside to doing that?
 
         let currentTimeWithinCurrentLoop = currentTime % loopLengthInMillis
 

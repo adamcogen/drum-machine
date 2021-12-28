@@ -18,7 +18,7 @@ This drum machine will eventually be an improved version of my old project [Poly
 
 Local HTTP server is needed to avoid Cross Origin Request issues when loading drum samples (at least in Chrome browser).
 
-For Mac, run one of the .sh files included in this repo to start the HTTP server.
+For Mac, run one of the .sh files included in this repo to start the HTTP server:
 
 Python 2:
 ```
@@ -30,5 +30,12 @@ Python 3:
 sh server.python3.sh
 ```
 
-For Windows, you should be able to just run the commands that are in these .sh files from the command line to start the HTTP server.
+then in a browser go to:
 
+```
+http://localhost:8000/
+```
+
+and replace 8000 with whatever port number the server says it's running on.
+
+For Windows, you should be able to just run the commands that are in these .sh files from the command line to start the HTTP server.
