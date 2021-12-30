@@ -76,12 +76,22 @@ window.onload = () => {
     let sequencerAndToolsLineColor = '#707070'
     let sequencerAndToolsLineWidth = 3
     let trashBinColor = 'red'
+    /**
+     * gui settings: subdivision lines
+     */
+    let subdivisionLineHeight = 20
+    let subdivisionLineColor = sequencerAndToolsLineColor // 'black'
 
     // initialize sequencer data structure
     let sequencer = new Sequencer(4, loopLengthInMillis)
+    sequencer.rows[0].setNumberOfSubdivisions(8)
+    sequencer.rows[1].setNumberOfSubdivisions(4)
+    sequencer.rows[2].setNumberOfSubdivisions(2)
+    sequencer.rows[3].setNumberOfSubdivisions(0)
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
     let sequencerRowLines = initializeSequencerRowLines() // list of sequencer row lines
+    let subdivionLineLists = initializeSubdivionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivion lines per row)
     let drumTriggerLines = initializeDrumTriggerLines() // list of lines that move to represent the current time within the loop
     let noteBankContainer = initializeNoteBankContainer() // a rectangle that goes around the note bank
     let noteTrashBinContainer = initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
@@ -350,20 +360,7 @@ window.onload = () => {
         while (nextNoteToSchedule !== null && nextNoteToSchedule.priority >= currentTimeWithinCurrentLoop && nextNoteToSchedule.priority <= endTimeOfNotesToSchedule) {
             // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for
             // console.log("schedule end. next note to schedule priority: " + nextNoteToSchedule.priority + ". current time within current loop: " + currentTimeWithinCurrentLoop + ". end time of notes to schedule: " + endTimeOfNotesToSchedule + ". note was last scheduled on iteration: " + nextNoteToSchedule.data.lastScheduledOnIteration + ". current iteration is: " + numberOfLoopsSoFar + ".")
-            /**
-             * todo: this top scheduler is the one with the bug where placing a note at the beginning of a row causes it to play right away. fix that.
-             * ok I think I fixed that bug, I think it was that there was no start limit on the time window in the above 'if' statement, only an end limit,
-             * so all old not-scheduled-yet notes were being scheduled as well, or something like that. i added a front limit to the check, then notes started
-             * getting dropped (they wouldn't be scheduled..). I figured this was due to the time window being too short, so it passes before we can get to a
-             * note to schedule it, or something like, so I raised the look-ahead time window length. that seems to have fixed the issue but i'll keep an eye
-             * on it. it seems some notes can still get dropped when the drum machine window is minized and you are doing other things.
-             * okay so this bug wasn't fixed. and it seems to be fixed now. i made a bunch of changes to try to fix it, but the version of the code i was using
-             * seems to have been cached by the browser, so when i was testing the different fixes, none of them worked, but then when i cleared the cache, as
-             * far as i can tell, the bug was fixed.. so i can't currently reproduce it, but i also am not sure what change actually fixed it.. so for now
-             * i'll keep an eye out for if it happens again, but the bug seems to be fixed.. i wish i knew which change fixed it though lol. whatever. 
-             * i guess i just have to get over it.
-             */
-            // console.log("iterating over node (end): " + nextNoteToSchedule)
+            // console.log("iterating over node (haven't wrapped around to beginning yet): " + nextNoteToSchedule)
             if (numberOfLoopsSoFar > nextNoteToSchedule.data.lastScheduledOnIteration) {
                 scheduleNote(actualStartTimeOfCurrentLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
             }
@@ -376,14 +373,13 @@ window.onload = () => {
         let endTimeToScheduleUpToFromBeginningOfLoop = endTimeOfNotesToSchedule - loopLengthInMillis // calulate leftover time to schedule for from beginning of loop, e.g. from 0 to 7 millis from above example
         let actualStartTimeOfNextLoop = actualStartTimeOfCurrentLoop + loopLengthInMillis
         if (endTimeToScheduleUpToFromBeginningOfLoop >= 0) {
-            // console.log("" + endTimeToScheduleUpToFromBeginningOfLoop)
             //console.log("dealing with a look-ahead window that wraps around to the beginning of the loop now..")
             nextNoteToSchedule = sequencer.rows[sequencerRowIndex].notesList.head
             while (nextNoteToSchedule !== null && nextNoteToSchedule.priority <= endTimeToScheduleUpToFromBeginningOfLoop) {
                 // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for
                 // console.log("schedule beginning. next note to schedule priority: " + nextNoteToSchedule.priority + ". current time within current loop: " + currentTimeWithinCurrentLoop + ". end time of notes to schedule: " + endTimeOfNotesToSchedule + ". note was last scheduled on iteration: " + nextNoteToSchedule.data.lastScheduledOnIteration + ". current iteration is: " + numberOfLoopsSoFar + ".")
                 // todo: determine whether this should be scheduled at current loop start time or next loop start time..
-                // console.log("iterating over node (beginning): " + nextNoteToSchedule)
+                // console.log("iterating over node (have wrapped around to beginning): " + nextNoteToSchedule)
                 if (numberOfLoopsSoFar + 1 > nextNoteToSchedule.data.lastScheduledOnIteration) {
                     scheduleNote(actualStartTimeOfNextLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
                 }
@@ -637,6 +633,38 @@ window.onload = () => {
         return sequencerRowLines
     }
 
+    // add 'subdivion lines' to each sequencer row. these lines divide each row into the given number of evenly-sized sections.
+    // in other words, if a row's 'subdivision count' is 5, that row will be divided into 5 even chunks (it will have 5 subdivision
+    // lines). subdivision lines pretty much represent 'beats', so a line that is subdivided into 5 sections shows 5 beats.
+    function initializeSubdivionLines() {
+        let allSubdivisionLineLists = []
+        let subdivisionLinesForRow = []
+        for (let rowsDrawn = 0; rowsDrawn < sequencer.numberOfRows; rowsDrawn++) {
+            console.log("entering loop. rows drawn: " + rowsDrawn)
+            if (sequencer.rows[rowsDrawn].getNumberOfSubdivions() <= 0) {
+                console.log("no subdivisions to draw for row: " + rowsDrawn)
+                continue; // don't draw subdivions for this row if there are 0 or fewer
+            }
+            let xIncrementBetweenSubdivisions = sequencerWidth / sequencer.rows[rowsDrawn].getNumberOfSubdivions()
+            for (let subdivionsDrawnForRow = 0; subdivionsDrawnForRow < sequencer.rows[rowsDrawn].getNumberOfSubdivions(); subdivionsDrawnForRow++) {
+                let subdivionLine = two.makePath(
+                    [
+                        new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenSubdivisions * subdivionsDrawnForRow), sequencerVerticalOffset - 1 + (rowsDrawn * spaceBetweenSequencerRows)),
+                        new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenSubdivisions * subdivionsDrawnForRow), sequencerVerticalOffset + (rowsDrawn * spaceBetweenSequencerRows) + subdivisionLineHeight),
+                    ], 
+                    false
+                );
+                subdivionLine.linewidth = sequencerAndToolsLineWidth;
+                subdivionLine.stroke = subdivisionLineColor
+
+                subdivisionLinesForRow.push(subdivionLine) // keep a list of all subdivision lines for the current row
+            }
+
+            allSubdivisionLineLists.push(subdivisionLinesForRow) // keep a list of all rows' subdivision line lists
+        }
+        return allSubdivisionLineLists
+    }
+
     // draw lines for the 'drum triggers' for each sequencer row.
     // these are the little lines above each sequencer line that track the current time within the loop.
     // return a list of the drawn lines. these will be Two.js 'path' objects.
@@ -792,5 +820,17 @@ class SequencerRow {
     constructor(loopLengthInMillis) {
         this.loopLengthInMillis = loopLengthInMillis
         this.notesList = new PriorityLinkedList()
+        this.subdivision = 0
+    }
+
+    getNumberOfSubdivions() {
+        return this.subdivision
+    }
+
+    // must be an integer 
+    // (non-integer values would have cycles that are longer than one loop length, 
+    // support for that isn't planned in this drum machine)
+    setNumberOfSubdivisions(value) {
+        this.subdivision = value
     }
 }
