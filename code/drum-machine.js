@@ -182,10 +182,14 @@ window.onload = () => {
             let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= noteTrashBinHorizontalOffset - placementPadding) && (mouseX <= noteTrashBinHorizontalOffset + noteTrashBinWidth + placementPadding)
             let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= noteTrashBinVerticalOffset - placementPadding) && (mouseY <= noteTrashBinVerticalOffset + noteTrashBinHeight + placementPadding)
             if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
-                if (circleBeingMoved.guiData.row >= 0) { // only bother trowing away things that came from a row. throwing away note bank notes is pointless
+                if (circleBeingMoved.guiData.row >= 0) { // only bother throwing away things that came from a row. throwing away note bank notes is pointless
                     // console.log("throwing note in the trash: " + circleBeingMoved.guiData.label + ", from row: " + circleBeingMoved.guiData.row + ".")
                     circleBeingMoved.remove() // remove the circle from the Two.js display
                     removeCircleFromAllDrawnCirclesList(circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles
+                    // if the deleted note is the 'next note to schedule', we should increment that 'next note to schedule' to its .next (i.e. we should skip the deleted note)
+                    if (nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row] !== null && nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row].label ===  circleBeingMoved.guiData.label) {
+                        nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row] = nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row].next
+                    }
                     circleBeingMovedNewRow = -3 // set a placeholder row number reserved for notes in the trash
                 }
             }
@@ -206,24 +210,10 @@ window.onload = () => {
                     rowLeftLimit = rowActualLeftBound - placementPadding
                     rowRightLimit = rowActualRightBound + placementPadding
                     if (mouseX >= rowLeftLimit && mouseX <= rowRightLimit && mouseY >= rowTopLimit && mouseY <= rowBottomLimit) {
-                        // console.log("would place on row: " + rowIndex)
                         // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
-                        if (mouseX < rowActualLeftBound) { // snap to left side of row
-                            circleNewXPosition = rowActualLeftBound
-                            // console.log("new x positon is out of bounds. row actual left bound: " + rowActualLeftBound + ". circle new x: " + circleNewXPosition + ". mouseX: " + mouseX + ".")
-                        } else if (mouseX > rowActualRightBound) { // snap to right side of row
-                            circleNewXPosition = rowActualRightBound
-                            // console.log("new x positon is out of bounds. row actual right bound: " + rowActualRightBound + ". circle new x: " + circleNewXPosition + ". mouseX: " + mouseX + ".")
-                        } else {
-                            circleNewXPosition = mouseX
-                            // console.log("new x position is in bounds.")
-                        }
-                        // snap down from top or up from bottom of row
-                        if (mouseY !== rowActualVerticalLocation) {
-                            circleNewYPosition = rowActualVerticalLocation
-                        } else {
-                            circleNewYPosition = mouseY
-                        }
+                        circleNewXPosition = confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
+                        circleNewYPosition = confineNumberToBounds(mouseY, rowActualVerticalLocation, rowActualVerticalLocation)
+                        // console.log("circle will be placed on row: " + rowIndex)
                         circleBeingMovedNewRow = rowIndex
                         break; // we found the row that the note will be placed on, so stop iterating thru rows early
                     }
@@ -259,12 +249,16 @@ window.onload = () => {
                 // add the moved note to its new sequencer row
                 // console.log("insert node into row: " + circleBeingMovedNewRow + " with label: " + circleBeingMoved.guiData.label + ".")
                 sequencer.rows[circleBeingMovedNewRow].notesList.insertNode(node, circleBeingMoved.guiData.label)
-            } // else the new row is < 0, i.e. the note was not successfully moved out of the sound bank, or it is being deleted, so don't add it to any new row
+            }
         }
         circleBeingMoved = null
         setNoteTrashBinVisibility(false)
     });
 
+    // run any miscellaneous unit tests needed before starting main update loop
+    testConfineNumberToBounds()
+
+    // start main recursive update loop, where all state updates will happen
     requestAnimationFrameShim(draw)
 
     /**
@@ -274,16 +268,6 @@ window.onload = () => {
     // this method is the 'update' loop that will keep updating the page. after first invocation, this method calls itself recursively forever.
     function draw() {
         let currentTime = audioContext.currentTime * 1000;
-        // console.log("" + audioContext.currentTime * 1000)
-
-        // todo: need to handle a weird case: if the next scheduled note gets deleted, what do we do? :|
-        // hm maybe we can mark deleted nodes as deleted, then if a node is deleted at this point,
-        // we can just call getNodeWithPriority for the current time, then get that node instead? makes sense to me.
-        // actually, i think in this case, the next node will be null, so we will pick up the front of the list (list.head).
-        // then, we will iterate thru and see that all the earlier notes have already been played on the current iteration, 
-        // so will skip till we get to the right place. so this may already be handled correctly. need to test.
-        // another option could be to not reset deletedNode.next to null, that way we can just go to the next node in the
-        // list like normal even if the current one is deleted.. is there a downside to doing that?
 
         let currentTimeWithinCurrentLoop = currentTime % loopLengthInMillis
 
@@ -316,7 +300,7 @@ window.onload = () => {
             }
 
             if (nextNoteToScheduleForEachRow[sequencerRowIndex] !== null) { // still will be null if note list is still empty
-                nextNoteToScheduleForEachRow[sequencerRowIndex] = scheduleNotes(nextNoteToScheduleForEachRow[sequencerRowIndex], sequencerRowIndex, currentTime)
+                nextNoteToScheduleForEachRow[sequencerRowIndex] = scheduleNotesForCurrentTime(nextNoteToScheduleForEachRow[sequencerRowIndex], sequencerRowIndex, currentTime)
             }
         }
 
@@ -324,17 +308,7 @@ window.onload = () => {
         requestAnimationFrameShim(draw); // call this 'draw' method again recursively
     }
 
-    function setNoteTrashBinVisibility(visible) {
-        if (visible) {
-            // console.log("showing note trash bin")
-            noteTrashBinContainer.stroke = trashBinColor
-        } else {
-            // console.log("hiding note trash bin")
-            noteTrashBinContainer.stroke = 'transparent'
-        }
-    }
-
-    function scheduleNotes(nextNoteToSchedule, sequencerRowIndex, currentTime) {
+    function scheduleNotesForCurrentTime(nextNoteToSchedule, sequencerRowIndex, currentTime) {
         let currentTimeWithinCurrentLoop = currentTime % loopLengthInMillis
         // console.log("ct: " + currentTime + " ctwcl: " + currentTimeWithinCurrentLoop + " llim: " + loopLengthInMillis + ".")
         let numberOfLoopsSoFar = Math.floor(currentTime / loopLengthInMillis)
@@ -362,7 +336,7 @@ window.onload = () => {
             // console.log("schedule end. next note to schedule priority: " + nextNoteToSchedule.priority + ". current time within current loop: " + currentTimeWithinCurrentLoop + ". end time of notes to schedule: " + endTimeOfNotesToSchedule + ". note was last scheduled on iteration: " + nextNoteToSchedule.data.lastScheduledOnIteration + ". current iteration is: " + numberOfLoopsSoFar + ".")
             // console.log("iterating over node (haven't wrapped around to beginning yet): " + nextNoteToSchedule)
             if (numberOfLoopsSoFar > nextNoteToSchedule.data.lastScheduledOnIteration) {
-                scheduleNote(actualStartTimeOfCurrentLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
+                scheduleDrumSample(actualStartTimeOfCurrentLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
             }
             nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFar // record the last iteration that the note was played on to avoid duplicate scheduling within the same iteration
             nextNoteToSchedule = nextNoteToSchedule.next
@@ -378,10 +352,9 @@ window.onload = () => {
             while (nextNoteToSchedule !== null && nextNoteToSchedule.priority <= endTimeToScheduleUpToFromBeginningOfLoop) {
                 // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for
                 // console.log("schedule beginning. next note to schedule priority: " + nextNoteToSchedule.priority + ". current time within current loop: " + currentTimeWithinCurrentLoop + ". end time of notes to schedule: " + endTimeOfNotesToSchedule + ". note was last scheduled on iteration: " + nextNoteToSchedule.data.lastScheduledOnIteration + ". current iteration is: " + numberOfLoopsSoFar + ".")
-                // todo: determine whether this should be scheduled at current loop start time or next loop start time..
-                // console.log("iterating over node (have wrapped around to beginning): " + nextNoteToSchedule)
+                // console.log("iterating over node (after wrapping around to beginning): " + nextNoteToSchedule)
                 if (numberOfLoopsSoFar + 1 > nextNoteToSchedule.data.lastScheduledOnIteration) {
-                    scheduleNote(actualStartTimeOfNextLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
+                    scheduleDrumSample(actualStartTimeOfNextLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
                 }
                 nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFar + 1
                 nextNoteToSchedule = nextNoteToSchedule.next
@@ -391,35 +364,19 @@ window.onload = () => {
         return nextNoteToSchedule
     }
 
-    function scheduleNote(startTime, sampleName){
+    function scheduleDrumSample(startTime, sampleName){
         // adjustedStartTime = (Math.floor(currentTime / loopLengthInMillis) * loopLengthInMillis) + note.priority
         // console.log("scheduling a note. start time: " + startTime)
         // scheduleOscillatorNote(frequency, startTime / 1000, .075)
         scheduleSound(samples[sampleName].file, startTime / 1000, .5)
     }
 
-    // schedule an oscillator note to play at the specified time
-    function scheduleOscillatorNote(frequency, time, noteLength, gain=1) {
-        let oscillator = audioContext.createOscillator();
-            
-        // set gain (volume). 1 is default, .1 is 10 percent
-        gainNode = audioContext.createGain();
-        gainNode.gain.value = gain;
-        gainNode.connect(audioContext.destination);
-        oscillator.connect(gainNode);
-        
-        oscillator.frequency.value = frequency;
-
-        oscillator.start(time);
-        oscillator.stop(time + noteLength);
-    }
-
     // play the sample with the given name right away (don't worry about scheduling it for some time in the future)
-    function playNote(sampleName) {
-        playSound(samples[sampleName].file, .5)
+    function playDrumSampleNow(sampleName) {
+        playSoundNow(samples[sampleName].file, .5)
     }
 
-    function playSound(sample, gain=1, playbackRate=1) {
+    function playSoundNow(sample, gain=1, playbackRate=1) {
         let sound = audioContext.createBufferSource(); // creates a sound source
         sound.buffer = sample; // tell the sound source which sample to play
         sound.playbackRate.value = playbackRate; // 1 is default playback rate; 0.5 is half-speed; 2 is double-speed
@@ -485,28 +442,24 @@ window.onload = () => {
         sequencer.rows[0].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), 0, 
         {
             lastScheduledOnIteration: -1,
-            // frequency: 880,
             sampleName: HI_HAT_CLOSED,
         }
         ))
         sequencer.rows[1].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 1, 
             {
                 lastScheduledOnIteration: -1,
-                // frequency: 880,
                 sampleName: HI_HAT_OPEN,
             }
         ))
         sequencer.rows[2].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), ((loopLengthInMillis / 4) * 2), 
             {
                 lastScheduledOnIteration: -1,
-                // frequency: 880,
                 sampleName: SNARE,
             }
         ))
         sequencer.rows[3].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 3, 
             {
                 lastScheduledOnIteration: -1,
-                // frequency: 880,
                 sampleName: BASS_DRUM
             }
         ))
@@ -589,7 +542,7 @@ window.onload = () => {
             circleBeingMovedStartingPositionX = circleBeingMoved.translation.x
             circleBeingMovedStartingPositionY = circleBeingMoved.translation.y
             setNoteTrashBinVisibility(true)
-            playNote(circleBeingMoved.guiData.sampleName)
+            playDrumSampleNow(circleBeingMoved.guiData.sampleName)
         });
 
         // add info to the circle object that the gui uses to keep track of things
@@ -605,7 +558,7 @@ window.onload = () => {
     // remove a circle from the 'allDrawnCircles' list, based on its label.
     // this is meant to be used during deletion of notes from the sequencer, with the idea being that deleting
     // them from this list and maybe from a few other places will clear up clutter, and hopefully allow the 
-    // deleted circles to get garbage collected.
+    // deleted circles to get garbage-collected.
     function removeCircleFromAllDrawnCirclesList(label){
         let indexOfListItemToRemove = allDrawnCircles.findIndex(elementFromList => elementFromList.guiData.label === label);
         if (indexOfListItemToRemove === -1) { //  we don't expect to reach this case, where a circle with the given label isn't found in the list
@@ -640,10 +593,10 @@ window.onload = () => {
         let allSubdivisionLineLists = []
         let subdivisionLinesForRow = []
         for (let rowsDrawn = 0; rowsDrawn < sequencer.numberOfRows; rowsDrawn++) {
-            console.log("entering loop. rows drawn: " + rowsDrawn)
+            // console.log("entering loop. rows drawn: " + rowsDrawn)
             if (sequencer.rows[rowsDrawn].getNumberOfSubdivions() <= 0) {
-                console.log("no subdivisions to draw for row: " + rowsDrawn)
-                continue; // don't draw subdivions for this row if there are 0 or fewer
+                // console.log("no subdivisions to draw for row: " + rowsDrawn)
+                continue; // don't draw subdivions for this row if it has 0 or fewer subdivisions
             }
             let xIncrementBetweenSubdivisions = sequencerWidth / sequencer.rows[rowsDrawn].getNumberOfSubdivions()
             for (let subdivionsDrawnForRow = 0; subdivionsDrawnForRow < sequencer.rows[rowsDrawn].getNumberOfSubdivions(); subdivionsDrawnForRow++) {
@@ -722,6 +675,39 @@ window.onload = () => {
         return noteTrashBinContainer
     }
 
+    // show or hide the note trash bin (show if visible === true, hide otherwise)
+    function setNoteTrashBinVisibility(visible) {
+        if (visible) {
+            // console.log("showing note trash bin")
+            noteTrashBinContainer.stroke = trashBinColor
+        } else {
+            // console.log("hiding note trash bin")
+            noteTrashBinContainer.stroke = 'transparent'
+        }
+    }
+
+    // given a number and an upper and lower bound, confine the number to be between the bounds.
+    // if the number if below the lower bound, return the lower bound.
+    // if it is above the upper bound, return the upper bound.
+    // if it is between the bounds, return the number unchanged.
+    function confineNumberToBounds(number, lowerBound, upperBound) {
+        if (number < lowerBound) {
+            return lowerBound
+        } else if (number > upperBound) {
+            return upperBound
+        } else {
+            return number
+        }
+    }
+
+    // quick happy-path unit test for confineNumberToBounds()
+    function testConfineNumberToBounds() {
+        assertEquals(5, confineNumberToBounds(4, 5, 10), "number below lower bound")
+        assertEquals(5, confineNumberToBounds(5, 5, 10), "number same as lower bound")
+        assertEquals(6, confineNumberToBounds(6, 5, 10), "number between the bounds")
+        assertEquals(10, confineNumberToBounds(10, 5, 10), "number same as upper bound")
+        assertEquals(10, confineNumberToBounds(11, 5, 10), "number above upper bound")
+    }
 }
 
 /**
