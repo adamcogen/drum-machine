@@ -33,7 +33,6 @@ window.onload = () => {
     let audioContextStarted = false
     window.onclick = () => {
         if (!audioContextStarted) {
-            // console.log("Starting ('resuming') audio context..")
             audioContext.resume()
             audioContextStarted = true
         }
@@ -131,7 +130,7 @@ window.onload = () => {
         }
     }
 
-    // get the 'head' of each row's notes-list and store them in a list so we can keep accessing them easily
+    // get the next note that needs to be scheduled for each row (will start as list 'head', and update as we go)
     let nextNoteToScheduleForEachRow = []
     for (let nextNotesInitializedSoFarCount = 0; nextNotesInitializedSoFarCount < sequencer.numberOfRows; nextNotesInitializedSoFarCount++) {
         nextNoteToScheduleForEachRow.push(sequencer.rows[nextNotesInitializedSoFarCount].notesList.head)
@@ -183,7 +182,6 @@ window.onload = () => {
             let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= noteTrashBinVerticalOffset - placementPadding) && (mouseY <= noteTrashBinVerticalOffset + noteTrashBinHeight + placementPadding)
             if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
                 if (circleBeingMoved.guiData.row >= 0) { // only bother throwing away things that came from a row. throwing away note bank notes is pointless
-                    // console.log("throwing note in the trash: " + circleBeingMoved.guiData.label + ", from row: " + circleBeingMoved.guiData.row + ".")
                     circleBeingMoved.remove() // remove the circle from the Two.js display
                     removeCircleFromAllDrawnCirclesList(circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles
                     // if the deleted note is the 'next note to schedule', we should increment that 'next note to schedule' to its .next (i.e. we should skip the deleted note)
@@ -199,9 +197,7 @@ window.onload = () => {
             if (withinHorizonalBoundaryOfSequencer && withinVerticalBoundaryOfSequencer) {
                 // if we get here, we know the circle is being placed within the vertical and horizontal boundaries of the sequencer.
                 // next we want to do a more fine-grained calculation, for whether it is close to one of the sequencer lines.
-                // console.log("the circle was placed within the vertical and horizonal boundaries of the sequencer")
                 for(let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
-                    // console.log("checking if the circle is being placed on row: " + rowIndex)
                     rowActualVerticalLocation = sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows)
                     rowActualLeftBound = sequencerHorizontalOffset
                     rowActualRightBound = sequencerHorizontalOffset + sequencerWidth
@@ -213,24 +209,27 @@ window.onload = () => {
                         // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
                         circleNewXPosition = confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
                         circleNewYPosition = confineNumberToBounds(mouseY, rowActualVerticalLocation, rowActualVerticalLocation)
-                        // console.log("circle will be placed on row: " + rowIndex)
                         circleBeingMovedNewRow = rowIndex
                         break; // we found the row that the note will be placed on, so stop iterating thru rows early
                     }
                 }
             }
             // we are done checking for collisions with things, so now move on to updating data
-            // console.log("setting position of circle that was being moved. new x: " + circleNewXPosition + ". new y: " + circleNewYPosition)
             circleBeingMoved.translation.x = circleNewXPosition
             circleBeingMoved.translation.y = circleNewYPosition
             circleBeingMoved.guiData.row = circleBeingMovedNewRow
             let node = null
             // remove the moved note from its old sequencer row. todo: consider changing this logic to just update node's priority if it isn't switching rows.)
             if (circleBeingMovedOldRow >= 0) { // -2 is the 'row' given to notes that are in the note bank. if old row is < 0, we don't need to remove it from any sequencer row.
-                // console.log("remove node from row: " + circleBeingMovedOldRow + " with label: " + circleBeingMoved.guiData.label + ".")
                 node = sequencer.rows[circleBeingMovedOldRow].notesList.removeNode(circleBeingMoved.guiData.label)
-                // console.log("removed node after moving circle: " + node)
+                /**
+                 * todo: consider whether we need to update 'next note to schedule' here in some cases.
+                 * i think we do..
+                 * i think that if 'next note to schedule' is the removed note, it will still play.
+                 * easy fix should be to set 'next note to schedule' to its .next if the next note's label matches the removed note's label.
+                 */
             }
+            // add the moved note to its new sequencer row.
             if (circleBeingMovedNewRow >= 0) {
                 if (node === null) { // this should just mean the circle was pulled from the note bank, so we need to create a node for it
                     if (circleBeingMovedOldRow >= 0) { // should be an unreachable case, just checking for safety
@@ -244,11 +243,17 @@ window.onload = () => {
                 }
                 // convert the note's new y position into a sequencer timestamp, and set the node's 'priority' to its new timestamp
                 let newNodeTimestampMillis = loopLengthInMillis * ((circleNewXPosition - sequencerHorizontalOffset) / sequencerWidth)
-                // console.log("New timestamp for node that was moved: " + newNodeTimestampMillis)
                 node.priority = newNodeTimestampMillis
                 // add the moved note to its new sequencer row
-                // console.log("insert node into row: " + circleBeingMovedNewRow + " with label: " + circleBeingMoved.guiData.label + ".")
                 sequencer.rows[circleBeingMovedNewRow].notesList.insertNode(node, circleBeingMoved.guiData.label)
+                /**
+                 * todo: consider whether we need to update 'next note to schedule' here in some cases.
+                 * i think we do..
+                 * [current time] -> [inserted note] -> ['next note to schedule']
+                 * need to test, but i think in this case, we won't play the newly inserted node.
+                 * a way to fix could be to call 'next note to schedule' .prev if .prev.label === inserted node .label?
+                 * we also need to deal with making sure the note isn't played twice. does scheduler handle that? maybe
+                 */
             }
         }
         circleBeingMoved = null
@@ -265,7 +270,7 @@ window.onload = () => {
      * end of main logic, start of function definitions.
      */
 
-    // this method is the 'update' loop that will keep updating the page. after first invocation, this method calls itself recursively forever.
+    // this method is the 'update' loop that will keep updating the page. after first invocation, this method basically calls itself recursively forever.
     function draw() {
         let currentTime = audioContext.currentTime * 1000;
 
@@ -299,18 +304,17 @@ window.onload = () => {
                 nextNoteToScheduleForEachRow[sequencerRowIndex] = sequencer.rows[sequencerRowIndex].notesList.head
             }
 
-            if (nextNoteToScheduleForEachRow[sequencerRowIndex] !== null) { // still will be null if note list is still empty
+            if (nextNoteToScheduleForEachRow[sequencerRowIndex] !== null) { // will always be null if the row's note list is empty
                 nextNoteToScheduleForEachRow[sequencerRowIndex] = scheduleNotesForCurrentTime(nextNoteToScheduleForEachRow[sequencerRowIndex], sequencerRowIndex, currentTime)
             }
         }
 
         two.update() // update the GUI display
-        requestAnimationFrameShim(draw); // call this 'draw' method again recursively
+        requestAnimationFrameShim(draw); // call animation frame update with this 'draw' method again
     }
 
     function scheduleNotesForCurrentTime(nextNoteToSchedule, sequencerRowIndex, currentTime) {
         let currentTimeWithinCurrentLoop = currentTime % loopLengthInMillis
-        // console.log("ct: " + currentTime + " ctwcl: " + currentTimeWithinCurrentLoop + " llim: " + loopLengthInMillis + ".")
         let numberOfLoopsSoFar = Math.floor(currentTime / loopLengthInMillis)
         let actualStartTimeOfCurrentLoop = numberOfLoopsSoFar * loopLengthInMillis
 
@@ -333,8 +337,6 @@ window.onload = () => {
         let endTimeOfNotesToSchedule = currentTimeWithinCurrentLoop + LOOK_AHEAD_MILLIS // no need to trim this to the end of the loop, since there won't be any notes scheduled after the end anyway
         while (nextNoteToSchedule !== null && nextNoteToSchedule.priority >= currentTimeWithinCurrentLoop && nextNoteToSchedule.priority <= endTimeOfNotesToSchedule) {
             // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for
-            // console.log("schedule end. next note to schedule priority: " + nextNoteToSchedule.priority + ". current time within current loop: " + currentTimeWithinCurrentLoop + ". end time of notes to schedule: " + endTimeOfNotesToSchedule + ". note was last scheduled on iteration: " + nextNoteToSchedule.data.lastScheduledOnIteration + ". current iteration is: " + numberOfLoopsSoFar + ".")
-            // console.log("iterating over node (haven't wrapped around to beginning yet): " + nextNoteToSchedule)
             if (numberOfLoopsSoFar > nextNoteToSchedule.data.lastScheduledOnIteration) {
                 scheduleDrumSample(actualStartTimeOfCurrentLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
             }
@@ -347,12 +349,9 @@ window.onload = () => {
         let endTimeToScheduleUpToFromBeginningOfLoop = endTimeOfNotesToSchedule - loopLengthInMillis // calulate leftover time to schedule for from beginning of loop, e.g. from 0 to 7 millis from above example
         let actualStartTimeOfNextLoop = actualStartTimeOfCurrentLoop + loopLengthInMillis
         if (endTimeToScheduleUpToFromBeginningOfLoop >= 0) {
-            //console.log("dealing with a look-ahead window that wraps around to the beginning of the loop now..")
             nextNoteToSchedule = sequencer.rows[sequencerRowIndex].notesList.head
             while (nextNoteToSchedule !== null && nextNoteToSchedule.priority <= endTimeToScheduleUpToFromBeginningOfLoop) {
                 // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for
-                // console.log("schedule beginning. next note to schedule priority: " + nextNoteToSchedule.priority + ". current time within current loop: " + currentTimeWithinCurrentLoop + ". end time of notes to schedule: " + endTimeOfNotesToSchedule + ". note was last scheduled on iteration: " + nextNoteToSchedule.data.lastScheduledOnIteration + ". current iteration is: " + numberOfLoopsSoFar + ".")
-                // console.log("iterating over node (after wrapping around to beginning): " + nextNoteToSchedule)
                 if (numberOfLoopsSoFar + 1 > nextNoteToSchedule.data.lastScheduledOnIteration) {
                     scheduleDrumSample(actualStartTimeOfNextLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
                 }
@@ -360,15 +359,26 @@ window.onload = () => {
                 nextNoteToSchedule = nextNoteToSchedule.next
             }
         }
-        // console.log("new next note to schedule: " + nextNoteToSchedule + ". time in current loop: " + currentTimeWithinCurrentLoop)
         return nextNoteToSchedule
     }
 
     function scheduleDrumSample(startTime, sampleName){
-        // adjustedStartTime = (Math.floor(currentTime / loopLengthInMillis) * loopLengthInMillis) + note.priority
-        // console.log("scheduling a note. start time: " + startTime)
-        // scheduleOscillatorNote(frequency, startTime / 1000, .075)
         scheduleSound(samples[sampleName].file, startTime / 1000, .5)
+    }
+
+    // schedule a sample to play at the specified time
+    function scheduleSound(sample, time, gain=1, playbackRate=1) {
+        let sound = audioContext.createBufferSource(); // creates a sound source
+        sound.buffer = sample; // tell the sound source which sample to play
+        sound.playbackRate.value = playbackRate; // 1 is default playback rate; 0.5 is half-speed; 2 is double-speed
+
+        // set gain (volume). 1 is default, .1 is 10 percent
+        gainNode = audioContext.createGain();
+        gainNode.gain.value = gain;
+        gainNode.connect(audioContext.destination);
+        sound.connect(gainNode); // connect the sound to the context's destination (the speakers)
+
+        sound.start(time);
     }
 
     // play the sample with the given name right away (don't worry about scheduling it for some time in the future)
@@ -388,21 +398,6 @@ window.onload = () => {
         sound.connect(gainNode); // connect the sound to the context's destination (the speakers)
 
         sound.start();
-    }
-
-    // schedule a sample to play at the specified time
-    function scheduleSound(sample, time, gain=1, playbackRate=1) {
-        let sound = audioContext.createBufferSource(); // creates a sound source
-        sound.buffer = sample; // tell the sound source which sample to play
-        sound.playbackRate.value = playbackRate; // 1 is default playback rate; 0.5 is half-speed; 2 is double-speed
-
-        // set gain (volume). 1 is default, .1 is 10 percent
-        gainNode = audioContext.createGain();
-        gainNode.gain.value = gain;
-        gainNode.connect(audioContext.destination);
-        sound.connect(gainNode); // connect the sound to the context's destination (the speakers)
-
-        sound.start(time);
     }
 
     // load a sample from a file. to load from a local file, this script needs to be running on a server.
@@ -482,7 +477,7 @@ window.onload = () => {
         
         // Shim the requestAnimationFrame API, with a setTimeout fallback
         window.requestAnimationFrameShim = (function(){
-            return  window.requestAnimationFrame ||
+            return window.requestAnimationFrame ||
             window.webkitRequestAnimationFrame ||
             window.mozRequestAnimationFrame ||
             window.oRequestAnimationFrame ||
@@ -593,9 +588,7 @@ window.onload = () => {
         let allSubdivisionLineLists = []
         let subdivisionLinesForRow = []
         for (let rowsDrawn = 0; rowsDrawn < sequencer.numberOfRows; rowsDrawn++) {
-            // console.log("entering loop. rows drawn: " + rowsDrawn)
             if (sequencer.rows[rowsDrawn].getNumberOfSubdivions() <= 0) {
-                // console.log("no subdivisions to draw for row: " + rowsDrawn)
                 continue; // don't draw subdivions for this row if it has 0 or fewer subdivisions
             }
             let xIncrementBetweenSubdivisions = sequencerWidth / sequencer.rows[rowsDrawn].getNumberOfSubdivions()
@@ -678,10 +671,8 @@ window.onload = () => {
     // show or hide the note trash bin (show if visible === true, hide otherwise)
     function setNoteTrashBinVisibility(visible) {
         if (visible) {
-            // console.log("showing note trash bin")
             noteTrashBinContainer.stroke = trashBinColor
         } else {
-            // console.log("hiding note trash bin")
             noteTrashBinContainer.stroke = 'transparent'
         }
     }
@@ -727,7 +718,6 @@ class IdGenerator {
     getNextId() {
         let id = this.idCounter
         this.idCounter += 1
-        // console.log("returning generated ID: " + id)
         return id
     }
 }
