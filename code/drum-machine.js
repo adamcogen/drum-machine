@@ -259,20 +259,8 @@ window.onload = () => {
                  */
                 if (nextNoteToScheduleForEachRow[circleBeingMovedNewRow] !== null && nextNoteToScheduleForEachRow[circleBeingMovedNewRow].previous !== null && nextNoteToScheduleForEachRow[circleBeingMovedNewRow].previous.label === circleBeingMoved.guiData.label) {
                     nextNoteToScheduleForEachRow[circleBeingMovedNewRow] = nextNoteToScheduleForEachRow[circleBeingMovedNewRow].previous
-                    nextNoteToScheduleForEachRow[circleBeingMovedNewRow].data.lastScheduledOnIteration = -1 // mark note as 'not played yet on current iteration'
                 }
-                /**
-                 * we also need to update 'next note to schedule' here in the following case: next node to schedule is currently 'head'.
-                 * because if next note to schedule is 'head' (i.e. we reached the end of the note list) and this new note gets added to
-                 * the end of the list, we want the newly added note to become the next note to schedule so that it will get played.
-                 * update: we might not actually need to do this. i think this may be fixed by addressing a different bug first.
-                 */
-                // let nextNoteIsHead = (nextNoteToScheduleForEachRow[circleBeingMovedNewRow].label === sequencer.rows[circleBeingMovedNewRow].notesList.head.label)
-                // let newNoteIsLast = (node.next === null)
-                // if (nextNoteIsHead && newNoteIsLast) {
-                //     nextNoteToScheduleForEachRow[circleBeingMovedNewRow] = node
-                //     nextNoteToScheduleForEachRow[circleBeingMovedNewRow].data.lastScheduledOnIteration = -1
-                // }
+                node.data.lastScheduledOnIteration = -1 // mark note as 'not played yet on current iteration'
             }
         }
         circleBeingMoved = null
