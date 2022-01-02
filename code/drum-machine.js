@@ -41,7 +41,7 @@ window.onload = () => {
     /**
      * drum machine configurations
      */
-     let loopLengthInMillis = 1200; // length of the whole drum sequence (loop), in millliseconds
+     let loopLengthInMillis = 1500; // length of the whole drum sequence (loop), in millliseconds
      const LOOK_AHEAD_MILLIS = 20; // number of milliseconds to look ahead when scheduling notes to play. note bigger value means that there is a longer delay for sounds to stop after the 'pause' button is hit.
     /**
      * gui settings: sequencer
@@ -221,13 +221,18 @@ window.onload = () => {
             let node = null
             // remove the moved note from its old sequencer row. todo: consider changing this logic to just update node's priority if it isn't switching rows.)
             if (circleBeingMovedOldRow >= 0) { // -2 is the 'row' given to notes that are in the note bank. if old row is < 0, we don't need to remove it from any sequencer row.
-                node = sequencer.rows[circleBeingMovedOldRow].notesList.removeNode(circleBeingMoved.guiData.label)
                 /**
-                 * todo: consider whether we need to update 'next note to schedule' here in some cases.
-                 * i think we do..
-                 * i think that if 'next note to schedule' is the removed note, it will still play.
-                 * easy fix should be to set 'next note to schedule' to its .next if the next note's label matches the removed note's label.
+                 * we need to update 'next note to schedule' here in the following case: if 'next note to schedule' is the moved note.
+                 * if we didn't specifically handle this case, then if 'next note to schedule' was the moved note, it would still play.
+                 * this may not seem bad at first, but the old (removed) note has a null .next value, so the rest of the notes in the 
+                 * old row would no longer play if we didn't fix this.
+                 * a fix is to set 'next note to schedule' to its .next if the next note's label matches the removed note's label,
+                 * _before_ removing the moved note from its old row.
                  */
+                 if (nextNoteToScheduleForEachRow[circleBeingMovedOldRow] !== null && nextNoteToScheduleForEachRow[circleBeingMovedOldRow].label === circleBeingMoved.guiData.label) {
+                    nextNoteToScheduleForEachRow[circleBeingMovedOldRow] = nextNoteToScheduleForEachRow[circleBeingMovedOldRow].next
+                }
+                node = sequencer.rows[circleBeingMovedOldRow].notesList.removeNode(circleBeingMoved.guiData.label)
             }
             // add the moved note to its new sequencer row.
             if (circleBeingMovedNewRow >= 0) {
@@ -247,13 +252,27 @@ window.onload = () => {
                 // add the moved note to its new sequencer row
                 sequencer.rows[circleBeingMovedNewRow].notesList.insertNode(node, circleBeingMoved.guiData.label)
                 /**
-                 * todo: consider whether we need to update 'next note to schedule' here in some cases.
-                 * i think we do..
+                 * we need to update 'next note to schedule' here in the following case:
                  * [current time] -> [inserted note] -> ['next note to schedule']
-                 * need to test, but i think in this case, we won't play the newly inserted node.
-                 * a way to fix could be to call 'next note to schedule' .prev if .prev.label === inserted node .label?
-                 * we also need to deal with making sure the note isn't played twice. does scheduler handle that? maybe
+                 * if we didn't specifcally handle this case, we wouldn't play the newly inserted node.
+                 * a way to fix is to call 'next note to schedule' .prev if .prev.label === inserted node .label.
                  */
+                if (nextNoteToScheduleForEachRow[circleBeingMovedNewRow] !== null && nextNoteToScheduleForEachRow[circleBeingMovedNewRow].previous !== null && nextNoteToScheduleForEachRow[circleBeingMovedNewRow].previous.label === circleBeingMoved.guiData.label) {
+                    nextNoteToScheduleForEachRow[circleBeingMovedNewRow] = nextNoteToScheduleForEachRow[circleBeingMovedNewRow].previous
+                    nextNoteToScheduleForEachRow[circleBeingMovedNewRow].data.lastScheduledOnIteration = -1 // mark note as 'not played yet on current iteration'
+                }
+                /**
+                 * we also need to update 'next note to schedule' here in the following case: next node to schedule is currently 'head'.
+                 * because if next note to schedule is 'head' (i.e. we reached the end of the note list) and this new note gets added to
+                 * the end of the list, we want the newly added note to become the next note to schedule so that it will get played.
+                 * update: we might not actually need to do this. i think this may be fixed by addressing a different bug first.
+                 */
+                // let nextNoteIsHead = (nextNoteToScheduleForEachRow[circleBeingMovedNewRow].label === sequencer.rows[circleBeingMovedNewRow].notesList.head.label)
+                // let newNoteIsLast = (node.next === null)
+                // if (nextNoteIsHead && newNoteIsLast) {
+                //     nextNoteToScheduleForEachRow[circleBeingMovedNewRow] = node
+                //     nextNoteToScheduleForEachRow[circleBeingMovedNewRow].data.lastScheduledOnIteration = -1
+                // }
             }
         }
         circleBeingMoved = null
@@ -300,7 +319,7 @@ window.onload = () => {
         for (let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
             if (nextNoteToScheduleForEachRow[sequencerRowIndex] === null) {
                 // if nextNoteToSchedule is null, the list was empty at some point, so keep polling for a note to be added to it.
-                // or we reached the last note, which is fine, just go back to the beginning of the sequence
+                // or we reached the last note, which is fine, just go back to the beginning of the sequence.
                 nextNoteToScheduleForEachRow[sequencerRowIndex] = sequencer.rows[sequencerRowIndex].notesList.head
             }
 
@@ -330,17 +349,19 @@ window.onload = () => {
          * but that is an easy restriction to add, and also if look-ahead window is short (such as 10 millis), we won't want to
          * make a loop shorter than 10 millis anyway, so no one will notice or care about that restriction.
          */
-
-        // this will be the first part: schedule notes from the current time, to whichver of these comes first:
+        // this will be the first part: schedule notes from the current time, to whichever of these comes first:
         //   - the end of the look-ahead window
         //   - the end of the loop
         let endTimeOfNotesToSchedule = currentTimeWithinCurrentLoop + LOOK_AHEAD_MILLIS // no need to trim this to the end of the loop, since there won't be any notes scheduled after the end anyway
-        while (nextNoteToSchedule !== null && nextNoteToSchedule.priority >= currentTimeWithinCurrentLoop && nextNoteToSchedule.priority <= endTimeOfNotesToSchedule) {
-            // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for
-            if (numberOfLoopsSoFar > nextNoteToSchedule.data.lastScheduledOnIteration) {
+        // keep iterating until the end of the list (nextNoteToSchedule will be 'null') or until nextNoteToSchedule is after 'end of notes to schedule'
+        // what should we do if nextNoteToSchedule is _before_ 'beginning of notes to schedule'?
+        while (nextNoteToSchedule !== null && nextNoteToSchedule.priority <= endTimeOfNotesToSchedule) {
+            // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for.
+            // don't schedule a note unless it hasn't been scheduled on this loop iteration and it goes after the current time (i.e. don't schedule notes in the past, just skip over them)
+            if (nextNoteToSchedule.priority >= currentTimeWithinCurrentLoop && numberOfLoopsSoFar > nextNoteToSchedule.data.lastScheduledOnIteration) {
                 scheduleDrumSample(actualStartTimeOfCurrentLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
+                nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFar // record the last iteration that the note was played on to avoid duplicate scheduling within the same iteration
             }
-            nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFar // record the last iteration that the note was played on to avoid duplicate scheduling within the same iteration
             nextNoteToSchedule = nextNoteToSchedule.next
         }
 
@@ -348,14 +369,15 @@ window.onload = () => {
         // of the loop to the end of leftover look-ahead window time.
         let endTimeToScheduleUpToFromBeginningOfLoop = endTimeOfNotesToSchedule - loopLengthInMillis // calulate leftover time to schedule for from beginning of loop, e.g. from 0 to 7 millis from above example
         let actualStartTimeOfNextLoop = actualStartTimeOfCurrentLoop + loopLengthInMillis
+        let numberOfLoopsSoFarPlusOne = numberOfLoopsSoFar + 1
         if (endTimeToScheduleUpToFromBeginningOfLoop >= 0) {
             nextNoteToSchedule = sequencer.rows[sequencerRowIndex].notesList.head
             while (nextNoteToSchedule !== null && nextNoteToSchedule.priority <= endTimeToScheduleUpToFromBeginningOfLoop) {
                 // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for
-                if (numberOfLoopsSoFar + 1 > nextNoteToSchedule.data.lastScheduledOnIteration) {
+                if (numberOfLoopsSoFarPlusOne > nextNoteToSchedule.data.lastScheduledOnIteration) {
                     scheduleDrumSample(actualStartTimeOfNextLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
+                    nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFarPlusOne
                 }
-                nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFar + 1
                 nextNoteToSchedule = nextNoteToSchedule.next
             }
         }
