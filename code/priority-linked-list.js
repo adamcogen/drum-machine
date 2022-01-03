@@ -1,6 +1,8 @@
 /**
- * Start of linked list implementation
- * todo: document how this data structure works.
+ * This file contains the implementation and tests for the data structure that stores
+ * all the notes of the drum sequencer.
+ * 
+ * how it works:
  * 
  * basically, this is a specialized data structure that will be used as the backend
  * for the drum sequencer. it is going to be a linked list, where you can insert or 
