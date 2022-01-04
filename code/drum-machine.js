@@ -84,17 +84,23 @@ window.onload = () => {
      */
     let subdivisionLineHeight = 20
     let subdivisionLineColor = sequencerAndToolsLineColor // 'black'
+    /**
+     * gui settings: mouse movement, note placing
+     */
+    let placementPadding = 20 // give this many pixels of padding on either side of things when we're placing, so we don't have to place them _precisely_ on the line, the trash bin, etc.
 
     // initialize sequencer data structure
     let sequencer = new Sequencer(4, loopLengthInMillis)
     sequencer.rows[0].setNumberOfSubdivisions(8)
+    sequencer.rows[0].setQuantization(true)
     sequencer.rows[1].setNumberOfSubdivisions(4)
+    sequencer.rows[1].setQuantization(true)
     sequencer.rows[2].setNumberOfSubdivisions(2)
     sequencer.rows[3].setNumberOfSubdivisions(0)
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
     let sequencerRowLines = initializeSequencerRowLines() // list of sequencer row lines
-    let subdivionLineLists = initializeSubdivionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivion lines per row)
+    let subdivisionLineLists = initializeSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
     let drumTriggerLines = initializeDrumTriggerLines() // list of lines that move to represent the current time within the loop
     let noteBankContainer = initializeNoteBankContainer() // a rectangle that goes around the note bank
     let noteTrashBinContainer = initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
@@ -146,12 +152,60 @@ window.onload = () => {
             adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
+            // start with default note movement behavior, for when the note doesn't fall within range of the trash bin, a sequencer line, etc.
             circleBeingMoved.translation.x = mouseX
             circleBeingMoved.translation.y = mouseY
+            /**
+             * adding stuff here for new 'snap to grid on move' behavior.
+             * this will be the first part of making it so that notes being moved 'snap' into place when they are close to the trash bin or a sequencer line.
+             * this will also be used for 'snapping' notes to subdivision lines (i.e. quantizing them) during placement onto quantized sequencer rows.
+             * todo: add 'update sequence on move' behavior, so that the sequence will be constantly updated as notes are removed / moved around 
+             * (i.e. the sequence will update in real time even before the note being moved is released).
+             */
+            // check if the note is within range to be placed in the trash bin. if so, move the circle to the center of the trash bin.
+            centerOfTrashBinX = noteTrashBinHorizontalOffset + (noteTrashBinWidth / 2)
+            centerOfTrashBinY = noteTrashBinVerticalOffset + (noteTrashBinHeight / 2)
+            let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= noteTrashBinHorizontalOffset - placementPadding) && (mouseX <= noteTrashBinHorizontalOffset + noteTrashBinWidth + placementPadding)
+            let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= noteTrashBinVerticalOffset - placementPadding) && (mouseY <= noteTrashBinVerticalOffset + noteTrashBinHeight + placementPadding)
+            if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
+                circleBeingMoved.translation.x = centerOfTrashBinX
+                circleBeingMoved.translation.y = centerOfTrashBinY
+            }
+            // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
+            let withinHorizonalBoundaryOfSequencer = (mouseX >= sequencerHorizontalOffset - placementPadding) && (mouseX <= (sequencerHorizontalOffset + sequencerWidth) + placementPadding)
+            let withinVerticalBoundaryOfSequencer = (mouseY >= sequencerVerticalOffset - placementPadding) && (mouseY <= sequencerVerticalOffset + ((sequencer.numberOfRows - 1) * spaceBetweenSequencerRows) + placementPadding)
+            if (withinHorizonalBoundaryOfSequencer && withinVerticalBoundaryOfSequencer) {
+                // if we get here, we know the circle is within the vertical and horizontal boundaries of the sequencer.
+                // next we want to do a more fine-grained calculation, for whether it is in range to be placed onto one of the sequencer lines.
+                for(let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
+                    rowActualVerticalLocation = sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows)
+                    rowActualLeftBound = sequencerHorizontalOffset
+                    rowActualRightBound = sequencerHorizontalOffset + sequencerWidth
+                    rowTopLimit = rowActualVerticalLocation - placementPadding
+                    rowBottomLimit = rowActualVerticalLocation + placementPadding
+                    rowLeftLimit = rowActualLeftBound - placementPadding
+                    rowRightLimit = rowActualRightBound + placementPadding
+                    if (mouseX >= rowLeftLimit && mouseX <= rowRightLimit && mouseY >= rowTopLimit && mouseY <= rowBottomLimit) {
+                        // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
+                        if (sequencer.rows[rowIndex].quantized === true) {
+                            // determine which subdivision we are closest to
+                            circleBeingMoved.translation.x = getXPositionOfClosestSubdivisionLine(mouseX, sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                        } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
+                            circleBeingMoved.translation.x = confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
+                        }
+                        // quantization only affects x position. y position will always just be on line, so always put it there.
+                        circleBeingMoved.translation.y = confineNumberToBounds(mouseY, rowActualVerticalLocation, rowActualVerticalLocation)
+                        break; // we found the row that the note will be placed on, so stop iterating thru rows early
+                    }
+                }
+            }
         }
     });
 
     // lifting your mouse anywhere means you're no longer click-dragging
+    /**
+     * todo: clean this up to get rid of redundancy after implementing 'snap-to' behavior in window 'mousemove'
+     */
     window.addEventListener('mouseup', (event) => {
         if (circleBeingMoved !== null) {
             /**
@@ -180,7 +234,6 @@ window.onload = () => {
             adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
-            placementPadding = 10 // give this many pixels of padding on either side so we don't have to place the circle _precisely_ on its new line
             // check if the note is being placed in the trash bin. if so, delete the circle and its associated node if there is one
             let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= noteTrashBinHorizontalOffset - placementPadding) && (mouseX <= noteTrashBinHorizontalOffset + noteTrashBinWidth + placementPadding)
             let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= noteTrashBinVerticalOffset - placementPadding) && (mouseY <= noteTrashBinVerticalOffset + noteTrashBinHeight + placementPadding)
@@ -211,8 +264,10 @@ window.onload = () => {
                     rowRightLimit = rowActualRightBound + placementPadding
                     if (mouseX >= rowLeftLimit && mouseX <= rowRightLimit && mouseY >= rowTopLimit && mouseY <= rowBottomLimit) {
                         // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
-                        circleNewXPosition = confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
-                        circleNewYPosition = confineNumberToBounds(mouseY, rowActualVerticalLocation, rowActualVerticalLocation)
+                        //circleNewXPosition = confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
+                        //circleNewYPosition = confineNumberToBounds(mouseY, rowActualVerticalLocation, rowActualVerticalLocation)
+                        circleNewXPosition = circleBeingMoved.translation.x
+                        circleNewYPosition = circleBeingMoved.translation.y
                         circleBeingMovedNewRow = rowIndex
                         break; // we found the row that the note will be placed on, so stop iterating thru rows early
                     }
@@ -431,6 +486,25 @@ window.onload = () => {
         request.send();
     }
 
+    // for a given mouse x coordinate and number of subdivisions, return the x coordinate
+    // of the subdivision line that is closest to the mouse position. in other words,
+    // quantize the mouse x position to the nearest subdivision line.
+    // this will be used for 'snapping' notes to subdivision lines when moving them on 
+    // quantized sequencer rows.
+    function getXPositionOfClosestSubdivisionLine(mouseX, numberOfSubdivisions) {
+        let sequencerLeftEdge = sequencerHorizontalOffset
+        let sequencerRightEdge = sequencerHorizontalOffset + sequencerWidth
+        let widthOfEachSubdivision = sequencerWidth / numberOfSubdivisions
+        let mouseXWithinSequencer = mouseX - sequencerLeftEdge
+        let subdivisionNumberToLeftOfMouse = Math.floor(mouseXWithinSequencer / widthOfEachSubdivision)
+        let mouseIsCloserToRightSubdivisionThanLeft = (mouseXWithinSequencer % widthOfEachSubdivision) > (widthOfEachSubdivision / 2)
+        let subdivisionToSnapTo = subdivisionNumberToLeftOfMouse
+        if (mouseIsCloserToRightSubdivisionThanLeft) {
+            subdivisionToSnapTo += 1
+        }
+        return sequencerLeftEdge + (widthOfEachSubdivision * confineNumberToBounds(subdivisionToSnapTo, 0, numberOfSubdivisions - 1))
+    }
+
     // The SVG renderer's top left corner isn't necessarily located at (0,0), 
     // so our mouse / touch events may be misaligned until we correct them.
     // event.pageX and event.pageY are read-only, so this method creates and 
@@ -595,29 +669,29 @@ window.onload = () => {
         return sequencerRowLines
     }
 
-    // add 'subdivion lines' to each sequencer row. these lines divide each row into the given number of evenly-sized sections.
+    // add 'subdivision lines' to each sequencer row. these lines divide each row into the given number of evenly-sized sections.
     // in other words, if a row's 'subdivision count' is 5, that row will be divided into 5 even chunks (it will have 5 subdivision
     // lines). subdivision lines pretty much represent 'beats', so a line that is subdivided into 5 sections shows 5 beats.
-    function initializeSubdivionLines() {
+    function initializeSubdivisionLines() {
         let allSubdivisionLineLists = []
         let subdivisionLinesForRow = []
         for (let rowsDrawn = 0; rowsDrawn < sequencer.numberOfRows; rowsDrawn++) {
-            if (sequencer.rows[rowsDrawn].getNumberOfSubdivions() <= 0) {
-                continue; // don't draw subdivions for this row if it has 0 or fewer subdivisions
+            if (sequencer.rows[rowsDrawn].getNumberOfSubdivisions() <= 0) {
+                continue; // don't draw subdivisions for this row if it has 0 or fewer subdivisions
             }
-            let xIncrementBetweenSubdivisions = sequencerWidth / sequencer.rows[rowsDrawn].getNumberOfSubdivions()
-            for (let subdivionsDrawnForRow = 0; subdivionsDrawnForRow < sequencer.rows[rowsDrawn].getNumberOfSubdivions(); subdivionsDrawnForRow++) {
-                let subdivionLine = two.makePath(
+            let xIncrementBetweenSubdivisions = sequencerWidth / sequencer.rows[rowsDrawn].getNumberOfSubdivisions()
+            for (let subdivisionsDrawnForRow = 0; subdivisionsDrawnForRow < sequencer.rows[rowsDrawn].getNumberOfSubdivisions(); subdivisionsDrawnForRow++) {
+                let subdivisionLine = two.makePath(
                     [
-                        new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenSubdivisions * subdivionsDrawnForRow), sequencerVerticalOffset - 1 + (rowsDrawn * spaceBetweenSequencerRows)),
-                        new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenSubdivisions * subdivionsDrawnForRow), sequencerVerticalOffset + (rowsDrawn * spaceBetweenSequencerRows) + subdivisionLineHeight),
+                        new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), sequencerVerticalOffset - 1 + (rowsDrawn * spaceBetweenSequencerRows)),
+                        new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), sequencerVerticalOffset + (rowsDrawn * spaceBetweenSequencerRows) + subdivisionLineHeight),
                     ], 
                     false
                 );
-                subdivionLine.linewidth = sequencerAndToolsLineWidth;
-                subdivionLine.stroke = subdivisionLineColor
+                subdivisionLine.linewidth = sequencerAndToolsLineWidth;
+                subdivisionLine.stroke = subdivisionLineColor
 
-                subdivisionLinesForRow.push(subdivionLine) // keep a list of all subdivision lines for the current row
+                subdivisionLinesForRow.push(subdivisionLine) // keep a list of all subdivision lines for the current row
             }
 
             allSubdivisionLineLists.push(subdivisionLinesForRow) // keep a list of all rows' subdivision line lists

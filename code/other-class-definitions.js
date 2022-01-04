@@ -95,17 +95,27 @@ class SequencerRow {
     constructor(loopLengthInMillis) {
         this.loopLengthInMillis = loopLengthInMillis
         this.notesList = new PriorityLinkedList()
-        this.subdivision = 0
+        this.subdivisions = 0
+        this.quantized = false
     }
 
-    getNumberOfSubdivions() {
-        return this.subdivision
+    getNumberOfSubdivisions() {
+        return this.subdivisions
     }
 
     // must be an integer 
     // (non-integer values would have cycles that are longer than one loop length, 
     // support for that isn't planned in this drum machine)
+    // todo: much work to be done to allow for changing the number of subdivisions in a quantized row with notes already on it
     setNumberOfSubdivisions(value) {
-        this.subdivision = value
+        this.subdivisions = value
+    }
+
+    // set whether this row should be quantized or not.
+    // 'quantize' is a boolean. true and the row will be quantized,
+    // otherwise it will not be.
+    // todo: much work to be done here to allow for setting the quantization of a row with notes already on it.
+    setQuantization(quantize) {
+        this.quantized = quantize
     }
 }
