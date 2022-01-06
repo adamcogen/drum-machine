@@ -13,17 +13,19 @@ window.onload = () => {
     const HI_HAT_CLOSED = 'hi-hat-closed';
     const HI_HAT_OPEN = 'hi-hat-open';
     const SNARE = 'snare';
+    const WOODBLOCK = 'woodblock';
     const WAV_EXTENSION = '.wav';
 
     // load all sound files
     let samples = {}
-    samples[HI_HAT_CLOSED] = new SequencerNoteType(loadSample(HI_HAT_CLOSED, SOUND_FILES_PATH + HI_HAT_CLOSED + WAV_EXTENSION), '#bd3b07') // or try #b58f04 , this was yellow before
+    samples[WOODBLOCK] = new SequencerNoteType(loadSample(WOODBLOCK, SOUND_FILES_PATH + WOODBLOCK + WAV_EXTENSION), '#bd3b07')
+    samples[HI_HAT_CLOSED] = new SequencerNoteType(loadSample(HI_HAT_CLOSED, SOUND_FILES_PATH + HI_HAT_CLOSED + WAV_EXTENSION), '#cf6311') // or try #b58f04 , this was yellow before
     samples[HI_HAT_OPEN] = new SequencerNoteType(loadSample(HI_HAT_OPEN, SOUND_FILES_PATH + HI_HAT_OPEN + WAV_EXTENSION), '#b8961c') // or try #bf3d5e , this was red before
     samples[SNARE] = new SequencerNoteType(loadSample(SNARE, SOUND_FILES_PATH + SNARE + WAV_EXTENSION), '#0e6e21')
     samples[BASS_DRUM] = new SequencerNoteType(loadSample(BASS_DRUM, SOUND_FILES_PATH + BASS_DRUM + WAV_EXTENSION), '#1b617a')
 
     // initialize the list of sample names we will use. the order of this list determines the order of sounds on the sound bank
-    let sampleNameList = [HI_HAT_CLOSED, HI_HAT_OPEN, SNARE, BASS_DRUM]
+    let sampleNameList = [WOODBLOCK, HI_HAT_CLOSED, HI_HAT_OPEN, SNARE, BASS_DRUM]
 
     // initialize ID generator for node / note labels, and node generator for notes taken from the sample bank.
     let idGenerator = new IdGenerator() // we will use this same ID generator everywhere we need IDs, to make sure we track which IDs have already been generated
@@ -64,12 +66,12 @@ window.onload = () => {
     let noteBankVerticalOffset = 135
     let noteBankHorizontalOffset = 40
     let spaceBetweenNoteBankNotes = 40
-    let numberOfNotesInNoteBank = 4
+    let numberOfNotesInNoteBank = sampleNameList.length
     let noteBankPadding = 20
     /**
      * gui settings: note trash bin
      */
-    let noteTrashBinVerticalOffset = 340
+    let noteTrashBinVerticalOffset = 380
     let noteTrashBinHorizontalOffset = 40
     let noteTrashBinWidth = 48
     let noteTrashBinHeight = 48
@@ -90,13 +92,17 @@ window.onload = () => {
     let placementPadding = 20 // give this many pixels of padding on either side of things when we're placing, so we don't have to place them _precisely_ on the line, the trash bin, etc.
 
     // initialize sequencer data structure
-    let sequencer = new Sequencer(4, loopLengthInMillis)
+    let sequencer = new Sequencer(6, loopLengthInMillis)
     sequencer.rows[0].setNumberOfSubdivisions(8)
     sequencer.rows[0].setQuantization(true)
     sequencer.rows[1].setNumberOfSubdivisions(4)
     sequencer.rows[1].setQuantization(true)
     sequencer.rows[2].setNumberOfSubdivisions(2)
     sequencer.rows[3].setNumberOfSubdivisions(0)
+    sequencer.rows[4].setNumberOfSubdivisions(5)
+    sequencer.rows[4].setQuantization(true)
+    sequencer.rows[5].setNumberOfSubdivisions(7)
+    sequencer.rows[5].setQuantization(true)
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
     let sequencerRowLines = initializeSequencerRowLines() // list of sequencer row lines
@@ -114,6 +120,11 @@ window.onload = () => {
     let circleBeingMovedStartingPositionY = null
     let circleBeingMovedOldRow = null
     let circleBeingMovedNewRow = null
+    
+    // create constants that will be used to denote special sequencer 'row' numbers, to indicate special places notes can go such as the note bank or the trash bin
+    const HAS_NO_ROW_NUMBER = -1 // code for 'not in any row'
+    const NOTE_BANK_ROW_NUMBER = -2
+    const NOTE_TRASH_BIN_ROW_NUMBER = -3
 
     // set up a initial example drum sequence
     initializeDefaultSequencerPattern()
@@ -155,6 +166,7 @@ window.onload = () => {
             // start with default note movement behavior, for when the note doesn't fall within range of the trash bin, a sequencer line, etc.
             circleBeingMoved.translation.x = mouseX
             circleBeingMoved.translation.y = mouseY
+            circleBeingMovedNewRow = HAS_NO_ROW_NUMBER // start with "it's not colliding with anything", and update the value from there if we find a collision
             /**
              * adding stuff here for new 'snap to grid on move' behavior.
              * this will be the first part of making it so that notes being moved 'snap' into place when they are close to the trash bin or a sequencer line.
@@ -170,6 +182,7 @@ window.onload = () => {
             if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
                 circleBeingMoved.translation.x = centerOfTrashBinX
                 circleBeingMoved.translation.y = centerOfTrashBinY
+                circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
             }
             // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
             let withinHorizonalBoundaryOfSequencer = (mouseX >= sequencerHorizontalOffset - placementPadding) && (mouseX <= (sequencerHorizontalOffset + sequencerWidth) + placementPadding)
@@ -195,6 +208,7 @@ window.onload = () => {
                         }
                         // quantization only affects x position. y position will always just be on line, so always put it there.
                         circleBeingMoved.translation.y = confineNumberToBounds(mouseY, rowActualVerticalLocation, rowActualVerticalLocation)
+                        circleBeingMovedNewRow = rowIndex // set 'new row' to whichever row we collided with / 'snapped' to
                         break; // we found the row that the note will be placed on, so stop iterating thru rows early
                     }
                 }
@@ -210,66 +224,53 @@ window.onload = () => {
         if (circleBeingMoved !== null) {
             /**
              * this is the workflow for determining where to put a circle that we were click-dragging once we release the mouse.
-             * how this workflow works:
-             * - note down initial information about circle starting state and current state.
-             * - check for collision with the trash bin. if colliding, new row is < 0.
-             * - check for collision with a sequencer row. if colliding, new row is > 0.
-             * - how to handle states:
-             *   - if the note isn't colliding with a row or the trash bin, put it back where it came from, no change.
-             *   - if old row is >= 0, remove the note from its old row
-             *   - of old row is < 0, do NOT remove the note from its old row
-             *   - if new row is >= 0, place the note into its new row
-             *   - if new row < 0, do NOT place the note into a new row
-             *   - this means: 
-             *     - old row >= 0, new row < 0: is a delete operation. delete a note from its old row, without adding it back anywhere.
-             *     - old row >= 0, new row >= 0: is a move-note operation. move note from one row to another or to a new place in the same row.
-             *     - old row < 0, new row < 0: means a note was removed from the note bank but didn't end up on a row. there will be no change.
-             *     - old row < 0, new row >= 0: takes a note from the note bank and adds it to a new row, without removing it from an old row.
+             * how this workflow works (todo: double check that this is all correct):
+             * - in the circle.mousedown event, we: 
+             *   - note down initial information about circle starting state before being moved
+             * - in the window.mousemove event, we:
+             *   - check for circle collision with the trash bin. if colliding, cricle's new row is -3.
+             *   - check for collision with a sequencer row. if colliding, new row is >= 0.
+             *   - if colliding with nothing, new row is -1.
+             * - in this window.mouseup event, how we handle states:
+             *   - if the note isn't colliding with a sequencer row or the trash bin, put it back wherever it came from, with no change.
+             *   - if the note is on a row, remove it from wherever it came from, and add it wherever it was placed (even if new and old row are the same)
+             *   - if the note is in the trash bin, throw it away, unless it came from the note bank, in which case we just but it back onto the note bank.
+             *   - to do all of this, we will manually change the values of some of these variables around, then make changes using the following set of rules:
+             *     - how to handle different 'old row' values:
+             *       - if old row is >= 0, remove the note from its old row
+             *       - if old row is < 0, do NOT remove the note from its old row. 
+             *     - how to handle different 'new row' values:
+             *       - if new row is >= 0, place the note into its new row
+             *       - if new row < 0, do NOT place the note into a new row
+             *     - this means: 
+             *       - old row >= 0, new row < 0: is a delete operation. delete a note from its old row, without adding it back anywhere.
+             *       - old row >= 0, new row >= 0: is a move-note operation. move note from one row to another or to a new place in the same row.
+             *       - old row < 0, new row < 0: means a note was removed from the note bank but didn't end up on a row. there will be no change.
+             *       - old row < 0, new row >= 0: takes a note from the note bank and adds it to a new row, without removing it from an old row.
              */
             // note down starting state, current state
-            circleBeingMovedOldRow = circleBeingMoved.guiData.row
-            circleBeingMovedNewRow = circleBeingMovedOldRow // we will determine whether we need a new value for this later
             circleNewXPosition = circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle
             circleNewYPosition = circleBeingMovedStartingPositionY
             adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
-            // check if the note is being placed in the trash bin. if so, delete the circle and its associated node if there is one
-            let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= noteTrashBinHorizontalOffset - placementPadding) && (mouseX <= noteTrashBinHorizontalOffset + noteTrashBinWidth + placementPadding)
-            let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= noteTrashBinVerticalOffset - placementPadding) && (mouseY <= noteTrashBinVerticalOffset + noteTrashBinHeight + placementPadding)
-            if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
-                if (circleBeingMoved.guiData.row >= 0) { // only bother throwing away things that came from a row. throwing away note bank notes is pointless
+            // check for collisions with things (sequencer rows, the trash bin, etc.)and make adjustments accordingly, so that everything will be handled as explained in the block comment above
+            if (circleBeingMovedNewRow >= 0) { // this means the note is being put onto a new sequencer row
+                circleNewXPosition = circleBeingMoved.translation.x // the note should have already been 'snapped' to its new row in the 'mousemove' event, so just commit to that new location
+                circleNewYPosition = circleBeingMoved.translation.y
+            } else if (circleBeingMovedNewRow === HAS_NO_ROW_NUMBER) { // if the note isn't being put onto any row, just put it back wherever it came from
+                circleNewXPosition = circleBeingMovedStartingPositionX
+                circleNewYPosition = circleBeingMovedStartingPositionY
+                circleBeingMovedNewRow = circleBeingMovedOldRow // replace the 'has no row' constant value with the old row number that this was taken from (i.e. just put it back where it came from!)
+            } else if (circleBeingMovedNewRow === NOTE_TRASH_BIN_ROW_NUMBER) { // check if the note is being placed in the trash bin. if so, delete the circle and its associated node if there is one
+                if (circleBeingMovedOldRow === NOTE_BANK_ROW_NUMBER) { // if the note being thrown away came from the note bank, just put it back in the note bank.
+                    circleBeingMovedNewRow = NOTE_BANK_ROW_NUMBER
+                } else { // only bother throwing away things that came from a row (throwing away note bank notes is pointless)
                     circleBeingMoved.remove() // remove the circle from the Two.js display
                     removeCircleFromAllDrawnCirclesList(circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles
                     // if the deleted note is the 'next note to schedule', we should increment that 'next note to schedule' to its .next (i.e. we should skip the deleted note)
                     if (nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row] !== null && nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row].label ===  circleBeingMoved.guiData.label) {
                         nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row] = nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row].next
-                    }
-                    circleBeingMovedNewRow = -3 // set a placeholder row number reserved for notes in the trash
-                }
-            }
-            // check if the note is being placed onto a sequencer row. if so, determine which row, and add it to the row line and data structure, etc.
-            let withinHorizonalBoundaryOfSequencer = (mouseX >= sequencerHorizontalOffset - placementPadding) && (mouseX <= (sequencerHorizontalOffset + sequencerWidth) + placementPadding)
-            let withinVerticalBoundaryOfSequencer = (mouseY >= sequencerVerticalOffset - placementPadding) && (mouseY <= sequencerVerticalOffset + ((sequencer.numberOfRows - 1) * spaceBetweenSequencerRows) + placementPadding)
-            if (withinHorizonalBoundaryOfSequencer && withinVerticalBoundaryOfSequencer) {
-                // if we get here, we know the circle is being placed within the vertical and horizontal boundaries of the sequencer.
-                // next we want to do a more fine-grained calculation, for whether it is close to one of the sequencer lines.
-                for(let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
-                    rowActualVerticalLocation = sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows)
-                    rowActualLeftBound = sequencerHorizontalOffset
-                    rowActualRightBound = sequencerHorizontalOffset + sequencerWidth
-                    rowTopLimit = rowActualVerticalLocation - placementPadding
-                    rowBottomLimit = rowActualVerticalLocation + placementPadding
-                    rowLeftLimit = rowActualLeftBound - placementPadding
-                    rowRightLimit = rowActualRightBound + placementPadding
-                    if (mouseX >= rowLeftLimit && mouseX <= rowRightLimit && mouseY >= rowTopLimit && mouseY <= rowBottomLimit) {
-                        // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
-                        //circleNewXPosition = confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
-                        //circleNewYPosition = confineNumberToBounds(mouseY, rowActualVerticalLocation, rowActualVerticalLocation)
-                        circleNewXPosition = circleBeingMoved.translation.x
-                        circleNewYPosition = circleBeingMoved.translation.y
-                        circleBeingMovedNewRow = rowIndex
-                        break; // we found the row that the note will be placed on, so stop iterating thru rows early
                     }
                 }
             }
@@ -588,7 +589,7 @@ window.onload = () => {
         }
         let xPosition = noteBankHorizontalOffset + noteBankPadding + (unplayedCircleRadius / 2)
         let yPosition = noteBankVerticalOffset + noteBankPadding + (indexOfSampleInNoteBank * unplayedCircleRadius) + (indexOfSampleInNoteBank * spaceBetweenNoteBankNotes)
-        let row = -2 // for cirlces on the note bank, the circle is not in a real row yet, so use -2 as a placeholder row number
+        let row = NOTE_BANK_ROW_NUMBER // for cirlces on the note bank, the circle is not in a real row yet, so use -2 as a placeholder row number
         /**
          * the top note in the note bank will have label '-1', next one down will be '-2', etc.
          * these negative number labels will still be unique to a particular circle in the note bank,
@@ -624,6 +625,8 @@ window.onload = () => {
             circleBeingMoved = circle
             circleBeingMovedStartingPositionX = circleBeingMoved.translation.x
             circleBeingMovedStartingPositionY = circleBeingMoved.translation.y
+            circleBeingMovedOldRow = circleBeingMoved.guiData.row
+            circleBeingMovedNewRow = circleBeingMovedOldRow
             setNoteTrashBinVisibility(true)
             playDrumSampleNow(circleBeingMoved.guiData.sampleName)
         });
