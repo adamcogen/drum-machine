@@ -48,7 +48,7 @@ window.onload = () => {
      * drum machine configurations
      */
      let loopLengthInMillis = 1500; // length of the whole drum sequence (loop), in millliseconds
-     const LOOK_AHEAD_MILLIS = 20; // number of milliseconds to look ahead when scheduling notes to play. note bigger value means that there is a longer delay for sounds to stop after the 'pause' button is hit.
+     const LOOK_AHEAD_MILLIS = 50; // number of milliseconds to look ahead when scheduling notes to play. note bigger value means that there is a longer delay for sounds to stop after the 'pause' button is hit.
     /**
      * gui settings: sequencer
      */
@@ -75,6 +75,13 @@ window.onload = () => {
     let noteTrashBinHorizontalOffset = 40
     let noteTrashBinWidth = 48
     let noteTrashBinHeight = 48
+    /**
+     * gui settings: pause button
+     */
+    let pauseButtonVerticalOffset = 74
+    let pauseButtonHorizontalOffset = 40
+    let pauseButtonWidth = 48
+    let pauseButtonHeight = 48
     /**
      * gui settings: colors
      */
@@ -110,9 +117,12 @@ window.onload = () => {
     let drumTriggerLines = initializeDrumTriggerLines() // list of lines that move to represent the current time within the loop
     let noteBankContainer = initializeNoteBankContainer() // a rectangle that goes around the note bank
     let noteTrashBinContainer = initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
+    let pauseButton = initializePauseButton() // a rectangle that will act as the pause button for now
     setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
 
     two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
+
+    addPauseButtonAdctionListeners()
 
     // create variables which will be used to track info about the note that is being clicked and dragged
     let circleBeingMoved = null
@@ -217,10 +227,8 @@ window.onload = () => {
     });
 
     // lifting your mouse anywhere means you're no longer click-dragging
-    /**
-     * todo: clean this up to get rid of redundancy after implementing 'snap-to' behavior in window 'mousemove'
-     */
     window.addEventListener('mouseup', (event) => {
+        pauseButton.fill = 'transparent' // if mouse is up, we can't be clicking the pause button, so make it look 'unclicked'
         if (circleBeingMoved !== null) {
             /**
              * this is the workflow for determining where to put a circle that we were click-dragging once we release the mouse.
@@ -334,14 +342,47 @@ window.onload = () => {
     requestAnimationFrameShim(draw)
 
     /**
+     * initialize some variables that will be used for timekeeping, managing of pauses, etc.
+     */
+    /**
+     * how should time tracking / pausing be managed?
+     * how time tracking worked previously, before adding the ability to pause:
+     *   - we tracked 'current time' in millis
+     *   - we calculated 'start time of current loop': Math.floor('current time' / 'loop length')
+     *   - we know the time at which each note should play within the loop, so if a note
+     *     needed to play, we scheduled it for its real time:
+     *     'start time of current loop' + 'time this note should play within loop'
+     * how should time work, if we want to be able to pause?
+     * the tricky thing is that we want to unpause from wherever we paused (i.e. could need to resume half way through a loop), and still have the scheduler work correctly.
+     *   - we track 'current time' in millis
+     *   - we track 'most recent unpause time'
+     *   - we track 'most recent pause-time within loop' (as in, whether most recent pause happened half way thru a loop, towards the end of it, etc., but in millis)
+     *   - we calculate 'current time within current loop', account for all the pause-related stuff we tracking (see the code below for how)
+     *   - we calculate 'theoretical start time of current loop, calculating for pauses': basically just 'actual current time' - 'current time within current loop'
+     *   - once we have 'theoretical start time of current loop' and 'current time within current loop', we have enough info to schedule notes exactly the way we did
+     *   - before, and pausing / unpausing will be account for. we can also do little things like tell the scheduler to run only if the sequencer is unpaused, etc.
+     */
+    let currentTime = 0 // current time since audio context was started, in millis
+    let mostRecentUnpauseTime = 0 // raw time in millis for when we most recently unpaused the sequencer
+    let mostRecentPauseTimeWithinLoop = 0 // when we last paused, how far into the loop were we? as in, if we paused half way thru a loop, this will be millis representing half way thru the loop
+    let currentTimeWithinCurrentLoop = 0 // how many millis into the current loop are we?
+    let theoreticalStartTimeOfCurrentLoop = 0 // calculate what time the current loop started at (or would have started at in theory, if we account for pauses)
+    let paused = false // store whether sequencer is paused or not
+
+    /**
      * end of main logic, start of function definitions.
      */
 
     // this method is the 'update' loop that will keep updating the page. after first invocation, this method basically calls itself recursively forever.
     function draw() {
-        let currentTime = audioContext.currentTime * 1000;
+        currentTime = audioContext.currentTime * 1000;
 
-        let currentTimeWithinCurrentLoop = currentTime % loopLengthInMillis
+        if (paused) {
+            currentTimeWithinCurrentLoop = mostRecentPauseTimeWithinLoop // updated for the sake of the on-screen drum trigger lines
+        } else {
+            currentTimeWithinCurrentLoop = (currentTime - mostRecentUnpauseTime + mostRecentPauseTimeWithinLoop) % loopLengthInMillis
+            theoreticalStartTimeOfCurrentLoop = (currentTime - currentTimeWithinCurrentLoop) // no need to update if we are currently paused
+        }
 
         drumTriggersXPosition = sequencerHorizontalOffset + (sequencerWidth * (currentTimeWithinCurrentLoop / loopLengthInMillis))
 
@@ -364,15 +405,17 @@ window.onload = () => {
         }
 
         // iterate through each sequencer, scheduling upcoming notes for all of them
-        for (let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
-            if (nextNoteToScheduleForEachRow[sequencerRowIndex] === null) {
-                // if nextNoteToSchedule is null, the list was empty at some point, so keep polling for a note to be added to it.
-                // or we reached the last note, which is fine, just go back to the beginning of the sequence.
-                nextNoteToScheduleForEachRow[sequencerRowIndex] = sequencer.rows[sequencerRowIndex].notesList.head
-            }
-
-            if (nextNoteToScheduleForEachRow[sequencerRowIndex] !== null) { // will always be null if the row's note list is empty
-                nextNoteToScheduleForEachRow[sequencerRowIndex] = scheduleNotesForCurrentTime(nextNoteToScheduleForEachRow[sequencerRowIndex], sequencerRowIndex, currentTime)
+        if (!paused) {
+            for (let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
+                if (nextNoteToScheduleForEachRow[sequencerRowIndex] === null) {
+                    // if nextNoteToSchedule is null, the list was empty at some point, so keep polling for a note to be added to it.
+                    // or we reached the last note, which is fine, just go back to the beginning of the sequence.
+                    nextNoteToScheduleForEachRow[sequencerRowIndex] = sequencer.rows[sequencerRowIndex].notesList.head
+                }
+    
+                if (nextNoteToScheduleForEachRow[sequencerRowIndex] !== null) { // will always be null if the row's note list is empty
+                    nextNoteToScheduleForEachRow[sequencerRowIndex] = scheduleNotesForCurrentTime(nextNoteToScheduleForEachRow[sequencerRowIndex], sequencerRowIndex, currentTime, currentTimeWithinCurrentLoop, theoreticalStartTimeOfCurrentLoop)
+                }
             }
         }
 
@@ -380,10 +423,8 @@ window.onload = () => {
         requestAnimationFrameShim(draw); // call animation frame update with this 'draw' method again
     }
 
-    function scheduleNotesForCurrentTime(nextNoteToSchedule, sequencerRowIndex, currentTime) {
-        let currentTimeWithinCurrentLoop = currentTime % loopLengthInMillis
-        let numberOfLoopsSoFar = Math.floor(currentTime / loopLengthInMillis)
-        let actualStartTimeOfCurrentLoop = numberOfLoopsSoFar * loopLengthInMillis
+    function scheduleNotesForCurrentTime(nextNoteToSchedule, sequencerRowIndex, currentTime, currentTimeWithinCurrentLoop, actualStartTimeOfCurrentLoop) {
+        let numberOfLoopsSoFar = Math.floor(currentTime / loopLengthInMillis) // mostly used to make sure we don't schedule the same note twice. this number doesn't account for pauses, but i think that's fine. todo: make sure that's fine
 
         /**
          * At the end of the loop sequence, the look-ahead window may wrap back around to the beginning of the loop.
@@ -759,6 +800,31 @@ window.onload = () => {
         return noteTrashBinContainer
     }
 
+    function initializePauseButton() {
+        let pauseButton = two.makePath(
+            [
+                new Two.Anchor(pauseButtonHorizontalOffset, pauseButtonVerticalOffset),
+                new Two.Anchor(pauseButtonHorizontalOffset + pauseButtonWidth, pauseButtonVerticalOffset),
+                new Two.Anchor(pauseButtonHorizontalOffset + pauseButtonWidth, pauseButtonVerticalOffset + pauseButtonHeight),
+                new Two.Anchor(pauseButtonHorizontalOffset, pauseButtonVerticalOffset + pauseButtonHeight),
+            ],
+            false
+        );
+        pauseButton.linewidth = sequencerAndToolsLineWidth
+        pauseButton.stroke = sequencerAndToolsLineColor
+        pauseButton.fill = 'transparent'
+        return pauseButton
+    }
+
+    function addPauseButtonAdctionListeners() {
+        pauseButton._renderer.elem.addEventListener('mousedown', (event) => {
+            pauseButton.fill = "#bfbfbf"
+        })
+        pauseButton._renderer.elem.addEventListener('click', (event) => {
+            togglePaused()
+        })
+    }
+
     // show or hide the note trash bin (show if visible === true, hide otherwise)
     function setNoteTrashBinVisibility(visible) {
         if (visible) {
@@ -766,6 +832,16 @@ window.onload = () => {
         } else {
             noteTrashBinContainer.stroke = 'transparent'
         }
+    }
+
+    // toggle whether the sequencer is 'paused' or not. this method gets called when we click the pause button
+    function togglePaused() {
+        if (paused) { // unpause 
+            mostRecentUnpauseTime = currentTime
+        } else { // pause
+            mostRecentPauseTimeWithinLoop = currentTimeWithinCurrentLoop
+        }
+        paused = !paused
     }
 
     // given a number and an upper and lower bound, confine the number to be between the bounds.
