@@ -10,7 +10,29 @@
         <script src="code/lib/AudioContextMonkeyPatch.js"></script>
 
         <style>
-            body { background-color: #d4d4d4; } /* somewhere between c4c4c4 and e4e4e4 */
+            body { /* set the background color for the page*/
+                background-color: #d4d4d4; /* somewhere between c4c4c4 and e4e4e4 */ 
+            }
+
+            textarea { /* format all textarea objects */
+                font-size: 20px;
+                resize: none; /* switch to 'horizontal' to only allow for horizontal resizing */
+                vertical-align: middle;
+                background-color: transparent;
+                border-width: 3px;
+                /* border-color: transparent; */
+                -webkit-border-radius: 5px;
+                -moz-border-radius: 5px;
+                border-radius: 5px;
+                text-align: right;
+            }
+
+            #tempo-text-inputs { /* format the text-inputs div */
+                line-height: 2;
+                position: absolute; /* use absolute positioning so we can move the position in our javascript code if needed */
+                left: 130px;
+                top: 15px;
+            }
         </style>
 
     </head>
@@ -21,5 +43,8 @@
         <script src='code/priority-linked-list.js'></script>
         <script src='code/other-class-definitions.js'></script>
         <script src='code/drum-machine.js'></script>
+        <div id="tempo-text-inputs">
+            <textarea id="text-input-loop-length-millis" rows="1" cols="4"></textarea>
+        </div>
     </body>
 </html>

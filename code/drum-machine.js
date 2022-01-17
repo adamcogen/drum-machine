@@ -4,8 +4,19 @@
 
 window.onload = () => {
 
+    // Store DOM elements we use, so that we can access them without having to pull them from the DOM each time
+    let domElements = {
+        divs: {
+            drawShapes: document.getElementById('draw-shapes'),
+            tempoTextInputs: document.getElementById('tempo-text-inputs'),
+        },
+        textInputs: {
+            loopLengthMillis: document.getElementById('text-input-loop-length-millis'),
+        }
+    }
+
     // Initialize Two.js library
-    let two = initializeTwoJs(document.getElementById('draw-shapes'))
+    let two = initializeTwoJs(domElements.divs.drawShapes)
 
     // initialize sound file constants
     const SOUND_FILES_PATH = './sounds/';
@@ -97,6 +108,13 @@ window.onload = () => {
      * gui settings: mouse movement, note placing
      */
     let placementPadding = 20 // give this many pixels of padding on either side of things when we're placing, so we don't have to place them _precisely_ on the line, the trash bin, etc.
+    /**
+     * tempo text input settings
+     */
+    domElements.divs.tempoTextInputs.style.left = "477px"
+    domElements.divs.tempoTextInputs.style.top = "25px"
+    let maximumAllowedLoopLengthInMillis = "99999"
+
 
     // initialize sequencer data structure
     let sequencer = new Sequencer(6, loopLengthInMillis)
@@ -122,7 +140,10 @@ window.onload = () => {
 
     two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
 
-    addPauseButtonAdctionListeners()
+    initializeTextInputValuesAndStyles();
+    initializeTextInputActionListeners();
+
+    addPauseButtonActionListeners()
 
     // create variables which will be used to track info about the note that is being clicked and dragged
     let circleBeingMoved = null
@@ -228,7 +249,6 @@ window.onload = () => {
 
     // lifting your mouse anywhere means you're no longer click-dragging
     window.addEventListener('mouseup', (event) => {
-        pauseButton.fill = 'transparent' // if mouse is up, we can't be clicking the pause button, so make it look 'unclicked'
         if (circleBeingMoved !== null) {
             /**
              * this is the workflow for determining where to put a circle that we were click-dragging once we release the mouse.
@@ -360,7 +380,7 @@ window.onload = () => {
      *   - we calculate 'current time within current loop', account for all the pause-related stuff we tracking (see the code below for how)
      *   - we calculate 'theoretical start time of current loop, calculating for pauses': basically just 'actual current time' - 'current time within current loop'
      *   - once we have 'theoretical start time of current loop' and 'current time within current loop', we have enough info to schedule notes exactly the way we did
-     *   - before, and pausing / unpausing will be account for. we can also do little things like tell the scheduler to run only if the sequencer is unpaused, etc.
+     *     before, and pausing / unpausing will be account for. we can also do little things like tell the scheduler to run only if the sequencer is unpaused, etc.
      */
     let currentTime = 0 // current time since audio context was started, in millis
     let mostRecentUnpauseTime = 0 // raw time in millis for when we most recently unpaused the sequencer
@@ -816,10 +836,7 @@ window.onload = () => {
         return pauseButton
     }
 
-    function addPauseButtonAdctionListeners() {
-        pauseButton._renderer.elem.addEventListener('mousedown', (event) => {
-            pauseButton.fill = "#bfbfbf"
-        })
+    function addPauseButtonActionListeners() {
         pauseButton._renderer.elem.addEventListener('click', (event) => {
             togglePaused()
         })
@@ -837,11 +854,84 @@ window.onload = () => {
     // toggle whether the sequencer is 'paused' or not. this method gets called when we click the pause button
     function togglePaused() {
         if (paused) { // unpause 
-            mostRecentUnpauseTime = currentTime
+            unpause()
         } else { // pause
-            mostRecentPauseTimeWithinLoop = currentTimeWithinCurrentLoop
+            pause()
         }
-        paused = !paused
+    }
+
+    function pause() {
+        if (!paused) {
+            paused = true
+            mostRecentPauseTimeWithinLoop = currentTimeWithinCurrentLoop
+            pauseButton.fill = "#bfbfbf"
+        }
+    }
+
+    function unpause() {
+        if (paused) {
+            paused = false
+            mostRecentUnpauseTime = currentTime
+            pauseButton.fill = "transparent"
+        }
+    }
+
+    // restart the sequence, as in move the drum trigger back to the beginning of the sequence
+    function restartSequencer() {
+        mostRecentPauseTimeWithinLoop = 0
+        for (nextNoteToScheduleForRow of nextNoteToScheduleForEachRow) {
+            nextNoteToScheduleForRow = null // reset next note to schedule. 'head' will get picked up on the next call to draw() 
+        }
+    }
+
+    function initializeTextInputValuesAndStyles() {
+        domElements.textInputs.loopLengthMillis.value = loopLengthInMillis
+        domElements.textInputs.loopLengthMillis.style.borderColor = sequencerAndToolsLineColor
+    }
+
+    function initializeTextInputActionListeners() {
+        /**
+         * set up 'focus' and 'blur' events for the 'loop length in millis' text input.
+         * the plan is that when you update the values in the text box, they will be applied
+         * after you click away from the text box automaticaly, unless the input isn't a valid
+         * number. if something besides a valid number is entered, the value will just go back
+         * to whatever it was before, and not make any change to the sequencer.
+         */
+        domElements.textInputs.loopLengthMillis.addEventListener('blur', (event) => {
+            let newTextInputValue = domElements.textInputs.loopLengthMillis.value.trim() // remove whitespace from beginning and end of input then store it
+            if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
+                newTextInputValue = loopLengthInMillis
+            }
+            newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
+            // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
+            newTextInputValue = confineNumberToBounds(newTextInputValue, LOOK_AHEAD_MILLIS, maximumAllowedLoopLengthInMillis)
+            domElements.textInputs.loopLengthMillis.value = newTextInputValue
+            updateSequencerLoopLength(newTextInputValue)
+        })
+    }
+
+    function updateSequencerLoopLength(newLoopLengthInMillis) {
+        if (loopLengthInMillis === newLoopLengthInMillis) { // save a little effort by skipping update if it isn't needed
+            return
+        }
+        /**
+         * note down current state before changing tempo
+         */
+        let oldLoopLengthInMillis = loopLengthInMillis
+        let wasPaused = paused
+        /**
+         * update states
+         */
+        loopLengthInMillis = newLoopLengthInMillis
+        pause()
+        sequencer.setLoopLengthInMillis(loopLengthInMillis)
+        // scale the 'current time within loop' up or down, such that we have progressed the same percent through the loop 
+        // (i.e. keep progressing the sequence from the same place it was in before changing tempo, now just faster or slower)
+        mostRecentPauseTimeWithinLoop = (newLoopLengthInMillis / oldLoopLengthInMillis) * mostRecentPauseTimeWithinLoop
+        // only unpause if the sequencer wasn't paused before
+        if (!wasPaused) {
+            unpause()
+        }
     }
 
     // given a number and an upper and lower bound, confine the number to be between the bounds.

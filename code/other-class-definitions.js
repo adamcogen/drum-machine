@@ -88,6 +88,13 @@ class Sequencer {
     }
 
     // todo: add getters and setters for class fields. setters will take a bit of logic to adjust everything whenever we make changes to values.
+
+    setLoopLengthInMillis(newLoopLengthInMillis) {
+        for (let row of this.rows) {
+            row.setLoopLengthInMillis(newLoopLengthInMillis)
+        }
+        this.loopLengthInMillis = newLoopLengthInMillis
+    }
 }
 
 // a drum sequencer row. each drum sequencer can have any number of rows, which can have notes placed onto them.
@@ -117,5 +124,15 @@ class SequencerRow {
     // todo: much work to be done here to allow for setting the quantization of a row with notes already on it.
     setQuantization(quantize) {
         this.quantized = quantize
+    }
+
+    setLoopLengthInMillis(newLoopLengthInMillis) {
+        let currentNode = this.notesList.head
+        while (currentNode) {
+            currentNode.priority = (newLoopLengthInMillis / this.loopLengthInMillis) * currentNode.priority
+            currentNode.data.lastScheduledOnIteration = -1
+            currentNode = currentNode.next
+        }
+        this.loopLengthInMillis = newLoopLengthInMillis
     }
 }
