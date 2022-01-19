@@ -43,7 +43,8 @@ class SampleBankNodeGenerator {
         if (this.sampleNameList.includes(sampleName)) {
             return new PriorityLinkedListNode(this.idGenerator.getNextId(), -1, {
                 lastScheduledOnIteration: -1,
-                sampleName: sampleName
+                sampleName: sampleName,
+                beat: -1,
             })
         } else {
             throw "requested a sample name from the sample bank that doesn't exist! requested sample name: " + sampleName + ". sample list: " + sampleList + "."
@@ -89,6 +90,8 @@ class Sequencer {
 
     // todo: add getters and setters for class fields. setters will take a bit of logic to adjust everything whenever we make changes to values.
 
+    // update loop length in millis. the bulk of the logic for this is handled at the row level, so just iterate through all rows
+    // updating their loop length, then update the value of the 'loop length' variable we have stored in the main sequencer.
     setLoopLengthInMillis(newLoopLengthInMillis) {
         for (let row of this.rows) {
             row.setLoopLengthInMillis(newLoopLengthInMillis)
@@ -129,8 +132,9 @@ class SequencerRow {
     setLoopLengthInMillis(newLoopLengthInMillis) {
         let currentNode = this.notesList.head
         while (currentNode) {
-            currentNode.priority = (newLoopLengthInMillis / this.loopLengthInMillis) * currentNode.priority
-            currentNode.data.lastScheduledOnIteration = -1
+            // todo: consider using the 'beat number' variable stored in each node when scaling, if it's available
+            currentNode.priority = (newLoopLengthInMillis / this.loopLengthInMillis) * currentNode.priority // 'scale' the priority (timestamp) of each node to the new tempo, so that ordering and timing are maintained, but the loop is just faster or slower as appropriate
+            currentNode.data.lastScheduledOnIteration = -1 // the 'number of iterations so far' calculation relies on loop length, so it becomes wrong when we change that value. so let's just reset the number we have stored here to prevent it from being misinterpreted.
             currentNode = currentNode.next
         }
         this.loopLengthInMillis = newLoopLengthInMillis

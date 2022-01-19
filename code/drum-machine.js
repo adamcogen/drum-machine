@@ -151,11 +151,19 @@ window.onload = () => {
     let circleBeingMovedStartingPositionY = null
     let circleBeingMovedOldRow = null
     let circleBeingMovedNewRow = null
+    let circleBeingMovedOldBeatNumber = null
+    let circleBeingMovedNewBeatNumber = null
     
     // create constants that will be used to denote special sequencer 'row' numbers, to indicate special places notes can go such as the note bank or the trash bin
     const HAS_NO_ROW_NUMBER = -1 // code for 'not in any row'
     const NOTE_BANK_ROW_NUMBER = -2
     const NOTE_TRASH_BIN_ROW_NUMBER = -3
+
+    // create constants that denote special beat numbers
+    const NOTE_IS_NOT_QUANTIZED = -1
+
+    // create constants that denote special 'lastPlayedOnIteration' values
+    const NOTE_HAS_NEVER_BEEN_PLAYED = -1
 
     // set up a initial example drum sequence
     initializeDefaultSequencerPattern()
@@ -177,7 +185,8 @@ window.onload = () => {
             let sampleName = noteToDraw.data.sampleName
             let row = sequencerRowIndex
             let label = noteToDraw.label
-            drawNewNoteCircle(xPosition, yPosition, sampleName, label, row)
+            let beat = noteToDraw.data.beat
+            drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat)
             noteToDraw = noteToDraw.next
         }
     }
@@ -233,9 +242,11 @@ window.onload = () => {
                         // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
                         if (sequencer.rows[rowIndex].quantized === true) {
                             // determine which subdivision we are closest to
-                            circleBeingMoved.translation.x = getXPositionOfClosestSubdivisionLine(mouseX, sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                            circleBeingMovedNewBeatNumber = getIndexOfClosestSubdivisionLine(mouseX, sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                            circleBeingMoved.translation.x = getXPositionOfSubdivisionLine(circleBeingMovedNewBeatNumber, sequencer.rows[rowIndex].getNumberOfSubdivisions())
                         } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
                             circleBeingMoved.translation.x = confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
+                            circleBeingMovedNewBeatNumber = NOTE_IS_NOT_QUANTIZED
                         }
                         // quantization only affects x position. y position will always just be on line, so always put it there.
                         circleBeingMoved.translation.y = confineNumberToBounds(mouseY, rowActualVerticalLocation, rowActualVerticalLocation)
@@ -276,9 +287,10 @@ window.onload = () => {
              *       - old row < 0, new row < 0: means a note was removed from the note bank but didn't end up on a row. there will be no change.
              *       - old row < 0, new row >= 0: takes a note from the note bank and adds it to a new row, without removing it from an old row.
              */
-            // note down starting state, current state
-            circleNewXPosition = circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle
-            circleNewYPosition = circleBeingMovedStartingPositionY
+            // note down starting state, current state.
+            circleNewXPosition = circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle.
+            circleNewYPosition = circleBeingMovedStartingPositionY // if the circle is colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
+            circleNewBeatNumber = circleBeingMovedOldBeatNumber
             adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
@@ -286,10 +298,12 @@ window.onload = () => {
             if (circleBeingMovedNewRow >= 0) { // this means the note is being put onto a new sequencer row
                 circleNewXPosition = circleBeingMoved.translation.x // the note should have already been 'snapped' to its new row in the 'mousemove' event, so just commit to that new location
                 circleNewYPosition = circleBeingMoved.translation.y
+                circleNewBeatNumber = circleBeingMovedNewBeatNumber
             } else if (circleBeingMovedNewRow === HAS_NO_ROW_NUMBER) { // if the note isn't being put onto any row, just put it back wherever it came from
                 circleNewXPosition = circleBeingMovedStartingPositionX
                 circleNewYPosition = circleBeingMovedStartingPositionY
                 circleBeingMovedNewRow = circleBeingMovedOldRow // replace the 'has no row' constant value with the old row number that this was taken from (i.e. just put it back where it came from!)
+                circleNewBeatNumber = circleBeingMovedOldBeatNumber
             } else if (circleBeingMovedNewRow === NOTE_TRASH_BIN_ROW_NUMBER) { // check if the note is being placed in the trash bin. if so, delete the circle and its associated node if there is one
                 if (circleBeingMovedOldRow === NOTE_BANK_ROW_NUMBER) { // if the note being thrown away came from the note bank, just put it back in the note bank.
                     circleBeingMovedNewRow = NOTE_BANK_ROW_NUMBER
@@ -348,7 +362,9 @@ window.onload = () => {
                 if (nextNoteToScheduleForEachRow[circleBeingMovedNewRow] !== null && nextNoteToScheduleForEachRow[circleBeingMovedNewRow].previous !== null && nextNoteToScheduleForEachRow[circleBeingMovedNewRow].previous.label === circleBeingMoved.guiData.label) {
                     nextNoteToScheduleForEachRow[circleBeingMovedNewRow] = nextNoteToScheduleForEachRow[circleBeingMovedNewRow].previous
                 }
-                node.data.lastScheduledOnIteration = -1 // mark note as 'not played yet on current iteration'
+                node.data.lastScheduledOnIteration = NOTE_HAS_NEVER_BEEN_PLAYED // mark note as 'not played yet on current iteration'
+                node.data.beat = circleNewBeatNumber
+                circleBeingMoved.guiData.beat = circleNewBeatNumber
             }
         }
         circleBeingMoved = null
@@ -548,14 +564,31 @@ window.onload = () => {
         request.send();
     }
 
-    // for a given mouse x coordinate and number of subdivisions, return the x coordinate
-    // of the subdivision line that is closest to the mouse position. in other words,
-    // quantize the mouse x position to the nearest subdivision line.
-    // this will be used for 'snapping' notes to subdivision lines when moving them on 
-    // quantized sequencer rows.
-    function getXPositionOfClosestSubdivisionLine(mouseX, numberOfSubdivisions) {
+    // todo: clean up the block comments for the two 'snap to' methods below for clarity
+
+    /**
+     * for a given x coordinate and number of subdivisions, return what subdivision
+     * number (i.e. what beat number) the x coordinate falls closest to.
+     * 
+     * this is used as part of 'snap note to quantized row' logic.
+     * 
+     * for a given mouse x coordinate and number of subdivisions, we need to find the 
+     * x coordinate of the subdivision line that is closest to the mouse position. in 
+     * other words, we need to quantize the mouse x position to the nearest subdivision 
+     * line. this will be used for 'snapping' notes to subdivision lines when moving 
+     * them on quantized sequencer rows.
+     * we will break the logic for doing this into two parts.
+     * 
+     * the first part of doing this is handled in this function -- we need to find the
+     * index of the closest subdivision line, in other words we need to find the beat
+     * number that we should quantize to for the given mouse x coordinate and number
+     * of subdivisions.
+     * 
+     * the other piece we will then need to do is to get the x position for a beat
+     * number. that will be handled elsewhere.
+     */
+    function getIndexOfClosestSubdivisionLine(mouseX, numberOfSubdivisions) {
         let sequencerLeftEdge = sequencerHorizontalOffset
-        let sequencerRightEdge = sequencerHorizontalOffset + sequencerWidth
         let widthOfEachSubdivision = sequencerWidth / numberOfSubdivisions
         let mouseXWithinSequencer = mouseX - sequencerLeftEdge
         let subdivisionNumberToLeftOfMouse = Math.floor(mouseXWithinSequencer / widthOfEachSubdivision)
@@ -564,7 +597,23 @@ window.onload = () => {
         if (mouseIsCloserToRightSubdivisionThanLeft) {
             subdivisionToSnapTo += 1
         }
-        return sequencerLeftEdge + (widthOfEachSubdivision * confineNumberToBounds(subdivisionToSnapTo, 0, numberOfSubdivisions - 1))
+        return confineNumberToBounds(subdivisionToSnapTo, 0, numberOfSubdivisions - 1)
+    }
+    
+    /**
+     * for a given subdivision number and number of subdivisions, return
+     * the x coordinate of that subdivision number.
+     * 
+     * this logic is part of our 'snap note to quantized sequencer row' logic.
+     * see the block comment above for info on how this function is used.
+     * 
+     * this function is the second part of the logic explained in the block comment 
+     * above, where we find the x coordinate for a given beat number.
+     */
+    function getXPositionOfSubdivisionLine(subdivisionIndex, numberOfSubdivisions) {
+        let sequencerLeftEdge = sequencerHorizontalOffset
+        let widthOfEachSubdivision = sequencerWidth / numberOfSubdivisions
+        return sequencerLeftEdge + (widthOfEachSubdivision * subdivisionIndex)
     }
 
     // The SVG renderer's top left corner isn't necessarily located at (0,0), 
@@ -586,26 +635,30 @@ window.onload = () => {
     function initializeDefaultSequencerPattern(){
         sequencer.rows[0].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), 0, 
         {
-            lastScheduledOnIteration: -1,
+            lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
             sampleName: HI_HAT_CLOSED,
+            beat: 0,
         }
         ))
         sequencer.rows[1].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 1, 
             {
-                lastScheduledOnIteration: -1,
+                lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: HI_HAT_OPEN,
+                beat: 1,
             }
         ))
         sequencer.rows[2].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), ((loopLengthInMillis / 4) * 2), 
             {
-                lastScheduledOnIteration: -1,
+                lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: SNARE,
+                beat: NOTE_IS_NOT_QUANTIZED,
             }
         ))
         sequencer.rows[3].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 3, 
             {
-                lastScheduledOnIteration: -1,
-                sampleName: BASS_DRUM
+                lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
+                sampleName: BASS_DRUM,
+                beat: NOTE_IS_NOT_QUANTIZED,
             }
         ))
     }
@@ -657,14 +710,14 @@ window.onload = () => {
          * and these IDs will be replaced with a real, normal label (a generated ID) once each note
          * bank circle is taken fom the note bank and placed onto a real row.
          */
-        let label = (indexOfSampleInNoteBank + 1) * -1
-        drawNewNoteCircle(xPosition, yPosition, sampleName, label, row)
+        let label = (indexOfSampleInNoteBank + 1) * -1 // see block comment above for info about '-1' here
+        drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, NOTE_IS_NOT_QUANTIZED)
     }
 
     // create a new circle (i.e. note) on the screen, with the specified x and y position. color is determined by sample name. 
     // values given for sample name, label, and row number are stored in the circle object to help the GUI keep track of things.
     // add the newly created circle to the list of all drawn cricles.
-    function drawNewNoteCircle(xPosition, yPosition, sampleName, label, row) {
+    function drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat) {
         // initialize the new circle and set its colors
         let circle = two.makeCircle(xPosition, yPosition, unplayedCircleRadius)
         circle.fill = samples[sampleName].color
@@ -672,6 +725,7 @@ window.onload = () => {
 
         // add mouse events to the new circle
         two.update() // this 'update' needs to go here because it is what generates the new circle's _renderer.elem 
+        
         // add border to circle on mouseover
         circle._renderer.elem.addEventListener('mouseenter', (event) => {
             circle.stroke = 'black'
@@ -688,6 +742,8 @@ window.onload = () => {
             circleBeingMovedStartingPositionY = circleBeingMoved.translation.y
             circleBeingMovedOldRow = circleBeingMoved.guiData.row
             circleBeingMovedNewRow = circleBeingMovedOldRow
+            circleBeingMovedOldBeatNumber = circleBeingMoved.guiData.beat
+            circleBeingMovedNewBeatNumber = circleBeingMovedOldBeatNumber
             setNoteTrashBinVisibility(true)
             playDrumSampleNow(circleBeingMoved.guiData.sampleName)
         });
@@ -697,6 +753,7 @@ window.onload = () => {
         circle.guiData.sampleName = sampleName
         circle.guiData.row = row
         circle.guiData.label = label
+        circle.guiData.beat = beat
 
         // add circle to list of all drawn circles
         allDrawnCircles.push(circle)
