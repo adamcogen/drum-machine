@@ -9,6 +9,7 @@ window.onload = () => {
         divs: {
             drawShapes: document.getElementById('draw-shapes'),
             tempoTextInputs: document.getElementById('tempo-text-inputs'),
+            subdivisionTextInputs: document.getElementById('subdivision-text-inputs')
         },
         textInputs: {
             loopLengthMillis: document.getElementById('text-input-loop-length-millis'),
@@ -113,7 +114,12 @@ window.onload = () => {
      */
     domElements.divs.tempoTextInputs.style.left = "477px"
     domElements.divs.tempoTextInputs.style.top = "25px"
-    let maximumAllowedLoopLengthInMillis = "99999"
+    let maximumAllowedLoopLengthInMillis = "99999" // this number is chosen to match the width of the text input. if we make the input wider we can allow for bigger numbers. fractional numbers less than this could still go over the width of the box.
+    /**
+     * subdivision text input settings
+     */
+    let subdivisionTextInputHorizontalPadding = 10
+    let subdivisionTextInputVerticalPadding = -17
 
 
     // initialize sequencer data structure
@@ -137,6 +143,22 @@ window.onload = () => {
     let noteTrashBinContainer = initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
     let pauseButton = initializePauseButton() // a rectangle that will act as the pause button for now
     setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
+
+    // start putting together some subdivision text input proof-of-concept stuff here
+    let subdivisionTextInputs = []
+    for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+        let textArea = document.createElement("textarea");
+        textArea.cols = "3"
+        textArea.rows = "1"
+        textArea.style.position = "absolute"
+        textArea.style.top = "" + (sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows) + subdivisionTextInputVerticalPadding) + "px"
+        textArea.style.left = "" + (sequencerHorizontalOffset + sequencerWidth + subdivisionTextInputHorizontalPadding) + "px"
+        textArea.style.borderColor = sequencerAndToolsLineColor = sequencerAndToolsLineColor
+        textArea.value = sequencer.rows[rowIndex].getNumberOfSubdivisions()
+        domElements.divs.subdivisionTextInputs.appendChild(textArea);
+        subdivisionTextInputs.push(textArea)
+        textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
+    }
 
     two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
 
@@ -289,7 +311,7 @@ window.onload = () => {
              */
             // note down starting state, current state.
             circleNewXPosition = circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle.
-            circleNewYPosition = circleBeingMovedStartingPositionY // if the circle is colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
+            circleNewYPosition = circleBeingMovedStartingPositionY // if the circle is not colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
             circleNewBeatNumber = circleBeingMovedOldBeatNumber
             adjustEventCoordinates(event)
             mouseX = event.pageX

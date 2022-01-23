@@ -27,11 +27,15 @@
                 text-align: right;
             }
 
-            #tempo-text-inputs { /* format the text-inputs div */
+            #tempo-text-inputs { /* format the tempo-text-inputs div */
                 line-height: 2;
                 position: absolute; /* use absolute positioning so we can move the position in our javascript code if needed */
                 left: 130px;
                 top: 15px;
+            }
+            #subdivision-text-inputs { /* format the subdivision-text-inputs div */
+                line-height: 2;
+                position: absolute; /* use absolute positioning so we can move the position in our javascript code if needed */
             }
         </style>
 
@@ -46,5 +50,6 @@
         <div id="tempo-text-inputs">
             <textarea id="text-input-loop-length-millis" rows="1" cols="4"></textarea>
         </div>
+        <div id="subdivision-text-inputs"></div>
     </body>
 </html>
