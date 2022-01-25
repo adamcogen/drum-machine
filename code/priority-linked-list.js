@@ -119,7 +119,7 @@ class PriorityLinkedList {
     // nodes with priorities that are already in the list will be inserted at the beginning of that priority's
     // nodes, rather than at the end, but that's an arbitrary choice. i.e. if priorities are the same, the 
     // nodes with same priorities will be sorted from newest to oldest in the list.
-    getIndexOfPriority(priority) {
+    _getIndexOfPriority(priority) {
         let index = 0
         if (this.head === null) {
             return index
@@ -144,7 +144,7 @@ class PriorityLinkedList {
     // this method ignores the requirement for the linked list to remain in sorted order.
     // I intend to use this as a helper method -- I will first retrieve the index to insert at
     // based on the new node's priority, then this method will perform the actual insert.
-    insertNodeAtIndex(nodeToInsert, insertAtIndex) {
+    _insertNodeAtIndex(nodeToInsert, insertAtIndex) {
         let size = this.getSize()
         if (size === 0 && insertAtIndex !== 0) {
             throw "You're trying to insert into an empty list at an index other than 0! That can't be done. You tried to insert at index: " + insertAtIndex + "."
@@ -190,8 +190,8 @@ class PriorityLinkedList {
 
     // insert a node in the right place based on its priority, maintaining the sorted order of the linked list
     insertNode(nodeToInsert) {
-        let indexToInsertAt = this.getIndexOfPriority(nodeToInsert.priority)
-        this.insertNodeAtIndex(nodeToInsert, indexToInsertAt)
+        let indexToInsertAt = this._getIndexOfPriority(nodeToInsert.priority)
+        this._insertNodeAtIndex(nodeToInsert, indexToInsertAt)
     }
 
     // get the index of the _first_ node in the list has the given label.
@@ -199,7 +199,7 @@ class PriorityLinkedList {
     // this is intended to be used as a helper method that will be called before
     // 'removeNodeAtIndex', so that we can remove the _first_ node with a given label
     // from our list.
-    getIndexOfLabel(label) {
+    _getIndexOfLabel(label) {
         if (this.size === 0) { // empty list, return -1 without needing to search thru.
             return -1
         }
@@ -221,7 +221,7 @@ class PriorityLinkedList {
 
     // remove the node at the specified index.
     // return the node that was removed, so that we can easily re-insert it or insert it into another list if we want to.
-    removeNodeAtIndex(removeAtIndex) {
+    _removeNodeAtIndex(removeAtIndex) {
         let size = this.getSize()
         if (this.head === null) {
             throw "problem: you're trying to remove a node from an empty list. the list size: " + size + ". you tried to remove index: " + removeAtIndex + "."
@@ -274,8 +274,8 @@ class PriorityLinkedList {
     // meaning, if there are multiple nodes in the list with the same label,
     // only the first one of those will be removed by this method!
     removeNode(label) {
-        let removeAtIndex = this.getIndexOfLabel(label)
-        return this.removeNodeAtIndex(removeAtIndex)
+        let removeAtIndex = this._getIndexOfLabel(label)
+        return this._removeNodeAtIndex(removeAtIndex)
     }
 }
 
@@ -291,54 +291,54 @@ function assertEquals(expected, actual, message) {
 }
 
 // test 'insertNodeAtIndex' and 'getIndexOfPriority' methods (for now just verify results manually in console..)
-function testInsertNodeAtIndex() {
+function _testInsertNodeAtIndex() {
     let list = new PriorityLinkedList()
     assertEquals(0, list.getSize(), "assert empty list size is 0")
     let firstInsertedNode = new PriorityLinkedListNode("3", 3)
-    list.insertNodeAtIndex(firstInsertedNode, 0)
+    list._insertNodeAtIndex(firstInsertedNode, 0)
     assertEquals(1, list.getSize(), "assert list size is as expected")
     let secondInsertedNode = new PriorityLinkedListNode("5", 5)
-    list.insertNodeAtIndex(secondInsertedNode, 1)
+    list._insertNodeAtIndex(secondInsertedNode, 1)
     assertEquals(2, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfPriority(2), "check index of priority on small list")
-    assertEquals(0, list.getIndexOfPriority(3), "check index of priority on small list")
-    assertEquals(1, list.getIndexOfPriority(4), "check index of priority on small list")
+    assertEquals(0, list._getIndexOfPriority(2), "check index of priority on small list")
+    assertEquals(0, list._getIndexOfPriority(3), "check index of priority on small list")
+    assertEquals(1, list._getIndexOfPriority(4), "check index of priority on small list")
     let thirdInsertedNode = new PriorityLinkedListNode("1", 1)
-    list.insertNodeAtIndex(thirdInsertedNode, 0)
+    list._insertNodeAtIndex(thirdInsertedNode, 0)
     assertEquals(3, list.getSize(), "assert list size is as expected")
     let fourthInsertedNode = new PriorityLinkedListNode("2", 2)
-    list.insertNodeAtIndex(fourthInsertedNode, 1)
+    list._insertNodeAtIndex(fourthInsertedNode, 1)
     assertEquals(4, list.getSize(), "assert list size is as expected")
     let fifthInsertedNode = new PriorityLinkedListNode("4", 4)
-    list.insertNodeAtIndex(fifthInsertedNode, 3)
+    list._insertNodeAtIndex(fifthInsertedNode, 3)
     assertEquals(5, list.getSize(), "assert list size is as expected")
     let sixthInsertedNode = new PriorityLinkedListNode("6", 6)
-    list.insertNodeAtIndex(sixthInsertedNode, 5)
+    list._insertNodeAtIndex(sixthInsertedNode, 5)
     assertEquals(6, list.getSize(), "assert list size is as expected")
-    assertEquals(-1, list.getIndexOfLabel("0"), "assert label is found where expected")
-    assertEquals(0, list.getIndexOfLabel("1"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("3"), "assert label is found where expected")
-    assertEquals(3, list.getIndexOfLabel("4"), "assert label is found where expected")
-    assertEquals(4, list.getIndexOfLabel("5"), "assert label is found where expected")
-    assertEquals(5, list.getIndexOfLabel("6"), "assert label is found where expected")
-    assertEquals(-1, list.getIndexOfLabel("7"), "assert label is found where expected")
+    assertEquals(-1, list._getIndexOfLabel("0"), "assert label is found where expected")
+    assertEquals(0, list._getIndexOfLabel("1"), "assert label is found where expected")
+    assertEquals(1, list._getIndexOfLabel("2"), "assert label is found where expected")
+    assertEquals(2, list._getIndexOfLabel("3"), "assert label is found where expected")
+    assertEquals(3, list._getIndexOfLabel("4"), "assert label is found where expected")
+    assertEquals(4, list._getIndexOfLabel("5"), "assert label is found where expected")
+    assertEquals(5, list._getIndexOfLabel("6"), "assert label is found where expected")
+    assertEquals(-1, list._getIndexOfLabel("7"), "assert label is found where expected")
     assertEquals(6, list.getSize(), "check list size after inserting all nodes")
-    assertEquals(0, list.getIndexOfPriority(0), "check index of priority on full list")
-    assertEquals(0, list.getIndexOfPriority(1), "check index of priority on full list")
-    assertEquals(1, list.getIndexOfPriority(2), "check index of priority on full list")
-    assertEquals(2, list.getIndexOfPriority(3), "check index of priority on full list")
-    assertEquals(3, list.getIndexOfPriority(4), "check index of priority on full list")
-    assertEquals(4, list.getIndexOfPriority(5), "check index of priority on full list")
-    assertEquals(5, list.getIndexOfPriority(6), "check index of priority on full list")
-    assertEquals(6, list.getIndexOfPriority(7), "check index of priority on full list")
+    assertEquals(0, list._getIndexOfPriority(0), "check index of priority on full list")
+    assertEquals(0, list._getIndexOfPriority(1), "check index of priority on full list")
+    assertEquals(1, list._getIndexOfPriority(2), "check index of priority on full list")
+    assertEquals(2, list._getIndexOfPriority(3), "check index of priority on full list")
+    assertEquals(3, list._getIndexOfPriority(4), "check index of priority on full list")
+    assertEquals(4, list._getIndexOfPriority(5), "check index of priority on full list")
+    assertEquals(5, list._getIndexOfPriority(6), "check index of priority on full list")
+    assertEquals(6, list._getIndexOfPriority(7), "check index of priority on full list")
 }
 
-function testInsertNodeWithPriority() {
+function _testInsertNodeWithPriority() {
     // insert items and check list size as we go
     let list = new PriorityLinkedList()
     assertEquals(0, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfPriority(3), "check index of priority of first element that we are about to insert")
+    assertEquals(0, list._getIndexOfPriority(3), "check index of priority of first element that we are about to insert")
     let firstInsertedNode = new PriorityLinkedListNode("3", 3)
     list.insertNode(firstInsertedNode)
     assertEquals(1, list.getSize(), "assert list size is as expected")
@@ -358,12 +358,12 @@ function testInsertNodeWithPriority() {
     list.insertNode(sixthInsertedNode)
     assertEquals(6, list.getSize(), "assert list size is as expected")
     // check final list order (check labels only)
-    assertEquals(0, list.getIndexOfLabel("1"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("3"), "assert label is found where expected")
-    assertEquals(3, list.getIndexOfLabel("4"), "assert label is found where expected")
-    assertEquals(4, list.getIndexOfLabel("5"), "assert label is found where expected")
-    assertEquals(5, list.getIndexOfLabel("6"), "assert label is found where expected")
+    assertEquals(0, list._getIndexOfLabel("1"), "assert label is found where expected")
+    assertEquals(1, list._getIndexOfLabel("2"), "assert label is found where expected")
+    assertEquals(2, list._getIndexOfLabel("3"), "assert label is found where expected")
+    assertEquals(3, list._getIndexOfLabel("4"), "assert label is found where expected")
+    assertEquals(4, list._getIndexOfLabel("5"), "assert label is found where expected")
+    assertEquals(5, list._getIndexOfLabel("6"), "assert label is found where expected")
     // test that all .next and .previous are right
     // console.log("checking that all .next and .previous are right. current list order is: " + list)
     // check element 1 (head)
@@ -400,7 +400,7 @@ function testInsertNodeWithPriority() {
     
 }
 
-function testRemoveNode() {
+function _testRemoveNode() {
     let list = new PriorityLinkedList()
     let node1 = new PriorityLinkedListNode("3", 3)
     let node2 = new PriorityLinkedListNode("5", 5)
@@ -416,37 +416,37 @@ function testRemoveNode() {
     list.insertNode(node6)
     assertEquals(6, list.getSize(), "assert list size is as expected")
     // check final list order (check labels only)
-    assertEquals(0, list.getIndexOfLabel("1"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("3"), "assert label is found where expected")
-    assertEquals(3, list.getIndexOfLabel("4"), "assert label is found where expected")
-    assertEquals(4, list.getIndexOfLabel("5"), "assert label is found where expected")
-    assertEquals(5, list.getIndexOfLabel("6"), "assert label is found where expected")
+    assertEquals(0, list._getIndexOfLabel("1"), "assert label is found where expected")
+    assertEquals(1, list._getIndexOfLabel("2"), "assert label is found where expected")
+    assertEquals(2, list._getIndexOfLabel("3"), "assert label is found where expected")
+    assertEquals(3, list._getIndexOfLabel("4"), "assert label is found where expected")
+    assertEquals(4, list._getIndexOfLabel("5"), "assert label is found where expected")
+    assertEquals(5, list._getIndexOfLabel("6"), "assert label is found where expected")
     // console.log("starting list: " + list)
     // remove first element
     list.removeNode("1")
     // console.log("after removing first element: " + list)
     assertEquals(5, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("3"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("4"), "assert label is found where expected")
-    assertEquals(3, list.getIndexOfLabel("5"), "assert label is found where expected")
-    assertEquals(4, list.getIndexOfLabel("6"), "assert label is found where expected")
+    assertEquals(0, list._getIndexOfLabel("2"), "assert label is found where expected")
+    assertEquals(1, list._getIndexOfLabel("3"), "assert label is found where expected")
+    assertEquals(2, list._getIndexOfLabel("4"), "assert label is found where expected")
+    assertEquals(3, list._getIndexOfLabel("5"), "assert label is found where expected")
+    assertEquals(4, list._getIndexOfLabel("6"), "assert label is found where expected")
     // remove last element
     list.removeNode("6")
     // console.log("after removing last element: " + list)
     assertEquals(4, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("3"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("4"), "assert label is found where expected")
-    assertEquals(3, list.getIndexOfLabel("5"), "assert label is found where expected")
+    assertEquals(0, list._getIndexOfLabel("2"), "assert label is found where expected")
+    assertEquals(1, list._getIndexOfLabel("3"), "assert label is found where expected")
+    assertEquals(2, list._getIndexOfLabel("4"), "assert label is found where expected")
+    assertEquals(3, list._getIndexOfLabel("5"), "assert label is found where expected")
     // remove a middle element
     list.removeNode("3")
     // console.log("after removing middle element (labelled '3'): " + list)
     assertEquals(3, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("4"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("5"), "assert label is found where expected")
+    assertEquals(0, list._getIndexOfLabel("2"), "assert label is found where expected")
+    assertEquals(1, list._getIndexOfLabel("4"), "assert label is found where expected")
+    assertEquals(2, list._getIndexOfLabel("5"), "assert label is found where expected")
     // add a double element and test that the first occurrence of it is removed
     let node7 = new PriorityLinkedListNode("4", 6)
     let node8 = new PriorityLinkedListNode("4", 8)
@@ -454,29 +454,29 @@ function testRemoveNode() {
     list.insertNode(node8)
     // console.log("after inserting some duplicalte-label elements (labelled '4'): " + list)
     assertEquals(5, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("4"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("5"), "assert label is found where expected")
+    assertEquals(0, list._getIndexOfLabel("2"), "assert label is found where expected")
+    assertEquals(1, list._getIndexOfLabel("4"), "assert label is found where expected")
+    assertEquals(2, list._getIndexOfLabel("5"), "assert label is found where expected")
     // remove first '4'
     list.removeNode("4")
     // console.log("after removing first duplicate-label '4': " + list)
     assertEquals(4, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("5"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("4"), "assert label is found where expected")
+    assertEquals(0, list._getIndexOfLabel("2"), "assert label is found where expected")
+    assertEquals(1, list._getIndexOfLabel("5"), "assert label is found where expected")
+    assertEquals(2, list._getIndexOfLabel("4"), "assert label is found where expected")
     // remove second '4'
     list.removeNode("4")
     // console.log("after removing second duplicate-label '4': " + list)
     assertEquals(3, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("5"), "assert label is found where expected")
-    assertEquals(2, list.getIndexOfLabel("4"), "assert label is found where expected")
+    assertEquals(0, list._getIndexOfLabel("2"), "assert label is found where expected")
+    assertEquals(1, list._getIndexOfLabel("5"), "assert label is found where expected")
+    assertEquals(2, list._getIndexOfLabel("4"), "assert label is found where expected")
     // remove last '4'
     list.removeNode("4")
     // console.log("after removing second duplicate-label '4': " + list)
     assertEquals(2, list.getSize(), "assert list size is as expected")
-    assertEquals(0, list.getIndexOfLabel("2"), "assert label is found where expected")
-    assertEquals(1, list.getIndexOfLabel("5"), "assert label is found where expected")
+    assertEquals(0, list._getIndexOfLabel("2"), "assert label is found where expected")
+    assertEquals(1, list._getIndexOfLabel("5"), "assert label is found where expected")
     // todo: test that .next and .previous are correct in all of these cases
 }
 
@@ -485,7 +485,7 @@ function testRemoveNode() {
  */
 
 // 'insert' method tests
-testInsertNodeAtIndex()
-testInsertNodeWithPriority()
+_testInsertNodeAtIndex()
+_testInsertNodeWithPriority()
 // 'remove' method tests
-testRemoveNode()
+_testRemoveNode()

@@ -114,12 +114,13 @@ window.onload = () => {
      */
     domElements.divs.tempoTextInputs.style.left = "477px"
     domElements.divs.tempoTextInputs.style.top = "25px"
-    let maximumAllowedLoopLengthInMillis = "99999" // this number is chosen to match the width of the text input. if we make the input wider we can allow for bigger numbers. fractional numbers less than this could still go over the width of the box.
+    let maximumAllowedLoopLengthInMillis = 99999 // this number is chosen to match the width of the text input. if we make the input wider we can allow for bigger numbers. fractional numbers less than this could still go over the width of the box.
     /**
      * subdivision text input settings
      */
     let subdivisionTextInputHorizontalPadding = 10
     let subdivisionTextInputVerticalPadding = -17
+    let maximumAllowedNumberOfSubdivisions = 1000
 
 
     // initialize sequencer data structure
@@ -137,33 +138,22 @@ window.onload = () => {
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
     let sequencerRowLines = initializeSequencerRowLines() // list of sequencer row lines
-    let subdivisionLineLists = initializeSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
+    let subdivisionLineLists = initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
     let drumTriggerLines = initializeDrumTriggerLines() // list of lines that move to represent the current time within the loop
     let noteBankContainer = initializeNoteBankContainer() // a rectangle that goes around the note bank
     let noteTrashBinContainer = initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
     let pauseButton = initializePauseButton() // a rectangle that will act as the pause button for now
     setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
 
-    // start putting together some subdivision text input proof-of-concept stuff here
-    let subdivisionTextInputs = []
-    for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-        let textArea = document.createElement("textarea");
-        textArea.cols = "3"
-        textArea.rows = "1"
-        textArea.style.position = "absolute"
-        textArea.style.top = "" + (sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows) + subdivisionTextInputVerticalPadding) + "px"
-        textArea.style.left = "" + (sequencerHorizontalOffset + sequencerWidth + subdivisionTextInputHorizontalPadding) + "px"
-        textArea.style.borderColor = sequencerAndToolsLineColor = sequencerAndToolsLineColor
-        textArea.value = sequencer.rows[rowIndex].getNumberOfSubdivisions()
-        domElements.divs.subdivisionTextInputs.appendChild(textArea);
-        subdivisionTextInputs.push(textArea)
-        textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
-    }
-
     two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
 
-    initializeTextInputValuesAndStyles();
-    initializeTextInputActionListeners();
+    initializeTempoTextInputValuesAndStyles();
+    initializeTempoTextInputActionListeners();
+
+    // start putting together some subdivision text input proof-of-concept stuff here
+    let subdivisionTextInputs = []
+    initializeSubdivisionTextInputsValuesAndStyles();
+    initializeSubdivisionTextInputsActionListeners();
 
     addPauseButtonActionListeners()
 
@@ -193,25 +183,8 @@ window.onload = () => {
     // keep a list of all the circles (i.e. notes) that have been drawn on the screen
     let allDrawnCircles = []
 
-    // draw the circles (i.e. notes) that are in the note bank
-    for (noteBankSampleName of sampleNameList) {
-        drawNoteBankCircleForSample(noteBankSampleName)
-    }
-
-    // draw all notes that are in the sequencer before the sequencer starts (aka the notes of the initial example drum sequence)
-    for(let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
-        noteToDraw = sequencer.rows[sequencerRowIndex].notesList.head
-        while (noteToDraw !== null) {
-            let xPosition = sequencerHorizontalOffset + (sequencerWidth * (noteToDraw.priority / sequencer.loopLengthInMillis))
-            let yPosition = sequencerVerticalOffset + (sequencerRowIndex * spaceBetweenSequencerRows)
-            let sampleName = noteToDraw.data.sampleName
-            let row = sequencerRowIndex
-            let label = noteToDraw.label
-            let beat = noteToDraw.data.beat
-            drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat)
-            noteToDraw = noteToDraw.next
-        }
-    }
+    drawAllNoteBankCircles()
+    drawNotesToReflectSequencerCurrentState()
 
     // get the next note that needs to be scheduled for each row (will start as list 'head', and update as we go)
     let nextNoteToScheduleForEachRow = []
@@ -330,8 +303,7 @@ window.onload = () => {
                 if (circleBeingMovedOldRow === NOTE_BANK_ROW_NUMBER) { // if the note being thrown away came from the note bank, just put it back in the note bank.
                     circleBeingMovedNewRow = NOTE_BANK_ROW_NUMBER
                 } else { // only bother throwing away things that came from a row (throwing away note bank notes is pointless)
-                    circleBeingMoved.remove() // remove the circle from the Two.js display
-                    removeCircleFromAllDrawnCirclesList(circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles
+                    removeCircleFromDisplay(circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles and from the two.js canvas
                     // if the deleted note is the 'next note to schedule', we should increment that 'next note to schedule' to its .next (i.e. we should skip the deleted note)
                     if (nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row] !== null && nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row].label ===  circleBeingMoved.guiData.label) {
                         nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row] = nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row].next
@@ -444,12 +416,12 @@ window.onload = () => {
 
         drumTriggersXPosition = sequencerHorizontalOffset + (sequencerWidth * (currentTimeWithinCurrentLoop / loopLengthInMillis))
 
-        for (drumTriggerLine of drumTriggerLines) {
+        for (let drumTriggerLine of drumTriggerLines) {
             drumTriggerLine.position.x = drumTriggersXPosition
         }
 
         // make circles get bigger when they play.
-        for (circle of allDrawnCircles) {
+        for (let circle of allDrawnCircles) {
             let radiusToSetUnplayedCircleTo = unplayedCircleRadius
             if (circleBeingMoved !== null && circleBeingMoved.guiData.label === circle.guiData.label) {
                 // if we are moving this circle, make its unplayed radius slightly bigger than normal
@@ -662,6 +634,13 @@ window.onload = () => {
             beat: 0,
         }
         ))
+        sequencer.rows[0].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 8) * 3, 
+        {
+            lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
+            sampleName: WOODBLOCK,
+            beat: 3,
+        }
+        ))
         sequencer.rows[1].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 1, 
             {
                 lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
@@ -711,6 +690,30 @@ window.onload = () => {
                 window.setTimeout(callback, 1000 / 60);
             };
         })();
+    }
+
+    function drawAllNoteBankCircles(){
+        // draw the circles (i.e. notes) that are in the note bank
+        for (let noteBankSampleName of sampleNameList) {
+            drawNoteBankCircleForSample(noteBankSampleName)
+        }
+    }
+
+    function drawNotesToReflectSequencerCurrentState(){
+        // draw all notes that are in the sequencer before the sequencer starts (aka the notes of the initial example drum sequence)
+        for(let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
+            let noteToDraw = sequencer.rows[sequencerRowIndex].notesList.head
+            while (noteToDraw !== null) {
+                let xPosition = sequencerHorizontalOffset + (sequencerWidth * (noteToDraw.priority / sequencer.loopLengthInMillis))
+                let yPosition = sequencerVerticalOffset + (sequencerRowIndex * spaceBetweenSequencerRows)
+                let sampleName = noteToDraw.data.sampleName
+                let row = sequencerRowIndex
+                let label = noteToDraw.label
+                let beat = noteToDraw.data.beat
+                drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat)
+                noteToDraw = noteToDraw.next
+            }
+        }
     }
 
     // draw a new circle in the note bank based on its sampleName.
@@ -781,16 +784,45 @@ window.onload = () => {
         allDrawnCircles.push(circle)
     }
 
-    // remove a circle from the 'allDrawnCircles' list, based on its label.
+    // remove a circle from the 'allDrawnCircles' list and two.js canvas, based on its label.
     // this is meant to be used during deletion of notes from the sequencer, with the idea being that deleting
     // them from this list and maybe from a few other places will clear up clutter, and hopefully allow the 
     // deleted circles to get garbage-collected.
-    function removeCircleFromAllDrawnCirclesList(label){
+    // note that this method _only_ deletes circles from the _display_, not from the underlying sequencer data
+    // structure, that needs to be handled somewhere else separately.
+    function removeCircleFromDisplay(label){
         let indexOfListItemToRemove = allDrawnCircles.findIndex(elementFromList => elementFromList.guiData.label === label);
         if (indexOfListItemToRemove === -1) { //  we don't expect to reach this case, where a circle with the given label isn't found in the list
-            throw "unexpected problem: couldn't find the circle with the given label in the list of all drawn circles, when trying to delete it. the given label was: " + label + ". full list (labels only) (sorry for printing annoying thing): " + allDrawnCircles.map((item) => item.guiData.label) + "."
+            throw "unexpected problem: couldn't find the circle with the given label in the list of all drawn circles, when trying to delete it. the given label was: " + label + ". full list (labels only): " + allDrawnCircles.map((item) => item.guiData.label) + "."
         }
-        allDrawnCircles.splice(indexOfListItemToRemove, 1) // this should go in and delete the element we want to delete!
+        let listOfOneRemovedElement = allDrawnCircles.splice(indexOfListItemToRemove, 1) // this should go in and delete the element we want to delete!
+        if (listOfOneRemovedElement.length !== 1) {
+            throw "unexpected problem: we expected exactly one circle to be removed from the allDrawnCricles list, but some other number of circles were removed. number removed: " + listOfOneRemovedElement.length
+        }
+        // now we should remove the circle from the two.js canvas as well
+        listOfOneRemovedElement[0].remove()
+    }
+
+    /**
+     * given an index of a row in the sequencer, remove all of the circles from the GUI for that row.
+     * this has _no effect_ on the underlying sequencer data structure, it just removes the circles from
+     * the display!
+     */
+    function removeAllCirclesInSequencerRowFromDisplay(sequencerRowIndex) {
+        for (let note of sequencer.rows[sequencerRowIndex].notesList) {
+            removeCircleFromDisplay(note.label)
+        }
+    }
+
+    /**
+     * remove all circles from the display.
+     * this has _no effect_ on the underlying sequencer data structure, it only removes circles _from the GUI display_.
+     */
+    function removeAllCirclesFromDisplay() {
+        let allDrawnCirclesCopy = [...allDrawnCircles] // make a copy of the drawn circles list so we can iterate through its circles while also removing the items from the original list
+        for (let note of allDrawnCirclesCopy) {
+            removeCircleFromDisplay(note.guiData.label)
+        }
     }
 
     // draw lines for sequencer rows. return a list of the drawn lines. these will be Two.js 'path' objects.
@@ -815,31 +847,48 @@ window.onload = () => {
     // add 'subdivision lines' to each sequencer row. these lines divide each row into the given number of evenly-sized sections.
     // in other words, if a row's 'subdivision count' is 5, that row will be divided into 5 even chunks (it will have 5 subdivision
     // lines). subdivision lines pretty much represent 'beats', so a line that is subdivided into 5 sections shows 5 beats.
-    function initializeSubdivisionLines() {
+    function initializeAllSubdivisionLines() {
         let allSubdivisionLineLists = []
         let subdivisionLinesForRow = []
         for (let rowsDrawn = 0; rowsDrawn < sequencer.numberOfRows; rowsDrawn++) {
-            if (sequencer.rows[rowsDrawn].getNumberOfSubdivisions() <= 0) {
-                continue; // don't draw subdivisions for this row if it has 0 or fewer subdivisions
-            }
-            let xIncrementBetweenSubdivisions = sequencerWidth / sequencer.rows[rowsDrawn].getNumberOfSubdivisions()
-            for (let subdivisionsDrawnForRow = 0; subdivisionsDrawnForRow < sequencer.rows[rowsDrawn].getNumberOfSubdivisions(); subdivisionsDrawnForRow++) {
-                let subdivisionLine = two.makePath(
-                    [
-                        new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), sequencerVerticalOffset - 1 + (rowsDrawn * spaceBetweenSequencerRows)),
-                        new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), sequencerVerticalOffset + (rowsDrawn * spaceBetweenSequencerRows) + subdivisionLineHeight),
-                    ], 
-                    false
-                );
-                subdivisionLine.linewidth = sequencerAndToolsLineWidth;
-                subdivisionLine.stroke = subdivisionLineColor
-
-                subdivisionLinesForRow.push(subdivisionLine) // keep a list of all subdivision lines for the current row
-            }
-
+            subdivisionLinesForRow = initializeSubdivisionLinesForRow(rowsDrawn)
             allSubdivisionLineLists.push(subdivisionLinesForRow) // keep a list of all rows' subdivision line lists
         }
         return allSubdivisionLineLists
+    }
+
+    // draw subdivision lines for a single sequencer row, with the given row index.
+    // return a list of two.js 'path' objects representing each subdivision line for the sequncer row with the given index.
+    function initializeSubdivisionLinesForRow(rowIndex) {
+        let subdivisionLinesForRow = []
+        if (sequencer.rows[rowIndex].getNumberOfSubdivisions() <= 0) {
+            return [] // don't draw subdivisions for this row if it has 0 or fewer subdivisions
+        }
+        let xIncrementBetweenSubdivisions = sequencerWidth / sequencer.rows[rowIndex].getNumberOfSubdivisions()
+        for (let subdivisionsDrawnForRow = 0; subdivisionsDrawnForRow < sequencer.rows[rowIndex].getNumberOfSubdivisions(); subdivisionsDrawnForRow++) {
+            let subdivisionLine = two.makePath(
+                [
+                    new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), sequencerVerticalOffset - 1 + (rowIndex * spaceBetweenSequencerRows)),
+                    new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows) + subdivisionLineHeight),
+                ], 
+                false
+            );
+            subdivisionLine.linewidth = sequencerAndToolsLineWidth;
+            subdivisionLine.stroke = subdivisionLineColor
+
+            subdivisionLinesForRow.push(subdivisionLine) // keep a list of all subdivision lines for the current row
+        }
+        return subdivisionLinesForRow
+    }
+
+    // given the index of a sequencer row, remove all subdivision lines from the display for that row.
+    // the current intent of this is to delete them all so that they can be re-drawn afterwards (such as
+    // when the number of subdivisions in a particular row is changed).
+    function removeSubdivisionLinesForRow(rowIndex) {
+        for (subdivisionLine of subdivisionLineLists[rowIndex]) {
+            subdivisionLine.remove()
+        }
+        subdivisionLineLists[rowIndex] = []
     }
 
     // draw lines for the 'drum triggers' for each sequencer row.
@@ -958,17 +1007,17 @@ window.onload = () => {
     // restart the sequence, as in move the drum trigger back to the beginning of the sequence
     function restartSequencer() {
         mostRecentPauseTimeWithinLoop = 0
-        for (nextNoteToScheduleForRow of nextNoteToScheduleForEachRow) {
+        for (let nextNoteToScheduleForRow of nextNoteToScheduleForEachRow) {
             nextNoteToScheduleForRow = null // reset next note to schedule. 'head' will get picked up on the next call to draw() 
         }
     }
 
-    function initializeTextInputValuesAndStyles() {
+    function initializeTempoTextInputValuesAndStyles() {
         domElements.textInputs.loopLengthMillis.value = loopLengthInMillis
         domElements.textInputs.loopLengthMillis.style.borderColor = sequencerAndToolsLineColor
     }
 
-    function initializeTextInputActionListeners() {
+    function initializeTempoTextInputActionListeners() {
         /**
          * set up 'focus' and 'blur' events for the 'loop length in millis' text input.
          * the plan is that when you update the values in the text box, they will be applied
@@ -1011,6 +1060,66 @@ window.onload = () => {
         if (!wasPaused) {
             unpause()
         }
+    }
+
+    function initializeSubdivisionTextInputsValuesAndStyles() {
+        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+            let textArea = document.createElement("textarea");
+            textArea.cols = "3"
+            textArea.rows = "1"
+            textArea.style.position = "absolute"
+            textArea.style.top = "" + (sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows) + subdivisionTextInputVerticalPadding) + "px"
+            textArea.style.left = "" + (sequencerHorizontalOffset + sequencerWidth + subdivisionTextInputHorizontalPadding) + "px"
+            textArea.style.borderColor = sequencerAndToolsLineColor = sequencerAndToolsLineColor
+            textArea.value = sequencer.rows[rowIndex].getNumberOfSubdivisions()
+            domElements.divs.subdivisionTextInputs.appendChild(textArea);
+            // note for later: the opposite of appendChild is removeChild
+            subdivisionTextInputs.push(textArea)
+            // textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
+        }
+    }
+
+    function initializeSubdivisionTextInputsActionListeners() {
+        for (let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
+            let subdivisionTextInput = subdivisionTextInputs[rowIndex]
+            subdivisionTextInput.addEventListener('blur', (event) => {
+                let newTextInputValue = subdivisionTextInput.value.trim() // remove whitespace from beginning and end of input then store it
+                if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
+                    newTextInputValue = sequencer.rows[rowIndex].getNumberOfSubdivisions()
+                }
+                newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
+                newTextInputValue = confineNumberToBounds(newTextInputValue, 1, maximumAllowedNumberOfSubdivisions)
+                subdivisionTextInput.value = newTextInputValue
+                updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
+            })
+        }
+    }
+
+    function updateNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex) {
+        // first delete all existing notes from the display for the changed row,
+        // because now they may be out of date or some of them may have been deleted,
+        // and the simplest thing to do may just be to delete them all then redraw
+        // the current state of the sequencer for the changed row.
+        /**
+         * found a problem with deleting only a single row. shapes are layered on-screen in the order they are 
+         * drawn (newer on top), so re-drawing only one row including its subdivision lines means if we move a 
+         * circle from another line onto the row with newly drawn subdivision lines, the note will show up 
+         * behind the subdivision lines. it isn't simple to change layer ordering in two.js, so instead of
+         * re-drawing single rows, we will redraw the entire sequencer's notes whenever a big change 
+         * happens, since it is simpler. also since notes are scheduled ahead of time, the extra computation
+         * shouldn't affect the timing of the drums at all.
+         */
+        removeAllCirclesFromDisplay()
+        // now update the sequencer data structure to reflect the new number of subdivisions.
+        // call the sequencer's 'update subdivisions for row' method
+        sequencer.setNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex)
+        // next we will delete the subdivision lines for the changed row
+        removeSubdivisionLinesForRow(rowIndex)
+        // then we will draw the new subdivision lines for the changed row
+        subdivisionLineLists[rowIndex] = initializeSubdivisionLinesForRow(rowIndex)
+        // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
+        drawAllNoteBankCircles()
+        drawNotesToReflectSequencerCurrentState()
     }
 
     // given a number and an upper and lower bound, confine the number to be between the bounds.
