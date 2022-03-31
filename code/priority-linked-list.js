@@ -8,7 +8,7 @@
  * for the drum sequencer. it is going to be a linked list, where you can insert or 
  * remove one node at a time, and the list will automatically maintain a sorted order.
  * I am calling it a 'priority linked list' for now for lack of a better name, but it
- * will probably end up being more specialized that that by the time it's done.
+ * will probably end up being more specialized than that by the time it's done.
  * 
  * the list will be sorted based on the numerical value of each node's 'priority' property,
  * which will be set when node constructor is called (could also add an 'update and re-sort'

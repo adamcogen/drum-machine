@@ -5,8 +5,8 @@
 
 // class used to generate unique id numbers.
 // just increments a counter by 1 and returns the counter value each time you ask for a new id.
-// could add capacity for a larger number of IDs by using hex, or just including letters in IDs
-// as well. could also consider padding with a specified number of 0s and returning as a string
+// could add capacity for a larger number of IDs by using base36, i.e. adding letters to IDs, not
+// just numbers. Could also consider padding with a specified number of 0s and returning as a string
 // if we wanted ID generation to be a little more uniform. none of that matters for now.
 class IdGenerator {
     constructor() {
@@ -153,10 +153,13 @@ class SequencerRow {
                 while(note) {
                     // adjust note priorities, and remove notes if their 'beat' value no longer exists for the new number of subdivisions
                     if (note.data.beat >= newNumberOfSubdivisions) {
+                        let nextNoteToCheck = note.next
                         this.notesList.removeNode(note.label)
+                        note = nextNoteToCheck // manually skip to the note after the deleted note (which now has a null .next value)
+                    } else {
+                        note.priority = (note.data.beat * newLengthOfOneSubdivision)
+                        note = note.next
                     }
-                    note.priority = (note.data.beat * newLengthOfOneSubdivision)
-                    note = note.next
                 }
             }
         }

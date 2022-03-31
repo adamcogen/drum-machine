@@ -243,8 +243,8 @@ window.onload = () => {
                             circleBeingMoved.translation.x = confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
                             circleBeingMovedNewBeatNumber = NOTE_IS_NOT_QUANTIZED
                         }
-                        // quantization only affects x position. y position will always just be on line, so always put it there.
-                        circleBeingMoved.translation.y = confineNumberToBounds(mouseY, rowActualVerticalLocation, rowActualVerticalLocation)
+                        // quantization has a more complicated effect on x position than y. y position will always just be on line, so always just put it there.
+                        circleBeingMoved.translation.y = rowActualVerticalLocation;
                         circleBeingMovedNewRow = rowIndex // set 'new row' to whichever row we collided with / 'snapped' to
                         break; // we found the row that the note will be placed on, so stop iterating thru rows early
                     }
@@ -263,13 +263,16 @@ window.onload = () => {
              *   - note down initial information about circle starting state before being moved
              * - in the window.mousemove event, we:
              *   - check for circle collision with the trash bin. if colliding, cricle's new row is -3.
-             *   - check for collision with a sequencer row. if colliding, new row is >= 0.
+             *   - check for collision with a sequencer row. if colliding, new row is >= 0 (specifically, the index of the sequencer row it's colliding with).
              *   - if colliding with nothing, new row is -1.
-             * - in this window.mouseup event, how we handle states:
+             * - in this window.mouseup event, how we handle states, based on the values we previously set in the window.mousemove event:
              *   - if the note isn't colliding with a sequencer row or the trash bin, put it back wherever it came from, with no change.
-             *   - if the note is on a row, remove it from wherever it came from, and add it wherever it was placed (even if new and old row are the same)
-             *   - if the note is in the trash bin, throw it away, unless it came from the note bank, in which case we just but it back onto the note bank.
-             *   - to do all of this, we will manually change the values of some of these variables around, then make changes using the following set of rules:
+             *   - if the note is on a row, remove it from wherever it came from, and add it wherever it was placed (even if new and old row are the same, 
+             *     in order to allow for a simple way to move a note to a different place on the same row)
+             *   - if the note is in the trash bin, throw it away, unless it came from the note bank, in which case we just but it back onto the note bank 
+             *     (i.e. put it back where it came from).
+             *   - to do all of this, we will (in some cases) manually change the values of some of these variables around based on what combination of 
+             *     values we have stored, then make changes to the state of the sequencer using the following set of rules:
              *     - how to handle different 'old row' values:
              *       - if old row is >= 0, remove the note from its old row
              *       - if old row is < 0, do NOT remove the note from its old row. 
@@ -280,7 +283,9 @@ window.onload = () => {
              *       - old row >= 0, new row < 0: is a delete operation. delete a note from its old row, without adding it back anywhere.
              *       - old row >= 0, new row >= 0: is a move-note operation. move note from one row to another or to a new place in the same row.
              *       - old row < 0, new row < 0: means a note was removed from the note bank but didn't end up on a row. there will be no change.
-             *       - old row < 0, new row >= 0: takes a note from the note bank and adds it to a new row, without removing it from an old row.
+             *       - old row < 0, new row >= 0: takes a note from the note bank and adds it to a new row, without removing it from an old row
+             *         (since there's no real reason to actually remove anything when "removing" a note from the note bank. instead we just 
+             *         create a new node for the sequencer's note list, and place that onto the row it's being added to).
              */
             // note down starting state, current state.
             circleNewXPosition = circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle.
@@ -310,7 +315,7 @@ window.onload = () => {
                     }
                 }
             }
-            // we are done checking for collisions with things, so now move on to updating data
+            // we are done checking for collisions with things and updating 'old row' and 'new row' values, so now move on to updating the sequencer
             circleBeingMoved.translation.x = circleNewXPosition
             circleBeingMoved.translation.y = circleNewYPosition
             circleBeingMoved.guiData.row = circleBeingMovedNewRow
