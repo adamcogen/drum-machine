@@ -48,12 +48,8 @@ window.onload = () => {
     let audioContext = new AudioContext();
 
     // wait until the first click before resuming the audio context (this is required by Chrome browser)
-    let audioContextStarted = false
     window.onclick = () => {
-        if (!audioContextStarted) {
-            audioContext.resume()
-            audioContextStarted = true
-        }
+        audioContext.resume()
     }
 
     /**
@@ -303,12 +299,6 @@ window.onload = () => {
                     circleBeingMovedNewRow = NOTE_BANK_ROW_NUMBER
                 } else { // only bother throwing away things that came from a row (throwing away note bank notes is pointless)
                     removeCircleFromDisplay(circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles and from the two.js canvas
-                    // if the deleted note is the 'next note to schedule', we should increment that 'next note to schedule' to its .next (i.e. we should skip the deleted note)
-                    let rowOfDeletedCircle = circleBeingMoved.guiData.row
-                    let nextNoteToScheduleForRowOfDeletedCircle = sequencer.getNextNoteToScheduleForRow(rowOfDeletedCircle)
-                    if (nextNoteToScheduleForRowOfDeletedCircle !== null && nextNoteToScheduleForRowOfDeletedCircle.label === circleBeingMoved.guiData.label) {
-                        sequencer.setNextNoteToScheduleForRow(rowOfDeletedCircle, nextNoteToScheduleForRowOfDeletedCircle.next)
-                    }
                 }
             }
             // we are done checking for collisions with things and updating 'old row' and 'new row' values, so now move on to updating the sequencer
@@ -318,19 +308,7 @@ window.onload = () => {
             let node = null
             // remove the moved note from its old sequencer row. todo: consider changing this logic to just update node's priority if it isn't switching rows.)
             if (circleBeingMovedOldRow >= 0) { // -2 is the 'row' given to notes that are in the note bank. if old row is < 0, we don't need to remove it from any sequencer row.
-                /**
-                 * we need to update 'next note to schedule' here in the following case: if 'next note to schedule' is the moved note.
-                 * if we didn't specifically handle this case, then if 'next note to schedule' was the moved note, it would still play.
-                 * this may not seem bad at first, but the old (removed) note has a null .next value, so the rest of the notes in the 
-                 * old row would no longer play if we didn't fix this.
-                 * a fix is to set 'next note to schedule' to its .next if the next note's label matches the removed note's label,
-                 * _before_ removing the moved note from its old row.
-                 */
-                let nextNoteToScheduleForOldRowOfMovedCircle = sequencer.getNextNoteToScheduleForRow(circleBeingMovedOldRow)
-                if (nextNoteToScheduleForOldRowOfMovedCircle !== null && nextNoteToScheduleForOldRowOfMovedCircle.label === circleBeingMoved.guiData.label) {
-                    sequencer.setNextNoteToScheduleForRow(circleBeingMovedOldRow, nextNoteToScheduleForOldRowOfMovedCircle.next)
-                }
-                node = sequencer.rows[circleBeingMovedOldRow].notesList.removeNode(circleBeingMoved.guiData.label)
+                node = sequencer.rows[circleBeingMovedOldRow].removeNode(circleBeingMoved.guiData.label)
             }
             // add the moved note to its new sequencer row.
             if (circleBeingMovedNewRow >= 0) {
@@ -348,17 +326,7 @@ window.onload = () => {
                 let newNodeTimestampMillis = loopLengthInMillis * ((circleNewXPosition - sequencerHorizontalOffset) / sequencerWidth)
                 node.priority = newNodeTimestampMillis
                 // add the moved note to its new sequencer row
-                sequencer.rows[circleBeingMovedNewRow].notesList.insertNode(node, circleBeingMoved.guiData.label)
-                /**
-                 * we need to update 'next note to schedule' here in the following case:
-                 * [current time] -> [inserted note] -> ['next note to schedule']
-                 * if we didn't specifcally handle this case, we wouldn't play the newly inserted node.
-                 * a way to fix is to call 'next note to schedule' .prev if .prev.label === inserted node .label.
-                 */
-                let nextNoteToScheduleForNewRowOfMovedCircle = sequencer.getNextNoteToScheduleForRow(circleBeingMovedNewRow)
-                if (nextNoteToScheduleForNewRowOfMovedCircle !== null && nextNoteToScheduleForNewRowOfMovedCircle.previous !== null && nextNoteToScheduleForNewRowOfMovedCircle.previous.label === circleBeingMoved.guiData.label) {
-                    sequencer.setNextNoteToScheduleForRow(circleBeingMovedNewRow, nextNoteToScheduleForNewRowOfMovedCircle.previous)
-                }
+                sequencer.rows[circleBeingMovedNewRow].insertNode(node, circleBeingMoved.guiData.label)
                 node.data.lastScheduledOnIteration = NOTE_HAS_NEVER_BEEN_PLAYED // mark note as 'not played yet on current iteration'
                 node.data.beat = circleNewBeatNumber
                 circleBeingMoved.guiData.beat = circleNewBeatNumber
@@ -494,7 +462,7 @@ window.onload = () => {
         let actualStartTimeOfNextLoop = actualStartTimeOfCurrentLoop + loopLengthInMillis
         let numberOfLoopsSoFarPlusOne = numberOfLoopsSoFar + 1
         if (endTimeToScheduleUpToFromBeginningOfLoop >= 0) {
-            nextNoteToSchedule = sequencer.rows[sequencerRowIndex].notesList.head
+            nextNoteToSchedule = sequencer.rows[sequencerRowIndex]._notesList.head
             while (nextNoteToSchedule !== null && nextNoteToSchedule.priority <= endTimeToScheduleUpToFromBeginningOfLoop) {
                 // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for
                 if (numberOfLoopsSoFarPlusOne > nextNoteToSchedule.data.lastScheduledOnIteration) {
@@ -629,37 +597,37 @@ window.onload = () => {
         }
     }
 
-    // set up a default initial drum sequence with some notes in it
+    // set up a default initial drum sequence with some notes in it.
     function initializeDefaultSequencerPattern(){
-        sequencer.rows[0].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), 0, 
+        sequencer.rows[0]._notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), 0, 
         {
             lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
             sampleName: HI_HAT_CLOSED,
             beat: 0,
         }
         ))
-        sequencer.rows[0].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 8) * 3, 
+        sequencer.rows[0]._notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 8) * 3, 
         {
             lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
             sampleName: WOODBLOCK,
             beat: 3,
         }
         ))
-        sequencer.rows[1].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 1, 
+        sequencer.rows[1]._notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 1, 
             {
                 lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: HI_HAT_OPEN,
                 beat: 1,
             }
         ))
-        sequencer.rows[2].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), ((loopLengthInMillis / 4) * 2), 
+        sequencer.rows[2]._notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), ((loopLengthInMillis / 4) * 2), 
             {
                 lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: SNARE,
                 beat: NOTE_IS_NOT_QUANTIZED,
             }
         ))
-        sequencer.rows[3].notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 3, 
+        sequencer.rows[3]._notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 3, 
             {
                 lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: BASS_DRUM,
@@ -706,7 +674,7 @@ window.onload = () => {
     function drawNotesToReflectSequencerCurrentState(){
         // draw all notes that are in the sequencer before the sequencer starts (aka the notes of the initial example drum sequence)
         for(let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
-            let noteToDraw = sequencer.rows[sequencerRowIndex].notesList.head
+            let noteToDraw = sequencer.rows[sequencerRowIndex]._notesList.head // we are reading notes list directly, but making no changes to it
             while (noteToDraw !== null) {
                 let xPosition = sequencerHorizontalOffset + (sequencerWidth * (noteToDraw.priority / sequencer.loopLengthInMillis))
                 let yPosition = sequencerVerticalOffset + (sequencerRowIndex * spaceBetweenSequencerRows)
@@ -813,7 +781,7 @@ window.onload = () => {
      * the display!
      */
     function removeAllCirclesInSequencerRowFromDisplay(sequencerRowIndex) {
-        for (let note of sequencer.rows[sequencerRowIndex].notesList) {
+        for (let note of sequencer.rows[sequencerRowIndex]._notesList) {
             removeCircleFromDisplay(note.label)
         }
     }

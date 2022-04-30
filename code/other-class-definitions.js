@@ -78,6 +78,9 @@ class Sequencer {
     }
 
     // potential problem: we are passing in an actual note here. that could be bad. what if we scheduled a note that isn't even in the row? 
+    // maybe this isn't an issue, but potential fixes could be to pass in a note index instead of a note, or perform a check to make sure
+    // the given note exists in the row, and throw if it doesn't. it might not matter too much though, since this method will only be
+    // called internally, so maybe we could just assume it will always be given sensible inputs :-)
     setNextNoteToScheduleForRow(rowIndex, note) {
         this.rows[rowIndex].nextNoteToSchedule = note
     }
@@ -122,7 +125,7 @@ class Sequencer {
 class SequencerRow {
     constructor(loopLengthInMillis) {
         this.loopLengthInMillis = loopLengthInMillis
-        this.notesList = new PriorityLinkedList()
+        this._notesList = new PriorityLinkedList()
         this.nextNoteToSchedule = this.resetNextNoteToSchedule() // get the next note that needs to be scheduled (will start as list 'head', and update as we go)
         this.subdivisions = 0
         this.quantized = false
@@ -130,12 +133,56 @@ class SequencerRow {
 
     // reset the 'next note to schedule' to notesList.head
     resetNextNoteToSchedule() {
-        this.nextNoteToSchedule = this.notesList.head
+        this.nextNoteToSchedule = this._notesList.head
         return this.nextNoteToSchedule
     }
 
     getNumberOfSubdivisions() {
         return this.subdivisions
+    }
+
+    /**
+     * remove a node from this sequencer row safely, including
+     * management of any changes that are needed so that 'next note
+     * to schedule' is updated correctly.
+     */
+    removeNode(labelOfNodeToRemove) {
+        /**
+         * if the deleted note is the 'next note to schedule', we should increment that 'next note to schedule' to its .next 
+         * (i.e. we should skip the deleted note)
+         * 
+         * more detailed explanation:
+         * we need to update 'next note to schedule' here in the following case: if 'next note to schedule' is the removed note.
+         * if we didn't specifically handle this case, then if 'next note to schedule' was the removed note, it would still play.
+         * this may not seem too bad at first, but the old (removed) note has a null .next value, so the rest of the notes in the 
+         * row would no longer play if we didn't fix this.
+         * a fix is to set 'next note to schedule' to its .next if the next note's label matches the removed note's label,
+         * _before_ removing the moved note from its row.
+         */
+        if (this.nextNoteToSchedule !== null && this.nextNoteToSchedule.label === labelOfNodeToRemove) {
+            this.nextNoteToSchedule = this.nextNoteToSchedule.next
+        }
+
+        let node = this._notesList.removeNode(labelOfNodeToRemove)
+        return node
+    }
+
+    /**
+     * insert a new node into this sequencer row safely, including
+     * management of any changes that are needed so that 'next note
+     * to schedule' is updated correctly.
+     */
+    insertNode(newNode, newNodeLabel) {
+        this._notesList.insertNode(newNode, newNodeLabel)
+        /**
+         * we need to update 'next note to schedule' here in the following case:
+         * [current time] -> [inserted note] -> ['next note to schedule']
+         * if we didn't specifcally handle this case, we wouldn't play the newly inserted node.
+         * a way to fix is to call 'next note to schedule' .prev if .prev.label === inserted node .label.
+         */
+        if (this.nextNoteToSchedule !== null && this.nextNoteToSchedule.previous !== null && this.nextNoteToSchedule.previous.label === newNodeLabel) {
+            this.nextNoteToSchedule = this.nextNoteToSchedule.previous
+        }
     }
 
     // must be an integer 
@@ -162,7 +209,7 @@ class SequencerRow {
             let newLengthOfOneSubdivision = (this.loopLengthInMillis / newNumberOfSubdivisions)
             if (newNumberOfSubdivisions > this.subdivisions) {
                 // adding more subdivisions: keep existing 'beat' numbers of each note the same, just we'll just add more subdivisions after them, and adjust note priorities.
-                let note = this.notesList.head
+                let note = this._notesList.head
                 while(note) {
                     // just adjust note priorities
                     note.priority = (note.data.beat * newLengthOfOneSubdivision)
@@ -170,12 +217,12 @@ class SequencerRow {
                 }
             } else if (newNumberOfSubdivisions < this.subdivisions) {
                 // taking subdivisions away: need to decide on behavior here, but maybe we just cut off the notes with 'beat' number higher than the last new subdivision?
-                let note = this.notesList.head
+                let note = this._notesList.head
                 while(note) {
                     // adjust note priorities, and remove notes if their 'beat' value no longer exists for the new number of subdivisions
                     if (note.data.beat >= newNumberOfSubdivisions) {
                         let nextNoteToCheck = note.next
-                        this.notesList.removeNode(note.label)
+                        this._notesList.removeNode(note.label)
                         note = nextNoteToCheck // manually skip to the note after the deleted note (which now has a null .next value)
                     } else {
                         note.priority = (note.data.beat * newLengthOfOneSubdivision)
@@ -196,7 +243,7 @@ class SequencerRow {
     }
 
     setLoopLengthInMillis(newLoopLengthInMillis) {
-        let currentNode = this.notesList.head
+        let currentNode = this._notesList.head
         while (currentNode) {
             // todo: consider using the 'beat number' variable stored in each node when scaling, if it's available
             currentNode.priority = (newLoopLengthInMillis / this.loopLengthInMillis) * currentNode.priority // 'scale' the priority (timestamp) of each node to the new tempo, so that ordering and timing are maintained, but the loop is just faster or slower as appropriate
