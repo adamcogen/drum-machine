@@ -62,7 +62,7 @@ class Sequencer {
         this.sampleBank = sampleBank
     }
 
-    initializeEmptySequencerRows(){
+    initializeEmptySequencerRows() {
         let rows = []
         let rowCount = 0
         while (rowCount < this.numberOfRows) {
@@ -71,6 +71,20 @@ class Sequencer {
             rowCount++
         }
         return rows
+    }
+
+    getNextNoteToScheduleForRow(rowIndex) {
+        return this.rows[rowIndex].nextNoteToSchedule
+    }
+
+    // potential problem: we are passing in an actual note here. that could be bad. what if we scheduled a note that isn't even in the row? 
+    setNextNoteToScheduleForRow(rowIndex, note) {
+        this.rows[rowIndex].nextNoteToSchedule = note
+    }
+
+    // for the given row index, set 'next note to schedule' back to the head of the notes list
+    resetNextNoteToScheduleForRow(rowIndex) {
+        this.rows[rowIndex].resetNextNoteToSchedule()
     }
 
     // add a new empty row to the end of the drum sequencer
@@ -109,8 +123,15 @@ class SequencerRow {
     constructor(loopLengthInMillis) {
         this.loopLengthInMillis = loopLengthInMillis
         this.notesList = new PriorityLinkedList()
+        this.nextNoteToSchedule = this.resetNextNoteToSchedule() // get the next note that needs to be scheduled (will start as list 'head', and update as we go)
         this.subdivisions = 0
         this.quantized = false
+    }
+
+    // reset the 'next note to schedule' to notesList.head
+    resetNextNoteToSchedule() {
+        this.nextNoteToSchedule = this.notesList.head
+        return this.nextNoteToSchedule
     }
 
     getNumberOfSubdivisions() {

@@ -186,12 +186,6 @@ window.onload = () => {
     drawAllNoteBankCircles()
     drawNotesToReflectSequencerCurrentState()
 
-    // get the next note that needs to be scheduled for each row (will start as list 'head', and update as we go)
-    let nextNoteToScheduleForEachRow = []
-    for (let nextNotesInitializedSoFarCount = 0; nextNotesInitializedSoFarCount < sequencer.numberOfRows; nextNotesInitializedSoFarCount++) {
-        nextNoteToScheduleForEachRow.push(sequencer.rows[nextNotesInitializedSoFarCount].notesList.head)
-    }
-
     // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
     window.addEventListener('mousemove', (event) => {
         if (circleBeingMoved !== null) {
@@ -310,8 +304,10 @@ window.onload = () => {
                 } else { // only bother throwing away things that came from a row (throwing away note bank notes is pointless)
                     removeCircleFromDisplay(circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles and from the two.js canvas
                     // if the deleted note is the 'next note to schedule', we should increment that 'next note to schedule' to its .next (i.e. we should skip the deleted note)
-                    if (nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row] !== null && nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row].label ===  circleBeingMoved.guiData.label) {
-                        nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row] = nextNoteToScheduleForEachRow[circleBeingMoved.guiData.row].next
+                    let rowOfDeletedCircle = circleBeingMoved.guiData.row
+                    let nextNoteToScheduleForRowOfDeletedCircle = sequencer.getNextNoteToScheduleForRow(rowOfDeletedCircle)
+                    if (nextNoteToScheduleForRowOfDeletedCircle !== null && nextNoteToScheduleForRowOfDeletedCircle.label === circleBeingMoved.guiData.label) {
+                        sequencer.setNextNoteToScheduleForRow(rowOfDeletedCircle, nextNoteToScheduleForRowOfDeletedCircle.next)
                     }
                 }
             }
@@ -330,8 +326,9 @@ window.onload = () => {
                  * a fix is to set 'next note to schedule' to its .next if the next note's label matches the removed note's label,
                  * _before_ removing the moved note from its old row.
                  */
-                 if (nextNoteToScheduleForEachRow[circleBeingMovedOldRow] !== null && nextNoteToScheduleForEachRow[circleBeingMovedOldRow].label === circleBeingMoved.guiData.label) {
-                    nextNoteToScheduleForEachRow[circleBeingMovedOldRow] = nextNoteToScheduleForEachRow[circleBeingMovedOldRow].next
+                let nextNoteToScheduleForOldRowOfMovedCircle = sequencer.getNextNoteToScheduleForRow(circleBeingMovedOldRow)
+                if (nextNoteToScheduleForOldRowOfMovedCircle !== null && nextNoteToScheduleForOldRowOfMovedCircle.label === circleBeingMoved.guiData.label) {
+                    sequencer.setNextNoteToScheduleForRow(circleBeingMovedOldRow, nextNoteToScheduleForOldRowOfMovedCircle.next)
                 }
                 node = sequencer.rows[circleBeingMovedOldRow].notesList.removeNode(circleBeingMoved.guiData.label)
             }
@@ -358,8 +355,9 @@ window.onload = () => {
                  * if we didn't specifcally handle this case, we wouldn't play the newly inserted node.
                  * a way to fix is to call 'next note to schedule' .prev if .prev.label === inserted node .label.
                  */
-                if (nextNoteToScheduleForEachRow[circleBeingMovedNewRow] !== null && nextNoteToScheduleForEachRow[circleBeingMovedNewRow].previous !== null && nextNoteToScheduleForEachRow[circleBeingMovedNewRow].previous.label === circleBeingMoved.guiData.label) {
-                    nextNoteToScheduleForEachRow[circleBeingMovedNewRow] = nextNoteToScheduleForEachRow[circleBeingMovedNewRow].previous
+                let nextNoteToScheduleForNewRowOfMovedCircle = sequencer.getNextNoteToScheduleForRow(circleBeingMovedNewRow)
+                if (nextNoteToScheduleForNewRowOfMovedCircle !== null && nextNoteToScheduleForNewRowOfMovedCircle.previous !== null && nextNoteToScheduleForNewRowOfMovedCircle.previous.label === circleBeingMoved.guiData.label) {
+                    sequencer.setNextNoteToScheduleForRow(circleBeingMovedNewRow, nextNoteToScheduleForNewRowOfMovedCircle.previous)
                 }
                 node.data.lastScheduledOnIteration = NOTE_HAS_NEVER_BEEN_PLAYED // mark note as 'not played yet on current iteration'
                 node.data.beat = circleNewBeatNumber
@@ -442,14 +440,15 @@ window.onload = () => {
         // iterate through each sequencer, scheduling upcoming notes for all of them
         if (!paused) {
             for (let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
-                if (nextNoteToScheduleForEachRow[sequencerRowIndex] === null) {
+                if (sequencer.getNextNoteToScheduleForRow(sequencerRowIndex) === null) {
                     // if nextNoteToSchedule is null, the list was empty at some point, so keep polling for a note to be added to it.
                     // or we reached the last note, which is fine, just go back to the beginning of the sequence.
-                    nextNoteToScheduleForEachRow[sequencerRowIndex] = sequencer.rows[sequencerRowIndex].notesList.head
+                    sequencer.resetNextNoteToScheduleForRow(sequencerRowIndex)
                 }
-    
-                if (nextNoteToScheduleForEachRow[sequencerRowIndex] !== null) { // will always be null if the row's note list is empty
-                    nextNoteToScheduleForEachRow[sequencerRowIndex] = scheduleNotesForCurrentTime(nextNoteToScheduleForEachRow[sequencerRowIndex], sequencerRowIndex, currentTime, currentTimeWithinCurrentLoop, theoreticalStartTimeOfCurrentLoop)
+
+                if (sequencer.getNextNoteToScheduleForRow(sequencerRowIndex) !== null) { // will always be null if (and only if) the row's note list is empty
+                    let nextNoteToScheduleForRow = scheduleNotesForCurrentTime(sequencer.getNextNoteToScheduleForRow(sequencerRowIndex), sequencerRowIndex, currentTime, currentTimeWithinCurrentLoop, theoreticalStartTimeOfCurrentLoop)
+                    sequencer.setNextNoteToScheduleForRow(sequencerRowIndex, nextNoteToScheduleForRow)
                 }
             }
         }
@@ -1012,8 +1011,8 @@ window.onload = () => {
     // restart the sequence, as in move the drum trigger back to the beginning of the sequence
     function restartSequencer() {
         mostRecentPauseTimeWithinLoop = 0
-        for (let nextNoteToScheduleForRow of nextNoteToScheduleForEachRow) {
-            nextNoteToScheduleForRow = null // reset next note to schedule. 'head' will get picked up on the next call to draw() 
+        for (let i = 0; i < sequencer.rows.length; i++) {
+            sequencer.resetNextNoteToScheduleForRow(i); // reset next note to schedule to each note list's 'head'
         }
     }
 
