@@ -120,7 +120,7 @@ window.onload = () => {
 
 
     // initialize sequencer data structure
-    let sequencer = new Sequencer(6, loopLengthInMillis)
+    let sequencer = new Sequencer(audioContext, 6, loopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
     sequencer.rows[0].setNumberOfSubdivisions(8)
     sequencer.rows[0].setQuantization(true)
     sequencer.rows[1].setNumberOfSubdivisions(4)
@@ -405,93 +405,13 @@ window.onload = () => {
             }
         }
 
-        // iterate through each sequencer, scheduling upcoming notes for all of them
+        // iterate through each sequencer row, scheduling upcoming notes for all of them
         if (!paused) {
-            for (let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
-                if (sequencer.getNextNoteToScheduleForRow(sequencerRowIndex) === null) {
-                    // if nextNoteToSchedule is null, the list was empty at some point, so keep polling for a note to be added to it.
-                    // or we reached the last note, which is fine, just go back to the beginning of the sequence.
-                    sequencer.resetNextNoteToScheduleForRow(sequencerRowIndex)
-                }
-
-                if (sequencer.getNextNoteToScheduleForRow(sequencerRowIndex) !== null) { // will always be null if (and only if) the row's note list is empty
-                    let nextNoteToScheduleForRow = scheduleNotesForCurrentTime(sequencer.getNextNoteToScheduleForRow(sequencerRowIndex), sequencerRowIndex, currentTime, currentTimeWithinCurrentLoop, theoreticalStartTimeOfCurrentLoop)
-                    sequencer.setNextNoteToScheduleForRow(sequencerRowIndex, nextNoteToScheduleForRow)
-                }
-            }
+            sequencer.scheduleAllUpcomingNotes(currentTime, currentTimeWithinCurrentLoop, theoreticalStartTimeOfCurrentLoop)
         }
 
         two.update() // update the GUI display
         requestAnimationFrameShim(draw); // call animation frame update with this 'draw' method again
-    }
-
-    function scheduleNotesForCurrentTime(nextNoteToSchedule, sequencerRowIndex, currentTime, currentTimeWithinCurrentLoop, actualStartTimeOfCurrentLoop) {
-        let numberOfLoopsSoFar = Math.floor(currentTime / loopLengthInMillis) // mostly used to make sure we don't schedule the same note twice. this number doesn't account for pauses, but i think that's fine. todo: make sure that's fine
-
-        /**
-         * At the end of the loop sequence, the look-ahead window may wrap back around to the beginning of the loop.
-         * e.g. if there are 3 millis left in the loop, and the look-ahead window is 10 millis long, we will want to schedule
-         * all notes that fall in the last 3 millis of the loop, as well as in the first 7 millis.
-         * For this reason, scheduling notes will be broken into two steps:
-         * (1) schedule notes from current time to the end of look-ahead window or to the end of the loop, whichever comes first
-         * (2) if the look-ahead window wraps back around to the beginning of the loop, schedule notes from the beginning of 
-         *     the loop to the end of the look-ahead window.
-         * This also means the look-ahead window won't work right if the length of the loop is shorter than the look-ahead time,
-         * but that is an easy restriction to add, and also if look-ahead window is short (such as 10 millis), we won't want to
-         * make a loop shorter than 10 millis anyway, so no one will notice or care about that restriction.
-         */
-        // this will be the first part: schedule notes from the current time, to whichever of these comes first:
-        //   - the end of the look-ahead window
-        //   - the end of the loop
-        let endTimeOfNotesToSchedule = currentTimeWithinCurrentLoop + LOOK_AHEAD_MILLIS // no need to trim this to the end of the loop, since there won't be any notes scheduled after the end anyway
-        // keep iterating until the end of the list (nextNoteToSchedule will be 'null') or until nextNoteToSchedule is after 'end of notes to schedule'
-        // what should we do if nextNoteToSchedule is _before_ 'beginning of notes to schedule'?
-        while (nextNoteToSchedule !== null && nextNoteToSchedule.priority <= endTimeOfNotesToSchedule) {
-            // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for.
-            // don't schedule a note unless it hasn't been scheduled on this loop iteration and it goes after the current time (i.e. don't schedule notes in the past, just skip over them)
-            if (nextNoteToSchedule.priority >= currentTimeWithinCurrentLoop && numberOfLoopsSoFar > nextNoteToSchedule.data.lastScheduledOnIteration) {
-                scheduleDrumSample(actualStartTimeOfCurrentLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
-                nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFar // record the last iteration that the note was played on to avoid duplicate scheduling within the same iteration
-            }
-            nextNoteToSchedule = nextNoteToSchedule.next
-        }
-
-        // this will be the second part: if the look-ahead window went past the end of the loop, schedule notes from the beginning
-        // of the loop to the end of leftover look-ahead window time.
-        let endTimeToScheduleUpToFromBeginningOfLoop = endTimeOfNotesToSchedule - loopLengthInMillis // calulate leftover time to schedule for from beginning of loop, e.g. from 0 to 7 millis from above example
-        let actualStartTimeOfNextLoop = actualStartTimeOfCurrentLoop + loopLengthInMillis
-        let numberOfLoopsSoFarPlusOne = numberOfLoopsSoFar + 1
-        if (endTimeToScheduleUpToFromBeginningOfLoop >= 0) {
-            nextNoteToSchedule = sequencer.rows[sequencerRowIndex]._notesList.head
-            while (nextNoteToSchedule !== null && nextNoteToSchedule.priority <= endTimeToScheduleUpToFromBeginningOfLoop) {
-                // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for
-                if (numberOfLoopsSoFarPlusOne > nextNoteToSchedule.data.lastScheduledOnIteration) {
-                    scheduleDrumSample(actualStartTimeOfNextLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
-                    nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFarPlusOne
-                }
-                nextNoteToSchedule = nextNoteToSchedule.next
-            }
-        }
-        return nextNoteToSchedule
-    }
-
-    function scheduleDrumSample(startTime, sampleName){
-        scheduleSound(samples[sampleName].file, startTime / 1000, .5)
-    }
-
-    // schedule a sample to play at the specified time
-    function scheduleSound(sample, time, gain=1, playbackRate=1) {
-        let sound = audioContext.createBufferSource(); // creates a sound source
-        sound.buffer = sample; // tell the sound source which sample to play
-        sound.playbackRate.value = playbackRate; // 1 is default playback rate; 0.5 is half-speed; 2 is double-speed
-
-        // set gain (volume). 1 is default, .1 is 10 percent
-        gainNode = audioContext.createGain();
-        gainNode.gain.value = gain;
-        gainNode.connect(audioContext.destination);
-        sound.connect(gainNode); // connect the sound to the context's destination (the speakers)
-
-        sound.start(time);
     }
 
     // play the sample with the given name right away (don't worry about scheduling it for some time in the future)

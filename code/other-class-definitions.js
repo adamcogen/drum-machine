@@ -55,11 +55,13 @@ class SampleBankNodeGenerator {
 
 // a drum sequencer, which is made up of multiple rows that can have notes placed onto them.
 class Sequencer {
-    constructor(numberOfRows = 4, loopLengthInMillis = 1000, sampleBank = []) {
+    constructor(audioContext, numberOfRows = 4, loopLengthInMillis = 1000, lookAheadMillis = 50, samples = []) {
+        this.audioContext = audioContext
         this.numberOfRows = numberOfRows
         this.loopLengthInMillis = loopLengthInMillis
         this.rows = this.initializeEmptySequencerRows()
-        this.sampleBank = sampleBank
+        this.lookAheadMillis = lookAheadMillis
+        this.samples = samples
     }
 
     initializeEmptySequencerRows() {
@@ -119,6 +121,91 @@ class Sequencer {
         }
         this.loopLengthInMillis = newLoopLengthInMillis
     }
+
+    scheduleAllUpcomingNotes(currentTime, currentTimeWithinCurrentLoop, theoreticalStartTimeOfCurrentLoop) {
+        for (let rowIndex = 0; rowIndex < this.rows.length; rowIndex++) {
+            if (this.getNextNoteToScheduleForRow(rowIndex) === null) {
+                // if nextNoteToSchedule is null, the list was empty at some point, so keep polling for a note to be added to it.
+                // or we reached the last note, which is fine, just go back to the beginning of the sequence.
+                this.resetNextNoteToScheduleForRow(rowIndex)
+            }
+
+            if (this.getNextNoteToScheduleForRow(rowIndex) !== null) { // will always be null if (and only if) the row's note list is empty
+                let nextNoteToScheduleForRow = this.scheduleNotesForCurrentTime(this.getNextNoteToScheduleForRow(rowIndex), rowIndex, currentTime, currentTimeWithinCurrentLoop, theoreticalStartTimeOfCurrentLoop)
+                this.setNextNoteToScheduleForRow(rowIndex, nextNoteToScheduleForRow)
+            }
+        }
+    }
+
+    scheduleNotesForCurrentTime(nextNoteToSchedule, sequencerRowIndex, currentTime, currentTimeWithinCurrentLoop, actualStartTimeOfCurrentLoop) {
+        let numberOfLoopsSoFar = Math.floor(currentTime / this.loopLengthInMillis) // mostly used to make sure we don't schedule the same note twice. this number doesn't account for pauses, but i think that's fine. todo: make sure that's fine
+
+        /**
+         * At the end of the loop sequence, the look-ahead window may wrap back around to the beginning of the loop.
+         * e.g. if there are 3 millis left in the loop, and the look-ahead window is 10 millis long, we will want to schedule
+         * all notes that fall in the last 3 millis of the loop, as well as in the first 7 millis.
+         * For this reason, scheduling notes will be broken into two steps:
+         * (1) schedule notes from current time to the end of look-ahead window or to the end of the loop, whichever comes first
+         * (2) if the look-ahead window wraps back around to the beginning of the loop, schedule notes from the beginning of 
+         *     the loop to the end of the look-ahead window.
+         * This also means the look-ahead window won't work right if the length of the loop is shorter than the look-ahead time,
+         * but that is an easy restriction to add, and also if look-ahead window is short (such as 10 millis), we won't want to
+         * make a loop shorter than 10 millis anyway, so no one will notice or care about that restriction.
+         */
+        // this will be the first part: schedule notes from the current time, to whichever of these comes first:
+        //   - the end of the look-ahead window
+        //   - the end of the loop
+        let endTimeOfNotesToSchedule = currentTimeWithinCurrentLoop + this.lookAheadMillis // no need to trim this to the end of the loop, since there won't be any notes scheduled after the end anyway
+        // keep iterating until the end of the list (nextNoteToSchedule will be 'null') or until nextNoteToSchedule is after 'end of notes to schedule'
+        // what should we do if nextNoteToSchedule is _before_ 'beginning of notes to schedule'?
+        while (nextNoteToSchedule !== null && nextNoteToSchedule.priority <= endTimeOfNotesToSchedule) {
+            // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for.
+            // don't schedule a note unless it hasn't been scheduled on this loop iteration and it goes after the current time (i.e. don't schedule notes in the past, just skip over them)
+            if (nextNoteToSchedule.priority >= currentTimeWithinCurrentLoop && numberOfLoopsSoFar > nextNoteToSchedule.data.lastScheduledOnIteration) {
+                this.scheduleDrumSample(actualStartTimeOfCurrentLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
+                nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFar // record the last iteration that the note was played on to avoid duplicate scheduling within the same iteration
+            }
+            nextNoteToSchedule = nextNoteToSchedule.next
+        }
+
+        // this will be the second part: if the look-ahead window went past the end of the loop, schedule notes from the beginning
+        // of the loop to the end of leftover look-ahead window time.
+        let endTimeToScheduleUpToFromBeginningOfLoop = endTimeOfNotesToSchedule - this.loopLengthInMillis // calulate leftover time to schedule for from beginning of loop, e.g. from 0 to 7 millis from above example
+        let actualStartTimeOfNextLoop = actualStartTimeOfCurrentLoop + this.loopLengthInMillis
+        let numberOfLoopsSoFarPlusOne = numberOfLoopsSoFar + 1
+        if (endTimeToScheduleUpToFromBeginningOfLoop >= 0) {
+            nextNoteToSchedule = this.rows[sequencerRowIndex]._notesList.head
+            while (nextNoteToSchedule !== null && nextNoteToSchedule.priority <= endTimeToScheduleUpToFromBeginningOfLoop) {
+                // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for
+                if (numberOfLoopsSoFarPlusOne > nextNoteToSchedule.data.lastScheduledOnIteration) {
+                    this.scheduleDrumSample(actualStartTimeOfNextLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
+                    nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFarPlusOne
+                }
+                nextNoteToSchedule = nextNoteToSchedule.next
+            }
+        }
+        return nextNoteToSchedule
+    }
+
+    scheduleDrumSample(startTime, sampleName){
+        this.scheduleSound(this.samples[sampleName].file, startTime / 1000, .5)
+    }
+
+    // schedule a sample to play at the specified time
+    scheduleSound(sample, time, gain=1, playbackRate=1) {
+        let sound = this.audioContext.createBufferSource(); // creates a sound source
+        sound.buffer = sample; // tell the sound source which sample to play
+        sound.playbackRate.value = playbackRate; // 1 is default playback rate; 0.5 is half-speed; 2 is double-speed
+
+        // set gain (volume). 1 is default, .1 is 10 percent
+        let gainNode = this.audioContext.createGain();
+        gainNode.gain.value = gain;
+        gainNode.connect(this.audioContext.destination);
+        sound.connect(gainNode); // connect the sound to the context's destination (the speakers)
+
+        sound.start(time);
+    }
+
 }
 
 // a drum sequencer row. each drum sequencer can have any number of rows, which can have notes placed onto them.
@@ -142,9 +229,8 @@ class SequencerRow {
     }
 
     /**
-     * remove a node from this sequencer row safely, including
-     * management of any changes that are needed so that 'next note
-     * to schedule' is updated correctly.
+     * remove a node from this sequencer row safely, including management of any 
+     * changes that are needed so that 'next note to schedule' is updated correctly.
      */
     removeNode(labelOfNodeToRemove) {
         /**
@@ -168,9 +254,8 @@ class SequencerRow {
     }
 
     /**
-     * insert a new node into this sequencer row safely, including
-     * management of any changes that are needed so that 'next note
-     * to schedule' is updated correctly.
+     * insert a new node into this sequencer row safely, including management of any 
+     * changes that are needed so that 'next note to schedule' is updated correctly.
      */
     insertNode(newNode, newNodeLabel) {
         this._notesList.insertNode(newNode, newNodeLabel)
