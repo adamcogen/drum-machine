@@ -377,7 +377,7 @@ window.onload = () => {
 
     // this method is the 'update' loop that will keep updating the page. after first invocation, this method basically calls itself recursively forever.
     function draw() {
-        currentTime = webAudioDriver.getCurrentTime()
+        currentTime = webAudioDriver.getCurrentTimeInMilliseconds()
 
         if (paused) {
             currentTimeWithinCurrentLoop = mostRecentPauseTimeWithinLoop // updated for the sake of the on-screen drum trigger lines

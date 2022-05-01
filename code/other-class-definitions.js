@@ -76,8 +76,8 @@ class BaseAudioDriver {
         throw "Method 'playSoundNow' from BaseAudioDriver needs to be implemented before being invoked."
     }
 
-    getCurrentTime(){
-        throw "Method 'getCurrentTime' from BaseAudioDriver needs to be implemented before being invoked."
+    getCurrentTimeInMilliseconds(){
+        throw "Method 'getCurrentTimeInMilliseconds' from BaseAudioDriver needs to be implemented before being invoked."
     }
 }
 
@@ -130,7 +130,7 @@ class WebAudioDriver extends BaseAudioDriver {
     }
 
     // return the current time according to the WebAudio context
-    getCurrentTime() {
+    getCurrentTimeInMilliseconds() {
         /**
          * we mutliply the WebAudio context's raw time by 1,000 to convert it from seconds to milliseconds,
          * just as a matter of preference. That seems more intelligible to me than using seconds. 
@@ -432,6 +432,68 @@ class SequencerRow {
     // todo: much work to be done here to allow for setting the quantization of a row with notes already on it.
     setQuantization(quantize) {
         this.quantized = quantize
+        /**
+         * if quantization has just been turned on, we need to quantize a previous un-quantized row.
+         * this will mean snapping notes that were previously unquantized, onto the grid.
+         * if quantization has been turned off, no need to change anything besides the row's 
+         * quantization setting -- no notes need to be moved, they just won't snap to the
+         * grid the next time the user tries to move them. although maybe we _do_ want to 
+         * change the 'beat' number that is stored in each note once we turn off quantization.
+         */
+        if (this.quantized) { // if quantization has just been turned on..
+            /**
+             * how should we handle quantization? we should be able to rely on note priorities alone, right?
+             * - based on a note's priority, find out which beat it is closest to.
+             *   - does this mean a note can wrap back around to the other side of the sequencer when it gets quantized (jump from end 
+             *     of row to beginning on-screen)? i'd say yes, that makes sense to do. although it may appear counter-intuitive to the
+             *     user. i'll have to see once I implement it. I'd say the view of the loop as a line is slightly counter-intuitive on
+             *     the whole, because things can be evenly spaced out but look un-even. for example if there are 4 evenly spaced notes, 
+             *     there will be empty space at the end of the row (between beats 4 and 1) and no empty space at the beginning of it
+             *     (between the start of the measure and beat 1). i think this is just a result of how the drum machine is set up.
+             * - snap the note into that position by updating it's priority and also give it a beat number to match it's new position.
+             */
+            let note = this._notesList.head;
+            while (note) {
+                let closestBeatToNote = this._getClosestBeatNumberForPriority(note.priority);
+                note.data.beat = closestBeatToNote
+                let newPriorityOfNote = this._getPriorityForBeatNumber(closestBeatToNote);
+                note.priority = newPriorityOfNote;
+            }
+        } else { // quantization has just been turned off
+            // set each note's beat number to a value indicating: 'this note is not quantized'
+            const NOTE_IS_NOT_QUANTIZED = -1; // to do: this constant value is also used by the GUI logic. I need to find a better (single / shared / common) place to define this value
+            let note = this._notesList.head
+            while (note) {
+                note.data.beat = NOTE_IS_NOT_QUANTIZED;
+                note = note.next
+            }
+        }
+    }
+
+    /**
+     * when we turn quantization on for a row that was previously un-quantized, we need each note in that row to snap onto a beat.
+     * this method calculates which beat number a note at a given priority should snap to.
+     * remember that 'priority' here refers to the time in milliseconds that the note should play wihtin each loop.
+     */
+    _getClosestBeatNumberForPriority(priority) {
+        let lengthOfEachBeatInMilliseconds = this.loopLengthInMillis / this.getNumberOfSubdivisions();
+        let numberOfBeatsBeforeNote = Math.floor(priority / lengthOfEachBeatInMilliseconds);
+        let noteIsCloserToRightBeatThanLeft = (priority % lengthOfEachBeatInMilliseconds) > (lengthOfEachBeatInMilliseconds / 2);
+        let closestBeat = numberOfBeatsBeforeNote;
+        if (noteIsCloserToRightBeatThanLeft) {
+            closestBeat += 1;
+        }
+        return closestBeat % this.getNumberOfSubdivisions() // modulo operator is used here so that we wrap around to the beggining if we're close enough to end of the loop
+    }
+
+    /**
+     * when we turn quantization on for a row that was previously un-quantized, we need each note in that row to snap onto a beat.
+     * this method calculates what priority a note should have, given what beat number the note falls on.
+     * remember that 'priority' here refers to the time in milliseconds that the note should play wihtin each loop.
+     */
+    _getPriorityForBeatNumber(beatNumber) {
+        let lengthOfEachBeatInMilliseconds = this.loopLengthInMillis / this.getNumberOfSubdivisions();
+        return beatNumber * lengthOfEachBeatInMilliseconds;
     }
 
     setLoopLengthInMillis(newLoopLengthInMillis) {
