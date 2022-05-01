@@ -377,7 +377,7 @@ window.onload = () => {
 
     // this method is the 'update' loop that will keep updating the page. after first invocation, this method basically calls itself recursively forever.
     function draw() {
-        currentTime = _audioContext.currentTime * 1000;
+        currentTime = webAudioDriver.getCurrentTime()
 
         if (paused) {
             currentTimeWithinCurrentLoop = mostRecentPauseTimeWithinLoop // updated for the sake of the on-screen drum trigger lines
@@ -576,7 +576,7 @@ window.onload = () => {
     function drawNotesToReflectSequencerCurrentState(){
         // draw all notes that are in the sequencer before the sequencer starts (aka the notes of the initial example drum sequence)
         for(let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
-            let noteToDraw = sequencer.rows[sequencerRowIndex]._notesList.head // we are reading notes list directly, but making no changes to it
+            let noteToDraw = sequencer.rows[sequencerRowIndex]._notesList.head // we are reading notes lists directly so that we can draw them, but making no changes to them
             while (noteToDraw !== null) {
                 let xPosition = sequencerHorizontalOffset + (sequencerWidth * (noteToDraw.priority / sequencer.loopLengthInMillis))
                 let yPosition = sequencerVerticalOffset + (sequencerRowIndex * spaceBetweenSequencerRows)

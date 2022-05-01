@@ -98,8 +98,24 @@ class WebAudioDriver extends BaseAudioDriver {
         this.webAudioContext = webAudioContext;
     }
 
-    // schedule a sound to play at the specified time
+    // schedule a sound to play at the specified time in milliseconds
     scheduleSound(soundData, time) {
+        let sound = this._setUpWebAudioContextSoundBufferSource(soundData)
+        /**
+         * we previously multipled the WebAudio context's raw time by 1,000 to convert it from seconds to milliseconds.
+         * Now we will convert the time back into seconds, which is the format that the WebAudio API is expecting.
+         */
+        sound.start(time / 1000);
+    }
+
+    // make a sound to play immediately
+    playSoundNow(soundData) {
+        let sound = this._setUpWebAudioContextSoundBufferSource(soundData)
+        sound.start();
+    }
+
+    // Set up and return the WebAudio API resource necessary for playing a sound
+    _setUpWebAudioContextSoundBufferSource(soundData) {
         let sound = this.webAudioContext.createBufferSource(); // creates a sound source
         sound.buffer = soundData.file; // tell the sound source which file to play
         sound.playbackRate.value = soundData.playbackRate; // 1 is default playback rate; 0.5 is half-speed; 2 is double-speed
@@ -110,27 +126,18 @@ class WebAudioDriver extends BaseAudioDriver {
         gainNode.connect(this.webAudioContext.destination);
         sound.connect(gainNode); // connect the sound to the context's destination (the speakers)
 
-        sound.start(time);
-    }
-
-    // make a sound to play immediately
-    playSoundNow(soundData) {
-        let sound = this.webAudioContext.createBufferSource(); // creates a sound source
-        sound.buffer = soundData.file; // tell the sound source which sample to play
-        sound.playbackRate.value = soundData.playbackRate; // 1 is default playback rate; 0.5 is half-speed; 2 is double-speed
-
-        // set gain (volume). 1 is default, .1 is 10 percent
-        let gainNode = this.webAudioContext.createGain();
-        gainNode.gain.value = soundData.gain;
-        gainNode.connect(this.webAudioContext.destination);
-        sound.connect(gainNode); // connect the sound to the context's destination (the speakers)
-
-        sound.start();
+        return sound
     }
 
     // return the current time according to the WebAudio context
     getCurrentTime() {
-        this.webAudioContext.currentTime
+        /**
+         * we mutliply the WebAudio context's raw time by 1,000 to convert it from seconds to milliseconds,
+         * just as a matter of preference. That seems more intelligible to me than using seconds. 
+         * this means that we will also need to divide any given time by 1,000 when we go to schedule it,
+         * so that it is back in the format that the WebAudio API is expecting.
+         */ 
+        return this.webAudioContext.currentTime * 1000;
     }
 }
 
@@ -300,7 +307,7 @@ class Sequencer {
         // for each 'schedule sounds ahead of time' audio driver, schedule the sound at the speicifed time
         for (let audioDriver of this.audioDrivers) {
             if (audioDriver.scheduleSoundsAheadOfTime) {
-                audioDriver.scheduleSound(soundData, startTime / 1000)
+                audioDriver.scheduleSound(soundData, startTime)
             }
         }
     }
