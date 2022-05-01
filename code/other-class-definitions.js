@@ -135,7 +135,8 @@ class WebAudioDriver extends BaseAudioDriver {
 }
 
 // to do: implement MIDI audio driver. depending on how midi support matches up with the way the WebAudio API works, 
-// in the worst case this MIDI driver should be able to work decently as a 'schedule now' audio driver.
+// in the worst case this MIDI driver should be able to work decently as a 'play sounds now' audio driver, rather
+// than scheduling them ahead of time. need to look into this.
 class MidiAudioDriver extends BaseAudioDriver {}
 
 // a drum sequencer, which is made up of multiple rows that can have notes placed onto them.
@@ -274,11 +275,13 @@ class Sequencer {
 
     // play the sample with the given name right away (don't worry about scheduling it for some time in the future)
     playDrumSampleNow(sampleName) {
+        // initialize sound data JSON object
         let soundData = {
             file: this.samples[sampleName].file,
             playbackRate: 1, 
             gain: .5,
         }
+
         // for each audio driver, play the sound now
         for (let audioDriver of this.audioDrivers) {
             audioDriver.playSoundNow(soundData)
@@ -392,7 +395,7 @@ class SequencerRow {
                 // adding more subdivisions: keep existing 'beat' numbers of each note the same, just we'll just add more subdivisions after them, and adjust note priorities.
                 let note = this._notesList.head
                 while(note) {
-                    // just adjust note priorities
+                    // just adjust note priorities. to do: this means the updated note priorities won't by applied to 'next note to schedule' until the next iteration. that's not ideal!
                     note.priority = (note.data.beat * newLengthOfOneSubdivision)
                     note = note.next
                 }
@@ -403,9 +406,10 @@ class SequencerRow {
                     // adjust note priorities, and remove notes if their 'beat' value no longer exists for the new number of subdivisions
                     if (note.data.beat >= newNumberOfSubdivisions) {
                         let nextNoteToCheck = note.next
-                        this._notesList.removeNode(note.label)
+                        this.removeNode(note.label)
                         note = nextNoteToCheck // manually skip to the note after the deleted note (which now has a null .next value)
                     } else {
+                        // to do: updated priority won't be applied to 'next note to schedule' until the next iteration here:
                         note.priority = (note.data.beat * newLengthOfOneSubdivision)
                         note = note.next
                     }

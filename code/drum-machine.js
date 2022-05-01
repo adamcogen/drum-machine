@@ -501,35 +501,35 @@ window.onload = () => {
 
     // set up a default initial drum sequence with some notes in it.
     function initializeDefaultSequencerPattern(){
-        sequencer.rows[0]._notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), 0, 
+        sequencer.rows[0].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), 0, 
         {
             lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
             sampleName: HI_HAT_CLOSED,
             beat: 0,
         }
         ))
-        sequencer.rows[0]._notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 8) * 3, 
+        sequencer.rows[0].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 8) * 3, 
         {
             lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
             sampleName: WOODBLOCK,
             beat: 3,
         }
         ))
-        sequencer.rows[1]._notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 1, 
+        sequencer.rows[1].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 1, 
             {
                 lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: HI_HAT_OPEN,
                 beat: 1,
             }
         ))
-        sequencer.rows[2]._notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), ((loopLengthInMillis / 4) * 2), 
+        sequencer.rows[2].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), ((loopLengthInMillis / 4) * 2), 
             {
                 lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: SNARE,
                 beat: NOTE_IS_NOT_QUANTIZED,
             }
         ))
-        sequencer.rows[3]._notesList.insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 3, 
+        sequencer.rows[3].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 3, 
             {
                 lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: BASS_DRUM,
@@ -675,17 +675,6 @@ window.onload = () => {
         }
         // now we should remove the circle from the two.js canvas as well
         listOfOneRemovedElement[0].remove()
-    }
-
-    /**
-     * given an index of a row in the sequencer, remove all of the circles from the GUI for that row.
-     * this has _no effect_ on the underlying sequencer data structure, it just removes the circles from
-     * the display!
-     */
-    function removeAllCirclesInSequencerRowFromDisplay(sequencerRowIndex) {
-        for (let note of sequencer.rows[sequencerRowIndex]._notesList) {
-            removeCircleFromDisplay(note.label)
-        }
     }
 
     /**
