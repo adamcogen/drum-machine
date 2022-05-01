@@ -45,11 +45,12 @@ window.onload = () => {
 
     // initialize web audio context
     setUpAudioAndAnimationForWebAudioApi()
-    let audioContext = new AudioContext();
+    let _audioContext = new AudioContext();
+    let webAudioDriver = new WebAudioDriver(_audioContext);
 
     // wait until the first click before resuming the audio context (this is required by Chrome browser)
     window.onclick = () => {
-        audioContext.resume()
+        _audioContext.resume()
     }
 
     /**
@@ -120,7 +121,7 @@ window.onload = () => {
 
 
     // initialize sequencer data structure
-    let sequencer = new Sequencer(audioContext, 6, loopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
+    let sequencer = new Sequencer([webAudioDriver], 6, loopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
     sequencer.rows[0].setNumberOfSubdivisions(8)
     sequencer.rows[0].setQuantization(true)
     sequencer.rows[1].setNumberOfSubdivisions(4)
@@ -376,7 +377,7 @@ window.onload = () => {
 
     // this method is the 'update' loop that will keep updating the page. after first invocation, this method basically calls itself recursively forever.
     function draw() {
-        currentTime = audioContext.currentTime * 1000;
+        currentTime = _audioContext.currentTime * 1000;
 
         if (paused) {
             currentTimeWithinCurrentLoop = mostRecentPauseTimeWithinLoop // updated for the sake of the on-screen drum trigger lines
@@ -414,25 +415,6 @@ window.onload = () => {
         requestAnimationFrameShim(draw); // call animation frame update with this 'draw' method again
     }
 
-    // play the sample with the given name right away (don't worry about scheduling it for some time in the future)
-    function playDrumSampleNow(sampleName) {
-        playSoundNow(samples[sampleName].file, .5)
-    }
-
-    function playSoundNow(sample, gain=1, playbackRate=1) {
-        let sound = audioContext.createBufferSource(); // creates a sound source
-        sound.buffer = sample; // tell the sound source which sample to play
-        sound.playbackRate.value = playbackRate; // 1 is default playback rate; 0.5 is half-speed; 2 is double-speed
-
-        // set gain (volume). 1 is default, .1 is 10 percent
-        gainNode = audioContext.createGain();
-        gainNode.gain.value = gain;
-        gainNode.connect(audioContext.destination);
-        sound.connect(gainNode); // connect the sound to the context's destination (the speakers)
-
-        sound.start();
-    }
-
     // load a sample from a file. to load from a local file, this script needs to be running on a server.
     function loadSample(sampleName, url) {
         let request = new XMLHttpRequest();
@@ -441,7 +423,7 @@ window.onload = () => {
       
         // Decode asynchronously
         request.onload = function() {
-            audioContext.decodeAudioData(request.response, function(buffer) {
+            _audioContext.decodeAudioData(request.response, function(buffer) {
             samples[sampleName].file = buffer; // once we get a response, write the returned data to the corresponding attribute in our 'samples' object
           }, (error) => {
               console.log("Error caught when attempting to load file with URL: '" + url + "'. Error: '" + error + "'.")
@@ -662,7 +644,7 @@ window.onload = () => {
             circleBeingMovedOldBeatNumber = circleBeingMoved.guiData.beat
             circleBeingMovedNewBeatNumber = circleBeingMovedOldBeatNumber
             setNoteTrashBinVisibility(true)
-            playDrumSampleNow(circleBeingMoved.guiData.sampleName)
+            sequencer.playDrumSampleNow(circleBeingMoved.guiData.sampleName)
         });
 
         // add info to the circle object that the gui uses to keep track of things

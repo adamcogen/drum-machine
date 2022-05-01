@@ -53,10 +53,95 @@ class SampleBankNodeGenerator {
 
 }
 
+/**
+ * This is an interface for audio drivers / audio contexts.
+ * Subclasses can be implemented to allow for uniform interactions with multiple
+ * different audio drivers (my current plan is to create a WebAudioDriver for the
+ * WebAudio API, and eventually a MidiAudioDriver, which will support outputting 
+ * live MIDI). This way the sequencer will be able to iterate through a list of 
+ * multiple different audio drivers, and make the same method calls to each of
+ * them in order to output sound in multiple ways or to multiple sources at the
+ * same time. 
+ */
+class BaseAudioDriver {
+    constructor(scheduleSoundsAheadOfTime = false) {
+        this.scheduleSoundsAheadOfTime = scheduleSoundsAheadOfTime; // define the expected usage pattern for playing sounds with this audio driver.
+    }
+
+    scheduleSound(soundData, time) {
+        throw "Method 'scheduleSound' from BaseAudioDriver needs to be implemented before being invoked."
+    }
+
+    playSoundNow(soundData) {
+        throw "Method 'playSoundNow' from BaseAudioDriver needs to be implemented before being invoked."
+    }
+
+    getCurrentTime(){
+        throw "Method 'getCurrentTime' from BaseAudioDriver needs to be implemented before being invoked."
+    }
+}
+
+/**
+ * Basic audio driver for Javascript WebAudio context.
+ * 
+ * Expected format of soundData: a JSON object
+ * soundData = {
+ *   file: , // a WebAudio buffer containing a sound file
+ *   playbackRate: , // 1 is default playback rate; 0.5 is half-speed; 2 is double-speed
+ *   gain: , // set gain (volume). 1 is default, .1 is 10 percent
+ * }
+ * 
+ */
+class WebAudioDriver extends BaseAudioDriver {
+    constructor(webAudioContext){
+        super(true);
+        this.webAudioContext = webAudioContext;
+    }
+
+    // schedule a sound to play at the specified time
+    scheduleSound(soundData, time) {
+        let sound = this.webAudioContext.createBufferSource(); // creates a sound source
+        sound.buffer = soundData.file; // tell the sound source which file to play
+        sound.playbackRate.value = soundData.playbackRate; // 1 is default playback rate; 0.5 is half-speed; 2 is double-speed
+
+        // set gain (volume). 1 is default, .1 is 10 percent
+        let gainNode = this.webAudioContext.createGain();
+        gainNode.gain.value = soundData.gain;
+        gainNode.connect(this.webAudioContext.destination);
+        sound.connect(gainNode); // connect the sound to the context's destination (the speakers)
+
+        sound.start(time);
+    }
+
+    // make a sound to play immediately
+    playSoundNow(soundData) {
+        let sound = this.webAudioContext.createBufferSource(); // creates a sound source
+        sound.buffer = soundData.file; // tell the sound source which sample to play
+        sound.playbackRate.value = soundData.playbackRate; // 1 is default playback rate; 0.5 is half-speed; 2 is double-speed
+
+        // set gain (volume). 1 is default, .1 is 10 percent
+        let gainNode = this.webAudioContext.createGain();
+        gainNode.gain.value = soundData.gain;
+        gainNode.connect(this.webAudioContext.destination);
+        sound.connect(gainNode); // connect the sound to the context's destination (the speakers)
+
+        sound.start();
+    }
+
+    // return the current time according to the WebAudio context
+    getCurrentTime() {
+        this.webAudioContext.currentTime
+    }
+}
+
+// to do: implement MIDI audio driver. depending on how midi support matches up with the way the WebAudio API works, 
+// in the worst case this MIDI driver should be able to work decently as a 'schedule now' audio driver.
+class MidiAudioDriver extends BaseAudioDriver {}
+
 // a drum sequencer, which is made up of multiple rows that can have notes placed onto them.
 class Sequencer {
-    constructor(audioContext, numberOfRows = 4, loopLengthInMillis = 1000, lookAheadMillis = 50, samples = []) {
-        this.audioContext = audioContext
+    constructor(audioDrivers, numberOfRows = 4, loopLengthInMillis = 1000, lookAheadMillis = 50, samples = []) {
+        this.audioDrivers = audioDrivers
         this.numberOfRows = numberOfRows
         this.loopLengthInMillis = loopLengthInMillis
         this.rows = this.initializeEmptySequencerRows()
@@ -187,23 +272,34 @@ class Sequencer {
         return nextNoteToSchedule
     }
 
-    scheduleDrumSample(startTime, sampleName){
-        this.scheduleSound(this.samples[sampleName].file, startTime / 1000, .5)
+    // play the sample with the given name right away (don't worry about scheduling it for some time in the future)
+    playDrumSampleNow(sampleName) {
+        let soundData = {
+            file: this.samples[sampleName].file,
+            playbackRate: 1, 
+            gain: .5,
+        }
+        // for each audio driver, play the sound now
+        for (let audioDriver of this.audioDrivers) {
+            audioDriver.playSoundNow(soundData)
+        }
     }
 
-    // schedule a sample to play at the specified time
-    scheduleSound(sample, time, gain=1, playbackRate=1) {
-        let sound = this.audioContext.createBufferSource(); // creates a sound source
-        sound.buffer = sample; // tell the sound source which sample to play
-        sound.playbackRate.value = playbackRate; // 1 is default playback rate; 0.5 is half-speed; 2 is double-speed
+    // schedule the sample with the given name to play at the specified time in millis
+    scheduleDrumSample(startTime, sampleName){
+        // initialize sound data JSON object
+        let soundData = {
+            file: this.samples[sampleName].file,
+            playbackRate: 1, 
+            gain: .5,
+        }
 
-        // set gain (volume). 1 is default, .1 is 10 percent
-        let gainNode = this.audioContext.createGain();
-        gainNode.gain.value = gain;
-        gainNode.connect(this.audioContext.destination);
-        sound.connect(gainNode); // connect the sound to the context's destination (the speakers)
-
-        sound.start(time);
+        // for each 'schedule sounds ahead of time' audio driver, schedule the sound at the speicifed time
+        for (let audioDriver of this.audioDrivers) {
+            if (audioDriver.scheduleSoundsAheadOfTime) {
+                audioDriver.scheduleSound(soundData, startTime / 1000)
+            }
+        }
     }
 
 }
