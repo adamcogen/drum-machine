@@ -206,6 +206,10 @@ class Sequencer {
         this.rows[rowIndex].setNumberOfSubdivisions(newNumberOfSubdivisions)
     }
 
+    setNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex) {
+        this.rows[rowIndex].setNumberOfReferenceLines(newNumberOfReferenceLines)
+    }
+
     // update loop length in millis. the bulk of the logic for this is handled at the row level, so just iterate through all rows
     // updating their loop length, then update the value of the 'loop length' variable we have stored in the main sequencer.
     setLoopLengthInMillis(newLoopLengthInMillis) {
@@ -322,6 +326,7 @@ class SequencerRow {
         this.nextNoteToSchedule = this.resetNextNoteToSchedule() // get the next note that needs to be scheduled (will start as list 'head', and update as we go)
         this.subdivisions = 0
         this.quantized = false
+        this.referenceLines = 0
     }
 
     // reset the 'next note to schedule' to notesList.head
@@ -332,6 +337,10 @@ class SequencerRow {
 
     getNumberOfSubdivisions() {
         return this.subdivisions
+    }
+
+    getNumberOfReferenceLines() {
+        return this.referenceLines
     }
 
     /**
@@ -424,6 +433,10 @@ class SequencerRow {
             }
         }
         this.subdivisions = newNumberOfSubdivisions
+    }
+
+    setNumberOfReferenceLines(newNumberOfReferenceLines) {
+        this.referenceLines = newNumberOfReferenceLines
     }
 
     // set whether this row should be quantized or not.

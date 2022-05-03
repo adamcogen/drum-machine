@@ -102,6 +102,7 @@ window.onload = () => {
      */
     let subdivisionLineHeight = 20
     let subdivisionLineColor = sequencerAndToolsLineColor // 'black'
+    let referenceLineColor = '#ababab' // meant to be slightly lighter than the subdivision line color
     /**
      * gui settings: mouse movement, note placing
      */
@@ -116,13 +117,15 @@ window.onload = () => {
      * subdivision text input settings
      */
     let subdivisionTextInputHorizontalPadding = 10
-    let subdivisionTextInputVerticalPadding = -17
+    let subdivisionTextInputVerticalPadding = 0 // centered on sequencer line (old value): -17
+    let referenceLineTextInputVerticalPadding = -35
     let maximumAllowedNumberOfSubdivisions = 1000
 
 
     // initialize sequencer data structure
     let sequencer = new Sequencer([webAudioDriver], 6, loopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
     sequencer.rows[0].setNumberOfSubdivisions(8)
+    sequencer.rows[0].setNumberOfReferenceLines(4)
     sequencer.rows[0].setQuantization(true)
     sequencer.rows[1].setNumberOfSubdivisions(4)
     sequencer.rows[1].setQuantization(true)
@@ -130,11 +133,13 @@ window.onload = () => {
     sequencer.rows[3].setNumberOfSubdivisions(0)
     sequencer.rows[4].setNumberOfSubdivisions(5)
     sequencer.rows[4].setQuantization(true)
+    sequencer.rows[5].setNumberOfReferenceLines(8)
     sequencer.rows[5].setNumberOfSubdivisions(7)
     sequencer.rows[5].setQuantization(true)
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
-    let sequencerRowLines = initializeSequencerRowLines() // list of sequencer row lines
+    let referenceLineLists = initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
+    let sequencerRowLines = initializeAllSequencerRowLines() // list of sequencer row lines
     let subdivisionLineLists = initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
     let drumTriggerLines = initializeDrumTriggerLines() // list of lines that move to represent the current time within the loop
     let noteBankContainer = initializeNoteBankContainer() // a rectangle that goes around the note bank
@@ -151,6 +156,10 @@ window.onload = () => {
     let subdivisionTextInputs = []
     initializeSubdivisionTextInputsValuesAndStyles();
     initializeSubdivisionTextInputsActionListeners();
+
+    let referenceLineTextInputs = []
+    initializeReferenceLineTextInputsValuesAndStyles();
+    initializeReferenceLineTextInputsActionListeners();
 
     // add checkboxes for toggling quantization on each row. these might be replaced with hand-drawn buttons of some sort later for better UI
     let quantizationCheckboxes = []
@@ -455,8 +464,8 @@ window.onload = () => {
 
     function initializeQuantizationCheckboxes() {
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            let verticalPosition = sequencerVerticalOffset + (spaceBetweenSequencerRows * rowIndex) - 15
-            let horizontalPosition = sequencerHorizontalOffset + sequencerWidth + 80
+            let verticalPosition = sequencerVerticalOffset + (spaceBetweenSequencerRows * rowIndex) + subdivisionTextInputVerticalPadding + 4
+            let horizontalPosition = sequencerHorizontalOffset + sequencerWidth + 73
             let checkbox = initializeCheckbox(verticalPosition, horizontalPosition)
             if (sequencer.rows[rowIndex].quantized) {
                 checkbox.checked = true;
@@ -738,22 +747,36 @@ window.onload = () => {
     }
 
     // draw lines for sequencer rows. return a list of the drawn lines. these will be Two.js 'path' objects.
-    function initializeSequencerRowLines() {
+    function initializeAllSequencerRowLines() {
         let sequencerRowLines = []
         for (let rowsDrawn = 0; rowsDrawn < sequencer.numberOfRows; rowsDrawn++) {
-            let sequencerRowLine = two.makePath(
-                [
-                    new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset + (rowsDrawn * spaceBetweenSequencerRows)),
-                    new Two.Anchor(sequencerHorizontalOffset + sequencerWidth, sequencerVerticalOffset + (rowsDrawn * spaceBetweenSequencerRows)),
-                ], 
-                false
-            );
-            sequencerRowLine.linewidth = sequencerAndToolsLineWidth;
-            sequencerRowLine.stroke = sequencerAndToolsLineColor
-    
+            let sequencerRowLine = initializeSequencerRowLine(rowsDrawn)
             sequencerRowLines.push(sequencerRowLine)
         }
         return sequencerRowLines
+    }
+
+    function initializeSequencerRowLine(rowIndex) {
+        let sequencerRowLine = two.makePath(
+            [
+                new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows)),
+                new Two.Anchor(sequencerHorizontalOffset + sequencerWidth, sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows)),
+            ], 
+            false
+        );
+        sequencerRowLine.linewidth = sequencerAndToolsLineWidth;
+        sequencerRowLine.stroke = sequencerAndToolsLineColor
+        return sequencerRowLine
+    }
+
+    function removeSequencerRowLine(rowIndex) {
+        sequencerRowLines[rowIndex].remove();
+        sequencerRowLines[rowIndex] = null;
+    }
+
+    function removeDrumTriggerLine(rowIndex) {
+        drumTriggerLines[rowIndex].remove();
+        drumTriggerLines[rowIndex] = null;
     }
 
     // add 'subdivision lines' to each sequencer row. these lines divide each row into the given number of evenly-sized sections.
@@ -803,25 +826,76 @@ window.onload = () => {
         subdivisionLineLists[rowIndex] = []
     }
 
+    function removeReferenceLinesForRow(rowIndex) {
+        for (referenceLine of referenceLineLists[rowIndex]) {
+            referenceLine.remove()
+        }
+        referenceLineLists[rowIndex] = []
+    }
+
+    function initializeAllReferenceLines() {
+        let allReferenceLineLists = []
+        let referenceLinesForRow = []
+        for (let rowsDrawn = 0; rowsDrawn < sequencer.numberOfRows; rowsDrawn++) {
+            referenceLinesForRow = initializeReferenceLinesForRow(rowsDrawn)
+            allReferenceLineLists.push(referenceLinesForRow) // keep a list of all rows' reference line lists
+        }
+        return allReferenceLineLists
+    }
+
+    function initializeReferenceLinesForRow(rowIndex) {
+        let referenceLinesForRow = []
+        if (sequencer.rows[rowIndex].getNumberOfReferenceLines() <= 0) {
+            return [] // don't draw reference lines for this row if it has 0 or fewer
+        }
+        let xIncrementBetweenLines = sequencerWidth / sequencer.rows[rowIndex].getNumberOfReferenceLines()
+        for (let linesDrawnForRow = 0; linesDrawnForRow < sequencer.rows[rowIndex].getNumberOfReferenceLines(); linesDrawnForRow++) {
+            let referenceLine = two.makePath(
+                [
+                    new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenLines * linesDrawnForRow), sequencerVerticalOffset - 1 + (rowIndex * spaceBetweenSequencerRows)),
+                    new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenLines * linesDrawnForRow), sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows) - subdivisionLineHeight),
+                ], 
+                false
+            );
+            referenceLine.linewidth = sequencerAndToolsLineWidth;
+            referenceLine.stroke = referenceLineColor
+
+            referenceLinesForRow.push(referenceLine) // keep a list of all reference lines for the current row
+        }
+        return referenceLinesForRow
+    }
+
+    function removeReferenceLinesForRow(rowIndex) {
+        for (referenceLine of referenceLineLists[rowIndex]) {
+            referenceLine.remove()
+        }
+        referenceLineLists[rowIndex] = []
+    }
+
     // draw lines for the 'drum triggers' for each sequencer row.
     // these are the little lines above each sequencer line that track the current time within the loop.
     // return a list of the drawn lines. these will be Two.js 'path' objects.
     function initializeDrumTriggerLines() {
         let drumTriggerLines = []
         for (let drumTriggersDrawn = 0; drumTriggersDrawn < sequencer.numberOfRows; drumTriggersDrawn++) {
-            let triggerLine = two.makePath(
-                [
-                    new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset + 1 + (drumTriggersDrawn * spaceBetweenSequencerRows)),
-                    new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset - drumTriggerHeight + (drumTriggersDrawn * spaceBetweenSequencerRows)),
-                ], 
-                false
-            );
-            triggerLine.linewidth = sequencerAndToolsLineWidth;
-            triggerLine.stroke = sequencerAndToolsLineColor
-    
+            let triggerLine = initializeDrumTriggerLineForRow(drumTriggersDrawn)
             drumTriggerLines.push(triggerLine)
         }
         return drumTriggerLines
+    }
+
+    function initializeDrumTriggerLineForRow(rowIndex) {
+        let triggerLine = two.makePath(
+            [
+                new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset + drumTriggerHeight + (rowIndex * spaceBetweenSequencerRows)),
+                new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset - drumTriggerHeight + (rowIndex * spaceBetweenSequencerRows)),
+            ], 
+            false
+        );
+        triggerLine.linewidth = sequencerAndToolsLineWidth;
+        triggerLine.stroke = 'black'
+
+        return triggerLine
     }
 
     // draw the physical note bank container on the screen. for now that's just a rectangle.
@@ -982,7 +1056,7 @@ window.onload = () => {
             textArea.style.position = "absolute"
             textArea.style.top = "" + (sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows) + subdivisionTextInputVerticalPadding) + "px"
             textArea.style.left = "" + (sequencerHorizontalOffset + sequencerWidth + subdivisionTextInputHorizontalPadding) + "px"
-            textArea.style.borderColor = sequencerAndToolsLineColor = sequencerAndToolsLineColor
+            textArea.style.borderColor = sequencerAndToolsLineColor
             textArea.value = sequencer.rows[rowIndex].getNumberOfSubdivisions()
             domElements.divs.subdivisionTextInputs.appendChild(textArea);
             // note for later: the opposite of appendChild is removeChild
@@ -1003,6 +1077,39 @@ window.onload = () => {
                 newTextInputValue = confineNumberToBounds(newTextInputValue, 0, maximumAllowedNumberOfSubdivisions)
                 subdivisionTextInput.value = newTextInputValue
                 updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
+            })
+        }
+    }
+
+    function initializeReferenceLineTextInputsValuesAndStyles() {
+        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+            let textArea = document.createElement("textarea");
+            textArea.cols = "3"
+            textArea.rows = "1"
+            textArea.style.position = "absolute"
+            textArea.style.top = "" + (sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows) + referenceLineTextInputVerticalPadding) + "px"
+            textArea.style.left = "" + (sequencerHorizontalOffset + sequencerWidth + subdivisionTextInputHorizontalPadding) + "px"
+            textArea.style.borderColor = referenceLineColor
+            textArea.value = sequencer.rows[rowIndex].getNumberOfReferenceLines()
+            domElements.divs.subdivisionTextInputs.appendChild(textArea);
+            // note for later: the opposite of appendChild is removeChild
+            referenceLineTextInputs.push(textArea)
+            // textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
+        }
+    }
+
+    function initializeReferenceLineTextInputsActionListeners() {
+        for (let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
+            let referenceLineTextInput = referenceLineTextInputs[rowIndex]
+            referenceLineTextInput.addEventListener('blur', (event) => {
+                let newTextInputValue = referenceLineTextInput.value.trim() // remove whitespace from beginning and end of input then store it
+                if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
+                    newTextInputValue = sequencer.rows[rowIndex].getNumberOfReferenceLines()
+                }
+                newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
+                newTextInputValue = confineNumberToBounds(newTextInputValue, 0, maximumAllowedNumberOfSubdivisions)
+                referenceLineTextInput.value = newTextInputValue
+                updateNumberOfReferenceLinesForRow(newTextInputValue, rowIndex)
             })
         }
     }
@@ -1033,12 +1140,42 @@ window.onload = () => {
         sequencer.setNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex)
         // next we will delete the subdivision lines for the changed row
         removeSubdivisionLinesForRow(rowIndex)
+        removeDrumTriggerLine(rowIndex)
         // then we will draw the new subdivision lines for the changed row
         subdivisionLineLists[rowIndex] = initializeSubdivisionLinesForRow(rowIndex)
+        drumTriggerLines[rowIndex] = initializeDrumTriggerLineForRow(rowIndex)
         // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
         drawAllNoteBankCircles()
         drawNotesToReflectSequencerCurrentState()
         subdivisionTextInputs[rowIndex].value = newNumberOfSubdivisions
+    }
+
+    function updateNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex) {
+        // first delete all existing notes from the display for the changed row,
+        // because now they may be out of date or some of them may have been deleted,
+        // and the simplest thing to do may just be to delete them all then redraw
+        // the current state of the sequencer for the changed row.
+        // the same applies for the subdivion lines and the sequencer row line as well,
+        // since we want those to be in front of the reference lines, which we are
+        // redrawing now.
+        removeAllCirclesFromDisplay()
+        // now update the sequencer data structure to reflect the new number of reference lines.
+        // call the sequencer's 'update number of reference lines for row' method
+        sequencer.setNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex)
+        // next we will delete all lines for the changed row
+        removeSubdivisionLinesForRow(rowIndex)
+        removeReferenceLinesForRow(rowIndex)
+        removeSequencerRowLine(rowIndex)
+        removeDrumTriggerLine(rowIndex)
+        // then we will draw all the lines for the changed row, starting with reference lines since they need to be the bottom layer
+        referenceLineLists[rowIndex] = initializeReferenceLinesForRow(rowIndex)
+        subdivisionLineLists[rowIndex] = initializeSubdivisionLinesForRow(rowIndex)
+        sequencerRowLines[rowIndex] = initializeSequencerRowLine(rowIndex)
+        drumTriggerLines[rowIndex] = initializeDrumTriggerLineForRow(rowIndex)
+        // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
+        drawAllNoteBankCircles()
+        drawNotesToReflectSequencerCurrentState()
+        referenceLineTextInputs[rowIndex].value = newNumberOfReferenceLines
     }
 
     // given a number and an upper and lower bound, confine the number to be between the bounds.
