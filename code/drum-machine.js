@@ -63,7 +63,7 @@ window.onload = () => {
      */
     let sequencerVerticalOffset = 100
     let sequencerHorizontalOffset = 150
-    let sequencerWidth = 800
+    let sequencerWidth = 400
     let spaceBetweenSequencerRows = 80
     let drumTriggerHeight = 20
     let unplayedCircleRadius = 8
@@ -461,9 +461,6 @@ window.onload = () => {
             if (sequencer.rows[rowIndex].quantized) {
                 checkbox.checked = true;
             }
-            if (sequencer.rows[rowIndex].getNumberOfSubdivisions() === 0) {
-                checkbox.disabled = true;
-            }
             quantizationCheckboxes.push(checkbox)
         }
     }
@@ -472,6 +469,10 @@ window.onload = () => {
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
             let checkbox = quantizationCheckboxes[rowIndex]
             checkbox.addEventListener('click', (event) => {
+                if (sequencer.rows[rowIndex].getNumberOfSubdivisions() === 0) {
+                    // you can't quantize a row if it has 0 subdivisions, so automatically change the value to 1 in this case
+                    updateNumberOfSubdivisionsForRow(1, rowIndex)
+                }
                 sequencer.rows[rowIndex].setQuantization(checkbox.checked)
                 removeAllCirclesFromDisplay()
                 drawAllNoteBankCircles()
@@ -1007,13 +1008,10 @@ window.onload = () => {
     }
 
     function updateNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex) {
-        // update quantization toggle checkbox, quantization settings
+        // update quantization toggle checkbox, quantization settings: you can't quantize a row if it has 0 subdivisions.
         if (newNumberOfSubdivisions === 0) {
             quantizationCheckboxes[rowIndex].checked = false
-            quantizationCheckboxes[rowIndex].disabled = true
             sequencer.rows[rowIndex].quantized = false
-        } else {
-            quantizationCheckboxes[rowIndex].disabled = false
         }
 
         // first delete all existing notes from the display for the changed row,
@@ -1040,6 +1038,7 @@ window.onload = () => {
         // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
         drawAllNoteBankCircles()
         drawNotesToReflectSequencerCurrentState()
+        subdivisionTextInputs[rowIndex].value = newNumberOfSubdivisions
     }
 
     // given a number and an upper and lower bound, confine the number to be between the bounds.
