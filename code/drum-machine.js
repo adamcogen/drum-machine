@@ -63,7 +63,7 @@ window.onload = () => {
      */
     let sequencerVerticalOffset = 100
     let sequencerHorizontalOffset = 150
-    let sequencerWidth = 400
+    let sequencerWidth = 800
     let spaceBetweenSequencerRows = 80
     let drumTriggerHeight = 20
     let unplayedCircleRadius = 8
@@ -151,6 +151,11 @@ window.onload = () => {
     let subdivisionTextInputs = []
     initializeSubdivisionTextInputsValuesAndStyles();
     initializeSubdivisionTextInputsActionListeners();
+
+    // add checkboxes for toggling quantization on each row. these might be replaced with hand-drawn buttons of some sort later for better UI
+    let quantizationCheckboxes = []
+    initializeQuantizationCheckboxes();
+    initializeQuantizationCheckboxActionListeners();
 
     addPauseButtonActionListeners()
 
@@ -371,6 +376,8 @@ window.onload = () => {
     let theoreticalStartTimeOfCurrentLoop = 0 // calculate what time the current loop started at (or would have started at in theory, if we account for pauses)
     let paused = false // store whether sequencer is paused or not
 
+    pause();
+
     /**
      * end of main logic, start of function definitions.
      */
@@ -430,6 +437,47 @@ window.onload = () => {
           });
         }
         request.send();
+    }
+
+    function initializeCheckbox(verticalPosition, horizontalPosition) {
+        let checkbox = document.createElement("input");
+        checkbox.setAttribute("type", "checkbox");
+        checkbox.style.position = "absolute";
+        checkbox.style.top = "" + verticalPosition + "px";
+        checkbox.style.left = "" + horizontalPosition + "px";
+        checkbox.style.width = "20px"
+        checkbox.style.height = "20px"
+        checkbox.style.outline = "20px"
+        domElements.divs.subdivisionTextInputs.appendChild(checkbox);
+        checkbox.style.cursor = "pointer"
+        return checkbox
+    }
+
+    function initializeQuantizationCheckboxes() {
+        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+            let verticalPosition = sequencerVerticalOffset + (spaceBetweenSequencerRows * rowIndex) - 15
+            let horizontalPosition = sequencerHorizontalOffset + sequencerWidth + 80
+            let checkbox = initializeCheckbox(verticalPosition, horizontalPosition)
+            if (sequencer.rows[rowIndex].quantized) {
+                checkbox.checked = true;
+            }
+            if (sequencer.rows[rowIndex].getNumberOfSubdivisions() === 0) {
+                checkbox.disabled = true;
+            }
+            quantizationCheckboxes.push(checkbox)
+        }
+    }
+
+    function initializeQuantizationCheckboxActionListeners() {
+        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+            let checkbox = quantizationCheckboxes[rowIndex]
+            checkbox.addEventListener('click', (event) => {
+                sequencer.rows[rowIndex].setQuantization(checkbox.checked)
+                removeAllCirclesFromDisplay()
+                drawAllNoteBankCircles()
+                drawNotesToReflectSequencerCurrentState()
+            });
+        }
     }
 
     // todo: clean up the block comments for the two 'snap to' methods below for clarity
@@ -951,7 +999,7 @@ window.onload = () => {
                     newTextInputValue = sequencer.rows[rowIndex].getNumberOfSubdivisions()
                 }
                 newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
-                newTextInputValue = confineNumberToBounds(newTextInputValue, 1, maximumAllowedNumberOfSubdivisions)
+                newTextInputValue = confineNumberToBounds(newTextInputValue, 0, maximumAllowedNumberOfSubdivisions)
                 subdivisionTextInput.value = newTextInputValue
                 updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
             })
@@ -959,6 +1007,15 @@ window.onload = () => {
     }
 
     function updateNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex) {
+        // update quantization toggle checkbox, quantization settings
+        if (newNumberOfSubdivisions === 0) {
+            quantizationCheckboxes[rowIndex].checked = false
+            quantizationCheckboxes[rowIndex].disabled = true
+            sequencer.rows[rowIndex].quantized = false
+        } else {
+            quantizationCheckboxes[rowIndex].disabled = false
+        }
+
         // first delete all existing notes from the display for the changed row,
         // because now they may be out of date or some of them may have been deleted,
         // and the simplest thing to do may just be to delete them all then redraw

@@ -451,13 +451,24 @@ class SequencerRow {
              *     there will be empty space at the end of the row (between beats 4 and 1) and no empty space at the beginning of it
              *     (between the start of the measure and beat 1). i think this is just a result of how the drum machine is set up.
              * - snap the note into that position by updating it's priority and also give it a beat number to match it's new position.
+             * - to preserve the sorted nature of the notes list, we will remove all nodes from the list, make adjustments to them, then
+             *   insert them again. there is definitely a better way to do that but this will work for now, can improve later if needed.
+             *   could be made cleaner by adding a "re-sort list" method to the data structure, or a "new from array of nodes" constructor.
+             *   some thought / decisions to be made there about which usage pattern should be encouraged.
              */
             let note = this._notesList.head;
+            let allExistingNotes = []
             while (note) {
+                allExistingNotes.push(note)
+                note = note.next
+            }
+            this._notesList.clear()
+            for (note of allExistingNotes) {
                 let closestBeatToNote = this._getClosestBeatNumberForPriority(note.priority);
                 note.data.beat = closestBeatToNote
                 let newPriorityOfNote = this._getPriorityForBeatNumber(closestBeatToNote);
                 note.priority = newPriorityOfNote;
+                this._notesList.insertNode(note)
             }
         } else { // quantization has just been turned off
             // set each note's beat number to a value indicating: 'this note is not quantized'
