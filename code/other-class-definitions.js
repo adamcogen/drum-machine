@@ -155,6 +155,37 @@ class Sequencer {
         this.rows = this.initializeEmptySequencerRows()
         this.lookAheadMillis = lookAheadMillis
         this.samples = samples
+        /**
+         * set up time-keeping / pause-related variables.
+         * we will probably eventually need to manage multiple timekeepers 
+         * at once, one for each audio driver.. for now just start with one.
+         * 
+         * how should time tracking / pausing be managed?
+         * how time tracking worked previously, before adding the ability to pause:
+         *   - we tracked 'current time' in millis
+         *   - we calculated 'start time of current loop': Math.floor('current time' / 'loop length')
+         *   - we know the time at which each note should play within the loop, so if a note
+         *     needed to play, we scheduled it for its real time:
+         *     'start time of current loop' + 'time this note should play within loop'
+         * how should time work, if we want to be able to pause?
+         * the tricky thing is that we want to unpause from wherever we paused (i.e. could need to resume half way through a loop), and still have the scheduler work correctly.
+         *   - we track 'current time' in millis
+         *   - we track 'most recent unpause time'
+         *   - we track 'most recent pause-time within loop' (as in, whether most recent pause happened half way thru a loop, towards the end of it, etc., but in millis)
+         *   - we calculate 'current time within current loop', account for all the pause-related stuff we tracking (see the code below for how)
+         *   - we calculate 'theoretical start time of current loop, calculating for pauses': basically just 'actual current time' - 'current time within current loop'
+         *   - once we have 'theoretical start time of current loop' and 'current time within current loop', we have enough info to schedule notes exactly the way we did
+         *     before, and pausing / unpausing will be account for. we can also do little things like tell the scheduler to run only if the sequencer is unpaused, etc.
+         */
+        this.currentTime = this.audioDrivers[0].getCurrentTimeInMilliseconds // current time since audio context was started, in millis
+        this.timekeeping = {
+            mostRecentUnpauseTime: 0, // raw time in millis for when we most recently unpaused the sequencer
+            mostRecentPauseTimeWithinLoop: 0, // when we last paused, how far into the loop were we? as in, if we paused half way thru a loop, this will be millis representing half way thru the loop
+            currentTimeWithinCurrentLoop: 0, // how many millis into the current loop are we?
+            theoreticalStartTimeOfCurrentLoop: 0 // calculate what time the current loop started at (or would have started at in theory, if we account for pauses)
+        }
+        this.paused = false; // store whether sequencer is paused or not
+        this.pause(); // start the sequencer paused
     }
 
     initializeEmptySequencerRows() {
@@ -166,6 +197,32 @@ class Sequencer {
             rowCount++
         }
         return rows
+    }
+
+    pause() {
+        this.paused = true;
+        this.timekeeping.mostRecentPauseTimeWithinLoop = this.timekeeping.currentTimeWithinCurrentLoop
+    }
+
+    unpause() {
+        this.paused = false;
+        this.timekeeping.mostRecentUnpauseTime = this.currentTime
+    }
+
+    /**
+     * this is the main update method for the sequencer.
+     * it should be called as often as possible, i.e. constantly, within the main update loop of the drum machine. 
+     * when it runs, it will manage updating all time-keeping variables and will schedule upcoming notes.
+     */
+    update() {
+        this.currentTime = this.audioDrivers[0].getCurrentTimeInMilliseconds()
+        if (this.paused) {
+            this.timekeeping.currentTimeWithinCurrentLoop = this.timekeeping.mostRecentPauseTimeWithinLoop // updated for the sake of the on-screen drum trigger lines
+        } else {
+            this.timekeeping.currentTimeWithinCurrentLoop = (this.currentTime - this.timekeeping.mostRecentUnpauseTime + this.timekeeping.mostRecentPauseTimeWithinLoop) % this.loopLengthInMillis
+            this.timekeeping.theoreticalStartTimeOfCurrentLoop = (this.currentTime - this.timekeeping.currentTimeWithinCurrentLoop) // put this here because no need to update it if we are currently paused
+            this.scheduleAllUpcomingNotes(this.currentTime, this.timekeeping.currentTimeWithinCurrentLoop, this.timekeeping.theoreticalStartTimeOfCurrentLoop) // schedule notes
+        }
     }
 
     getNextNoteToScheduleForRow(rowIndex) {
@@ -183,6 +240,14 @@ class Sequencer {
     // for the given row index, set 'next note to schedule' back to the head of the notes list
     resetNextNoteToScheduleForRow(rowIndex) {
         this.rows[rowIndex].resetNextNoteToSchedule()
+    }
+
+    // this method is untested, there's no button on-screen for it yet
+    restartSequencer() {
+        this.timekeeping.mostRecentPauseTimeWithinLoop = 0
+        for (let i = 0; i < this.rows.length; i++) {
+            this.resetNextNoteToScheduleForRow(i); // reset next note to schedule to each note list's 'head'
+        }
     }
 
     // add a new empty row to the end of the drum sequencer
@@ -213,12 +278,17 @@ class Sequencer {
     // update loop length in millis. the bulk of the logic for this is handled at the row level, so just iterate through all rows
     // updating their loop length, then update the value of the 'loop length' variable we have stored in the main sequencer.
     setLoopLengthInMillis(newLoopLengthInMillis) {
+        let oldLoopLengthInMillis = this.loopLengthInMillis
         for (let row of this.rows) {
             row.setLoopLengthInMillis(newLoopLengthInMillis)
         }
         this.loopLengthInMillis = newLoopLengthInMillis
+        // scale the 'current time within loop' up or down, such that we have progressed the same percent through the loop 
+        // (i.e. keep progressing the sequence from the same place it was in before changing tempo, now just faster or slower)
+        this.timekeeping.mostRecentPauseTimeWithinLoop = (newLoopLengthInMillis / oldLoopLengthInMillis) * this.timekeeping.mostRecentPauseTimeWithinLoop
     }
 
+    // iterate through each sequencer row, scheduling upcoming notes for all of them
     scheduleAllUpcomingNotes(currentTime, currentTimeWithinCurrentLoop, theoreticalStartTimeOfCurrentLoop) {
         for (let rowIndex = 0; rowIndex < this.rows.length; rowIndex++) {
             if (this.getNextNoteToScheduleForRow(rowIndex) === null) {

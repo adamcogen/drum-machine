@@ -56,7 +56,7 @@ window.onload = () => {
     /**
      * drum machine configurations
      */
-     let loopLengthInMillis = 1500; // length of the whole drum sequence (loop), in millliseconds
+     let defaultLoopLengthInMillis = 1500; // length of the whole drum sequence (loop), in millliseconds
      const LOOK_AHEAD_MILLIS = 50; // number of milliseconds to look ahead when scheduling notes to play. note bigger value means that there is a longer delay for sounds to stop after the 'pause' button is hit.
     /**
      * gui settings: sequencer
@@ -123,7 +123,7 @@ window.onload = () => {
 
 
     // initialize sequencer data structure
-    let sequencer = new Sequencer([webAudioDriver], 6, loopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
+    let sequencer = new Sequencer([webAudioDriver], 6, defaultLoopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
     sequencer.rows[0].setNumberOfSubdivisions(8)
     sequencer.rows[0].setNumberOfReferenceLines(4)
     sequencer.rows[0].setQuantization(true)
@@ -338,7 +338,7 @@ window.onload = () => {
                     drawNoteBankCircleForSample(circleBeingMoved.guiData.sampleName) // if the note was taken from the sound bank, refill the sound bank
                 }
                 // convert the note's new y position into a sequencer timestamp, and set the node's 'priority' to its new timestamp
-                let newNodeTimestampMillis = loopLengthInMillis * ((circleNewXPosition - sequencerHorizontalOffset) / sequencerWidth)
+                let newNodeTimestampMillis = sequencer.loopLengthInMillis * ((circleNewXPosition - sequencerHorizontalOffset) / sequencerWidth)
                 node.priority = newNodeTimestampMillis
                 // add the moved note to its new sequencer row
                 sequencer.rows[circleBeingMovedNewRow].insertNode(node, circleBeingMoved.guiData.label)
@@ -357,34 +357,6 @@ window.onload = () => {
     // start main recursive update loop, where all state updates will happen
     requestAnimationFrameShim(draw)
 
-    /**
-     * initialize some variables that will be used for timekeeping, managing of pauses, etc.
-     */
-    /**
-     * how should time tracking / pausing be managed?
-     * how time tracking worked previously, before adding the ability to pause:
-     *   - we tracked 'current time' in millis
-     *   - we calculated 'start time of current loop': Math.floor('current time' / 'loop length')
-     *   - we know the time at which each note should play within the loop, so if a note
-     *     needed to play, we scheduled it for its real time:
-     *     'start time of current loop' + 'time this note should play within loop'
-     * how should time work, if we want to be able to pause?
-     * the tricky thing is that we want to unpause from wherever we paused (i.e. could need to resume half way through a loop), and still have the scheduler work correctly.
-     *   - we track 'current time' in millis
-     *   - we track 'most recent unpause time'
-     *   - we track 'most recent pause-time within loop' (as in, whether most recent pause happened half way thru a loop, towards the end of it, etc., but in millis)
-     *   - we calculate 'current time within current loop', account for all the pause-related stuff we tracking (see the code below for how)
-     *   - we calculate 'theoretical start time of current loop, calculating for pauses': basically just 'actual current time' - 'current time within current loop'
-     *   - once we have 'theoretical start time of current loop' and 'current time within current loop', we have enough info to schedule notes exactly the way we did
-     *     before, and pausing / unpausing will be account for. we can also do little things like tell the scheduler to run only if the sequencer is unpaused, etc.
-     */
-    let currentTime = 0 // current time since audio context was started, in millis
-    let mostRecentUnpauseTime = 0 // raw time in millis for when we most recently unpaused the sequencer
-    let mostRecentPauseTimeWithinLoop = 0 // when we last paused, how far into the loop were we? as in, if we paused half way thru a loop, this will be millis representing half way thru the loop
-    let currentTimeWithinCurrentLoop = 0 // how many millis into the current loop are we?
-    let theoreticalStartTimeOfCurrentLoop = 0 // calculate what time the current loop started at (or would have started at in theory, if we account for pauses)
-    let paused = false // store whether sequencer is paused or not
-
     pause();
 
     /**
@@ -393,16 +365,9 @@ window.onload = () => {
 
     // this method is the 'update' loop that will keep updating the page. after first invocation, this method basically calls itself recursively forever.
     function draw() {
-        currentTime = webAudioDriver.getCurrentTimeInMilliseconds()
+        sequencer.update()
 
-        if (paused) {
-            currentTimeWithinCurrentLoop = mostRecentPauseTimeWithinLoop // updated for the sake of the on-screen drum trigger lines
-        } else {
-            currentTimeWithinCurrentLoop = (currentTime - mostRecentUnpauseTime + mostRecentPauseTimeWithinLoop) % loopLengthInMillis
-            theoreticalStartTimeOfCurrentLoop = (currentTime - currentTimeWithinCurrentLoop) // no need to update if we are currently paused
-        }
-
-        drumTriggersXPosition = sequencerHorizontalOffset + (sequencerWidth * (currentTimeWithinCurrentLoop / loopLengthInMillis))
+        drumTriggersXPosition = sequencerHorizontalOffset + (sequencerWidth * (sequencer.timekeeping.currentTimeWithinCurrentLoop / sequencer.loopLengthInMillis))
 
         for (let drumTriggerLine of drumTriggerLines) {
             drumTriggerLine.position.x = drumTriggersXPosition
@@ -420,11 +385,6 @@ window.onload = () => {
             } else {
                 circle.radius = playedCircleRadius
             }
-        }
-
-        // iterate through each sequencer row, scheduling upcoming notes for all of them
-        if (!paused) {
-            sequencer.scheduleAllUpcomingNotes(currentTime, currentTimeWithinCurrentLoop, theoreticalStartTimeOfCurrentLoop)
         }
 
         two.update() // update the GUI display
@@ -566,28 +526,28 @@ window.onload = () => {
             beat: 0,
         }
         ))
-        sequencer.rows[0].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 8) * 3, 
+        sequencer.rows[0].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (sequencer.loopLengthInMillis / 8) * 3, 
         {
             lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
             sampleName: WOODBLOCK,
             beat: 3,
         }
         ))
-        sequencer.rows[1].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 1, 
+        sequencer.rows[1].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (sequencer.loopLengthInMillis / 4) * 1, 
             {
                 lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: HI_HAT_OPEN,
                 beat: 1,
             }
         ))
-        sequencer.rows[2].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), ((loopLengthInMillis / 4) * 2), 
+        sequencer.rows[2].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), ((sequencer.loopLengthInMillis / 4) * 2), 
             {
                 lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: SNARE,
                 beat: NOTE_IS_NOT_QUANTIZED,
             }
         ))
-        sequencer.rows[3].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (loopLengthInMillis / 4) * 3, 
+        sequencer.rows[3].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (sequencer.loopLengthInMillis / 4) * 3, 
             {
                 lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: BASS_DRUM,
@@ -893,7 +853,7 @@ window.onload = () => {
             false
         );
         triggerLine.linewidth = sequencerAndToolsLineWidth;
-        triggerLine.stroke = 'black'
+        triggerLine.stroke = subdivisionLineColor // 'black'
 
         return triggerLine
     }
@@ -967,39 +927,29 @@ window.onload = () => {
 
     // toggle whether the sequencer is 'paused' or not. this method gets called when we click the pause button
     function togglePaused() {
-        if (paused) { // unpause 
-            unpause()
+        if (sequencer.paused) { // unpause 
+            unpause();
         } else { // pause
-            pause()
+            pause();
         }
     }
 
     function pause() {
-        if (!paused) {
-            paused = true
-            mostRecentPauseTimeWithinLoop = currentTimeWithinCurrentLoop
-            pauseButton.fill = "#bfbfbf"
+        if (!sequencer.paused) {
+            sequencer.pause();
         }
+        pauseButton.fill = "#bfbfbf"
     }
 
     function unpause() {
-        if (paused) {
-            paused = false
-            mostRecentUnpauseTime = currentTime
-            pauseButton.fill = "transparent"
+        if (sequencer.paused) {
+            sequencer.unpause();
         }
-    }
-
-    // restart the sequence, as in move the drum trigger back to the beginning of the sequence
-    function restartSequencer() {
-        mostRecentPauseTimeWithinLoop = 0
-        for (let i = 0; i < sequencer.rows.length; i++) {
-            sequencer.resetNextNoteToScheduleForRow(i); // reset next note to schedule to each note list's 'head'
-        }
+        pauseButton.fill = "transparent"
     }
 
     function initializeTempoTextInputValuesAndStyles() {
-        domElements.textInputs.loopLengthMillis.value = loopLengthInMillis
+        domElements.textInputs.loopLengthMillis.value = sequencer.loopLengthInMillis
         domElements.textInputs.loopLengthMillis.style.borderColor = sequencerAndToolsLineColor
     }
 
@@ -1014,7 +964,7 @@ window.onload = () => {
         domElements.textInputs.loopLengthMillis.addEventListener('blur', (event) => {
             let newTextInputValue = domElements.textInputs.loopLengthMillis.value.trim() // remove whitespace from beginning and end of input then store it
             if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
-                newTextInputValue = loopLengthInMillis
+                newTextInputValue = sequencer.loopLengthInMillis
             }
             newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
             // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
@@ -1025,26 +975,21 @@ window.onload = () => {
     }
 
     function updateSequencerLoopLength(newLoopLengthInMillis) {
-        if (loopLengthInMillis === newLoopLengthInMillis) { // save a little effort by skipping update if it isn't needed
+        if (sequencer.loopLengthInMillis === newLoopLengthInMillis) { // save a little effort by skipping update if it isn't needed
             return
         }
         /**
          * note down current state before changing tempo
          */
-        let oldLoopLengthInMillis = loopLengthInMillis
-        let wasPaused = paused
+        let wasPaused = sequencer.paused
         /**
          * update states
          */
-        loopLengthInMillis = newLoopLengthInMillis
-        pause()
-        sequencer.setLoopLengthInMillis(loopLengthInMillis)
-        // scale the 'current time within loop' up or down, such that we have progressed the same percent through the loop 
-        // (i.e. keep progressing the sequence from the same place it was in before changing tempo, now just faster or slower)
-        mostRecentPauseTimeWithinLoop = (newLoopLengthInMillis / oldLoopLengthInMillis) * mostRecentPauseTimeWithinLoop
+        pause();
+        sequencer.setLoopLengthInMillis(newLoopLengthInMillis);
         // only unpause if the sequencer wasn't paused before
         if (!wasPaused) {
-            unpause()
+            unpause();
         }
     }
 
