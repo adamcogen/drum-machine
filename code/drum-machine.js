@@ -196,6 +196,46 @@ window.onload = () => {
 
     drawAllNoteBankCircles()
     drawNotesToReflectSequencerCurrentState()
+    
+    // run any miscellaneous unit tests needed before starting main update loop
+    testConfineNumberToBounds()
+
+    pause(); // start the sequencer paused
+
+    // start main recursive update loop, where all state updates will happen
+    requestAnimationFrameShim(draw)
+
+    /**
+     * end of main logic, start of function definitions.
+     */
+
+    // this method is the 'update' loop that will keep updating the page. after first invocation, this method basically calls itself recursively forever.
+    function draw() {
+        sequencer.update()
+
+        drumTriggersXPosition = sequencerHorizontalOffset + (sequencerWidth * (sequencer.timekeeping.currentTimeWithinCurrentLoop / sequencer.loopLengthInMillis))
+
+        for (let drumTriggerLine of drumTriggerLines) {
+            drumTriggerLine.position.x = drumTriggersXPosition
+        }
+
+        // make circles get bigger when they play.
+        for (let circle of allDrawnCircles) {
+            let radiusToSetUnplayedCircleTo = unplayedCircleRadius
+            if (circleBeingMoved !== null && circleBeingMoved.guiData.label === circle.guiData.label) {
+                // if we are moving this circle, make its unplayed radius slightly bigger than normal
+                radiusToSetUnplayedCircleTo = movingCircleRadius;
+            }
+            if (circle.translation.x <= drumTriggersXPosition - 15 || circle.translation.x >= drumTriggersXPosition + 15) {
+                circle.radius = radiusToSetUnplayedCircleTo
+            } else {
+                circle.radius = playedCircleRadius
+            }
+        }
+
+        two.update() // update the GUI display
+        requestAnimationFrameShim(draw); // call animation frame update with this 'draw' method again
+    }
 
     // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
     window.addEventListener('mousemove', (event) => {
@@ -350,46 +390,6 @@ window.onload = () => {
         circleBeingMoved = null
         setNoteTrashBinVisibility(false)
     });
-
-    // run any miscellaneous unit tests needed before starting main update loop
-    testConfineNumberToBounds()
-
-    // start main recursive update loop, where all state updates will happen
-    requestAnimationFrameShim(draw)
-
-    pause();
-
-    /**
-     * end of main logic, start of function definitions.
-     */
-
-    // this method is the 'update' loop that will keep updating the page. after first invocation, this method basically calls itself recursively forever.
-    function draw() {
-        sequencer.update()
-
-        drumTriggersXPosition = sequencerHorizontalOffset + (sequencerWidth * (sequencer.timekeeping.currentTimeWithinCurrentLoop / sequencer.loopLengthInMillis))
-
-        for (let drumTriggerLine of drumTriggerLines) {
-            drumTriggerLine.position.x = drumTriggersXPosition
-        }
-
-        // make circles get bigger when they play.
-        for (let circle of allDrawnCircles) {
-            let radiusToSetUnplayedCircleTo = unplayedCircleRadius
-            if (circleBeingMoved !== null && circleBeingMoved.guiData.label === circle.guiData.label) {
-                // if we are moving this circle, make its unplayed radius slightly bigger than normal
-                radiusToSetUnplayedCircleTo = movingCircleRadius;
-            }
-            if (circle.translation.x <= drumTriggersXPosition - 15 || circle.translation.x >= drumTriggersXPosition + 15) {
-                circle.radius = radiusToSetUnplayedCircleTo
-            } else {
-                circle.radius = playedCircleRadius
-            }
-        }
-
-        two.update() // update the GUI display
-        requestAnimationFrameShim(draw); // call animation frame update with this 'draw' method again
-    }
 
     // load a sample from a file. to load from a local file, this script needs to be running on a server.
     function loadSample(sampleName, url) {
