@@ -53,73 +53,79 @@ window.onload = () => {
         _audioContext.resume()
     }
 
+
+    let defaultSequencerLineColor = '#707070'
+    let guiConfigurations = {
+        sequencer: {
+            top: 100,
+            left: 150,
+            width: 400,
+            spaceBetweenRows: 80,
+            color: defaultSequencerLineColor,
+            lineWidth: 3,
+        },
+        notes: {
+            unplayedCircleRadius: 8,
+            playedCircleRadius: 10,
+            movingCircleRadius: 9
+        },
+        sampleBank: {
+            top: 135,
+            left: 40,
+            spaceBetweenNotes: 40,
+            numberOfNotes: sampleNameList.length,
+            borderPadding: 20
+        },
+        drumTriggers: {
+            height: 20,
+            color: defaultSequencerLineColor, // 'black'
+        },
+        subdivisionLines: {
+            height: 20,
+            color: defaultSequencerLineColor,
+        },
+        referenceLines: {
+            height: 20,
+            color: '#ababab', // meant to be slightly lighter than the subdivision line color
+        },
+        noteTrashBin: {
+            top: 380,
+            left: 40,
+            width: 48,
+            height: 48,
+            color: "red",
+        },
+        pauseButton: {
+            top: 74,
+            left: 40,
+            width: 48,
+            height: 48,
+        },
+        mouseEvents: {
+            notePlacementPadding: 20, // give this many pixels of padding on either side of things when we're placing, so we don't have to place them _precisely_ on the line, the trash bin, etc.
+        },
+        tempoTextInput: {
+            top: 25,
+            left: 477,
+            maximumValue: 99999 // fractional numbers less than this could go over the width of the text input
+        },
+        subdivionLineTextInputs: {
+            topPaddingPerRow: 0, // centered on sequencer line would be: -17
+            leftPaddingPerRow: 10,
+            maximumValue: 1000,
+        },
+        referenceLineTextInputs: {
+            topPaddingPerRow: -35,
+            leftPaddingPerRow: 10,
+            maximumValue: 1000,
+        }
+    }
+
     /**
      * drum machine configurations
      */
-     let defaultLoopLengthInMillis = 1500; // length of the whole drum sequence (loop), in millliseconds
-     const LOOK_AHEAD_MILLIS = 50; // number of milliseconds to look ahead when scheduling notes to play. note bigger value means that there is a longer delay for sounds to stop after the 'pause' button is hit.
-    /**
-     * gui settings: sequencer
-     */
-    let sequencerVerticalOffset = 100
-    let sequencerHorizontalOffset = 150
-    let sequencerWidth = 400
-    let spaceBetweenSequencerRows = 80
-    let drumTriggerHeight = 20
-    let unplayedCircleRadius = 8
-    let playedCircleRadius = 10
-    let movingCircleRadius = 9
-    /**
-     * gui settings: sample bank
-     */
-    let noteBankVerticalOffset = 135
-    let noteBankHorizontalOffset = 40
-    let spaceBetweenNoteBankNotes = 40
-    let numberOfNotesInNoteBank = sampleNameList.length
-    let noteBankPadding = 20
-    /**
-     * gui settings: note trash bin
-     */
-    let noteTrashBinVerticalOffset = 380
-    let noteTrashBinHorizontalOffset = 40
-    let noteTrashBinWidth = 48
-    let noteTrashBinHeight = 48
-    /**
-     * gui settings: pause button
-     */
-    let pauseButtonVerticalOffset = 74
-    let pauseButtonHorizontalOffset = 40
-    let pauseButtonWidth = 48
-    let pauseButtonHeight = 48
-    /**
-     * gui settings: colors
-     */
-    let sequencerAndToolsLineColor = '#707070'
-    let sequencerAndToolsLineWidth = 3
-    let trashBinColor = 'red'
-    /**
-     * gui settings: subdivision lines
-     */
-    let subdivisionLineHeight = 20
-    let subdivisionLineColor = sequencerAndToolsLineColor // 'black'
-    let referenceLineColor = '#ababab' // meant to be slightly lighter than the subdivision line color
-    /**
-     * gui settings: mouse movement, note placing
-     */
-    let placementPadding = 20 // give this many pixels of padding on either side of things when we're placing, so we don't have to place them _precisely_ on the line, the trash bin, etc.
-    /**
-     * tempo text input settings
-     */
-    domElements.divs.tempoTextInputs.style.left = "477px"
-    domElements.divs.tempoTextInputs.style.top = "25px"
-    let maximumAllowedLoopLengthInMillis = 99999 // this number is chosen to match the width of the text input. if we make the input wider we can allow for bigger numbers. fractional numbers less than this could still go over the width of the box.
-    /**
-     * subdivision text input settings
-     */
-    let subdivisionTextInputHorizontalPadding = 10
-    let subdivisionTextInputVerticalPadding = 0 // centered on sequencer line (old value): -17
-    let referenceLineTextInputVerticalPadding = -35
-    let maximumAllowedNumberOfSubdivisions = 1000
+    const LOOK_AHEAD_MILLIS = 50; // number of milliseconds to look ahead when scheduling notes to play. note bigger value means that there is a longer delay for sounds to stop after the 'pause' button is hit.
+    let defaultLoopLengthInMillis = 1500; // length of the whole drum sequence (loop), in millliseconds
 
 
     // initialize sequencer data structure
@@ -213,7 +219,7 @@ window.onload = () => {
     function draw() {
         sequencer.update()
 
-        drumTriggersXPosition = sequencerHorizontalOffset + (sequencerWidth * (sequencer.timekeeping.currentTimeWithinCurrentLoop / sequencer.loopLengthInMillis))
+        drumTriggersXPosition = guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width * (sequencer.timekeeping.currentTimeWithinCurrentLoop / sequencer.loopLengthInMillis))
 
         for (let drumTriggerLine of drumTriggerLines) {
             drumTriggerLine.position.x = drumTriggersXPosition
@@ -221,15 +227,15 @@ window.onload = () => {
 
         // make circles get bigger when they play.
         for (let circle of allDrawnCircles) {
-            let radiusToSetUnplayedCircleTo = unplayedCircleRadius
+            let radiusToSetUnplayedCircleTo = guiConfigurations.notes.unplayedCircleRadius
             if (circleBeingMoved !== null && circleBeingMoved.guiData.label === circle.guiData.label) {
                 // if we are moving this circle, make its unplayed radius slightly bigger than normal
-                radiusToSetUnplayedCircleTo = movingCircleRadius;
+                radiusToSetUnplayedCircleTo = guiConfigurations.notes.movingCircleRadius;
             }
             if (circle.translation.x <= drumTriggersXPosition - 15 || circle.translation.x >= drumTriggersXPosition + 15) {
                 circle.radius = radiusToSetUnplayedCircleTo
             } else {
-                circle.radius = playedCircleRadius
+                circle.radius = guiConfigurations.notes.playedCircleRadius
             }
         }
 
@@ -255,29 +261,29 @@ window.onload = () => {
              * (i.e. the sequence will update in real time even before the note being moved is released).
              */
             // check if the note is within range to be placed in the trash bin. if so, move the circle to the center of the trash bin.
-            centerOfTrashBinX = noteTrashBinHorizontalOffset + (noteTrashBinWidth / 2)
-            centerOfTrashBinY = noteTrashBinVerticalOffset + (noteTrashBinHeight / 2)
-            let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= noteTrashBinHorizontalOffset - placementPadding) && (mouseX <= noteTrashBinHorizontalOffset + noteTrashBinWidth + placementPadding)
-            let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= noteTrashBinVerticalOffset - placementPadding) && (mouseY <= noteTrashBinVerticalOffset + noteTrashBinHeight + placementPadding)
+            centerOfTrashBinX = guiConfigurations.noteTrashBin.left + (guiConfigurations.noteTrashBin.width / 2)
+            centerOfTrashBinY = guiConfigurations.noteTrashBin.top + (guiConfigurations.noteTrashBin.height / 2)
+            let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= guiConfigurations.noteTrashBin.left - guiConfigurations.mouseEvents.notePlacementPadding) && (mouseX <= guiConfigurations.noteTrashBin.left + guiConfigurations.noteTrashBin.width + guiConfigurations.mouseEvents.notePlacementPadding)
+            let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= guiConfigurations.noteTrashBin.top - guiConfigurations.mouseEvents.notePlacementPadding) && (mouseY <= guiConfigurations.noteTrashBin.top + guiConfigurations.noteTrashBin.height + guiConfigurations.mouseEvents.notePlacementPadding)
             if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
                 circleBeingMoved.translation.x = centerOfTrashBinX
                 circleBeingMoved.translation.y = centerOfTrashBinY
                 circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
             }
             // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
-            let withinHorizonalBoundaryOfSequencer = (mouseX >= sequencerHorizontalOffset - placementPadding) && (mouseX <= (sequencerHorizontalOffset + sequencerWidth) + placementPadding)
-            let withinVerticalBoundaryOfSequencer = (mouseY >= sequencerVerticalOffset - placementPadding) && (mouseY <= sequencerVerticalOffset + ((sequencer.numberOfRows - 1) * spaceBetweenSequencerRows) + placementPadding)
+            let withinHorizonalBoundaryOfSequencer = (mouseX >= guiConfigurations.sequencer.left - guiConfigurations.mouseEvents.notePlacementPadding) && (mouseX <= (guiConfigurations.sequencer.left + guiConfigurations.sequencer.width) + guiConfigurations.mouseEvents.notePlacementPadding)
+            let withinVerticalBoundaryOfSequencer = (mouseY >= guiConfigurations.sequencer.top - guiConfigurations.mouseEvents.notePlacementPadding) && (mouseY <= guiConfigurations.sequencer.top + ((sequencer.numberOfRows - 1) * guiConfigurations.sequencer.spaceBetweenRows) + guiConfigurations.mouseEvents.notePlacementPadding)
             if (withinHorizonalBoundaryOfSequencer && withinVerticalBoundaryOfSequencer) {
                 // if we get here, we know the circle is within the vertical and horizontal boundaries of the sequencer.
                 // next we want to do a more fine-grained calculation, for whether it is in range to be placed onto one of the sequencer lines.
                 for(let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
-                    rowActualVerticalLocation = sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows)
-                    rowActualLeftBound = sequencerHorizontalOffset
-                    rowActualRightBound = sequencerHorizontalOffset + sequencerWidth
-                    rowTopLimit = rowActualVerticalLocation - placementPadding
-                    rowBottomLimit = rowActualVerticalLocation + placementPadding
-                    rowLeftLimit = rowActualLeftBound - placementPadding
-                    rowRightLimit = rowActualRightBound + placementPadding
+                    rowActualVerticalLocation = guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)
+                    rowActualLeftBound = guiConfigurations.sequencer.left
+                    rowActualRightBound = guiConfigurations.sequencer.left + guiConfigurations.sequencer.width
+                    rowTopLimit = rowActualVerticalLocation - guiConfigurations.mouseEvents.notePlacementPadding
+                    rowBottomLimit = rowActualVerticalLocation + guiConfigurations.mouseEvents.notePlacementPadding
+                    rowLeftLimit = rowActualLeftBound - guiConfigurations.mouseEvents.notePlacementPadding
+                    rowRightLimit = rowActualRightBound + guiConfigurations.mouseEvents.notePlacementPadding
                     if (mouseX >= rowLeftLimit && mouseX <= rowRightLimit && mouseY >= rowTopLimit && mouseY <= rowBottomLimit) {
                         // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
                         if (sequencer.rows[rowIndex].quantized === true) {
@@ -378,7 +384,7 @@ window.onload = () => {
                     drawNoteBankCircleForSample(circleBeingMoved.guiData.sampleName) // if the note was taken from the sound bank, refill the sound bank
                 }
                 // convert the note's new y position into a sequencer timestamp, and set the node's 'priority' to its new timestamp
-                let newNodeTimestampMillis = sequencer.loopLengthInMillis * ((circleNewXPosition - sequencerHorizontalOffset) / sequencerWidth)
+                let newNodeTimestampMillis = sequencer.loopLengthInMillis * ((circleNewXPosition - guiConfigurations.sequencer.left) / guiConfigurations.sequencer.width)
                 node.priority = newNodeTimestampMillis
                 // add the moved note to its new sequencer row
                 sequencer.rows[circleBeingMovedNewRow].insertNode(node, circleBeingMoved.guiData.label)
@@ -424,8 +430,8 @@ window.onload = () => {
 
     function initializeQuantizationCheckboxes() {
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            let verticalPosition = sequencerVerticalOffset + (spaceBetweenSequencerRows * rowIndex) + subdivisionTextInputVerticalPadding + 4
-            let horizontalPosition = sequencerHorizontalOffset + sequencerWidth + 73
+            let verticalPosition = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * rowIndex) + guiConfigurations.subdivionLineTextInputs.topPaddingPerRow + 4
+            let horizontalPosition = guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + 73
             let checkbox = initializeCheckbox(verticalPosition, horizontalPosition)
             if (sequencer.rows[rowIndex].quantized) {
                 checkbox.checked = true;
@@ -474,8 +480,8 @@ window.onload = () => {
      * number. that will be handled elsewhere.
      */
     function getIndexOfClosestSubdivisionLine(mouseX, numberOfSubdivisions) {
-        let sequencerLeftEdge = sequencerHorizontalOffset
-        let widthOfEachSubdivision = sequencerWidth / numberOfSubdivisions
+        let sequencerLeftEdge = guiConfigurations.sequencer.left
+        let widthOfEachSubdivision = guiConfigurations.sequencer.width / numberOfSubdivisions
         let mouseXWithinSequencer = mouseX - sequencerLeftEdge
         let subdivisionNumberToLeftOfMouse = Math.floor(mouseXWithinSequencer / widthOfEachSubdivision)
         let mouseIsCloserToRightSubdivisionThanLeft = (mouseXWithinSequencer % widthOfEachSubdivision) > (widthOfEachSubdivision / 2)
@@ -497,8 +503,8 @@ window.onload = () => {
      * above, where we find the x coordinate for a given beat number.
      */
     function getXPositionOfSubdivisionLine(subdivisionIndex, numberOfSubdivisions) {
-        let sequencerLeftEdge = sequencerHorizontalOffset
-        let widthOfEachSubdivision = sequencerWidth / numberOfSubdivisions
+        let sequencerLeftEdge = guiConfigurations.sequencer.left
+        let widthOfEachSubdivision = guiConfigurations.sequencer.width / numberOfSubdivisions
         return sequencerLeftEdge + (widthOfEachSubdivision * subdivisionIndex)
     }
 
@@ -596,8 +602,8 @@ window.onload = () => {
         for(let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
             let noteToDraw = sequencer.rows[sequencerRowIndex]._notesList.head // we are reading notes lists directly so that we can draw them, but making no changes to them
             while (noteToDraw !== null) {
-                let xPosition = sequencerHorizontalOffset + (sequencerWidth * (noteToDraw.priority / sequencer.loopLengthInMillis))
-                let yPosition = sequencerVerticalOffset + (sequencerRowIndex * spaceBetweenSequencerRows)
+                let xPosition = guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width * (noteToDraw.priority / sequencer.loopLengthInMillis))
+                let yPosition = guiConfigurations.sequencer.top + (sequencerRowIndex * guiConfigurations.sequencer.spaceBetweenRows)
                 let sampleName = noteToDraw.data.sampleName
                 let row = sequencerRowIndex
                 let label = noteToDraw.label
@@ -618,8 +624,8 @@ window.onload = () => {
         if (indexOfSampleInNoteBank === -1) { // we don't expect to reach this case, where the given sample isn't found in the sample names list
             throw "unexpected problem: couldn't find the given sample in the sample list when trying to add it to the note bank. was looking for sample name: " + sampleName + ". expected sample name to be one of: " + sampleNameList + "."
         }
-        let xPosition = noteBankHorizontalOffset + noteBankPadding + (unplayedCircleRadius / 2)
-        let yPosition = noteBankVerticalOffset + noteBankPadding + (indexOfSampleInNoteBank * unplayedCircleRadius) + (indexOfSampleInNoteBank * spaceBetweenNoteBankNotes)
+        let xPosition = guiConfigurations.sampleBank.left + guiConfigurations.sampleBank.borderPadding + (guiConfigurations.notes.unplayedCircleRadius / 2)
+        let yPosition = guiConfigurations.sampleBank.top + guiConfigurations.sampleBank.borderPadding + (indexOfSampleInNoteBank * guiConfigurations.notes.unplayedCircleRadius) + (indexOfSampleInNoteBank * guiConfigurations.sampleBank.spaceBetweenNotes)
         let row = NOTE_BANK_ROW_NUMBER // for cirlces on the note bank, the circle is not in a real row yet, so use -2 as a placeholder row number
         /**
          * the top note in the note bank will have label '-1', next one down will be '-2', etc.
@@ -636,7 +642,7 @@ window.onload = () => {
     // add the newly created circle to the list of all drawn cricles.
     function drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat) {
         // initialize the new circle and set its colors
-        let circle = two.makeCircle(xPosition, yPosition, unplayedCircleRadius)
+        let circle = two.makeCircle(xPosition, yPosition, guiConfigurations.notes.unplayedCircleRadius)
         circle.fill = samples[sampleName].color
         circle.stroke = 'transparent'
 
@@ -719,13 +725,13 @@ window.onload = () => {
     function initializeSequencerRowLine(rowIndex) {
         let sequencerRowLine = two.makePath(
             [
-                new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows)),
-                new Two.Anchor(sequencerHorizontalOffset + sequencerWidth, sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows)),
+                new Two.Anchor(guiConfigurations.sequencer.left, guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
+                new Two.Anchor(guiConfigurations.sequencer.left + guiConfigurations.sequencer.width, guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
             ], 
             false
         );
-        sequencerRowLine.linewidth = sequencerAndToolsLineWidth;
-        sequencerRowLine.stroke = sequencerAndToolsLineColor
+        sequencerRowLine.linewidth = guiConfigurations.sequencer.lineWidth;
+        sequencerRowLine.stroke = guiConfigurations.sequencer.color
         return sequencerRowLine
     }
 
@@ -759,17 +765,17 @@ window.onload = () => {
         if (sequencer.rows[rowIndex].getNumberOfSubdivisions() <= 0) {
             return [] // don't draw subdivisions for this row if it has 0 or fewer subdivisions
         }
-        let xIncrementBetweenSubdivisions = sequencerWidth / sequencer.rows[rowIndex].getNumberOfSubdivisions()
+        let xIncrementBetweenSubdivisions = guiConfigurations.sequencer.width / sequencer.rows[rowIndex].getNumberOfSubdivisions()
         for (let subdivisionsDrawnForRow = 0; subdivisionsDrawnForRow < sequencer.rows[rowIndex].getNumberOfSubdivisions(); subdivisionsDrawnForRow++) {
             let subdivisionLine = two.makePath(
                 [
-                    new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), sequencerVerticalOffset - 1 + (rowIndex * spaceBetweenSequencerRows)),
-                    new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows) + subdivisionLineHeight),
+                    new Two.Anchor(guiConfigurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), guiConfigurations.sequencer.top - 1 + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
+                    new Two.Anchor(guiConfigurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows) + guiConfigurations.subdivisionLines.height),
                 ], 
                 false
             );
-            subdivisionLine.linewidth = sequencerAndToolsLineWidth;
-            subdivisionLine.stroke = subdivisionLineColor
+            subdivisionLine.linewidth = guiConfigurations.sequencer.lineWidth;
+            subdivisionLine.stroke = guiConfigurations.subdivisionLines.color
 
             subdivisionLinesForRow.push(subdivisionLine) // keep a list of all subdivision lines for the current row
         }
@@ -808,17 +814,17 @@ window.onload = () => {
         if (sequencer.rows[rowIndex].getNumberOfReferenceLines() <= 0) {
             return [] // don't draw reference lines for this row if it has 0 or fewer
         }
-        let xIncrementBetweenLines = sequencerWidth / sequencer.rows[rowIndex].getNumberOfReferenceLines()
+        let xIncrementBetweenLines = guiConfigurations.sequencer.width / sequencer.rows[rowIndex].getNumberOfReferenceLines()
         for (let linesDrawnForRow = 0; linesDrawnForRow < sequencer.rows[rowIndex].getNumberOfReferenceLines(); linesDrawnForRow++) {
             let referenceLine = two.makePath(
                 [
-                    new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenLines * linesDrawnForRow), sequencerVerticalOffset - 1 + (rowIndex * spaceBetweenSequencerRows)),
-                    new Two.Anchor(sequencerHorizontalOffset + (xIncrementBetweenLines * linesDrawnForRow), sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows) - subdivisionLineHeight),
+                    new Two.Anchor(guiConfigurations.sequencer.left + (xIncrementBetweenLines * linesDrawnForRow), guiConfigurations.sequencer.top - 1 + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
+                    new Two.Anchor(guiConfigurations.sequencer.left + (xIncrementBetweenLines * linesDrawnForRow), guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows) - guiConfigurations.referenceLines.height),
                 ], 
                 false
             );
-            referenceLine.linewidth = sequencerAndToolsLineWidth;
-            referenceLine.stroke = referenceLineColor
+            referenceLine.linewidth = guiConfigurations.sequencer.lineWidth;
+            referenceLine.stroke = guiConfigurations.referenceLines.color
 
             referenceLinesForRow.push(referenceLine) // keep a list of all reference lines for the current row
         }
@@ -847,13 +853,13 @@ window.onload = () => {
     function initializeDrumTriggerLineForRow(rowIndex) {
         let triggerLine = two.makePath(
             [
-                new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset + drumTriggerHeight + (rowIndex * spaceBetweenSequencerRows)),
-                new Two.Anchor(sequencerHorizontalOffset, sequencerVerticalOffset - drumTriggerHeight + (rowIndex * spaceBetweenSequencerRows)),
+                new Two.Anchor(guiConfigurations.sequencer.left, guiConfigurations.sequencer.top + guiConfigurations.drumTriggers.height + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
+                new Two.Anchor(guiConfigurations.sequencer.left, guiConfigurations.sequencer.top - guiConfigurations.drumTriggers.height + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
             ], 
             false
         );
-        triggerLine.linewidth = sequencerAndToolsLineWidth;
-        triggerLine.stroke = subdivisionLineColor // 'black'
+        triggerLine.linewidth = guiConfigurations.sequencer.lineWidth;
+        triggerLine.stroke = guiConfigurations.drumTriggers.color // 'black'
 
         return triggerLine
     }
@@ -863,15 +869,15 @@ window.onload = () => {
     function initializeNoteBankContainer() {
         let noteBankContainer = two.makePath(
             [
-                new Two.Anchor(noteBankHorizontalOffset, noteBankVerticalOffset),
-                new Two.Anchor(noteBankHorizontalOffset + unplayedCircleRadius + (noteBankPadding * 2), noteBankVerticalOffset),
-                new Two.Anchor(noteBankHorizontalOffset + unplayedCircleRadius + (noteBankPadding * 2), noteBankVerticalOffset + (unplayedCircleRadius * (numberOfNotesInNoteBank - 1)) + ((numberOfNotesInNoteBank - 1) * spaceBetweenNoteBankNotes) + (noteBankPadding * 2)),
-                new Two.Anchor(noteBankHorizontalOffset, noteBankVerticalOffset + (unplayedCircleRadius * (numberOfNotesInNoteBank - 1)) + ((numberOfNotesInNoteBank - 1) * spaceBetweenNoteBankNotes) + (noteBankPadding * 2)),
+                new Two.Anchor(guiConfigurations.sampleBank.left, guiConfigurations.sampleBank.top),
+                new Two.Anchor(guiConfigurations.sampleBank.left + guiConfigurations.notes.unplayedCircleRadius + (guiConfigurations.sampleBank.borderPadding * 2), guiConfigurations.sampleBank.top),
+                new Two.Anchor(guiConfigurations.sampleBank.left + guiConfigurations.notes.unplayedCircleRadius + (guiConfigurations.sampleBank.borderPadding * 2), guiConfigurations.sampleBank.top + (guiConfigurations.notes.unplayedCircleRadius * (guiConfigurations.sampleBank.numberOfNotes - 1)) + ((guiConfigurations.sampleBank.numberOfNotes - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)),
+                new Two.Anchor(guiConfigurations.sampleBank.left, guiConfigurations.sampleBank.top + (guiConfigurations.notes.unplayedCircleRadius * (guiConfigurations.sampleBank.numberOfNotes - 1)) + ((guiConfigurations.sampleBank.numberOfNotes - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)),
             ], 
             false
         );
-        noteBankContainer.linewidth = sequencerAndToolsLineWidth;
-        noteBankContainer.stroke = sequencerAndToolsLineColor
+        noteBankContainer.linewidth = guiConfigurations.sequencer.lineWidth;
+        noteBankContainer.stroke = guiConfigurations.sequencer.color
         noteBankContainer.fill = 'transparent'
         return noteBankContainer
     }
@@ -881,14 +887,14 @@ window.onload = () => {
     function initializeNoteTrashBinContainer() {
         let noteTrashBinContainer = two.makePath(
             [
-                new Two.Anchor(noteTrashBinHorizontalOffset, noteTrashBinVerticalOffset),
-                new Two.Anchor(noteTrashBinHorizontalOffset + noteTrashBinWidth, noteTrashBinVerticalOffset),
-                new Two.Anchor(noteTrashBinHorizontalOffset + noteTrashBinWidth, noteTrashBinVerticalOffset + noteTrashBinHeight),
-                new Two.Anchor(noteTrashBinHorizontalOffset, noteTrashBinVerticalOffset + noteTrashBinHeight),
+                new Two.Anchor(guiConfigurations.noteTrashBin.left, guiConfigurations.noteTrashBin.top),
+                new Two.Anchor(guiConfigurations.noteTrashBin.left + guiConfigurations.noteTrashBin.width, guiConfigurations.noteTrashBin.top),
+                new Two.Anchor(guiConfigurations.noteTrashBin.left + guiConfigurations.noteTrashBin.width, guiConfigurations.noteTrashBin.top + guiConfigurations.noteTrashBin.height),
+                new Two.Anchor(guiConfigurations.noteTrashBin.left, guiConfigurations.noteTrashBin.top + guiConfigurations.noteTrashBin.height),
             ],
             false
         );
-        noteTrashBinContainer.linewidth = sequencerAndToolsLineWidth
+        noteTrashBinContainer.linewidth = guiConfigurations.sequencer.lineWidth
         noteTrashBinContainer.stroke = 'transparent'
         noteTrashBinContainer.fill = 'transparent'
         return noteTrashBinContainer
@@ -897,15 +903,15 @@ window.onload = () => {
     function initializePauseButton() {
         let pauseButton = two.makePath(
             [
-                new Two.Anchor(pauseButtonHorizontalOffset, pauseButtonVerticalOffset),
-                new Two.Anchor(pauseButtonHorizontalOffset + pauseButtonWidth, pauseButtonVerticalOffset),
-                new Two.Anchor(pauseButtonHorizontalOffset + pauseButtonWidth, pauseButtonVerticalOffset + pauseButtonHeight),
-                new Two.Anchor(pauseButtonHorizontalOffset, pauseButtonVerticalOffset + pauseButtonHeight),
+                new Two.Anchor(guiConfigurations.pauseButton.left, guiConfigurations.pauseButton.top),
+                new Two.Anchor(guiConfigurations.pauseButton.left + guiConfigurations.pauseButton.width, guiConfigurations.pauseButton.top),
+                new Two.Anchor(guiConfigurations.pauseButton.left + guiConfigurations.pauseButton.width, guiConfigurations.pauseButton.top + guiConfigurations.pauseButton.height),
+                new Two.Anchor(guiConfigurations.pauseButton.left, guiConfigurations.pauseButton.top + guiConfigurations.pauseButton.height),
             ],
             false
         );
-        pauseButton.linewidth = sequencerAndToolsLineWidth
-        pauseButton.stroke = sequencerAndToolsLineColor
+        pauseButton.linewidth = guiConfigurations.sequencer.lineWidth
+        pauseButton.stroke = guiConfigurations.sequencer.color
         pauseButton.fill = 'transparent'
         return pauseButton
     }
@@ -919,7 +925,7 @@ window.onload = () => {
     // show or hide the note trash bin (show if visible === true, hide otherwise)
     function setNoteTrashBinVisibility(visible) {
         if (visible) {
-            noteTrashBinContainer.stroke = trashBinColor
+            noteTrashBinContainer.stroke = guiConfigurations.noteTrashBin.color
         } else {
             noteTrashBinContainer.stroke = 'transparent'
         }
@@ -949,8 +955,10 @@ window.onload = () => {
     }
 
     function initializeTempoTextInputValuesAndStyles() {
+        domElements.divs.tempoTextInputs.style.left = "" + guiConfigurations.tempoTextInput.left + "px"
+        domElements.divs.tempoTextInputs.style.top = "" + guiConfigurations.tempoTextInput.top + "px"
         domElements.textInputs.loopLengthMillis.value = sequencer.loopLengthInMillis
-        domElements.textInputs.loopLengthMillis.style.borderColor = sequencerAndToolsLineColor
+        domElements.textInputs.loopLengthMillis.style.borderColor = guiConfigurations.sequencer.color
     }
 
     function initializeTempoTextInputActionListeners() {
@@ -968,7 +976,7 @@ window.onload = () => {
             }
             newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
             // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
-            newTextInputValue = confineNumberToBounds(newTextInputValue, LOOK_AHEAD_MILLIS, maximumAllowedLoopLengthInMillis)
+            newTextInputValue = confineNumberToBounds(newTextInputValue, LOOK_AHEAD_MILLIS, guiConfigurations.tempoTextInput.maximumValue)
             domElements.textInputs.loopLengthMillis.value = newTextInputValue
             updateSequencerLoopLength(newTextInputValue)
         })
@@ -999,9 +1007,9 @@ window.onload = () => {
             textArea.cols = "3"
             textArea.rows = "1"
             textArea.style.position = "absolute"
-            textArea.style.top = "" + (sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows) + subdivisionTextInputVerticalPadding) + "px"
-            textArea.style.left = "" + (sequencerHorizontalOffset + sequencerWidth + subdivisionTextInputHorizontalPadding) + "px"
-            textArea.style.borderColor = sequencerAndToolsLineColor
+            textArea.style.top = "" + (guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows) + guiConfigurations.subdivionLineTextInputs.topPaddingPerRow) + "px"
+            textArea.style.left = "" + (guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + guiConfigurations.subdivionLineTextInputs.leftPaddingPerRow) + "px"
+            textArea.style.borderColor = guiConfigurations.sequencer.color
             textArea.value = sequencer.rows[rowIndex].getNumberOfSubdivisions()
             domElements.divs.subdivisionTextInputs.appendChild(textArea);
             // note for later: the opposite of appendChild is removeChild
@@ -1019,7 +1027,7 @@ window.onload = () => {
                     newTextInputValue = sequencer.rows[rowIndex].getNumberOfSubdivisions()
                 }
                 newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
-                newTextInputValue = confineNumberToBounds(newTextInputValue, 0, maximumAllowedNumberOfSubdivisions)
+                newTextInputValue = confineNumberToBounds(newTextInputValue, 0, guiConfigurations.subdivionLineTextInputs.maximumValue)
                 subdivisionTextInput.value = newTextInputValue
                 updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
             })
@@ -1032,9 +1040,9 @@ window.onload = () => {
             textArea.cols = "3"
             textArea.rows = "1"
             textArea.style.position = "absolute"
-            textArea.style.top = "" + (sequencerVerticalOffset + (rowIndex * spaceBetweenSequencerRows) + referenceLineTextInputVerticalPadding) + "px"
-            textArea.style.left = "" + (sequencerHorizontalOffset + sequencerWidth + subdivisionTextInputHorizontalPadding) + "px"
-            textArea.style.borderColor = referenceLineColor
+            textArea.style.top = "" + (guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows) + guiConfigurations.referenceLineTextInputs.topPaddingPerRow) + "px"
+            textArea.style.left = "" + (guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + guiConfigurations.referenceLineTextInputs.leftPaddingPerRow) + "px"
+            textArea.style.borderColor = guiConfigurations.referenceLines.color
             textArea.value = sequencer.rows[rowIndex].getNumberOfReferenceLines()
             domElements.divs.subdivisionTextInputs.appendChild(textArea);
             // note for later: the opposite of appendChild is removeChild
@@ -1052,7 +1060,7 @@ window.onload = () => {
                     newTextInputValue = sequencer.rows[rowIndex].getNumberOfReferenceLines()
                 }
                 newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
-                newTextInputValue = confineNumberToBounds(newTextInputValue, 0, maximumAllowedNumberOfSubdivisions)
+                newTextInputValue = confineNumberToBounds(newTextInputValue, 0, guiConfigurations.referenceLineTextInputs.maximumValue)
                 referenceLineTextInput.value = newTextInputValue
                 updateNumberOfReferenceLinesForRow(newTextInputValue, rowIndex)
             })
