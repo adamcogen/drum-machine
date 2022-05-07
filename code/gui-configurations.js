@@ -13,6 +13,9 @@ let guiConfigurations = {
         color: defaultSequencerLineColor,
         lineWidth: 3,
     },
+    defaultFont: {
+        color: "#575757",
+    },
     notes: {
         unplayedCircleRadius: 8,
         playedCircleRadius: 10,

@@ -890,6 +890,7 @@ window.onload = () => {
         domElements.divs.tempoTextInputs.style.top = "" + guiConfigurations.tempoTextInput.top + "px"
         domElements.textInputs.loopLengthMillis.value = sequencer.loopLengthInMillis
         domElements.textInputs.loopLengthMillis.style.borderColor = guiConfigurations.sequencer.color
+        domElements.textInputs.loopLengthMillis.style.color = guiConfigurations.defaultFont.color // set font color
     }
 
     function initializeTempoTextInputActionListeners() {
@@ -942,6 +943,7 @@ window.onload = () => {
             textArea.style.left = "" + (guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + guiConfigurations.subdivionLineTextInputs.leftPaddingPerRow) + "px"
             textArea.style.borderColor = guiConfigurations.sequencer.color
             textArea.value = sequencer.rows[rowIndex].getNumberOfSubdivisions()
+            textArea.style.color = guiConfigurations.defaultFont.color // set font color
             domElements.divs.subdivisionTextInputs.appendChild(textArea);
             // note for later: the opposite of appendChild is removeChild
             subdivisionTextInputs.push(textArea)
@@ -975,6 +977,11 @@ window.onload = () => {
             textArea.style.left = "" + (guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + guiConfigurations.referenceLineTextInputs.leftPaddingPerRow) + "px"
             textArea.style.borderColor = guiConfigurations.referenceLines.color
             textArea.value = sequencer.rows[rowIndex].getNumberOfReferenceLines()
+            if (sequencer.rows[rowIndex].getNumberOfReferenceLines() === 0) {
+                textArea.style.color = guiConfigurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
+            } else {
+                textArea.style.color = guiConfigurations.defaultFont.color // set font color
+            }
             domElements.divs.subdivisionTextInputs.appendChild(textArea);
             // note for later: the opposite of appendChild is removeChild
             referenceLineTextInputs.push(textArea)
@@ -992,6 +999,11 @@ window.onload = () => {
                 }
                 newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
                 newTextInputValue = confineNumberToBounds(newTextInputValue, 0, guiConfigurations.referenceLineTextInputs.maximumValue)
+                if (newTextInputValue === 0) {
+                    referenceLineTextInput.style.color = guiConfigurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
+                } else {
+                    referenceLineTextInput.style.color = guiConfigurations.defaultFont.color // set font color
+                }
                 referenceLineTextInput.value = newTextInputValue
                 updateNumberOfReferenceLinesForRow(newTextInputValue, rowIndex)
             })
