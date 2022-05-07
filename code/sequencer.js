@@ -99,14 +99,6 @@ class Sequencer {
         this.rows[rowIndex].resetNextNoteToSchedule()
     }
 
-    // this method is untested, there's no button on-screen for it yet
-    restartSequencer() {
-        this.timekeeping.mostRecentPauseTimeWithinLoop = 0
-        for (let i = 0; i < this.rows.length; i++) {
-            this.resetNextNoteToScheduleForRow(i); // reset next note to schedule to each note list's 'head'
-        }
-    }
-
     // add a new empty row to the end of the drum sequencer
     addRow() {
         // todo: implement this
@@ -243,6 +235,19 @@ class Sequencer {
         }
     }
 
+    /**
+     * restart the sequencer
+     */
+    restart() {
+        this.timekeeping.mostRecentPauseTimeWithinLoop = 0
+        this.timekeeping.mostRecentUnpauseTime = this.currentTime
+        this.timekeeping.currentTimeWithinCurrentLoop = 0
+        this.timekeeping.theoreticalStartTimeOfCurrentLoop = 0
+        for (let row of this.rows) {
+            row.resetNextNoteToSchedule()
+            row.markAllNotesAsNeverBeenScheduled()
+        }
+    }
 }
 
 // a drum sequencer row. each drum sequencer can have any number of rows, which can have notes placed onto them.
@@ -260,6 +265,16 @@ class SequencerRow {
     resetNextNoteToSchedule() {
         this.nextNoteToSchedule = this._notesList.head
         return this.nextNoteToSchedule
+    }
+
+    markAllNotesAsNeverBeenScheduled() {
+        const NOTE_HAS_NEVER_BEEN_PLAYED = -1 // need to move this definition somewhere else -- either a shared place or define it in the sequencer only
+        let note = this._notesList.head
+        while (note !== null) {
+            // reset 'last scheduled on iteration' for every note, so that notes will play even if we aren't technically on a new loop (such as after restarting the sequencer)
+            note.data.lastScheduledOnIteration = NOTE_HAS_NEVER_BEEN_PLAYED;
+            note = note.next
+        }
     }
 
     getNumberOfSubdivisions() {

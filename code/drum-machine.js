@@ -81,8 +81,19 @@ window.onload = () => {
     let drumTriggerLines = initializeDrumTriggerLines() // list of lines that move to represent the current time within the loop
     let noteBankContainer = initializeNoteBankContainer() // a rectangle that goes around the note bank
     let noteTrashBinContainer = initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
-    let pauseButton = initializePauseButton() // a rectangle that will act as the pause button for now
+    let pauseButtonShape = initializePauseButton() // a rectangle that will act as the pause button for now
+    let restartSequencerButtonShape = initializeRestartSequencerButton() // a rectangle that will act as the pause button for now
     setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
+
+    /**
+     * keep track of when each button was last clicked, so we can make the note darker for a little while after clicking it
+     */
+    lastButtonClickTimeTrackers = {
+        restartSequencer: {
+            lastClickTime: Number.MIN_SAFE_INTEGER,
+            shape: restartSequencerButtonShape,
+        }
+    }
 
     two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
 
@@ -104,6 +115,7 @@ window.onload = () => {
     initializeQuantizationCheckboxActionListeners();
 
     addPauseButtonActionListeners()
+    addRestartSequencerButtonActionListeners()
 
     // create variables which will be used to track info about the note that is being clicked and dragged
     let circleBeingMoved = null
@@ -167,6 +179,21 @@ window.onload = () => {
                 circle.radius = radiusToSetUnplayedCircleTo
             } else {
                 circle.radius = guiConfigurations.notes.playedCircleRadius
+            }
+        }
+
+        /**
+         * This logic allows us to show buttons as being "pressed" for a short amount of time.
+         * After we click a button, we set its "lastClickedTime" in the "lastButtonClickTimeTrackers" hash,
+         * and we change the button's shape's background to a "clicked" color in its click listener. then in 
+         * the logic below the button's background gets set back to "transparent" after the desired amount of 
+         * time has elapsed. this lets us animate buttons to appear clicked, even if the action they perform
+         * is done instantly after clicking.
+         */
+        for (buttonName in lastButtonClickTimeTrackers) {
+            let buttonClickTimeTracker = lastButtonClickTimeTrackers[buttonName]
+            if (sequencer.currentTime - buttonClickTimeTracker.lastClickTime > guiConfigurations.buttonBehavior.showClicksForHowManyMilliseconds) {
+                buttonClickTimeTracker.shape.fill = "transparent"
             }
         }
 
@@ -848,8 +875,32 @@ window.onload = () => {
     }
 
     function addPauseButtonActionListeners() {
-        pauseButton._renderer.elem.addEventListener('click', (event) => {
+        pauseButtonShape._renderer.elem.addEventListener('click', (event) => {
             togglePaused()
+        })
+    }
+
+    function initializeRestartSequencerButton() {
+        let button = two.makePath(
+            [
+                new Two.Anchor(guiConfigurations.restartSequencerButton.left, guiConfigurations.restartSequencerButton.top),
+                new Two.Anchor(guiConfigurations.restartSequencerButton.left + guiConfigurations.restartSequencerButton.width, guiConfigurations.restartSequencerButton.top),
+                new Two.Anchor(guiConfigurations.restartSequencerButton.left + guiConfigurations.restartSequencerButton.width, guiConfigurations.restartSequencerButton.top + guiConfigurations.restartSequencerButton.height),
+                new Two.Anchor(guiConfigurations.restartSequencerButton.left, guiConfigurations.restartSequencerButton.top + guiConfigurations.restartSequencerButton.height),
+            ],
+            false
+        );
+        button.linewidth = guiConfigurations.sequencer.lineWidth
+        button.stroke = guiConfigurations.sequencer.color
+        button.fill = 'transparent'
+        return button
+    }
+
+    function addRestartSequencerButtonActionListeners() {
+        restartSequencerButtonShape._renderer.elem.addEventListener('click', (event) => {
+            lastButtonClickTimeTrackers.restartSequencer.lastClickTime = sequencer.currentTime
+            restartSequencerButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
+            restartSequencer()
         })
     }
 
@@ -875,14 +926,14 @@ window.onload = () => {
         if (!sequencer.paused) {
             sequencer.pause();
         }
-        pauseButton.fill = "#bfbfbf"
+        pauseButtonShape.fill = "#bfbfbf"
     }
 
     function unpause() {
         if (sequencer.paused) {
             sequencer.unpause();
         }
-        pauseButton.fill = "transparent"
+        pauseButtonShape.fill = "transparent"
     }
 
     function initializeTempoTextInputValuesAndStyles() {
@@ -1072,6 +1123,10 @@ window.onload = () => {
         drawAllNoteBankCircles()
         drawNotesToReflectSequencerCurrentState()
         referenceLineTextInputs[rowIndex].value = newNumberOfReferenceLines
+    }
+
+    function restartSequencer() {
+        sequencer.restart();
     }
 
     // given a number and an upper and lower bound, confine the number to be between the bounds.

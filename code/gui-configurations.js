@@ -52,6 +52,12 @@ let guiConfigurations = {
         width: 48,
         height: 48,
     },
+    restartSequencerButton: {
+        top: 440,
+        left: 40,
+        width: 48,
+        height: 48,
+    },
     mouseEvents: {
         notePlacementPadding: 20, // give this many pixels of padding on either side of things when we're placing, so we don't have to place them _precisely_ on the line, the trash bin, etc.
     },
@@ -69,5 +75,9 @@ let guiConfigurations = {
         topPaddingPerRow: -35,
         leftPaddingPerRow: 10,
         maximumValue: 1000,
-    }
+    },
+    buttonBehavior: {
+        showClicksForHowManyMilliseconds: 200,
+        clickedButtonColor: "#c4c4c4",
+    },
 }
