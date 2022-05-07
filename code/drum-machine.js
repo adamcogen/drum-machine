@@ -53,80 +53,11 @@ window.onload = () => {
         _audioContext.resume()
     }
 
-
-    let defaultSequencerLineColor = '#707070'
-    let guiConfigurations = {
-        sequencer: {
-            top: 100,
-            left: 150,
-            width: 400,
-            spaceBetweenRows: 80,
-            color: defaultSequencerLineColor,
-            lineWidth: 3,
-        },
-        notes: {
-            unplayedCircleRadius: 8,
-            playedCircleRadius: 10,
-            movingCircleRadius: 9
-        },
-        sampleBank: {
-            top: 135,
-            left: 40,
-            spaceBetweenNotes: 40,
-            numberOfNotes: sampleNameList.length,
-            borderPadding: 20
-        },
-        drumTriggers: {
-            height: 20,
-            color: defaultSequencerLineColor, // 'black'
-        },
-        subdivisionLines: {
-            height: 20,
-            color: defaultSequencerLineColor,
-        },
-        referenceLines: {
-            height: 20,
-            color: '#ababab', // meant to be slightly lighter than the subdivision line color
-        },
-        noteTrashBin: {
-            top: 380,
-            left: 40,
-            width: 48,
-            height: 48,
-            color: "red",
-        },
-        pauseButton: {
-            top: 74,
-            left: 40,
-            width: 48,
-            height: 48,
-        },
-        mouseEvents: {
-            notePlacementPadding: 20, // give this many pixels of padding on either side of things when we're placing, so we don't have to place them _precisely_ on the line, the trash bin, etc.
-        },
-        tempoTextInput: {
-            top: 25,
-            left: 477,
-            maximumValue: 99999 // fractional numbers less than this could go over the width of the text input
-        },
-        subdivionLineTextInputs: {
-            topPaddingPerRow: 0, // centered on sequencer line would be: -17
-            leftPaddingPerRow: 10,
-            maximumValue: 1000,
-        },
-        referenceLineTextInputs: {
-            topPaddingPerRow: -35,
-            leftPaddingPerRow: 10,
-            maximumValue: 1000,
-        }
-    }
-
     /**
      * drum machine configurations
      */
     const LOOK_AHEAD_MILLIS = 50; // number of milliseconds to look ahead when scheduling notes to play. note bigger value means that there is a longer delay for sounds to stop after the 'pause' button is hit.
     let defaultLoopLengthInMillis = 1500; // length of the whole drum sequence (loop), in millliseconds
-
 
     // initialize sequencer data structure
     let sequencer = new Sequencer([webAudioDriver], 6, defaultLoopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
@@ -871,8 +802,8 @@ window.onload = () => {
             [
                 new Two.Anchor(guiConfigurations.sampleBank.left, guiConfigurations.sampleBank.top),
                 new Two.Anchor(guiConfigurations.sampleBank.left + guiConfigurations.notes.unplayedCircleRadius + (guiConfigurations.sampleBank.borderPadding * 2), guiConfigurations.sampleBank.top),
-                new Two.Anchor(guiConfigurations.sampleBank.left + guiConfigurations.notes.unplayedCircleRadius + (guiConfigurations.sampleBank.borderPadding * 2), guiConfigurations.sampleBank.top + (guiConfigurations.notes.unplayedCircleRadius * (guiConfigurations.sampleBank.numberOfNotes - 1)) + ((guiConfigurations.sampleBank.numberOfNotes - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)),
-                new Two.Anchor(guiConfigurations.sampleBank.left, guiConfigurations.sampleBank.top + (guiConfigurations.notes.unplayedCircleRadius * (guiConfigurations.sampleBank.numberOfNotes - 1)) + ((guiConfigurations.sampleBank.numberOfNotes - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)),
+                new Two.Anchor(guiConfigurations.sampleBank.left + guiConfigurations.notes.unplayedCircleRadius + (guiConfigurations.sampleBank.borderPadding * 2), guiConfigurations.sampleBank.top + (guiConfigurations.notes.unplayedCircleRadius * (sampleNameList.length - 1)) + ((sampleNameList.length - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)),
+                new Two.Anchor(guiConfigurations.sampleBank.left, guiConfigurations.sampleBank.top + (guiConfigurations.notes.unplayedCircleRadius * (sampleNameList.length - 1)) + ((sampleNameList.length - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)),
             ], 
             false
         );

@@ -1,6 +1,6 @@
 /**
- * This file contains class definitions for note bank node generator, sequencer, sequencer row, 
- * id generator, and any other small miscellaneous classes used in the drum machine implementation.
+ * This file contains class definitions for note bank node generator, id generator, 
+ * and any other small miscellaneous classes used in the drum machine implementation.
  */
 
 // class used to generate unique id numbers.

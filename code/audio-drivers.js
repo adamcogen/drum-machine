@@ -1,4 +1,11 @@
 /**
+ * This file contains an interface for audio drivers, and implementations
+ * for particular audio drivers, such as a WebAudio API audio context driver
+ * and MIDI driver. This will allow us to interact with different audio libraries
+ * in a uniform way.
+ */
+
+/**
  * This is an interface for audio drivers / audio contexts.
  * Subclasses can be implemented to allow for uniform interactions with multiple
  * different audio drivers (my current plan is to create a WebAudioDriver for the
@@ -8,7 +15,7 @@
  * them in order to output sound in multiple ways or to multiple sources at the
  * same time. 
  */
- class BaseAudioDriver {
+class BaseAudioDriver {
     constructor(scheduleSoundsAheadOfTime = false) {
         this.scheduleSoundsAheadOfTime = scheduleSoundsAheadOfTime; // define the expected usage pattern for playing sounds with this audio driver.
     }

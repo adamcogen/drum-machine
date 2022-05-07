@@ -1,3 +1,8 @@
+/**
+ * This file contains the sequencer and sequencer row classes.
+ * The sequencer manages time, scheduling of notes, etc.
+ */
+
 // a drum sequencer, which is made up of multiple rows that can have notes placed onto them.
 class Sequencer {
     constructor(audioDrivers, numberOfRows = 4, loopLengthInMillis = 1000, lookAheadMillis = 50, samples = []) {
