@@ -58,6 +58,12 @@ let guiConfigurations = {
         width: 48,
         height: 48,
     },
+    clearAllNotesButton: {
+        top: 500,
+        left: 40,
+        width: 48,
+        height: 48,
+    },
     mouseEvents: {
         notePlacementPadding: 20, // give this many pixels of padding on either side of things when we're placing, so we don't have to place them _precisely_ on the line, the trash bin, etc.
     },

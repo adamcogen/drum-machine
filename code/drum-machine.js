@@ -81,8 +81,9 @@ window.onload = () => {
     let drumTriggerLines = initializeDrumTriggerLines() // list of lines that move to represent the current time within the loop
     let noteBankContainer = initializeNoteBankContainer() // a rectangle that goes around the note bank
     let noteTrashBinContainer = initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
-    let pauseButtonShape = initializePauseButton() // a rectangle that will act as the pause button for now
-    let restartSequencerButtonShape = initializeRestartSequencerButton() // a rectangle that will act as the pause button for now
+    let pauseButtonShape = initializeButtonShape(guiConfigurations.pauseButton.top, guiConfigurations.pauseButton.left, guiConfigurations.pauseButton.height, guiConfigurations.pauseButton.width) // a rectangle that will act as the pause button for now
+    let restartSequencerButtonShape = initializeButtonShape(guiConfigurations.restartSequencerButton.top, guiConfigurations.restartSequencerButton.left, guiConfigurations.restartSequencerButton.height, guiConfigurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
+    let clearAllNotesButtonShape = initializeButtonShape(guiConfigurations.clearAllNotesButton.top, guiConfigurations.clearAllNotesButton.left, guiConfigurations.clearAllNotesButton.height, guiConfigurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
     setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
 
     /**
@@ -92,6 +93,10 @@ window.onload = () => {
         restartSequencer: {
             lastClickTime: Number.MIN_SAFE_INTEGER,
             shape: restartSequencerButtonShape,
+        },
+        clearAllNotes: {
+            lastClickTime: Number.MIN_SAFE_INTEGER,
+            shape: clearAllNotesButtonShape,
         }
     }
 
@@ -116,6 +121,7 @@ window.onload = () => {
 
     addPauseButtonActionListeners()
     addRestartSequencerButtonActionListeners()
+    addClearAllNotesButtonActionListeners()
 
     // create variables which will be used to track info about the note that is being clicked and dragged
     let circleBeingMoved = null
@@ -858,35 +864,19 @@ window.onload = () => {
         return noteTrashBinContainer
     }
 
-    function initializePauseButton() {
-        let pauseButton = two.makePath(
-            [
-                new Two.Anchor(guiConfigurations.pauseButton.left, guiConfigurations.pauseButton.top),
-                new Two.Anchor(guiConfigurations.pauseButton.left + guiConfigurations.pauseButton.width, guiConfigurations.pauseButton.top),
-                new Two.Anchor(guiConfigurations.pauseButton.left + guiConfigurations.pauseButton.width, guiConfigurations.pauseButton.top + guiConfigurations.pauseButton.height),
-                new Two.Anchor(guiConfigurations.pauseButton.left, guiConfigurations.pauseButton.top + guiConfigurations.pauseButton.height),
-            ],
-            false
-        );
-        pauseButton.linewidth = guiConfigurations.sequencer.lineWidth
-        pauseButton.stroke = guiConfigurations.sequencer.color
-        pauseButton.fill = 'transparent'
-        return pauseButton
-    }
-
     function addPauseButtonActionListeners() {
         pauseButtonShape._renderer.elem.addEventListener('click', (event) => {
             togglePaused()
         })
     }
 
-    function initializeRestartSequencerButton() {
+    function initializeButtonShape(top, left, height, width) {
         let button = two.makePath(
             [
-                new Two.Anchor(guiConfigurations.restartSequencerButton.left, guiConfigurations.restartSequencerButton.top),
-                new Two.Anchor(guiConfigurations.restartSequencerButton.left + guiConfigurations.restartSequencerButton.width, guiConfigurations.restartSequencerButton.top),
-                new Two.Anchor(guiConfigurations.restartSequencerButton.left + guiConfigurations.restartSequencerButton.width, guiConfigurations.restartSequencerButton.top + guiConfigurations.restartSequencerButton.height),
-                new Two.Anchor(guiConfigurations.restartSequencerButton.left, guiConfigurations.restartSequencerButton.top + guiConfigurations.restartSequencerButton.height),
+                new Two.Anchor(left, top),
+                new Two.Anchor(left + width, top),
+                new Two.Anchor(left + width, top + height),
+                new Two.Anchor(left, top + height),
             ],
             false
         );
@@ -901,6 +891,14 @@ window.onload = () => {
             lastButtonClickTimeTrackers.restartSequencer.lastClickTime = sequencer.currentTime
             restartSequencerButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
             restartSequencer()
+        })
+    }
+
+    function addClearAllNotesButtonActionListeners() {
+        clearAllNotesButtonShape._renderer.elem.addEventListener('click', (event) => {
+            lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = sequencer.currentTime
+            clearAllNotesButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
+            clearAllNotes();
         })
     }
 
@@ -1067,11 +1065,42 @@ window.onload = () => {
             quantizationCheckboxes[rowIndex].checked = false
             sequencer.rows[rowIndex].quantized = false
         }
+        // update the sequencer data structure to reflect the new number of subdivisions.
+        // call the sequencer's 'update subdivisions for row' method
+        sequencer.setNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex)
+        subdivisionTextInputs[rowIndex].value = newNumberOfSubdivisions
+        resetSequencerDisplayForRow(rowIndex)
+    }
 
-        // first delete all existing notes from the display for the changed row,
-        // because now they may be out of date or some of them may have been deleted,
-        // and the simplest thing to do may just be to delete them all then redraw
-        // the current state of the sequencer for the changed row.
+    function updateNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex) {
+        // update the sequencer data structure to reflect the new number of reference lines.
+        // call the sequencer's 'update number of reference lines for row' method
+        sequencer.setNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex)
+        referenceLineTextInputs[rowIndex].value = newNumberOfReferenceLines
+        resetSequencerDisplayForRow(rowIndex)
+    }
+
+    function restartSequencer() {
+        sequencer.restart();
+    }
+
+    function clearNotesForRow(rowIndex) { 
+        sequencer.clearRow(rowIndex)
+        resetSequencerDisplayForRow(rowIndex)
+    }
+
+    function clearAllNotes() {
+        sequencer.clear();
+        resetSequencerDisplayForAllRows();
+    }
+
+    function resetSequencerDisplayForAllRows() {
+        for (let i = 0; i < sequencer.rows.length; i++) {
+            resetSequencerDisplayForRow(i)
+        }
+    }
+
+    function resetSequencerDisplayForRow(rowIndex) {
         /**
          * found a problem with deleting only a single row. shapes are layered on-screen in the order they are 
          * drawn (newer on top), so re-drawing only one row including its subdivision lines means if we move a 
@@ -1081,23 +1110,6 @@ window.onload = () => {
          * happens, since it is simpler. also since notes are scheduled ahead of time, the extra computation
          * shouldn't affect the timing of the drums at all.
          */
-        removeAllCirclesFromDisplay()
-        // now update the sequencer data structure to reflect the new number of subdivisions.
-        // call the sequencer's 'update subdivisions for row' method
-        sequencer.setNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex)
-        // next we will delete the subdivision lines for the changed row
-        removeSubdivisionLinesForRow(rowIndex)
-        removeDrumTriggerLine(rowIndex)
-        // then we will draw the new subdivision lines for the changed row
-        subdivisionLineLists[rowIndex] = initializeSubdivisionLinesForRow(rowIndex)
-        drumTriggerLines[rowIndex] = initializeDrumTriggerLineForRow(rowIndex)
-        // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
-        drawAllNoteBankCircles()
-        drawNotesToReflectSequencerCurrentState()
-        subdivisionTextInputs[rowIndex].value = newNumberOfSubdivisions
-    }
-
-    function updateNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex) {
         // first delete all existing notes from the display for the changed row,
         // because now they may be out of date or some of them may have been deleted,
         // and the simplest thing to do may just be to delete them all then redraw
@@ -1106,9 +1118,6 @@ window.onload = () => {
         // since we want those to be in front of the reference lines, which we are
         // redrawing now.
         removeAllCirclesFromDisplay()
-        // now update the sequencer data structure to reflect the new number of reference lines.
-        // call the sequencer's 'update number of reference lines for row' method
-        sequencer.setNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex)
         // next we will delete all lines for the changed row
         removeSubdivisionLinesForRow(rowIndex)
         removeReferenceLinesForRow(rowIndex)
@@ -1122,11 +1131,6 @@ window.onload = () => {
         // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
         drawAllNoteBankCircles()
         drawNotesToReflectSequencerCurrentState()
-        referenceLineTextInputs[rowIndex].value = newNumberOfReferenceLines
-    }
-
-    function restartSequencer() {
-        sequencer.restart();
     }
 
     // given a number and an upper and lower bound, confine the number to be between the bounds.

@@ -235,9 +235,7 @@ class Sequencer {
         }
     }
 
-    /**
-     * restart the sequencer
-     */
+    // restart the sequencer
     restart() {
         this.timekeeping.mostRecentPauseTimeWithinLoop = 0
         this.timekeeping.mostRecentUnpauseTime = this.currentTime
@@ -247,6 +245,17 @@ class Sequencer {
             row.resetNextNoteToSchedule()
             row.markAllNotesAsNeverBeenScheduled()
         }
+    }
+
+    // delete all the notes from the sequencer
+    clear() {
+        for (let row of this.rows) {
+            row.clear()
+        }
+    }
+
+    clearRow(rowIndex) {
+        this.rows[rowIndex].clear()
     }
 }
 
@@ -275,6 +284,12 @@ class SequencerRow {
             note.data.lastScheduledOnIteration = NOTE_HAS_NEVER_BEEN_PLAYED;
             note = note.next
         }
+    }
+
+    // delete all the notes from this row
+    clear() {
+        this._notesList.clear()
+        this.resetNextNoteToSchedule()
     }
 
     getNumberOfSubdivisions() {
