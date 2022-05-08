@@ -74,7 +74,7 @@ class Sequencer {
     update() {
         this.currentTime = this.audioDrivers[0].getCurrentTimeInMilliseconds()
         if (this.paused) {
-            this.timekeeping.currentTimeWithinCurrentLoop = this.timekeeping.mostRecentPauseTimeWithinLoop // updated for the sake of the on-screen drum trigger lines
+            this.timekeeping.currentTimeWithinCurrentLoop = this.timekeeping.mostRecentPauseTimeWithinLoop // updated for the sake of the on-screen time tracking lines
         } else {
             this.timekeeping.currentTimeWithinCurrentLoop = (this.currentTime - this.timekeeping.mostRecentUnpauseTime + this.timekeeping.mostRecentPauseTimeWithinLoop) % this.loopLengthInMillis
             this.timekeeping.theoreticalStartTimeOfCurrentLoop = (this.currentTime - this.timekeeping.currentTimeWithinCurrentLoop) // put this here because no need to update it if we are currently paused

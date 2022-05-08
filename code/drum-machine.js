@@ -28,16 +28,21 @@ window.onload = () => {
     const WOODBLOCK = 'woodblock';
     const WAV_EXTENSION = '.wav';
 
-    // load all sound files
-    let samples = {}
-    samples[WOODBLOCK] = new SequencerNoteType(loadSample(WOODBLOCK, SOUND_FILES_PATH + WOODBLOCK + WAV_EXTENSION), '#bd3b07')
-    samples[HI_HAT_CLOSED] = new SequencerNoteType(loadSample(HI_HAT_CLOSED, SOUND_FILES_PATH + HI_HAT_CLOSED + WAV_EXTENSION), '#cf6311') // or try #b58f04 , this was yellow before
-    samples[HI_HAT_OPEN] = new SequencerNoteType(loadSample(HI_HAT_OPEN, SOUND_FILES_PATH + HI_HAT_OPEN + WAV_EXTENSION), '#b8961c') // or try #bf3d5e , this was red before
-    samples[SNARE] = new SequencerNoteType(loadSample(SNARE, SOUND_FILES_PATH + SNARE + WAV_EXTENSION), '#0e6e21')
-    samples[BASS_DRUM] = new SequencerNoteType(loadSample(BASS_DRUM, SOUND_FILES_PATH + BASS_DRUM + WAV_EXTENSION), '#1b617a')
-
     // initialize the list of sample names we will use. the order of this list determines the order of sounds on the sound bank
     let sampleNameList = [WOODBLOCK, HI_HAT_CLOSED, HI_HAT_OPEN, SNARE, BASS_DRUM]
+
+    // load all sound files
+    let samples = {}
+    samples[WOODBLOCK] = new SequencerNoteType(null, '#bd3b07')
+    samples[HI_HAT_CLOSED] = new SequencerNoteType(null, '#cf6311') // or try #b58f04 , this was yellow before
+    samples[HI_HAT_OPEN] = new SequencerNoteType(null, '#b8961c') // or try #bf3d5e , this was red before
+    samples[SNARE] = new SequencerNoteType(null, '#0e6e21')
+    samples[BASS_DRUM] = new SequencerNoteType(null, '#1b617a')
+
+    // load all of the drum samples
+    for (sampleName of sampleNameList) {
+        loadDrumSample(SOUND_FILES_PATH, sampleName, WAV_EXTENSION)
+    }
 
     // initialize ID generator for node / note labels, and node generator for notes taken from the sample bank.
     let idGenerator = new IdGenerator() // we will use this same ID generator everywhere we need IDs, to make sure we track which IDs have already been generated
@@ -78,7 +83,7 @@ window.onload = () => {
     let referenceLineLists = initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
     let sequencerRowLines = initializeAllSequencerRowLines() // list of sequencer row lines
     let subdivisionLineLists = initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
-    let drumTriggerLines = initializeDrumTriggerLines() // list of lines that move to represent the current time within the loop
+    let timeTrackingLines = initializeTimeTrackingLines() // list of lines that move to represent the current time within the loop
     let noteBankContainer = initializeNoteBankContainer() // a rectangle that goes around the note bank
     let noteTrashBinContainer = initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
     let pauseButtonShape = initializeButtonShape(guiConfigurations.pauseButton.top, guiConfigurations.pauseButton.left, guiConfigurations.pauseButton.height, guiConfigurations.pauseButton.width) // a rectangle that will act as the pause button for now
@@ -166,12 +171,12 @@ window.onload = () => {
 
     // this method is the 'update' loop that will keep updating the page. after first invocation, this method basically calls itself recursively forever.
     function draw() {
-        sequencer.update()
+        sequencer.update() // update timekeeping variables and schedule any upcoming notes, using the sequencer
 
-        drumTriggersXPosition = guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width * (sequencer.timekeeping.currentTimeWithinCurrentLoop / sequencer.loopLengthInMillis))
+        let timeTrackingLinesXPosition = guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width * (sequencer.timekeeping.currentTimeWithinCurrentLoop / sequencer.loopLengthInMillis))
 
-        for (let drumTriggerLine of drumTriggerLines) {
-            drumTriggerLine.position.x = drumTriggersXPosition
+        for (let timeTrackingLine of timeTrackingLines) {
+            timeTrackingLine.position.x = timeTrackingLinesXPosition
         }
 
         // make circles get bigger when they play.
@@ -181,7 +186,7 @@ window.onload = () => {
                 // if we are moving this circle, make its unplayed radius slightly bigger than normal
                 radiusToSetUnplayedCircleTo = guiConfigurations.notes.movingCircleRadius;
             }
-            if (circle.translation.x <= drumTriggersXPosition - 15 || circle.translation.x >= drumTriggersXPosition + 15) {
+            if (circle.translation.x <= timeTrackingLinesXPosition - 15 || circle.translation.x >= timeTrackingLinesXPosition + 15) {
                 circle.radius = radiusToSetUnplayedCircleTo
             } else {
                 circle.radius = guiConfigurations.notes.playedCircleRadius
@@ -361,8 +366,14 @@ window.onload = () => {
         setNoteTrashBinVisibility(false)
     });
 
-    // load a sample from a file. to load from a local file, this script needs to be running on a server.
-    function loadSample(sampleName, url) {
+    // making a cleaner (less redundant) way to call 'loadSample()', which matches what we need for the drum sequencer.
+    // the assumption here is that "sampleName" will always match the name of the file (without its file extension).
+    function loadDrumSample(directoryPath, sampleName, fileExtension) {
+        loadAudioSample(sampleName, directoryPath + sampleName + fileExtension)
+    }
+
+    // load an audio sample from a file. to load from a local file, this script needs to be running on a server.
+    function loadAudioSample(sampleName, url) {
         let request = new XMLHttpRequest();
         request.open('GET', url, true);
         request.responseType = 'arraybuffer';
@@ -704,9 +715,9 @@ window.onload = () => {
         sequencerRowLines[rowIndex] = null;
     }
 
-    function removeDrumTriggerLine(rowIndex) {
-        drumTriggerLines[rowIndex].remove();
-        drumTriggerLines[rowIndex] = null;
+    function removeTimeTrackingLine(rowIndex) {
+        timeTrackingLines[rowIndex].remove();
+        timeTrackingLines[rowIndex] = null;
     }
 
     // add 'subdivision lines' to each sequencer row. these lines divide each row into the given number of evenly-sized sections.
@@ -802,30 +813,30 @@ window.onload = () => {
         referenceLineLists[rowIndex] = []
     }
 
-    // draw lines for the 'drum triggers' for each sequencer row.
+    // draw lines for the 'time trackers' for each sequencer row.
     // these are the little lines above each sequencer line that track the current time within the loop.
     // return a list of the drawn lines. these will be Two.js 'path' objects.
-    function initializeDrumTriggerLines() {
-        let drumTriggerLines = []
-        for (let drumTriggersDrawn = 0; drumTriggersDrawn < sequencer.numberOfRows; drumTriggersDrawn++) {
-            let triggerLine = initializeDrumTriggerLineForRow(drumTriggersDrawn)
-            drumTriggerLines.push(triggerLine)
+    function initializeTimeTrackingLines() {
+        let lines = []
+        for (let linesDrawn = 0; linesDrawn < sequencer.numberOfRows; linesDrawn++) {
+            let timeTrackingLine = initializeTimeTrackingLineForRow(linesDrawn)
+            lines.push(timeTrackingLine)
         }
-        return drumTriggerLines
+        return lines
     }
 
-    function initializeDrumTriggerLineForRow(rowIndex) {
-        let triggerLine = two.makePath(
+    function initializeTimeTrackingLineForRow(rowIndex) {
+        let line = two.makePath(
             [
-                new Two.Anchor(guiConfigurations.sequencer.left, guiConfigurations.sequencer.top + guiConfigurations.drumTriggers.height + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
-                new Two.Anchor(guiConfigurations.sequencer.left, guiConfigurations.sequencer.top - guiConfigurations.drumTriggers.height + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
+                new Two.Anchor(guiConfigurations.sequencer.left, guiConfigurations.sequencer.top + guiConfigurations.timeTrackingLines.height + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
+                new Two.Anchor(guiConfigurations.sequencer.left, guiConfigurations.sequencer.top - guiConfigurations.timeTrackingLines.height + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
             ], 
             false
         );
-        triggerLine.linewidth = guiConfigurations.sequencer.lineWidth;
-        triggerLine.stroke = guiConfigurations.drumTriggers.color // 'black'
+        line.linewidth = guiConfigurations.sequencer.lineWidth;
+        line.stroke = guiConfigurations.timeTrackingLines.color // 'black'
 
-        return triggerLine
+        return line
     }
 
     // draw the physical note bank container on the screen. for now that's just a rectangle.
@@ -1122,12 +1133,12 @@ window.onload = () => {
         removeSubdivisionLinesForRow(rowIndex)
         removeReferenceLinesForRow(rowIndex)
         removeSequencerRowLine(rowIndex)
-        removeDrumTriggerLine(rowIndex)
+        removeTimeTrackingLine(rowIndex)
         // then we will draw all the lines for the changed row, starting with reference lines since they need to be the bottom layer
         referenceLineLists[rowIndex] = initializeReferenceLinesForRow(rowIndex)
         subdivisionLineLists[rowIndex] = initializeSubdivisionLinesForRow(rowIndex)
         sequencerRowLines[rowIndex] = initializeSequencerRowLine(rowIndex)
-        drumTriggerLines[rowIndex] = initializeDrumTriggerLineForRow(rowIndex)
+        timeTrackingLines[rowIndex] = initializeTimeTrackingLineForRow(rowIndex)
         // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
         drawAllNoteBankCircles()
         drawNotesToReflectSequencerCurrentState()

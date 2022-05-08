@@ -27,7 +27,7 @@ let guiConfigurations = {
         spaceBetweenNotes: 40,
         borderPadding: 20
     },
-    drumTriggers: {
+    timeTrackingLines: {
         height: 20,
         color: defaultSequencerLineColor, // 'black'
     },
