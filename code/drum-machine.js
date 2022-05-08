@@ -231,6 +231,7 @@ window.onload = () => {
             circleBeingMoved.translation.x = mouseX
             circleBeingMoved.translation.y = mouseY
             circleBeingMovedNewRow = HAS_NO_ROW_NUMBER // start with "it's not colliding with anything", and update the value from there if we find a collision
+            circleBeingMoved.stroke = "black"
             /**
              * adding stuff here for new 'snap to grid on move' behavior.
              * this will be the first part of making it so that notes being moved 'snap' into place when they are close to the trash bin or a sequencer line.
@@ -249,8 +250,12 @@ window.onload = () => {
                 circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
             }
             // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
-            let withinHorizonalBoundaryOfSequencer = (mouseX >= guiConfigurations.sequencer.left - guiConfigurations.mouseEvents.notePlacementPadding) && (mouseX <= (guiConfigurations.sequencer.left + guiConfigurations.sequencer.width) + guiConfigurations.mouseEvents.notePlacementPadding)
-            let withinVerticalBoundaryOfSequencer = (mouseY >= guiConfigurations.sequencer.top - guiConfigurations.mouseEvents.notePlacementPadding) && (mouseY <= guiConfigurations.sequencer.top + ((sequencer.numberOfRows - 1) * guiConfigurations.sequencer.spaceBetweenRows) + guiConfigurations.mouseEvents.notePlacementPadding)
+            let sequencerLeftBoundary = guiConfigurations.sequencer.left - guiConfigurations.mouseEvents.notePlacementPadding
+            let sequencerRightBoundary = (guiConfigurations.sequencer.left + guiConfigurations.sequencer.width) + guiConfigurations.mouseEvents.notePlacementPadding
+            let sequencerTopBoundary = guiConfigurations.sequencer.top - guiConfigurations.mouseEvents.notePlacementPadding
+            let sequencerBottomBoundary = guiConfigurations.sequencer.top + ((sequencer.numberOfRows - 1) * guiConfigurations.sequencer.spaceBetweenRows) + guiConfigurations.mouseEvents.notePlacementPadding
+            let withinHorizonalBoundaryOfSequencer = (mouseX >= sequencerLeftBoundary) && (mouseX <= sequencerRightBoundary)
+            let withinVerticalBoundaryOfSequencer = (mouseY >= sequencerTopBoundary) && (mouseY <= sequencerBottomBoundary)
             if (withinHorizonalBoundaryOfSequencer && withinVerticalBoundaryOfSequencer) {
                 // if we get here, we know the circle is within the vertical and horizontal boundaries of the sequencer.
                 // next we want to do a more fine-grained calculation, for whether it is in range to be placed onto one of the sequencer lines.
@@ -277,6 +282,14 @@ window.onload = () => {
                         circleBeingMovedNewRow = rowIndex // set 'new row' to whichever row we collided with / 'snapped' to
                         break; // we found the row that the note will be placed on, so stop iterating thru rows early
                     }
+                }
+            } else {
+                // new secondary trash bin logic: if the note is far enough away from the sequencer, we will throw it out
+                let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - guiConfigurations.mouseEvents.throwNoteAwaySidesPadding) || (mouseX >= sequencerRightBoundary + guiConfigurations.mouseEvents.throwNoteAwaySidesPadding)
+                let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - guiConfigurations.mouseEvents.throwNoteAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + guiConfigurations.mouseEvents.throwNoteAwayTopAndBottomPadding)
+                if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
+                    circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
+                    circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
                 }
             }
         }
