@@ -195,7 +195,8 @@ window.onload = () => {
                 // if we are moving this circle, make its unplayed radius slightly bigger than normal
                 radiusToSetUnplayedCircleTo = guiConfigurations.notes.movingCircleRadius;
             }
-            if (circle.translation.x <= timeTrackingLinesXPosition - 15 || circle.translation.x >= timeTrackingLinesXPosition + 15) {
+            let circleResizeRange = guiConfigurations.sequencer.width / 25
+            if (circle.translation.x <= timeTrackingLinesXPosition - circleResizeRange || circle.translation.x >= timeTrackingLinesXPosition + circleResizeRange) {
                 circle.radius = radiusToSetUnplayedCircleTo
             } else {
                 circle.radius = guiConfigurations.notes.playedCircleRadius
