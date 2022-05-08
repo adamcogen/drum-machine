@@ -86,4 +86,10 @@ let guiConfigurations = {
         showClicksForHowManyMilliseconds: 200,
         clickedButtonColor: "#c4c4c4",
     },
+    clearRowButtons: {
+        topPaddingPerRow: -30,
+        leftPaddingPerRow: 102,
+        height: 20,
+        width: 20,
+    }
 }

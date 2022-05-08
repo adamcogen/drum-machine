@@ -89,6 +89,7 @@ window.onload = () => {
     let pauseButtonShape = initializeButtonShape(guiConfigurations.pauseButton.top, guiConfigurations.pauseButton.left, guiConfigurations.pauseButton.height, guiConfigurations.pauseButton.width) // a rectangle that will act as the pause button for now
     let restartSequencerButtonShape = initializeButtonShape(guiConfigurations.restartSequencerButton.top, guiConfigurations.restartSequencerButton.left, guiConfigurations.restartSequencerButton.height, guiConfigurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
     let clearAllNotesButtonShape = initializeButtonShape(guiConfigurations.clearAllNotesButton.top, guiConfigurations.clearAllNotesButton.left, guiConfigurations.clearAllNotesButton.height, guiConfigurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
+    let clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(guiConfigurations.clearRowButtons.topPaddingPerRow, guiConfigurations.clearRowButtons.leftPaddingPerRow, guiConfigurations.clearRowButtons.height, guiConfigurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
     setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
 
     /**
@@ -102,6 +103,13 @@ window.onload = () => {
         clearAllNotes: {
             lastClickTime: Number.MIN_SAFE_INTEGER,
             shape: clearAllNotesButtonShape,
+        }
+    }
+    // also keep track of when each button was clicked for buttons that are generated one-per-row
+    for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+        lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex] = {
+            lastClickTime: Number.MIN_SAFE_INTEGER,
+            shape: clearNotesForRowButtonShapes[rowIndex],
         }
     }
 
@@ -127,6 +135,7 @@ window.onload = () => {
     addPauseButtonActionListeners()
     addRestartSequencerButtonActionListeners()
     addClearAllNotesButtonActionListeners()
+    addClearNotesForRowButtonsActionListeners()
 
     // create variables which will be used to track info about the note that is being clicked and dragged
     let circleBeingMoved = null
@@ -367,7 +376,7 @@ window.onload = () => {
     });
 
     // making a cleaner (less redundant) way to call 'loadSample()', which matches what we need for the drum sequencer.
-    // the assumption here is that "sampleName" will always match the name of the file (without its file extension).
+    // the simplifying assumption here is that "sampleName" will always match the name of the file (without its file extension).
     function loadDrumSample(directoryPath, sampleName, fileExtension) {
         loadAudioSample(sampleName, directoryPath + sampleName + fileExtension)
     }
@@ -897,6 +906,16 @@ window.onload = () => {
         return button
     }
 
+    function initializeButtonPerSequencerRow(topPaddingPerRow, leftPaddingPerRow, height, width) {
+        shapes = []
+        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+            let top = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * rowIndex) + topPaddingPerRow
+            let left = guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + leftPaddingPerRow
+            shapes[rowIndex] = initializeButtonShape(top, left, height, width)
+        }
+        return shapes
+    }
+
     function addRestartSequencerButtonActionListeners() {
         restartSequencerButtonShape._renderer.elem.addEventListener('click', (event) => {
             lastButtonClickTimeTrackers.restartSequencer.lastClickTime = sequencer.currentTime
@@ -911,6 +930,16 @@ window.onload = () => {
             clearAllNotesButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
             clearAllNotes();
         })
+    }
+
+    function addClearNotesForRowButtonsActionListeners() {
+        for(let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+            clearNotesForRowButtonShapes[rowIndex]._renderer.elem.addEventListener('click', (event) => {
+                lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = sequencer.currentTime
+                clearNotesForRowButtonShapes[rowIndex].fill = guiConfigurations.buttonBehavior.clickedButtonColor
+                clearNotesForRow(rowIndex);
+            })
+        }
     }
 
     // show or hide the note trash bin (show if visible === true, hide otherwise)
