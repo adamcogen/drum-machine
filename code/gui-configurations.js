@@ -93,5 +93,11 @@ let guiConfigurations = {
         leftPaddingPerRow: 102,
         height: 20,
         width: 20,
+    },
+    addRowButton: {
+        topPadding: 50,
+        leftPadding: 0,
+        height: 48,
+        width: 48
     }
 }

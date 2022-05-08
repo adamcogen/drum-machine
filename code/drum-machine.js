@@ -31,14 +31,15 @@ window.onload = () => {
     // initialize the list of sample names we will use. the order of this list determines the order of sounds on the sound bank
     let sampleNameList = [WOODBLOCK, HI_HAT_CLOSED, HI_HAT_OPEN, SNARE, BASS_DRUM]
 
-    // load all sound files
+    /**
+     * load sound files
+     */
     let samples = {}
     samples[WOODBLOCK] = new SequencerNoteType(null, '#bd3b07')
     samples[HI_HAT_CLOSED] = new SequencerNoteType(null, '#cf6311') // or try #b58f04 , this was yellow before
     samples[HI_HAT_OPEN] = new SequencerNoteType(null, '#b8961c') // or try #bf3d5e , this was red before
     samples[SNARE] = new SequencerNoteType(null, '#0e6e21')
     samples[BASS_DRUM] = new SequencerNoteType(null, '#1b617a')
-
     // load all of the drum samples
     for (sampleName of sampleNameList) {
         loadDrumSample(SOUND_FILES_PATH, sampleName, WAV_EXTENSION)
@@ -90,6 +91,7 @@ window.onload = () => {
     let restartSequencerButtonShape = initializeButtonShape(guiConfigurations.restartSequencerButton.top, guiConfigurations.restartSequencerButton.left, guiConfigurations.restartSequencerButton.height, guiConfigurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
     let clearAllNotesButtonShape = initializeButtonShape(guiConfigurations.clearAllNotesButton.top, guiConfigurations.clearAllNotesButton.left, guiConfigurations.clearAllNotesButton.height, guiConfigurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
     let clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(guiConfigurations.clearRowButtons.topPaddingPerRow, guiConfigurations.clearRowButtons.leftPaddingPerRow, guiConfigurations.clearRowButtons.height, guiConfigurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
+    let addRowButtonShape = initializeButtonShape(guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + guiConfigurations.addRowButton.topPadding, guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width / 2) + guiConfigurations.addRowButton.leftPadding - (guiConfigurations.addRowButton.width / 2), guiConfigurations.addRowButton.height, guiConfigurations.addRowButton.width)
     setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
 
     /**
@@ -103,7 +105,11 @@ window.onload = () => {
         clearAllNotes: {
             lastClickTime: Number.MIN_SAFE_INTEGER,
             shape: clearAllNotesButtonShape,
-        }
+        },
+        addRow: {
+            lastClickTime: Number.MIN_SAFE_INTEGER,
+            shape: addRowButtonShape
+        },
     }
     // also keep track of when each button was clicked for buttons that are generated one-per-row
     for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
@@ -136,6 +142,7 @@ window.onload = () => {
     addRestartSequencerButtonActionListeners()
     addClearAllNotesButtonActionListeners()
     addClearNotesForRowButtonsActionListeners()
+    addAddRowButtonActionListener()
 
     // create variables which will be used to track info about the note that is being clicked and dragged
     let circleBeingMoved = null
@@ -956,6 +963,13 @@ window.onload = () => {
                 clearNotesForRow(rowIndex);
             })
         }
+    }
+
+    function addAddRowButtonActionListener() {
+        addRowButtonShape._renderer.elem.addEventListener('click', (event) => {
+            lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
+            addRowButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
+        })
     }
 
     // show or hide the note trash bin (show if visible === true, hide otherwise)
