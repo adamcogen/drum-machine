@@ -248,6 +248,7 @@ window.onload = () => {
                 circleBeingMoved.translation.x = centerOfTrashBinX
                 circleBeingMoved.translation.y = centerOfTrashBinY
                 circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
+                circleBeingMoved.stroke = "red"
             }
             // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
             let sequencerLeftBoundary = guiConfigurations.sequencer.left - guiConfigurations.mouseEvents.notePlacementPadding
@@ -329,6 +330,7 @@ window.onload = () => {
              *         (since there's no real reason to actually remove anything when "removing" a note from the note bank. instead we just 
              *         create a new node for the sequencer's note list, and place that onto the row it's being added to).
              */
+            circleBeingMoved.stroke = "transparent"
             // note down starting state, current state.
             circleNewXPosition = circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle.
             circleNewYPosition = circleBeingMovedStartingPositionY // if the circle is not colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
@@ -1014,6 +1016,20 @@ window.onload = () => {
             domElements.textInputs.loopLengthMillis.value = newTextInputValue
             updateSequencerLoopLength(newTextInputValue)
         })
+        addDefaultTextInputKeypressEventListener(domElements.textInputs.loopLengthMillis, true)
+    }
+
+    function addDefaultTextInputKeypressEventListener(textarea, allowPeriods) {
+        textarea.addEventListener('keypress', (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault()
+                textarea.blur() // apply the change to the text area if the user presses "enter"
+            }
+            let periodCheckPassed = (event.key === "." && allowPeriods) // if the character is a period, make this value 'true' if periods are allowed. otherwise false.
+            if (isNaN(Number.parseInt(event.key)) && !periodCheckPassed) { // don't allow the user to enter things that aren't numbers (but allow periods if they're allowed)
+                event.preventDefault()
+            }
+        })
     }
 
     function updateSequencerLoopLength(newLoopLengthInMillis) {
@@ -1066,6 +1082,7 @@ window.onload = () => {
                 subdivisionTextInput.value = newTextInputValue
                 updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
             })
+            addDefaultTextInputKeypressEventListener(subdivisionTextInput, false)
         }
     }
 
@@ -1109,6 +1126,7 @@ window.onload = () => {
                 referenceLineTextInput.value = newTextInputValue
                 updateNumberOfReferenceLinesForRow(newTextInputValue, rowIndex)
             })
+            addDefaultTextInputKeypressEventListener(referenceLineTextInput, false)
         }
     }
 
