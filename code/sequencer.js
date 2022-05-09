@@ -101,7 +101,9 @@ class Sequencer {
 
     // add a new empty row to the end of the drum sequencer
     addRow() {
-        // todo: implement this
+        let row = new SequencerRow(this.loopLengthInMillis)
+        this.rows.push(row)
+        this.numberOfRows++
     }
 
     // delete a particular drum sequencer row, at the the specified index

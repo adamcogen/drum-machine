@@ -95,7 +95,9 @@ window.onload = () => {
     setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
 
     /**
-     * keep track of when each button was last clicked, so we can make the note darker for a little while after clicking it
+     * keep track of when each button was last clicked, so we can make the note darker for a little while after clicking it.
+     * we also keep track of when each button was clicked for buttons that are generated one-per-row, but those are initialized
+     * within the relevant action listenever methods, not here. same for a few other of these trackers. 
      */
     lastButtonClickTimeTrackers = {
         restartSequencer: {
@@ -109,13 +111,6 @@ window.onload = () => {
         addRow: {
             lastClickTime: Number.MIN_SAFE_INTEGER,
             shape: addRowButtonShape
-        },
-    }
-    // also keep track of when each button was clicked for buttons that are generated one-per-row
-    for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-        lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex] = {
-            lastClickTime: Number.MIN_SAFE_INTEGER,
-            shape: clearNotesForRowButtonShapes[rowIndex],
         }
     }
 
@@ -172,6 +167,8 @@ window.onload = () => {
 
     drawAllNoteBankCircles()
     drawNotesToReflectSequencerCurrentState()
+
+    refreshWindowMouseMoveEvent();
     
     // run any miscellaneous unit tests needed before starting main update loop
     testConfineNumberToBounds()
@@ -229,8 +226,8 @@ window.onload = () => {
         requestAnimationFrameShim(draw); // call animation frame update with this 'draw' method again
     }
 
-    // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
-    window.addEventListener('mousemove', (event) => {
+    function windowMouseMoveEventHandler(event) {
+        // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
         if (circleBeingMoved !== null) {
             adjustEventCoordinates(event)
             mouseX = event.pageX
@@ -302,7 +299,12 @@ window.onload = () => {
                 }
             }
         }
-    });
+    }
+
+    function refreshWindowMouseMoveEvent() {
+        window.removeEventListener('mousemove', windowMouseMoveEventHandler);
+        window.addEventListener('mousemove', windowMouseMoveEventHandler);
+    }
 
     // lifting your mouse anywhere means you're no longer click-dragging
     window.addEventListener('mouseup', (event) => {
@@ -436,6 +438,10 @@ window.onload = () => {
     }
 
     function initializeQuantizationCheckboxes() {
+        for (let existingCheckbox of quantizationCheckboxes) {
+            domElements.divs.subdivisionTextInputs.removeChild(existingCheckbox)
+        }
+        quantizationCheckboxes = []
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
             let verticalPosition = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * rowIndex) + guiConfigurations.subdivionLineTextInputs.topPaddingPerRow + 4
             let horizontalPosition = guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + 73
@@ -793,15 +799,15 @@ window.onload = () => {
     // the current intent of this is to delete them all so that they can be re-drawn afterwards (such as
     // when the number of subdivisions in a particular row is changed).
     function removeSubdivisionLinesForRow(rowIndex) {
-        for (subdivisionLine of subdivisionLineLists[rowIndex]) {
-            subdivisionLine.remove()
+        for (line of subdivisionLineLists[rowIndex]) {
+            line.remove()
         }
         subdivisionLineLists[rowIndex] = []
     }
 
     function removeReferenceLinesForRow(rowIndex) {
-        for (referenceLine of referenceLineLists[rowIndex]) {
-            referenceLine.remove()
+        for (line of referenceLineLists[rowIndex]) {
+            line.remove()
         }
         referenceLineLists[rowIndex] = []
     }
@@ -957,6 +963,10 @@ window.onload = () => {
 
     function addClearNotesForRowButtonsActionListeners() {
         for(let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+            lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex] = {
+                lastClickTime: Number.MIN_SAFE_INTEGER,
+                shape: clearNotesForRowButtonShapes[rowIndex],
+            }
             clearNotesForRowButtonShapes[rowIndex]._renderer.elem.addEventListener('click', (event) => {
                 lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = sequencer.currentTime
                 clearNotesForRowButtonShapes[rowIndex].fill = guiConfigurations.buttonBehavior.clickedButtonColor
@@ -966,10 +976,52 @@ window.onload = () => {
     }
 
     function addAddRowButtonActionListener() {
+        lastButtonClickTimeTrackers.addRow.shape = addRowButtonShape;
         addRowButtonShape._renderer.elem.addEventListener('click', (event) => {
             lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
             addRowButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
+            sequencer.addRow();
+            let newRowIndex = sequencer.rows.length - 1
+            // set new row default configuration
+            sequencer.rows[newRowIndex].setNumberOfSubdivisions(4);
+            // initialize lines for the  new row
+            referenceLineLists.push(initializeReferenceLinesForRow(newRowIndex))
+            subdivisionLineLists.push(initializeSubdivisionLinesForRow(newRowIndex))
+            timeTrackingLines.push(initializeTimeTrackingLineForRow(newRowIndex))
+            sequencerRowLines.push(initializeSequencerRowLine(newRowIndex))
+            redrawSequencer()
         })
+    }
+
+    function redrawSequencer() {
+        // update mouse event listeners to reflect current state of sequencer (number of rows, etc.)
+        refreshWindowMouseMoveEvent();
+        // redraw notes so and lines
+        resetNotesAndLinesDisplayForAllRows();
+        // redraw html inputs, such as subdivision and reference line text areas, quantization checkboxes
+        initializeSubdivisionTextInputsValuesAndStyles();
+        initializeReferenceLineTextInputsValuesAndStyles();
+        initializeQuantizationCheckboxes()
+        // redraw two.js shapes, such as 'add row' and 'clear notes for row' button shapes
+        // todo: make methods for these so we don't have to pass in the GUI configurations twice when initializing.
+        // todo: clean up first GUI initialization so that we can just call a 'redraw' method the first time as well, 
+        //       to avoid duplicated code
+        for (shape of clearNotesForRowButtonShapes) {
+            shape.remove()
+        }
+        clearNotesForRowButtonShapes = []
+        clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(guiConfigurations.clearRowButtons.topPaddingPerRow, guiConfigurations.clearRowButtons.leftPaddingPerRow, guiConfigurations.clearRowButtons.height, guiConfigurations.clearRowButtons.width); // this is a list of button rectangles, one per row, to clear the notes on that row
+        addRowButtonShape.remove();
+        addRowButtonShape = initializeButtonShape(guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + guiConfigurations.addRowButton.topPadding, guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width / 2) + guiConfigurations.addRowButton.leftPadding - (guiConfigurations.addRowButton.width / 2), guiConfigurations.addRowButton.height, guiConfigurations.addRowButton.width)
+        addRowButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
+        // update two.js so we can add action listeners to shapes
+        two.update()
+        // initialize action listeners
+        initializeSubdivisionTextInputsActionListeners();
+        initializeReferenceLineTextInputsActionListeners();
+        addClearNotesForRowButtonsActionListeners();
+        initializeQuantizationCheckboxActionListeners();
+        addAddRowButtonActionListener();
     }
 
     // show or hide the note trash bin (show if visible === true, hide otherwise)
@@ -1067,6 +1119,10 @@ window.onload = () => {
     }
 
     function initializeSubdivisionTextInputsValuesAndStyles() {
+        for(existingSubdivisionTextInput of subdivisionTextInputs) {
+            domElements.divs.subdivisionTextInputs.removeChild(existingSubdivisionTextInput)
+        }
+        subdivisionTextInputs = []
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
             let textArea = document.createElement("textarea");
             textArea.cols = "3"
@@ -1102,6 +1158,10 @@ window.onload = () => {
     }
 
     function initializeReferenceLineTextInputsValuesAndStyles() {
+        for(existingTextInput of referenceLineTextInputs) {
+            domElements.divs.subdivisionTextInputs.removeChild(existingTextInput)
+        }
+        referenceLineTextInputs = []
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
             let textArea = document.createElement("textarea");
             textArea.cols = "3"
@@ -1155,7 +1215,7 @@ window.onload = () => {
         // call the sequencer's 'update subdivisions for row' method
         sequencer.setNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex)
         subdivisionTextInputs[rowIndex].value = newNumberOfSubdivisions
-        resetSequencerDisplayForRow(rowIndex)
+        resetNotesAndLinesDisplayForRow(rowIndex)
     }
 
     function updateNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex) {
@@ -1163,7 +1223,7 @@ window.onload = () => {
         // call the sequencer's 'update number of reference lines for row' method
         sequencer.setNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex)
         referenceLineTextInputs[rowIndex].value = newNumberOfReferenceLines
-        resetSequencerDisplayForRow(rowIndex)
+        resetNotesAndLinesDisplayForRow(rowIndex)
     }
 
     function restartSequencer() {
@@ -1172,21 +1232,21 @@ window.onload = () => {
 
     function clearNotesForRow(rowIndex) { 
         sequencer.clearRow(rowIndex)
-        resetSequencerDisplayForRow(rowIndex)
+        resetNotesAndLinesDisplayForRow(rowIndex)
     }
 
     function clearAllNotes() {
         sequencer.clear();
-        resetSequencerDisplayForAllRows();
+        resetNotesAndLinesDisplayForAllRows();
     }
 
-    function resetSequencerDisplayForAllRows() {
+    function resetNotesAndLinesDisplayForAllRows() {
         for (let i = 0; i < sequencer.rows.length; i++) {
-            resetSequencerDisplayForRow(i)
+            resetNotesAndLinesDisplayForRow(i)
         }
     }
 
-    function resetSequencerDisplayForRow(rowIndex) {
+    function resetNotesAndLinesDisplayForRow(rowIndex) {
         /**
          * found a problem with deleting only a single row. shapes are layered on-screen in the order they are 
          * drawn (newer on top), so re-drawing only one row including its subdivision lines means if we move a 
