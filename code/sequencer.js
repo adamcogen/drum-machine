@@ -100,20 +100,66 @@ class Sequencer {
     }
 
     // add a new empty row to the end of the drum sequencer
-    addRow() {
+    addEmptyRow() {
         let row = new SequencerRow(this.loopLengthInMillis)
         this.rows.push(row)
         this.numberOfRows++
     }
 
     // delete a particular drum sequencer row, at the the specified index
-    deleteRowAtIndex() {
-        // todo: implement this
+    removeRowAtIndex(index) {
+        if (index < 0 || index >= this.numberOfRows) {
+            throw "index of row to remove was not valid. must be >= 0 and < " + this.numberOfRows + ", but was " + index + ".";
+        }
+        let removedRow = this.deleteArrayElementAtIndex(this.rows, index)[0];
+        this.numberOfRows--;
+        return removedRow;
+    }
+
+    // insert the given sequencer row at the specified index.
+    insertRowAtIndex(sequencerRowObjectToInsert, index) {
+        if (index < 0 || index >= this.numberOfRows) {
+            throw "index of row to insert was not valid. must be >= 0 and < " + this.numberOfRows + ", but was " + index + ".";
+        }
+        this.insertArrayElementAtIndex(this.rows, sequencerRowObjectToInsert, index);
+        this.numberOfRows++;
     }
 
     // move an existing row to a new place in the drum sequencer, i.e. changing the order of the existing rows.
-    changeRowIndex() {
-        // todo: implement this
+    // remove the row from its old place and insert it at its new place. this is different than switching the rows.
+    // row order is maintained, just one element is pulled out and put somewhere else.
+    moveRowToNewIndex(rowToMoveIndex, newIndex) {
+        let removedRow = this.removeRowAtIndex(rowToMoveIndex);
+        this.insertRowAtIndex(removedRow, newIndex);
+    }
+
+    // switch two existing sequencer rows with each other.
+    switchRows(oldIndex, newIndex) {
+        // perform input validation checks
+        if (oldIndex < 0 || oldIndex >= this.numberOfRows) {
+            throw "starting index of row to move was not valid. must be >= 0 and < " + this.numberOfRows + ", but was " + oldIndex + ".";
+        }
+        if (newIndex < 0 || newIndex >= this.numberOfRows) {
+            throw "new index to move row to was not valid. must be >= 0 and < " + this.numberOfRows + ", but was " + newIndex + ".";
+        }
+        if (oldIndex === newIndex) {
+            return;
+        }
+        let temp = this.rows[oldIndex]
+        this.rows[oldIndex] = this.rows[newIndex]
+        this.rows[newIndex] = temp
+    }
+
+    // helper function for working with arrays
+    // todo: check -- does this return an empty list if there is no element with the given index?
+    deleteArrayElementAtIndex(array, indexOfElementToDelete) {
+        let listOfOneRemovedElement = array.splice(indexOfElementToDelete, 1) // this should go in and delete the element we want to delete!
+        return listOfOneRemovedElement
+    }
+
+    // insert an element into an array at the given index.
+    insertArrayElementAtIndex(array, element, indexToInsertElementAt) {
+        array.splice(indexToInsertElementAt, 0, element)
     }
 
     // todo: add getters and setters for class fields. setters will take a bit of logic to adjust everything whenever we make changes to values.

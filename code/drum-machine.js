@@ -980,7 +980,7 @@ window.onload = () => {
         addRowButtonShape._renderer.elem.addEventListener('click', (event) => {
             lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
             addRowButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
-            sequencer.addRow();
+            sequencer.addEmptyRow();
             let newRowIndex = sequencer.rows.length - 1
             // set new row default configuration
             sequencer.rows[newRowIndex].setNumberOfSubdivisions(4);
