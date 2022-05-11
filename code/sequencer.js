@@ -128,6 +128,9 @@ class Sequencer {
     // move an existing row to a new place in the drum sequencer, i.e. changing the order of the existing rows.
     // remove the row from its old place and insert it at its new place. this is different than switching the rows.
     // row order is maintained, just one element is pulled out and put somewhere else.
+    //
+    // this method doesn't work as intended yet. i plan to fix it once GUI logic 
+    // for switching rows is working, since this will be easier to test then.
     moveRowToNewIndex(rowToMoveIndex, newIndex) {
         let removedRow = this.removeRowAtIndex(rowToMoveIndex);
         this.insertRowAtIndex(removedRow, newIndex);

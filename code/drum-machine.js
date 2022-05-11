@@ -980,17 +980,28 @@ window.onload = () => {
         addRowButtonShape._renderer.elem.addEventListener('click', (event) => {
             lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
             addRowButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
-            sequencer.addEmptyRow();
-            let newRowIndex = sequencer.rows.length - 1
-            // set new row default configuration
-            sequencer.rows[newRowIndex].setNumberOfSubdivisions(4);
-            // initialize lines for the  new row
-            referenceLineLists.push(initializeReferenceLinesForRow(newRowIndex))
-            subdivisionLineLists.push(initializeSubdivisionLinesForRow(newRowIndex))
-            timeTrackingLines.push(initializeTimeTrackingLineForRow(newRowIndex))
-            sequencerRowLines.push(initializeSequencerRowLine(newRowIndex))
-            redrawSequencer()
+            addEmptySequencerRow();
         })
+    }
+
+    function addEmptySequencerRow() {
+        sequencer.addEmptyRow();
+        let newRowIndex = sequencer.rows.length - 1
+        // set new row default configuration
+        sequencer.rows[newRowIndex].setNumberOfReferenceLines(4);
+        sequencer.rows[newRowIndex].setNumberOfSubdivisions(8);
+        // redraw the sequencer
+        redrawSequencer()
+    }
+
+    function removeSequencerRowAtIndex(index) {
+        sequencer.removeRowAtIndex(index);
+        redrawSequencer();
+    }
+
+    function moveSequencerRowToNewIndex(indexOfRowToMove, newIndex) {
+        sequencer.moveRowToNewIndex(indexOfRowToMove, newIndex);
+        redrawSequencer();
     }
 
     function redrawSequencer() {
@@ -1241,9 +1252,35 @@ window.onload = () => {
     }
 
     function resetNotesAndLinesDisplayForAllRows() {
-        for (let i = 0; i < sequencer.rows.length; i++) {
-            resetNotesAndLinesDisplayForRow(i)
+        removeAllCirclesFromDisplay()
+        for (list of subdivisionLineLists) {
+            for (line of list) {
+                line.remove();
+            }
+            list = [];
         }
+        subdivisionLineLists = []
+        for (list of referenceLineLists) {
+            for (line of list) {
+                line.remove();
+            }
+            list = [];
+        }
+        referenceLineLists = []
+        for (line of sequencerRowLines) {
+            line.remove();
+        }
+        sequencerRowLines = [];
+        for (line of timeTrackingLines) {
+            line.remove();
+        }
+        timeTrackingLines = [];
+        referenceLineLists = initializeAllReferenceLines();
+        subdivisionLineLists = initializeAllSubdivisionLines();
+        sequencerRowLines = initializeAllSequencerRowLines();
+        timeTrackingLines = initializeTimeTrackingLines();
+        drawAllNoteBankCircles();
+        drawNotesToReflectSequencerCurrentState();
     }
 
     function resetNotesAndLinesDisplayForRow(rowIndex) {
