@@ -81,17 +81,19 @@ window.onload = () => {
     sequencer.rows[5].setQuantization(true)
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
+    let sequencerRowSelectionRectangles = initializeSequencerRowSelectionRectangles();
     let referenceLineLists = initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
     let sequencerRowLines = initializeAllSequencerRowLines() // list of sequencer row lines
     let subdivisionLineLists = initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
     let timeTrackingLines = initializeTimeTrackingLines() // list of lines that move to represent the current time within the loop
     let noteBankContainer = initializeNoteBankContainer() // a rectangle that goes around the note bank
     let noteTrashBinContainer = initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
-    let pauseButtonShape = initializeButtonShape(guiConfigurations.pauseButton.top, guiConfigurations.pauseButton.left, guiConfigurations.pauseButton.height, guiConfigurations.pauseButton.width) // a rectangle that will act as the pause button for now
-    let restartSequencerButtonShape = initializeButtonShape(guiConfigurations.restartSequencerButton.top, guiConfigurations.restartSequencerButton.left, guiConfigurations.restartSequencerButton.height, guiConfigurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
-    let clearAllNotesButtonShape = initializeButtonShape(guiConfigurations.clearAllNotesButton.top, guiConfigurations.clearAllNotesButton.left, guiConfigurations.clearAllNotesButton.height, guiConfigurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
+    let pauseButtonShape = initializeRectangleShape(guiConfigurations.pauseButton.top, guiConfigurations.pauseButton.left, guiConfigurations.pauseButton.height, guiConfigurations.pauseButton.width) // a rectangle that will act as the pause button for now
+    let restartSequencerButtonShape = initializeRectangleShape(guiConfigurations.restartSequencerButton.top, guiConfigurations.restartSequencerButton.left, guiConfigurations.restartSequencerButton.height, guiConfigurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
+    let clearAllNotesButtonShape = initializeRectangleShape(guiConfigurations.clearAllNotesButton.top, guiConfigurations.clearAllNotesButton.left, guiConfigurations.clearAllNotesButton.height, guiConfigurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
     let clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(guiConfigurations.clearRowButtons.topPaddingPerRow, guiConfigurations.clearRowButtons.leftPaddingPerRow, guiConfigurations.clearRowButtons.height, guiConfigurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
-    let addRowButtonShape = initializeButtonShape(guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + guiConfigurations.addRowButton.topPadding, guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width / 2) + guiConfigurations.addRowButton.leftPadding - (guiConfigurations.addRowButton.width / 2), guiConfigurations.addRowButton.height, guiConfigurations.addRowButton.width)
+    let addRowButtonShape = initializeRectangleShape(guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + guiConfigurations.addRowButton.topPadding, guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width / 2) + guiConfigurations.addRowButton.leftPadding - (guiConfigurations.addRowButton.width / 2), guiConfigurations.addRowButton.height, guiConfigurations.addRowButton.width)
+    let sequencerRowHandles = initializeSequencerRowHandles()
     setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
 
     /**
@@ -137,7 +139,8 @@ window.onload = () => {
     addRestartSequencerButtonActionListeners()
     addClearAllNotesButtonActionListeners()
     addClearNotesForRowButtonsActionListeners()
-    addAddRowButtonActionListener()
+    initializeAddRowButtonActionListener()
+    initializeSequencerRowHandlesActionListeners();
 
     // create variables which will be used to track info about the note that is being clicked and dragged
     let circleBeingMoved = null
@@ -919,7 +922,7 @@ window.onload = () => {
         })
     }
 
-    function initializeButtonShape(top, left, height, width) {
+    function initializeRectangleShape(top, left, height, width) {
         let button = two.makePath(
             [
                 new Two.Anchor(left, top),
@@ -940,9 +943,83 @@ window.onload = () => {
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
             let top = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * rowIndex) + topPaddingPerRow
             let left = guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + leftPaddingPerRow
-            shapes[rowIndex] = initializeButtonShape(top, left, height, width)
+            shapes[rowIndex] = initializeRectangleShape(top, left, height, width)
         }
         return shapes
+    }
+
+    // these are circles that are to the left of the sequencer, which we can click on to select sequencer rows,
+    // so that we can move those rows by clicking and dragging, to rearrange the sequencer row order, throw 
+    // rows away, etc.
+    function initializeSequencerRowHandles() {
+        let allCircles = []
+        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+            let horizontalPosition = guiConfigurations.sequencer.left + guiConfigurations.sequencerRowHandles.leftPadding
+            let verticalPosition = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * rowIndex) + guiConfigurations.sequencerRowHandles.topPadding
+            let radius = guiConfigurations.sequencerRowHandles.radius
+            let circle = two.makeCircle(horizontalPosition, verticalPosition, radius);
+            circle.fill = guiConfigurations.sequencerRowHandles.unselectedColor
+            circle.stroke = "transparent"
+            allCircles.push(circle)
+        }
+        return allCircles
+    }
+
+    // if a row is selected, we draw a rectangle around it.
+    // this will initialize them (one per row) and make them
+    // transparent. we can make them visible once a row is selected.
+    function initializeSequencerRowSelectionRectangles() {
+        allRectangles = []
+        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+            let top = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * rowIndex) + guiConfigurations.sequencerRowSelections.topPadding
+            let left = guiConfigurations.sequencer.left + guiConfigurations.sequencerRowSelections.leftPadding
+            let width = guiConfigurations.sequencer.width + guiConfigurations.sequencerRowSelections.width
+            let height = guiConfigurations.sequencerRowSelections.height
+            let rectangle = initializeRectangleShape(top, left, height, width);
+            rectangle.stroke = 'transparent'
+            allRectangles.push(rectangle)
+        }
+        return allRectangles;
+    }
+
+    function initializeSequencerRowHandlesActionListeners() {
+        for (let rowIndex = 0; rowIndex < sequencerRowHandles.length; rowIndex++) {
+            let circle = sequencerRowHandles[rowIndex];
+            let rowSelectionRectangle = sequencerRowSelectionRectangles[rowIndex]
+
+            // add border to circle on mouseover
+            circle._renderer.elem.addEventListener('mouseenter', (event) => {
+                circle.stroke = 'black'
+                circle.linewidth = 2
+                circle.fill = guiConfigurations.sequencerRowHandles.unselectedColor
+                rowSelectionRectangle.stroke = guiConfigurations.sequencerRowHandles.unselectedColor
+            });
+            // remove border from circle when mouse is no longer over it
+            circle._renderer.elem.addEventListener('mouseleave', (event) => {
+                circle.stroke = 'transparent'
+                circle.fill = guiConfigurations.sequencerRowHandles.unselectedColor
+                rowSelectionRectangle.stroke = 'transparent'
+            });
+            // when you hold your mouse down on the row handle circle, select that row.
+            // we will de-select it later whenever you lift your mouse.
+            circle._renderer.elem.addEventListener('mousedown', (event) => {
+                console.log("clicked row handle for sequencer row with index " + rowIndex)
+                circle.stroke = 'black'
+                circle.linewidth = 2
+                circle.fill = guiConfigurations.sequencerRowHandles.selectedColor
+                rowSelectionRectangle.stroke = guiConfigurations.sequencerRowHandles.selectedColor
+            });
+            // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
+            // because if we implement snap-into-place for sequencer rows, the row handle may not actually
+            // be under our mouse when we lift our mouse to drop the row into place.
+            // just putting the most basic functionality for visual effects here for now.
+            circle._renderer.elem.addEventListener('mouseup', (event) => {
+                circle.stroke = 'black'
+                circle.linewidth = 2
+                circle.fill = guiConfigurations.sequencerRowHandles.unselectedColor
+                rowSelectionRectangle.stroke = guiConfigurations.sequencerRowHandles.unselectedColor
+            });
+        }
     }
 
     function addRestartSequencerButtonActionListeners() {
@@ -975,7 +1052,7 @@ window.onload = () => {
         }
     }
 
-    function addAddRowButtonActionListener() {
+    function initializeAddRowButtonActionListener() {
         lastButtonClickTimeTrackers.addRow.shape = addRowButtonShape;
         addRowButtonShape._renderer.elem.addEventListener('click', (event) => {
             lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
@@ -1023,7 +1100,7 @@ window.onload = () => {
         clearNotesForRowButtonShapes = []
         clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(guiConfigurations.clearRowButtons.topPaddingPerRow, guiConfigurations.clearRowButtons.leftPaddingPerRow, guiConfigurations.clearRowButtons.height, guiConfigurations.clearRowButtons.width); // this is a list of button rectangles, one per row, to clear the notes on that row
         addRowButtonShape.remove();
-        addRowButtonShape = initializeButtonShape(guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + guiConfigurations.addRowButton.topPadding, guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width / 2) + guiConfigurations.addRowButton.leftPadding - (guiConfigurations.addRowButton.width / 2), guiConfigurations.addRowButton.height, guiConfigurations.addRowButton.width)
+        addRowButtonShape = initializeRectangleShape(guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + guiConfigurations.addRowButton.topPadding, guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width / 2) + guiConfigurations.addRowButton.leftPadding - (guiConfigurations.addRowButton.width / 2), guiConfigurations.addRowButton.height, guiConfigurations.addRowButton.width)
         addRowButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
         // update two.js so we can add action listeners to shapes
         two.update()
@@ -1032,7 +1109,8 @@ window.onload = () => {
         initializeReferenceLineTextInputsActionListeners();
         addClearNotesForRowButtonsActionListeners();
         initializeQuantizationCheckboxActionListeners();
-        addAddRowButtonActionListener();
+        initializeAddRowButtonActionListener();
+        initializeSequencerRowHandlesActionListeners();
     }
 
     // show or hide the note trash bin (show if visible === true, hide otherwise)
@@ -1275,9 +1353,19 @@ window.onload = () => {
             line.remove();
         }
         timeTrackingLines = [];
+        for (circle of sequencerRowHandles) {
+            circle.remove();
+        }
+        sequencerRowHandles = []
+        for (rectangle of sequencerRowSelectionRectangles) {
+            rectangle.remove();
+        }
+        sequencerRowSelectionRectangles = []
+        sequencerRowSelectionRectangles = initializeSequencerRowSelectionRectangles();
         referenceLineLists = initializeAllReferenceLines();
         subdivisionLineLists = initializeAllSubdivisionLines();
         sequencerRowLines = initializeAllSequencerRowLines();
+        sequencerRowHandles = initializeSequencerRowHandles();
         timeTrackingLines = initializeTimeTrackingLines();
         drawAllNoteBankCircles();
         drawNotesToReflectSequencerCurrentState();

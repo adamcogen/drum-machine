@@ -4,10 +4,11 @@
  */
 
 let defaultSequencerLineColor = '#707070'
+let lighterSequencerColor = "#ababab"
 let guiConfigurations = {
     sequencer: {
-        top: 100,
-        left: 150,
+        top: 110,
+        left: 160,
         width: 400,
         spaceBetweenRows: 80,
         color: defaultSequencerLineColor,
@@ -37,7 +38,7 @@ let guiConfigurations = {
     },
     referenceLines: {
         height: 20,
-        color: '#ababab', // meant to be slightly lighter than the subdivision line color
+        color: lighterSequencerColor, // meant to be slightly lighter than the subdivision line color
     },
     noteTrashBin: {
         top: 380,
@@ -99,5 +100,18 @@ let guiConfigurations = {
         leftPadding: 0,
         height: 48,
         width: 48
+    },
+    sequencerRowHandles: { // these will be circles, one to the left of each sequencer row, that allow you to select the row and click-drag it.
+        topPadding: 0,
+        leftPadding: -30,
+        radius: 6,
+        unselectedColor: lighterSequencerColor,
+        selectedColor: defaultSequencerLineColor,
+    },
+    sequencerRowSelections: {
+        leftPadding: -60,
+        topPadding: -40,
+        width: 200,
+        height: 80,
     }
 }
