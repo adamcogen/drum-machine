@@ -150,6 +150,18 @@ window.onload = () => {
     let circleBeingMovedNewRow = null
     let circleBeingMovedOldBeatNumber = null
     let circleBeingMovedNewBeatNumber = null
+
+    let selectedRowIndex = null
+    let rowSelecionTracker = {
+        shapes: [],
+        shapesOriginalPositions: [], // this is going to be such a weird way of doing this..
+        rowHandleStartingPosition: {
+            x: 0,
+            y: 0,
+        },
+        domElements: [],
+        domElementsOriginalPositions: [],
+    }
     
     // create constants that will be used to denote special sequencer 'row' numbers, to indicate special places notes can go such as the note bank or the trash bin
     const HAS_NO_ROW_NUMBER = -1 // code for 'not in any row'
@@ -302,6 +314,34 @@ window.onload = () => {
                 }
             }
         }
+        if (selectedRowIndex !== null) {
+            adjustEventCoordinates(event)
+            mouseX = event.pageX
+            mouseY = event.pageY
+
+            let circle = sequencerRowHandles[selectedRowIndex]
+            circle.stroke = 'black'
+            circle.linewidth = 2
+            circle.fill = guiConfigurations.sequencerRowHandles.selectedColor
+            let rowSelectionRectangle = sequencerRowSelectionRectangles[selectedRowIndex]
+            rowSelectionRectangle.stroke = guiConfigurations.sequencerRowHandles.selectedColor
+
+            sequencerRowHandles[selectedRowIndex].translation.x = mouseX
+            sequencerRowHandles[selectedRowIndex].translation.y = mouseY
+
+            let xChangeFromStart = mouseX - rowSelecionTracker.rowHandleStartingPosition.x
+            let yChangeFromStart = mouseY - rowSelecionTracker.rowHandleStartingPosition.y
+
+            for (let shapeIndex = 0; shapeIndex < rowSelecionTracker.shapes.length; shapeIndex++) {
+                rowSelecionTracker.shapes[shapeIndex].translation.x = rowSelecionTracker.shapesOriginalPositions[shapeIndex].x + xChangeFromStart;
+                rowSelecionTracker.shapes[shapeIndex].translation.y = rowSelecionTracker.shapesOriginalPositions[shapeIndex].y + yChangeFromStart;
+            }
+
+            for (let domElementIndex = 0; domElementIndex < rowSelecionTracker.domElements.length; domElementIndex++) {
+                rowSelecionTracker.domElements[domElementIndex].style.left = "" + (rowSelecionTracker.domElementsOriginalPositions[domElementIndex].left + xChangeFromStart) + "px"
+                rowSelecionTracker.domElements[domElementIndex].style.top = "" + (rowSelecionTracker.domElementsOriginalPositions[domElementIndex].top + yChangeFromStart) + "px";
+            }
+        }
     }
 
     function refreshWindowMouseMoveEvent() {
@@ -311,6 +351,7 @@ window.onload = () => {
 
     // lifting your mouse anywhere means you're no longer click-dragging
     window.addEventListener('mouseup', (event) => {
+        // handle letting go of notes
         if (circleBeingMoved !== null) {
             /**
              * this is the workflow for determining where to put a circle that we were click-dragging once we release the mouse.
@@ -399,8 +440,13 @@ window.onload = () => {
                 circleBeingMoved.guiData.beat = circleNewBeatNumber
             }
         }
+        if (selectedRowIndex !== null) {
+            // do nothing yet
+            redrawSequencer()
+        }
         circleBeingMoved = null
         setNoteTrashBinVisibility(false)
+        selectedRowIndex = null
     });
 
     // making a cleaner (less redundant) way to call 'loadSample()', which matches what we need for the drum sequencer.
@@ -989,10 +1035,12 @@ window.onload = () => {
 
             // add border to circle on mouseover
             circle._renderer.elem.addEventListener('mouseenter', (event) => {
-                circle.stroke = 'black'
-                circle.linewidth = 2
-                circle.fill = guiConfigurations.sequencerRowHandles.unselectedColor
-                rowSelectionRectangle.stroke = guiConfigurations.sequencerRowHandles.unselectedColor
+                if (selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
+                    circle.stroke = 'black'
+                    circle.linewidth = 2
+                    circle.fill = guiConfigurations.sequencerRowHandles.unselectedColor
+                    rowSelectionRectangle.stroke = guiConfigurations.sequencerRowHandles.unselectedColor
+                }
             });
             // remove border from circle when mouse is no longer over it
             circle._renderer.elem.addEventListener('mouseleave', (event) => {
@@ -1003,7 +1051,46 @@ window.onload = () => {
             // when you hold your mouse down on the row handle circle, select that row.
             // we will de-select it later whenever you lift your mouse.
             circle._renderer.elem.addEventListener('mousedown', (event) => {
-                console.log("clicked row handle for sequencer row with index " + rowIndex)
+                // save relevant info about whichever row is selected
+                selectedRowIndex = rowIndex
+                // save a list, of all the shapes that are associated with the selected row.
+                // we are saving this list so that we can move them all as we move the row around.
+                rowSelecionTracker.shapes = [];
+                for (let circle of allDrawnCircles) {
+                    if (circle.guiData.row === rowIndex) {
+                        rowSelecionTracker.shapes.push(circle)
+                    }
+                }
+                rowSelecionTracker.shapes.push(...subdivisionLineLists[rowIndex])
+                rowSelecionTracker.shapes.push(...referenceLineLists[rowIndex])
+                rowSelecionTracker.shapes.push(sequencerRowLines[rowIndex])
+                rowSelecionTracker.shapes.push(sequencerRowSelectionRectangles[rowIndex])
+                rowSelecionTracker.shapes.push(clearNotesForRowButtonShapes[rowIndex])
+                // this part gets a little weird. save a list of all of the starting positions of each
+                // shape that is being moved. that way we can translate them proporionally to how far
+                // the row handle has moved.
+                rowSelecionTracker.shapesOriginalPositions = []
+                for (let shape of rowSelecionTracker.shapes) {
+                    rowSelecionTracker.shapesOriginalPositions.push({
+                        x: shape.translation.x,
+                        y: shape.translation.y,
+                    });
+                }
+                rowSelecionTracker.rowHandleStartingPosition.x = sequencerRowHandles[rowIndex].translation.x
+                rowSelecionTracker.rowHandleStartingPosition.y = sequencerRowHandles[rowIndex].translation.y
+                // do the exact same thing for dom elements (subdivision and reference line text inputs, quantization checkbox) next
+                rowSelecionTracker.domElements = [];
+                rowSelecionTracker.domElements.push(subdivisionTextInputs[rowIndex])
+                rowSelecionTracker.domElements.push(referenceLineTextInputs[rowIndex])
+                rowSelecionTracker.domElements.push(quantizationCheckboxes[rowIndex])
+                rowSelecionTracker.domElementsOriginalPositions = [];
+                for (let domElement of rowSelecionTracker.domElements) {
+                    rowSelecionTracker.domElementsOriginalPositions.push({
+                        left: parseInt(domElement.style.left.slice(0, -2)), // cut off "px" from the position and convert it to an integer
+                        top: parseInt(domElement.style.top.slice(0, -2)),
+                    });
+                }
+                // update visuals
                 circle.stroke = 'black'
                 circle.linewidth = 2
                 circle.fill = guiConfigurations.sequencerRowHandles.selectedColor
