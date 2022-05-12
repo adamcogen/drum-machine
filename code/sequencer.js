@@ -117,9 +117,10 @@ class Sequencer {
     }
 
     // insert the given sequencer row at the specified index.
+    // this does support inserting a new element at the end of the list.
     insertRowAtIndex(sequencerRowObjectToInsert, index) {
-        if (index < 0 || index >= this.numberOfRows) {
-            throw "index of row to insert was not valid. must be >= 0 and < " + this.numberOfRows + ", but was " + index + ".";
+        if (index < 0 || index > this.numberOfRows) {
+            throw "index of row to insert was not valid. must be >= 0 and <= " + this.numberOfRows + ", but was " + index + ".";
         }
         this.insertArrayElementAtIndex(this.rows, sequencerRowObjectToInsert, index);
         this.numberOfRows++;
@@ -128,9 +129,6 @@ class Sequencer {
     // move an existing row to a new place in the drum sequencer, i.e. changing the order of the existing rows.
     // remove the row from its old place and insert it at its new place. this is different than switching the rows.
     // row order is maintained, just one element is pulled out and put somewhere else.
-    //
-    // this method doesn't work as intended yet. i plan to fix it once GUI logic 
-    // for switching rows is working, since this will be easier to test then.
     moveRowToNewIndex(rowToMoveIndex, newIndex) {
         let removedRow = this.removeRowAtIndex(rowToMoveIndex);
         this.insertRowAtIndex(removedRow, newIndex);

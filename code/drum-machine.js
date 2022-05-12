@@ -341,6 +341,37 @@ window.onload = () => {
                 rowSelecionTracker.domElements[domElementIndex].style.left = "" + (rowSelecionTracker.domElementsOriginalPositions[domElementIndex].left + xChangeFromStart) + "px"
                 rowSelecionTracker.domElements[domElementIndex].style.top = "" + (rowSelecionTracker.domElementsOriginalPositions[domElementIndex].top + yChangeFromStart) + "px";
             }
+
+            for(let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
+                if (rowIndex === selectedRowIndex) {
+                    continue;
+                }
+                let rowHandleActualVerticalLocation = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * rowIndex) + guiConfigurations.sequencerRowHandles.topPadding;
+                let rowHandleActualHorizontalLocation = guiConfigurations.sequencer.left + guiConfigurations.sequencerRowHandles.leftPadding;
+                let topLimit = rowHandleActualVerticalLocation - guiConfigurations.mouseEvents.notePlacementPadding
+                let bottomLimit = rowHandleActualVerticalLocation + guiConfigurations.mouseEvents.notePlacementPadding
+                let leftLimit = rowHandleActualHorizontalLocation - guiConfigurations.mouseEvents.notePlacementPadding
+                let rightLimit = rowHandleActualHorizontalLocation + guiConfigurations.mouseEvents.notePlacementPadding
+
+                if (mouseX >= leftLimit && mouseX <= rightLimit && mouseY >= topLimit && mouseY <= bottomLimit) {
+
+                    // // for debugging, draw a rectangle around the row handle placement area
+                    // two.makePath(
+                    //     [
+                    //         new Two.Anchor(leftLimit, topLimit),
+                    //         new Two.Anchor(rightLimit, topLimit),
+                    //         new Two.Anchor(rightLimit, bottomLimit),
+                    //         new Two.Anchor(leftLimit, bottomLimit),
+                    //     ], 
+                    //     false
+                    // );
+
+                    sequencer.moveRowToNewIndex(selectedRowIndex, rowIndex);
+                    selectedRowIndex = rowIndex
+                    redrawSequencer();
+                    break; // we found the row that the note will be placed on, so stop iterating thru rows early
+                }
+            }
         }
     }
 
@@ -441,8 +472,9 @@ window.onload = () => {
             }
         }
         if (selectedRowIndex !== null) {
-            // do nothing yet
-            redrawSequencer()
+            // un-selecting the row will be handled in 'redraw', as long as we set selected row index to null here
+            selectedRowIndex = null
+            redrawSequencer();
         }
         circleBeingMoved = null
         setNoteTrashBinVisibility(false)
@@ -929,15 +961,21 @@ window.onload = () => {
     // draw the physical note bank container on the screen. for now that's just a rectangle.
     // return the note bank shape. this will be a Two.js path object.
     function initializeNoteBankContainer() {
-        let noteBankContainer = two.makePath(
-            [
-                new Two.Anchor(guiConfigurations.sampleBank.left, guiConfigurations.sampleBank.top),
-                new Two.Anchor(guiConfigurations.sampleBank.left + guiConfigurations.notes.unplayedCircleRadius + (guiConfigurations.sampleBank.borderPadding * 2), guiConfigurations.sampleBank.top),
-                new Two.Anchor(guiConfigurations.sampleBank.left + guiConfigurations.notes.unplayedCircleRadius + (guiConfigurations.sampleBank.borderPadding * 2), guiConfigurations.sampleBank.top + (guiConfigurations.notes.unplayedCircleRadius * (sampleNameList.length - 1)) + ((sampleNameList.length - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)),
-                new Two.Anchor(guiConfigurations.sampleBank.left, guiConfigurations.sampleBank.top + (guiConfigurations.notes.unplayedCircleRadius * (sampleNameList.length - 1)) + ((sampleNameList.length - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)),
-            ], 
-            false
-        );
+        let width  = guiConfigurations.notes.unplayedCircleRadius + (guiConfigurations.sampleBank.borderPadding * 2)
+        let height = (guiConfigurations.notes.unplayedCircleRadius * (sampleNameList.length - 1)) + ((sampleNameList.length - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)
+        let noteBankContainer = initializeRectangleShape(guiConfigurations.sampleBank.top, guiConfigurations.sampleBank.left, height, width)
+
+        // old way: draw a rectangle using a 'path'
+        // let noteBankContainer = two.makePath(
+        //     [
+        //         new Two.Anchor(guiConfigurations.sampleBank.left, guiConfigurations.sampleBank.top),
+        //         new Two.Anchor(guiConfigurations.sampleBank.left + guiConfigurations.notes.unplayedCircleRadius + (guiConfigurations.sampleBank.borderPadding * 2), guiConfigurations.sampleBank.top),
+        //         new Two.Anchor(guiConfigurations.sampleBank.left + guiConfigurations.notes.unplayedCircleRadius + (guiConfigurations.sampleBank.borderPadding * 2), guiConfigurations.sampleBank.top + (guiConfigurations.notes.unplayedCircleRadius * (sampleNameList.length - 1)) + ((sampleNameList.length - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)),
+        //         new Two.Anchor(guiConfigurations.sampleBank.left, guiConfigurations.sampleBank.top + (guiConfigurations.notes.unplayedCircleRadius * (sampleNameList.length - 1)) + ((sampleNameList.length - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)),
+        //     ], 
+        //     false
+        // );
+
         noteBankContainer.linewidth = guiConfigurations.sequencer.lineWidth;
         noteBankContainer.stroke = guiConfigurations.sequencer.color
         noteBankContainer.fill = 'transparent'
@@ -947,15 +985,19 @@ window.onload = () => {
     // draw the 'trash bin' for throwing out (deleting) notes. for now it's just
     // a red rectangle, will make it something better for user experience later.
     function initializeNoteTrashBinContainer() {
-        let noteTrashBinContainer = two.makePath(
-            [
-                new Two.Anchor(guiConfigurations.noteTrashBin.left, guiConfigurations.noteTrashBin.top),
-                new Two.Anchor(guiConfigurations.noteTrashBin.left + guiConfigurations.noteTrashBin.width, guiConfigurations.noteTrashBin.top),
-                new Two.Anchor(guiConfigurations.noteTrashBin.left + guiConfigurations.noteTrashBin.width, guiConfigurations.noteTrashBin.top + guiConfigurations.noteTrashBin.height),
-                new Two.Anchor(guiConfigurations.noteTrashBin.left, guiConfigurations.noteTrashBin.top + guiConfigurations.noteTrashBin.height),
-            ],
-            false
-        );
+        let noteTrashBinContainer = initializeRectangleShape(guiConfigurations.noteTrashBin.top, guiConfigurations.noteTrashBin.left, guiConfigurations.noteTrashBin.height, guiConfigurations.noteTrashBin.width)
+        
+        // old way: draw a rectangle using a 'path'
+        // let noteTrashBinContainer = two.makePath(
+        //     [
+        //         new Two.Anchor(guiConfigurations.noteTrashBin.left, guiConfigurations.noteTrashBin.top),
+        //         new Two.Anchor(guiConfigurations.noteTrashBin.left + guiConfigurations.noteTrashBin.width, guiConfigurations.noteTrashBin.top),
+        //         new Two.Anchor(guiConfigurations.noteTrashBin.left + guiConfigurations.noteTrashBin.width, guiConfigurations.noteTrashBin.top + guiConfigurations.noteTrashBin.height),
+        //         new Two.Anchor(guiConfigurations.noteTrashBin.left, guiConfigurations.noteTrashBin.top + guiConfigurations.noteTrashBin.height),
+        //     ],
+        //     false
+        // );
+        
         noteTrashBinContainer.linewidth = guiConfigurations.sequencer.lineWidth
         noteTrashBinContainer.stroke = 'transparent'
         noteTrashBinContainer.fill = 'transparent'
@@ -968,7 +1010,8 @@ window.onload = () => {
         })
     }
 
-    function initializeRectangleShape(top, left, height, width) {
+    function initializeRectangleShape(top, left, height, width, radius=5) {
+        // old button rectangle: make a rectangle using paths
         let button = two.makePath(
             [
                 new Two.Anchor(left, top),
@@ -978,6 +1021,8 @@ window.onload = () => {
             ],
             false
         );
+        // new button rectangle: make a rectangle with rounded corners
+        //button = two.makeRoundedRectangle(left + (width / 2), top + (height / 2), width, height, radius)
         button.linewidth = guiConfigurations.sequencer.lineWidth
         button.stroke = guiConfigurations.sequencer.color
         button.fill = 'transparent'
@@ -1052,49 +1097,7 @@ window.onload = () => {
             // we will de-select it later whenever you lift your mouse.
             circle._renderer.elem.addEventListener('mousedown', (event) => {
                 // save relevant info about whichever row is selected
-                selectedRowIndex = rowIndex
-                // save a list, of all the shapes that are associated with the selected row.
-                // we are saving this list so that we can move them all as we move the row around.
-                rowSelecionTracker.shapes = [];
-                for (let circle of allDrawnCircles) {
-                    if (circle.guiData.row === rowIndex) {
-                        rowSelecionTracker.shapes.push(circle)
-                    }
-                }
-                rowSelecionTracker.shapes.push(...subdivisionLineLists[rowIndex])
-                rowSelecionTracker.shapes.push(...referenceLineLists[rowIndex])
-                rowSelecionTracker.shapes.push(sequencerRowLines[rowIndex])
-                rowSelecionTracker.shapes.push(sequencerRowSelectionRectangles[rowIndex])
-                rowSelecionTracker.shapes.push(clearNotesForRowButtonShapes[rowIndex])
-                // this part gets a little weird. save a list of all of the starting positions of each
-                // shape that is being moved. that way we can translate them proporionally to how far
-                // the row handle has moved.
-                rowSelecionTracker.shapesOriginalPositions = []
-                for (let shape of rowSelecionTracker.shapes) {
-                    rowSelecionTracker.shapesOriginalPositions.push({
-                        x: shape.translation.x,
-                        y: shape.translation.y,
-                    });
-                }
-                rowSelecionTracker.rowHandleStartingPosition.x = sequencerRowHandles[rowIndex].translation.x
-                rowSelecionTracker.rowHandleStartingPosition.y = sequencerRowHandles[rowIndex].translation.y
-                // do the exact same thing for dom elements (subdivision and reference line text inputs, quantization checkbox) next
-                rowSelecionTracker.domElements = [];
-                rowSelecionTracker.domElements.push(subdivisionTextInputs[rowIndex])
-                rowSelecionTracker.domElements.push(referenceLineTextInputs[rowIndex])
-                rowSelecionTracker.domElements.push(quantizationCheckboxes[rowIndex])
-                rowSelecionTracker.domElementsOriginalPositions = [];
-                for (let domElement of rowSelecionTracker.domElements) {
-                    rowSelecionTracker.domElementsOriginalPositions.push({
-                        left: parseInt(domElement.style.left.slice(0, -2)), // cut off "px" from the position and convert it to an integer
-                        top: parseInt(domElement.style.top.slice(0, -2)),
-                    });
-                }
-                // update visuals
-                circle.stroke = 'black'
-                circle.linewidth = 2
-                circle.fill = guiConfigurations.sequencerRowHandles.selectedColor
-                rowSelectionRectangle.stroke = guiConfigurations.sequencerRowHandles.selectedColor
+                initializeRowSelectionVariablesAndVisuals(rowIndex);
             });
             // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
             // because if we implement snap-into-place for sequencer rows, the row handle may not actually
@@ -1107,6 +1110,55 @@ window.onload = () => {
                 rowSelectionRectangle.stroke = guiConfigurations.sequencerRowHandles.unselectedColor
             });
         }
+    }
+
+    function initializeRowSelectionVariablesAndVisuals(rowIndex) {
+        // save relevant info about whichever row is selected
+        selectedRowIndex = rowIndex;
+        // save a list, of all the shapes that are associated with the selected row.
+        // we are saving this list so that we can move them all as we move the row around.
+        rowSelecionTracker.shapes = [];
+        for (let circle of allDrawnCircles) {
+            if (circle.guiData.row === rowIndex) {
+                rowSelecionTracker.shapes.push(circle)
+            }
+        }
+        rowSelecionTracker.shapes.push(...subdivisionLineLists[rowIndex])
+        rowSelecionTracker.shapes.push(...referenceLineLists[rowIndex])
+        rowSelecionTracker.shapes.push(sequencerRowLines[rowIndex])
+        rowSelecionTracker.shapes.push(sequencerRowSelectionRectangles[rowIndex])
+        rowSelecionTracker.shapes.push(clearNotesForRowButtonShapes[rowIndex])
+        // this part gets a little weird. save a list of all of the starting positions of each
+        // shape that is being moved. that way we can translate them proporionally to how far
+        // the row handle has moved.
+        rowSelecionTracker.shapesOriginalPositions = []
+        for (let shape of rowSelecionTracker.shapes) {
+            rowSelecionTracker.shapesOriginalPositions.push({
+                x: shape.translation.x,
+                y: shape.translation.y,
+            });
+        }
+        rowSelecionTracker.rowHandleStartingPosition.x = sequencerRowHandles[rowIndex].translation.x
+        rowSelecionTracker.rowHandleStartingPosition.y = sequencerRowHandles[rowIndex].translation.y
+        // do the exact same thing for dom elements (subdivision and reference line text inputs, quantization checkbox) next
+        rowSelecionTracker.domElements = [];
+        rowSelecionTracker.domElements.push(subdivisionTextInputs[rowIndex])
+        rowSelecionTracker.domElements.push(referenceLineTextInputs[rowIndex])
+        rowSelecionTracker.domElements.push(quantizationCheckboxes[rowIndex])
+        rowSelecionTracker.domElementsOriginalPositions = [];
+        for (let domElement of rowSelecionTracker.domElements) {
+            rowSelecionTracker.domElementsOriginalPositions.push({
+                left: parseInt(domElement.style.left.slice(0, -2)), // cut off "px" from the position and convert it to an integer
+                top: parseInt(domElement.style.top.slice(0, -2)),
+            });
+        }
+        // update visuals
+        let circle = sequencerRowHandles[rowIndex]
+        circle.stroke = 'black'
+        circle.linewidth = 2
+        circle.fill = guiConfigurations.sequencerRowHandles.selectedColor
+        let rowSelectionRectangle = sequencerRowSelectionRectangles[rowIndex];
+        rowSelectionRectangle.stroke = guiConfigurations.sequencerRowHandles.selectedColor
     }
 
     function addRestartSequencerButtonActionListeners() {
@@ -1198,6 +1250,10 @@ window.onload = () => {
         initializeQuantizationCheckboxActionListeners();
         initializeAddRowButtonActionListener();
         initializeSequencerRowHandlesActionListeners();
+        if (selectedRowIndex !== null) {
+            // if a row is selected, set variables appropriately for moving it around
+            initializeRowSelectionVariablesAndVisuals(selectedRowIndex);
+        }
     }
 
     // show or hide the note trash bin (show if visible === true, hide otherwise)
