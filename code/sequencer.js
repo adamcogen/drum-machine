@@ -151,6 +151,20 @@ class Sequencer {
         this.rows[newIndex] = temp
     }
 
+    setNumberOfRows(newNumberOfRows) {
+        if (newNumberOfRows > this.rows.length) {
+            while (this.rows.length != newNumberOfRows) {
+                this.addEmptyRow()
+            }
+        } else if (newNumberOfRows < this.rows.length) { 
+            while (this.rows.length != newNumberOfRows) {
+                this.removeRowAtIndex(this.rows.length - 1)
+            }
+        } else { // newNumberOfRows === this.rows.length
+            return;
+        }
+    }
+
     // helper function for working with arrays
     // todo: check -- does this return an empty list if there is no element with the given index?
     deleteArrayElementAtIndex(array, indexOfElementToDelete) {

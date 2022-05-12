@@ -66,19 +66,7 @@ window.onload = () => {
     let defaultLoopLengthInMillis = 1500; // length of the whole drum sequence (loop), in millliseconds
 
     // initialize sequencer data structure
-    let sequencer = new Sequencer([webAudioDriver], 6, defaultLoopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
-    sequencer.rows[0].setNumberOfSubdivisions(8)
-    sequencer.rows[0].setNumberOfReferenceLines(4)
-    sequencer.rows[0].setQuantization(true)
-    sequencer.rows[1].setNumberOfSubdivisions(4)
-    sequencer.rows[1].setQuantization(true)
-    sequencer.rows[2].setNumberOfSubdivisions(2)
-    sequencer.rows[3].setNumberOfSubdivisions(0)
-    sequencer.rows[4].setNumberOfSubdivisions(5)
-    sequencer.rows[4].setQuantization(true)
-    sequencer.rows[5].setNumberOfReferenceLines(8)
-    sequencer.rows[5].setNumberOfSubdivisions(7)
-    sequencer.rows[5].setQuantization(true)
+    let sequencer = new Sequencer([webAudioDriver], 0, defaultLoopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
     let sequencerRowSelectionRectangles = initializeSequencerRowSelectionRectangles();
@@ -161,6 +149,7 @@ window.onload = () => {
         },
         domElements: [],
         domElementsOriginalPositions: [],
+        removeRow: false,
     }
     
     // create constants that will be used to denote special sequencer 'row' numbers, to indicate special places notes can go such as the note bank or the trash bin
@@ -175,7 +164,7 @@ window.onload = () => {
     const NOTE_HAS_NEVER_BEEN_PLAYED = -1
 
     // set up a initial example drum sequence
-    initializeDefaultSequencerPattern()
+    initializeSimpleDefaultSequencerPattern()
 
     // keep a list of all the circles (i.e. notes) that have been drawn on the screen
     let allDrawnCircles = []
@@ -189,6 +178,8 @@ window.onload = () => {
     testConfineNumberToBounds()
 
     pause(); // start the sequencer paused
+
+    redrawSequencer();
 
     // start main recursive update loop, where all state updates will happen
     requestAnimationFrameShim(draw)
@@ -243,7 +234,7 @@ window.onload = () => {
 
     function windowMouseMoveEventHandler(event) {
         // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
-        if (circleBeingMoved !== null) {
+        if (circleBeingMoved !== null) { // handle mousemove events when a note is selected
             adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
@@ -314,7 +305,7 @@ window.onload = () => {
                 }
             }
         }
-        if (selectedRowIndex !== null) {
+        if (selectedRowIndex !== null) { // handle mousemove events when a row is selected
             adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
@@ -329,8 +320,23 @@ window.onload = () => {
             sequencerRowHandles[selectedRowIndex].translation.x = mouseX
             sequencerRowHandles[selectedRowIndex].translation.y = mouseY
 
-            let xChangeFromStart = mouseX - rowSelecionTracker.rowHandleStartingPosition.x
-            let yChangeFromStart = mouseY - rowSelecionTracker.rowHandleStartingPosition.y
+            // check if the row handle is within range to be placed in the trash bin. if so, move the handle to the center of the trash bin.
+            centerOfTrashBinX = guiConfigurations.noteTrashBin.left + (guiConfigurations.noteTrashBin.width / 2)
+            centerOfTrashBinY = guiConfigurations.noteTrashBin.top + (guiConfigurations.noteTrashBin.height / 2)
+            let withinHorizontalBoundaryOfTrashBin = (mouseX >= guiConfigurations.noteTrashBin.left - guiConfigurations.mouseEvents.notePlacementPadding) && (mouseX <= guiConfigurations.noteTrashBin.left + guiConfigurations.noteTrashBin.width + guiConfigurations.mouseEvents.notePlacementPadding)
+            let withinVerticalBoundaryOfTrashBin = (mouseY >= guiConfigurations.noteTrashBin.top - guiConfigurations.mouseEvents.notePlacementPadding) && (mouseY <= guiConfigurations.noteTrashBin.top + guiConfigurations.noteTrashBin.height + guiConfigurations.mouseEvents.notePlacementPadding)
+            if (withinHorizontalBoundaryOfTrashBin && withinVerticalBoundaryOfTrashBin) {
+                circle.translation.x = centerOfTrashBinX
+                circle.translation.y = centerOfTrashBinY
+                rowSelectionRectangle.stroke = "red"
+                rowSelecionTracker.removeRow = true;
+                circle.stroke = "red"
+            } else {
+                rowSelecionTracker.removeRow = false;
+            }
+
+            let xChangeFromStart = sequencerRowHandles[selectedRowIndex].translation.x - rowSelecionTracker.rowHandleStartingPosition.x
+            let yChangeFromStart = sequencerRowHandles[selectedRowIndex].translation.y - rowSelecionTracker.rowHandleStartingPosition.y
 
             for (let shapeIndex = 0; shapeIndex < rowSelecionTracker.shapes.length; shapeIndex++) {
                 rowSelecionTracker.shapes[shapeIndex].translation.x = rowSelecionTracker.shapesOriginalPositions[shapeIndex].x + xChangeFromStart;
@@ -342,6 +348,21 @@ window.onload = () => {
                 rowSelecionTracker.domElements[domElementIndex].style.top = "" + (rowSelecionTracker.domElementsOriginalPositions[domElementIndex].top + yChangeFromStart) + "px";
             }
 
+            // if the row is far enough away from the sequencer, we will throw it out
+            let sequencerLeftBoundary = guiConfigurations.sequencer.left - guiConfigurations.mouseEvents.notePlacementPadding
+            let sequencerRightBoundary = (guiConfigurations.sequencer.left + guiConfigurations.sequencer.width) + guiConfigurations.mouseEvents.notePlacementPadding
+            let sequencerTopBoundary = guiConfigurations.sequencer.top - guiConfigurations.mouseEvents.notePlacementPadding
+            let sequencerBottomBoundary = guiConfigurations.sequencer.top + ((sequencer.numberOfRows - 1) * guiConfigurations.sequencer.spaceBetweenRows) + guiConfigurations.mouseEvents.notePlacementPadding
+            let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - guiConfigurations.mouseEvents.throwRowAwaySidesPadding) || (mouseX >= sequencerRightBoundary + guiConfigurations.mouseEvents.throwRowAwaySidesPadding)
+            let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - guiConfigurations.mouseEvents.throwRowAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + guiConfigurations.mouseEvents.throwRowAwayTopAndBottomPadding)
+            if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
+                circle.stroke = "red"
+                rowSelectionRectangle.stroke = "red"
+                rowSelecionTracker.removeRow = true;
+            } else {
+                rowSelecionTracker.removeRow = false;
+            }
+
             for(let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
                 if (rowIndex === selectedRowIndex) {
                     continue;
@@ -351,7 +372,7 @@ window.onload = () => {
                 let topLimit = rowHandleActualVerticalLocation - guiConfigurations.mouseEvents.notePlacementPadding
                 let bottomLimit = rowHandleActualVerticalLocation + guiConfigurations.mouseEvents.notePlacementPadding
                 let leftLimit = rowHandleActualHorizontalLocation - guiConfigurations.mouseEvents.notePlacementPadding
-                let rightLimit = rowHandleActualHorizontalLocation + guiConfigurations.mouseEvents.notePlacementPadding
+                let rightLimit = rowHandleActualHorizontalLocation + guiConfigurations.mouseEvents.notePlacementPadding + guiConfigurations.sequencer.width
 
                 if (mouseX >= leftLimit && mouseX <= rightLimit && mouseY >= topLimit && mouseY <= bottomLimit) {
                     sequencer.moveRowToNewIndex(selectedRowIndex, rowIndex);
@@ -461,6 +482,9 @@ window.onload = () => {
         }
         if (selectedRowIndex !== null) {
             // un-selecting the row will be handled in 'redraw', as long as we set selected row index to null here
+            if (rowSelecionTracker.removeRow) {
+                sequencer.removeRowAtIndex(selectedRowIndex);
+            }
             selectedRowIndex = null
             redrawSequencer();
         }
@@ -605,8 +629,26 @@ window.onload = () => {
         }
     }
 
+    function initializeSimpleDefaultSequencerPattern(){
+        sequencer.setNumberOfRows(0)
+        addEmptySequencerRow();
+    }
+
     // set up a default initial drum sequence with some notes in it.
-    function initializeDefaultSequencerPattern(){
+    function initializeComplexDefaultSequencerPattern(){
+        sequencer.setNumberOfRows(6)
+        sequencer.rows[0].setNumberOfSubdivisions(8)
+        sequencer.rows[0].setNumberOfReferenceLines(4)
+        sequencer.rows[0].setQuantization(true)
+        sequencer.rows[1].setNumberOfSubdivisions(4)
+        sequencer.rows[1].setQuantization(true)
+        sequencer.rows[2].setNumberOfSubdivisions(2)
+        sequencer.rows[3].setNumberOfSubdivisions(0)
+        sequencer.rows[4].setNumberOfSubdivisions(5)
+        sequencer.rows[4].setQuantization(true)
+        sequencer.rows[5].setNumberOfReferenceLines(8)
+        sequencer.rows[5].setNumberOfSubdivisions(7)
+        sequencer.rows[5].setQuantization(true)
         sequencer.rows[0].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), 0, 
         {
             lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
@@ -974,7 +1016,7 @@ window.onload = () => {
         })
     }
 
-    function initializeRectangleShape(top, left, height, width, radius=5) {
+    function initializeRectangleShape(top, left, height, width, radius=4) {
         // new button rectangle: make a rectangle with rounded corners
         button = two.makeRoundedRectangle(left + (width / 2), top + (height / 2), width, height, radius)
         button.linewidth = guiConfigurations.sequencer.lineWidth
@@ -1067,6 +1109,7 @@ window.onload = () => {
     }
 
     function initializeRowSelectionVariablesAndVisuals(rowIndex) {
+        setNoteTrashBinVisibility(true)
         // save relevant info about whichever row is selected
         selectedRowIndex = rowIndex;
         // save a list, of all the shapes that are associated with the selected row.
@@ -1151,6 +1194,8 @@ window.onload = () => {
             lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
             addRowButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
             addEmptySequencerRow();
+            // redraw the sequencer
+            redrawSequencer()
         })
     }
 
@@ -1160,18 +1205,7 @@ window.onload = () => {
         // set new row default configuration
         sequencer.rows[newRowIndex].setNumberOfReferenceLines(4);
         sequencer.rows[newRowIndex].setNumberOfSubdivisions(8);
-        // redraw the sequencer
-        redrawSequencer()
-    }
-
-    function removeSequencerRowAtIndex(index) {
-        sequencer.removeRowAtIndex(index);
-        redrawSequencer();
-    }
-
-    function moveSequencerRowToNewIndex(indexOfRowToMove, newIndex) {
-        sequencer.moveRowToNewIndex(indexOfRowToMove, newIndex);
-        redrawSequencer();
+        sequencer.rows[newRowIndex].setQuantization(true);
     }
 
     function redrawSequencer() {
@@ -1423,7 +1457,7 @@ window.onload = () => {
 
     function clearAllNotes() {
         sequencer.clear();
-        resetNotesAndLinesDisplayForAllRows();
+        redrawSequencer()
     }
 
     function resetNotesAndLinesDisplayForAllRows() {
