@@ -354,18 +354,6 @@ window.onload = () => {
                 let rightLimit = rowHandleActualHorizontalLocation + guiConfigurations.mouseEvents.notePlacementPadding
 
                 if (mouseX >= leftLimit && mouseX <= rightLimit && mouseY >= topLimit && mouseY <= bottomLimit) {
-
-                    // // for debugging, draw a rectangle around the row handle placement area
-                    // two.makePath(
-                    //     [
-                    //         new Two.Anchor(leftLimit, topLimit),
-                    //         new Two.Anchor(rightLimit, topLimit),
-                    //         new Two.Anchor(rightLimit, bottomLimit),
-                    //         new Two.Anchor(leftLimit, bottomLimit),
-                    //     ], 
-                    //     false
-                    // );
-
                     sequencer.moveRowToNewIndex(selectedRowIndex, rowIndex);
                     selectedRowIndex = rowIndex
                     redrawSequencer();
@@ -964,18 +952,6 @@ window.onload = () => {
         let width  = guiConfigurations.notes.unplayedCircleRadius + (guiConfigurations.sampleBank.borderPadding * 2)
         let height = (guiConfigurations.notes.unplayedCircleRadius * (sampleNameList.length - 1)) + ((sampleNameList.length - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)
         let noteBankContainer = initializeRectangleShape(guiConfigurations.sampleBank.top, guiConfigurations.sampleBank.left, height, width)
-
-        // old way: draw a rectangle using a 'path'
-        // let noteBankContainer = two.makePath(
-        //     [
-        //         new Two.Anchor(guiConfigurations.sampleBank.left, guiConfigurations.sampleBank.top),
-        //         new Two.Anchor(guiConfigurations.sampleBank.left + guiConfigurations.notes.unplayedCircleRadius + (guiConfigurations.sampleBank.borderPadding * 2), guiConfigurations.sampleBank.top),
-        //         new Two.Anchor(guiConfigurations.sampleBank.left + guiConfigurations.notes.unplayedCircleRadius + (guiConfigurations.sampleBank.borderPadding * 2), guiConfigurations.sampleBank.top + (guiConfigurations.notes.unplayedCircleRadius * (sampleNameList.length - 1)) + ((sampleNameList.length - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)),
-        //         new Two.Anchor(guiConfigurations.sampleBank.left, guiConfigurations.sampleBank.top + (guiConfigurations.notes.unplayedCircleRadius * (sampleNameList.length - 1)) + ((sampleNameList.length - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)),
-        //     ], 
-        //     false
-        // );
-
         noteBankContainer.linewidth = guiConfigurations.sequencer.lineWidth;
         noteBankContainer.stroke = guiConfigurations.sequencer.color
         noteBankContainer.fill = 'transparent'
@@ -986,18 +962,6 @@ window.onload = () => {
     // a red rectangle, will make it something better for user experience later.
     function initializeNoteTrashBinContainer() {
         let noteTrashBinContainer = initializeRectangleShape(guiConfigurations.noteTrashBin.top, guiConfigurations.noteTrashBin.left, guiConfigurations.noteTrashBin.height, guiConfigurations.noteTrashBin.width)
-        
-        // old way: draw a rectangle using a 'path'
-        // let noteTrashBinContainer = two.makePath(
-        //     [
-        //         new Two.Anchor(guiConfigurations.noteTrashBin.left, guiConfigurations.noteTrashBin.top),
-        //         new Two.Anchor(guiConfigurations.noteTrashBin.left + guiConfigurations.noteTrashBin.width, guiConfigurations.noteTrashBin.top),
-        //         new Two.Anchor(guiConfigurations.noteTrashBin.left + guiConfigurations.noteTrashBin.width, guiConfigurations.noteTrashBin.top + guiConfigurations.noteTrashBin.height),
-        //         new Two.Anchor(guiConfigurations.noteTrashBin.left, guiConfigurations.noteTrashBin.top + guiConfigurations.noteTrashBin.height),
-        //     ],
-        //     false
-        // );
-        
         noteTrashBinContainer.linewidth = guiConfigurations.sequencer.lineWidth
         noteTrashBinContainer.stroke = 'transparent'
         noteTrashBinContainer.fill = 'transparent'
@@ -1011,18 +975,8 @@ window.onload = () => {
     }
 
     function initializeRectangleShape(top, left, height, width, radius=5) {
-        // old button rectangle: make a rectangle using paths
-        let button = two.makePath(
-            [
-                new Two.Anchor(left, top),
-                new Two.Anchor(left + width, top),
-                new Two.Anchor(left + width, top + height),
-                new Two.Anchor(left, top + height),
-            ],
-            false
-        );
         // new button rectangle: make a rectangle with rounded corners
-        //button = two.makeRoundedRectangle(left + (width / 2), top + (height / 2), width, height, radius)
+        button = two.makeRoundedRectangle(left + (width / 2), top + (height / 2), width, height, radius)
         button.linewidth = guiConfigurations.sequencer.lineWidth
         button.stroke = guiConfigurations.sequencer.color
         button.fill = 'transparent'
