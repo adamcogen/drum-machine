@@ -46,24 +46,48 @@ let guiConfigurations = {
         width: 48,
         height: 48,
         color: "red",
+        icon: {
+            height: 40,
+            width: 40,
+            topPadding: 0,
+            leftPadding: 0,
+        }
     },
     pauseButton: {
         top: 74,
         left: 40,
         width: 48,
         height: 48,
+        icon: {
+            height: 40,
+            width: 40,
+            topPadding: 0,
+            leftPadding: 0,
+        }
     },
     restartSequencerButton: {
         top: 440,
         left: 40,
         width: 48,
         height: 48,
+        icon: {
+            width: 40,
+            height: 40,
+            topPadding: 0,
+            leftPadding: 0,
+        }
     },
     clearAllNotesButton: {
         top: 500,
         left: 40,
         width: 48,
         height: 48,
+        icon: {
+            width: 40,
+            height: 40,
+            topPadding: 0,
+            leftPadding: 0,
+        }
     },
     mouseEvents: {
         notePlacementPadding: 20, // give this many pixels of padding on either side of things when we're placing, so we don't have to place them _precisely_ on the line, the trash bin, etc.
@@ -101,7 +125,13 @@ let guiConfigurations = {
         topPadding: 50,
         leftPadding: 0,
         height: 48,
-        width: 48
+        width: 48,
+        icon: {
+            height: 40,
+            width: 40,
+            topPadding: 0,
+            leftPadding: 0,
+        },
     },
     sequencerRowHandles: { // these will be circles, one to the left of each sequencer row, that allow you to select the row and click-drag it.
         topPadding: 0,

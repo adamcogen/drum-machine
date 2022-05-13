@@ -14,6 +14,15 @@
                 background-color: #d4d4d4; /* somewhere between c4c4c4 and e4e4e4 */ 
             }
 
+            img {
+                position: absolute;
+                user-select: none;
+                -moz-user-select: none;
+                -webkit-user-drag: none;
+                -webkit-user-select: none;
+                -ms-user-select: none;
+            }
+
             textarea { /* format all textarea objects */
                 font-size: 20px;
                 resize: none; /* switch to 'horizontal' to only allow for horizontal resizing */
@@ -46,6 +55,11 @@
     </head>
     
     <body>
+        <!-- the order of these elements matters. we want some button icons all the way
+        in the back, and we want text inputs etc. in front of the canvas we are drawing on.
+        other button icons belong in the front. -->
+        <img src="./assets/trash-closed.png" id="trash-closed-icon" draggable="false"/>
+        <img src="./assets/trash-open.png" id="trash-open-icon" draggable="false"/>
         <div id="draw-shapes"></div>
         <!-- Load drum machine source code -->
         <script src='code/priority-linked-list.js'></script>
@@ -58,5 +72,10 @@
             <textarea id="text-input-loop-length-millis" rows="1" cols="4"></textarea>
         </div>
         <div id="subdivision-text-inputs"></div>
+        <img src="./assets/pause.png" id="pause-icon" draggable="false"/>
+        <img src="./assets/play.png" id="play-icon" draggable="false"/>
+        <img src="./assets/clear-all.png" id="clear-all-icon" draggable="false"/>
+        <img src="./assets/restart.png" id="restart-icon" draggable="false"/>
+        <img src="./assets/add.png" id="add-icon" draggable="false"/>
     </body>
 </html>

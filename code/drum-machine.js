@@ -13,7 +13,16 @@ window.onload = () => {
         },
         textInputs: {
             loopLengthMillis: document.getElementById('text-input-loop-length-millis'),
-        }
+        },
+        images: {
+            pauseIcon: document.getElementById('pause-icon'),
+            playIcon: document.getElementById('play-icon'),
+            clearAllIcon: document.getElementById('clear-all-icon'),
+            restartIcon: document.getElementById('restart-icon'),
+            trashClosedIcon: document.getElementById('trash-closed-icon'),
+            trashOpenIcon: document.getElementById('trash-open-icon'),
+            addIcon: document.getElementById('add-icon'),
+        },
     }
 
     // Initialize Two.js library
@@ -63,7 +72,7 @@ window.onload = () => {
      * drum machine configurations
      */
     const LOOK_AHEAD_MILLIS = 50; // number of milliseconds to look ahead when scheduling notes to play. note bigger value means that there is a longer delay for sounds to stop after the 'pause' button is hit.
-    let defaultLoopLengthInMillis = 1500; // length of the whole drum sequence (loop), in millliseconds
+    let defaultLoopLengthInMillis = 2100; // length of the whole drum sequence (loop), in millliseconds
 
     // initialize sequencer data structure
     let sequencer = new Sequencer([webAudioDriver], 0, defaultLoopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
@@ -243,6 +252,8 @@ window.onload = () => {
             circleBeingMoved.translation.y = mouseY
             circleBeingMovedNewRow = HAS_NO_ROW_NUMBER // start with "it's not colliding with anything", and update the value from there if we find a collision
             circleBeingMoved.stroke = "black"
+            domElements.images.trashClosedIcon.style.display = 'block'
+            domElements.images.trashOpenIcon.style.display = 'none'
             /**
              * adding stuff here for new 'snap to grid on move' behavior.
              * this will be the first part of making it so that notes being moved 'snap' into place when they are close to the trash bin or a sequencer line.
@@ -260,6 +271,8 @@ window.onload = () => {
                 circleBeingMoved.translation.y = centerOfTrashBinY
                 circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
                 circleBeingMoved.stroke = "red"
+                domElements.images.trashClosedIcon.style.display = 'none'
+                domElements.images.trashOpenIcon.style.display = 'block'
             }
             // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
             let sequencerLeftBoundary = guiConfigurations.sequencer.left - guiConfigurations.mouseEvents.notePlacementPadding
@@ -302,6 +315,8 @@ window.onload = () => {
                 if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
                     circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
                     circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
+                    domElements.images.trashClosedIcon.style.display = 'none'
+                    domElements.images.trashOpenIcon.style.display = 'block'
                 }
             }
         }
@@ -316,6 +331,8 @@ window.onload = () => {
             circle.fill = guiConfigurations.sequencerRowHandles.selectedColor
             let rowSelectionRectangle = sequencerRowSelectionRectangles[selectedRowIndex]
             rowSelectionRectangle.stroke = guiConfigurations.sequencerRowHandles.selectedColor
+            domElements.images.trashClosedIcon.style.display = 'block'
+            domElements.images.trashOpenIcon.style.display = 'none'
 
             sequencerRowHandles[selectedRowIndex].translation.x = mouseX
             sequencerRowHandles[selectedRowIndex].translation.y = mouseY
@@ -331,6 +348,8 @@ window.onload = () => {
                 rowSelectionRectangle.stroke = "red"
                 rowSelecionTracker.removeRow = true;
                 circle.stroke = "red"
+                domElements.images.trashClosedIcon.style.display = 'none'
+                domElements.images.trashOpenIcon.style.display = 'block'
             } else {
                 rowSelecionTracker.removeRow = false;
             }
@@ -359,6 +378,8 @@ window.onload = () => {
                 circle.stroke = "red"
                 rowSelectionRectangle.stroke = "red"
                 rowSelecionTracker.removeRow = true;
+                domElements.images.trashClosedIcon.style.display = 'none'
+                domElements.images.trashOpenIcon.style.display = 'block'
             } else {
                 rowSelecionTracker.removeRow = false;
             }
@@ -514,6 +535,52 @@ window.onload = () => {
           });
         }
         request.send();
+    }
+
+    function initializeIcons(hideIcons=false) {
+        if (hideIcons) { // gives us a mechanism to leave the icons off the sequencer display if we want to
+            for (key of Object.keys(domElements.images)) {
+                domElements.images[key].remove()
+            }
+            return;
+        }
+        // "add row" button icon
+        domElements.images.addIcon.style.width = "" + guiConfigurations.addRowButton.icon.width + "px"
+        domElements.images.addIcon.style.height = "" + guiConfigurations.addRowButton.icon.height + "px"
+        let addRowButtonTop = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + guiConfigurations.addRowButton.topPadding
+        let addRowButtonLeft = guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width / 2) + guiConfigurations.addRowButton.leftPadding - (guiConfigurations.addRowButton.width / 2)
+        domElements.images.addIcon.style.top = "" + (addRowButtonTop) + "px"
+        domElements.images.addIcon.style.left = "" + (addRowButtonLeft) + "px"
+        // trash bin icon: open
+        domElements.images.trashOpenIcon.style.width = "" + guiConfigurations.noteTrashBin.icon.width + "px"
+        domElements.images.trashOpenIcon.style.height = "" + guiConfigurations.noteTrashBin.icon.height + "px"
+        domElements.images.trashOpenIcon.style.left = "" + guiConfigurations.noteTrashBin.left + "px"
+        domElements.images.trashOpenIcon.style.top = "" + guiConfigurations.noteTrashBin.top + "px"
+        // trash bin icon: closed
+        domElements.images.trashClosedIcon.style.width = "" + guiConfigurations.noteTrashBin.icon.width + "px"
+        domElements.images.trashClosedIcon.style.height = "" + guiConfigurations.noteTrashBin.icon.height + "px"
+        domElements.images.trashClosedIcon.style.left = "" + guiConfigurations.noteTrashBin.left + "px"
+        domElements.images.trashClosedIcon.style.top = "" + guiConfigurations.noteTrashBin.top + "px"
+        // "clear all rows" button
+        domElements.images.clearAllIcon.style.width = "" + guiConfigurations.clearAllNotesButton.icon.width + "px"
+        domElements.images.clearAllIcon.style.height = "" + guiConfigurations.clearAllNotesButton.icon.height + "px"
+        domElements.images.clearAllIcon.style.left = "" + guiConfigurations.clearAllNotesButton.left + "px"
+        domElements.images.clearAllIcon.style.top = "" + guiConfigurations.clearAllNotesButton.top + "px"
+        // restart
+        domElements.images.restartIcon.style.width = "" + guiConfigurations.restartSequencerButton.icon.width + "px"
+        domElements.images.restartIcon.style.height = "" + guiConfigurations.restartSequencerButton.icon.height + "px"
+        domElements.images.restartIcon.style.left = "" + guiConfigurations.restartSequencerButton.left + "px"
+        domElements.images.restartIcon.style.top = "" + guiConfigurations.restartSequencerButton.top + "px"
+        // pause
+        domElements.images.pauseIcon.style.width = "" + guiConfigurations.pauseButton.icon.width + "px"
+        domElements.images.pauseIcon.style.height = "" + guiConfigurations.pauseButton.icon.height + "px"
+        domElements.images.pauseIcon.style.left = "" + guiConfigurations.pauseButton.left + "px"
+        domElements.images.pauseIcon.style.top = "" + guiConfigurations.pauseButton.top + "px"
+        // play
+        domElements.images.playIcon.style.width = "" + guiConfigurations.pauseButton.icon.width + "px"
+        domElements.images.playIcon.style.height = "" + guiConfigurations.pauseButton.icon.height + "px"
+        domElements.images.playIcon.style.left = "" + guiConfigurations.pauseButton.left + "px"
+        domElements.images.playIcon.style.top = "" + guiConfigurations.pauseButton.top + "px"
     }
 
     function initializeCheckbox(verticalPosition, horizontalPosition) {
@@ -1011,9 +1078,18 @@ window.onload = () => {
     }
 
     function addPauseButtonActionListeners() {
-        pauseButtonShape._renderer.elem.addEventListener('click', (event) => {
-            togglePaused()
-        })
+        // remove event listeners to avoid duplicates
+        pauseButtonShape._renderer.elem.removeEventListener('click', pauseButtonClickHandler)
+        domElements.images.pauseIcon.removeEventListener('click', pauseButtonClickHandler)
+        domElements.images.playIcon.removeEventListener('click', pauseButtonClickHandler)
+        // then add the event listeners
+        pauseButtonShape._renderer.elem.addEventListener('click', pauseButtonClickHandler)
+        domElements.images.pauseIcon.addEventListener('click', pauseButtonClickHandler)
+        domElements.images.playIcon.addEventListener('click', pauseButtonClickHandler)
+    }
+
+    function pauseButtonClickHandler(event) {
+        togglePaused()
     }
 
     function initializeRectangleShape(top, left, height, width, radius=4) {
@@ -1159,19 +1235,33 @@ window.onload = () => {
     }
 
     function addRestartSequencerButtonActionListeners() {
-        restartSequencerButtonShape._renderer.elem.addEventListener('click', (event) => {
-            lastButtonClickTimeTrackers.restartSequencer.lastClickTime = sequencer.currentTime
-            restartSequencerButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
-            restartSequencer()
-        })
+        // remove event listeners first to avoid duplicates
+        restartSequencerButtonShape._renderer.elem.removeEventListener('click', restartSequencerButtonClickHandler)
+        domElements.images.restartIcon.removeEventListener('click', restartSequencerButtonClickHandler)
+        // then add the event listeners
+        restartSequencerButtonShape._renderer.elem.addEventListener('click', restartSequencerButtonClickHandler)
+        domElements.images.restartIcon.addEventListener('click', restartSequencerButtonClickHandler)
+    }
+
+    function restartSequencerButtonClickHandler(event) {
+        lastButtonClickTimeTrackers.restartSequencer.lastClickTime = sequencer.currentTime
+        restartSequencerButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
+        restartSequencer()
     }
 
     function addClearAllNotesButtonActionListeners() {
-        clearAllNotesButtonShape._renderer.elem.addEventListener('click', (event) => {
-            lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = sequencer.currentTime
-            clearAllNotesButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
-            clearAllNotes();
-        })
+        // remove event listeners to prevent duplicates
+        clearAllNotesButtonShape._renderer.elem.removeEventListener('click', clearAllNotesButtonClickHandler)
+        domElements.images.clearAllIcon.removeEventListener('click', clearAllNotesButtonClickHandler)
+        // add event listners
+        clearAllNotesButtonShape._renderer.elem.addEventListener('click', clearAllNotesButtonClickHandler)
+        domElements.images.clearAllIcon.addEventListener('click', clearAllNotesButtonClickHandler)
+    }
+
+    function clearAllNotesButtonClickHandler(event) {
+        lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = sequencer.currentTime
+        clearAllNotesButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
+        clearAllNotes();
     }
 
     function addClearNotesForRowButtonsActionListeners() {
@@ -1190,13 +1280,20 @@ window.onload = () => {
 
     function initializeAddRowButtonActionListener() {
         lastButtonClickTimeTrackers.addRow.shape = addRowButtonShape;
-        addRowButtonShape._renderer.elem.addEventListener('click', (event) => {
-            lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
-            addRowButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
-            addEmptySequencerRow();
-            // redraw the sequencer
-            redrawSequencer()
-        })
+        // remove any existing click listeners to prevent duplicates
+        addRowButtonShape._renderer.elem.removeEventListener('click', addRowClickHandler)
+        addRowButtonShape._renderer.elem.addEventListener('click', addRowClickHandler)
+        // add new click listeners
+        domElements.images.addIcon.removeEventListener('click', addRowClickHandler)
+        domElements.images.addIcon.addEventListener('click', addRowClickHandler)
+    }
+
+    function addRowClickHandler(event) {
+        lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
+        addRowButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
+        addEmptySequencerRow();
+        // redraw the sequencer
+        redrawSequencer()
     }
 
     function addEmptySequencerRow() {
@@ -1242,14 +1339,19 @@ window.onload = () => {
             // if a row is selected, set variables appropriately for moving it around
             initializeRowSelectionVariablesAndVisuals(selectedRowIndex);
         }
+        // initialize, format, and move button icons into place
+        initializeIcons(true)
     }
 
     // show or hide the note trash bin (show if visible === true, hide otherwise)
     function setNoteTrashBinVisibility(visible) {
         if (visible) {
             noteTrashBinContainer.stroke = guiConfigurations.noteTrashBin.color
+            domElements.images.trashClosedIcon.style.display = 'block'
         } else {
             noteTrashBinContainer.stroke = 'transparent'
+            domElements.images.trashClosedIcon.style.display = 'none'
+            domElements.images.trashOpenIcon.style.display = 'none'
         }
     }
 
@@ -1267,6 +1369,8 @@ window.onload = () => {
             sequencer.pause();
         }
         pauseButtonShape.fill = "#bfbfbf"
+        domElements.images.pauseIcon.style.display = 'none'
+        domElements.images.playIcon.style.display = 'block'
     }
 
     function unpause() {
@@ -1274,6 +1378,8 @@ window.onload = () => {
             sequencer.unpause();
         }
         pauseButtonShape.fill = "transparent"
+        domElements.images.pauseIcon.style.display = 'block'
+        domElements.images.playIcon.style.display = 'none'
     }
 
     function initializeTempoTextInputValuesAndStyles() {
