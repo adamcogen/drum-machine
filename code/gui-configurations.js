@@ -41,7 +41,7 @@ let guiConfigurations = {
         color: lighterSequencerColor, // meant to be slightly lighter than the subdivision line color
     },
     noteTrashBin: {
-        top: 380,
+        top: 500,
         left: 40,
         width: 48,
         height: 48,
@@ -66,7 +66,7 @@ let guiConfigurations = {
         }
     },
     restartSequencerButton: {
-        top: 440,
+        top: 380,
         left: 40,
         width: 48,
         height: 48,
@@ -78,7 +78,7 @@ let guiConfigurations = {
         }
     },
     clearAllNotesButton: {
-        top: 500,
+        top: 440,
         left: 40,
         width: 48,
         height: 48,
