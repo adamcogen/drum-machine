@@ -1662,14 +1662,16 @@ window.onload = () => {
     function updateNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex) {
         // update quantization toggle checkbox, quantization settings: you can't quantize a row if it has 0 subdivisions.
         if (newNumberOfSubdivisions === 0) {
-            quantizationCheckboxes[rowIndex].checked = false
+            if (HIDE_ICONS) {
+                quantizationCheckboxes[rowIndex].checked = false
+            }
             sequencer.rows[rowIndex].quantized = false
         }
         // update the sequencer data structure to reflect the new number of subdivisions.
         // call the sequencer's 'update subdivisions for row' method
         sequencer.setNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex)
         subdivisionTextInputs[rowIndex].value = newNumberOfSubdivisions
-        resetNotesAndLinesDisplayForRow(rowIndex)
+        redrawSequencer()
     }
 
     function updateNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex) {
