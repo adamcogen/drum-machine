@@ -22,6 +22,9 @@ window.onload = () => {
             trashClosedIcon: document.getElementById('trash-closed-icon'),
             trashOpenIcon: document.getElementById('trash-open-icon'),
             addIcon: document.getElementById('add-icon'),
+            clearRowIcon: document.getElementById('clear-row-icon'),
+            lockedIcon: document.getElementById('locked-icon'),
+            unlockedIcon: document.getElementById('unlocked-icon'),
         },
     }
 
@@ -68,6 +71,11 @@ window.onload = () => {
         _audioContext.resume()
     }
 
+    const HIDE_ICONS = false
+    let clearRowIcons = []
+    let lockedIcons = []
+    let unlockedIcons = []
+
     /**
      * drum machine configurations
      */
@@ -99,6 +107,10 @@ window.onload = () => {
      * within the relevant action listenever methods, not here. same for a few other of these trackers. 
      */
     lastButtonClickTimeTrackers = {
+        pause: {
+            lastClickTime: Number.MIN_SAFE_INTEGER,
+            shape: pauseButtonShape,
+        },
         restartSequencer: {
             lastClickTime: Number.MIN_SAFE_INTEGER,
             shape: restartSequencerButtonShape,
@@ -273,6 +285,9 @@ window.onload = () => {
                 circleBeingMoved.stroke = "red"
                 domElements.images.trashClosedIcon.style.display = 'none'
                 domElements.images.trashOpenIcon.style.display = 'block'
+                noteTrashBinContainer.stroke = 'red'
+            } else {
+                noteTrashBinContainer.stroke = 'transparent'
             }
             // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
             let sequencerLeftBoundary = guiConfigurations.sequencer.left - guiConfigurations.mouseEvents.notePlacementPadding
@@ -317,6 +332,7 @@ window.onload = () => {
                     circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
                     domElements.images.trashClosedIcon.style.display = 'none'
                     domElements.images.trashOpenIcon.style.display = 'block'
+                    noteTrashBinContainer.stroke = 'red'
                 }
             }
         }
@@ -350,8 +366,10 @@ window.onload = () => {
                 circle.stroke = "red"
                 domElements.images.trashClosedIcon.style.display = 'none'
                 domElements.images.trashOpenIcon.style.display = 'block'
+                noteTrashBinContainer.stroke = 'red'
             } else {
                 rowSelecionTracker.removeRow = false;
+                noteTrashBinContainer.stroke = 'transparent'
             }
 
             let xChangeFromStart = sequencerRowHandles[selectedRowIndex].translation.x - rowSelecionTracker.rowHandleStartingPosition.x
@@ -380,8 +398,7 @@ window.onload = () => {
                 rowSelecionTracker.removeRow = true;
                 domElements.images.trashClosedIcon.style.display = 'none'
                 domElements.images.trashOpenIcon.style.display = 'block'
-            } else {
-                rowSelecionTracker.removeRow = false;
+                noteTrashBinContainer.stroke = 'red'
             }
 
             for(let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
@@ -581,6 +598,90 @@ window.onload = () => {
         domElements.images.playIcon.style.height = "" + guiConfigurations.pauseButton.icon.height + "px"
         domElements.images.playIcon.style.left = "" + guiConfigurations.pauseButton.left + "px"
         domElements.images.playIcon.style.top = "" + guiConfigurations.pauseButton.top + "px"
+        // clear row buttons -- one per row
+        for (icon of clearRowIcons) {
+            icon.remove();
+        }
+        clearRowIcons = [];
+        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+            // create a new copy of the original clear row icon
+            let clearRowIcon = domElements.images.clearRowIcon.cloneNode()
+            // make the copy visible
+            clearRowIcon.style.display = 'block'
+            // set the copy's position -- we will have one per row
+            clearRowIcon.style.width = "" + guiConfigurations.clearRowButtons.icon.width + "px";
+            clearRowIcon.style.height = "" + guiConfigurations.clearRowButtons.icon.height + "px"
+            clearRowIcon.style.left = "" + (guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + guiConfigurations.clearRowButtons.leftPaddingPerRow) + "px"
+            clearRowIcon.style.top = "" + (guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows) + guiConfigurations.clearRowButtons.topPaddingPerRow) + "px"
+            // add event listeners to our icon
+            clearRowIcon.removeEventListener('click', (event) => {
+                clearRowButtonClickHandler(event, rowIndex)
+            });
+            clearRowIcon.addEventListener('click', (event) => {
+                clearRowButtonClickHandler(event, rowIndex)
+            });
+            // add the copy to the dom and to our list that tracks these icons
+            clearRowIcons.push(clearRowIcon)
+            document.body.appendChild(clearRowIcon)
+        }
+        domElements.images.clearRowIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
+        // lock / unlock (quantize / unquantize) row buttons -- need one per row
+        for (icon of lockedIcons) {
+            icon.remove();
+        }
+        lockedIcons = [];
+        for (icon of unlockedIcons) {
+            icon.remove();
+        }
+        unlockedIcons = [];
+        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+            // make copies of the original image so that we can freely throw them away or add more
+            let lockedIcon = domElements.images.lockedIcon.cloneNode()
+            let unlockedIcon = domElements.images.unlockedIcon.cloneNode()
+            // set visibilty of each icon based on the row's current quantization setting
+            // really, we could just make whichever icon is necessary and not make an invisible copy of the other
+            // one, but making an invisible copy leaves the door open for optimizing the 'quantize' button a bit later.
+            // there is a bit of unnecessary code duplication right now because of this.
+            // may clean this up later, for now it's fine.
+            if (sequencer.rows[rowIndex].quantized) {
+                lockedIcon.style.display = 'block'
+                unlockedIcon.style.display = 'none'
+            } else {
+                lockedIcon.style.display = 'none'
+                unlockedIcon.style.display = 'block'
+            }
+            // put each lock icon into the right place, resize it, etc.
+            let lockIconsVerticalPosition = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * rowIndex) + guiConfigurations.subdivionLineTextInputs.topPaddingPerRow + guiConfigurations.quantizationButtons.icon.topPaddingPerRow
+            let lockIconsHorizontalPosition = guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + guiConfigurations.quantizationButtons.icon.leftPaddingPerRow
+            lockedIcon.style.width = "" + guiConfigurations.quantizationButtons.icon.width + "px"
+            lockedIcon.style.height = "" + guiConfigurations.quantizationButtons.icon.height + "px"
+            lockedIcon.style.left = "" + lockIconsHorizontalPosition + "px"
+            lockedIcon.style.top = "" + lockIconsVerticalPosition + "px"
+            unlockedIcon.style.width = "" + guiConfigurations.quantizationButtons.icon.width + "px"
+            unlockedIcon.style.height = "" + guiConfigurations.quantizationButtons.icon.height + "px"
+            unlockedIcon.style.left = "" + lockIconsHorizontalPosition + "px"
+            unlockedIcon.style.top = "" + lockIconsVerticalPosition + "px"
+            // add event listeners
+            lockedIcon.removeEventListener('click', (event) => {
+                setQuantizationButtonClickHandler(event, rowIndex, false)
+            });
+            lockedIcon.addEventListener('click', (event) => {
+                setQuantizationButtonClickHandler(event, rowIndex, false)
+            });
+            unlockedIcon.removeEventListener('click', (event) => {
+                setQuantizationButtonClickHandler(event, rowIndex, true)
+            });
+            unlockedIcon.addEventListener('click', (event) => {
+                setQuantizationButtonClickHandler(event, rowIndex, true)
+            });
+            // add the icons to the dom and to our list that tracks these icons
+            lockedIcons.push(lockedIcon)
+            unlockedIcons.push(unlockedIcon)
+            document.body.appendChild(lockedIcon)
+            document.body.appendChild(unlockedIcon)
+        }
+        domElements.images.unlockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
+        domElements.images.lockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
     }
 
     function initializeCheckbox(verticalPosition, horizontalPosition) {
@@ -598,6 +699,10 @@ window.onload = () => {
     }
 
     function initializeQuantizationCheckboxes() {
+        if (!HIDE_ICONS) {
+            quantizationCheckboxes = [];
+            return 
+        }
         for (let existingCheckbox of quantizationCheckboxes) {
             domElements.divs.subdivisionTextInputs.removeChild(existingCheckbox)
         }
@@ -614,19 +719,27 @@ window.onload = () => {
     }
 
     function initializeQuantizationCheckboxActionListeners() {
+        if (!HIDE_ICONS) {
+            return 
+        }
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
             let checkbox = quantizationCheckboxes[rowIndex]
+            checkbox.removeEventListener('click', (event) => {
+                setQuantizationButtonClickHandler(event, rowIndex, checkbox.checked)
+            });
             checkbox.addEventListener('click', (event) => {
-                if (sequencer.rows[rowIndex].getNumberOfSubdivisions() === 0) {
-                    // you can't quantize a row if it has 0 subdivisions, so automatically change the value to 1 in this case
-                    updateNumberOfSubdivisionsForRow(1, rowIndex)
-                }
-                sequencer.rows[rowIndex].setQuantization(checkbox.checked)
-                removeAllCirclesFromDisplay()
-                drawAllNoteBankCircles()
-                drawNotesToReflectSequencerCurrentState()
+                setQuantizationButtonClickHandler(event, rowIndex, checkbox.checked)
             });
         }
+    }
+
+    function setQuantizationButtonClickHandler(event, rowIndex, quantize) {
+        if (sequencer.rows[rowIndex].getNumberOfSubdivisions() === 0) {
+            // you can't quantize a row if it has 0 subdivisions, so automatically change the value to 1 in this case
+            updateNumberOfSubdivisionsForRow(1, rowIndex)
+        }
+        sequencer.rows[rowIndex].setQuantization(quantize)
+        redrawSequencer();
     }
 
     // todo: clean up the block comments for the two 'snap to' methods below for clarity
@@ -859,6 +972,7 @@ window.onload = () => {
             circleBeingMovedOldBeatNumber = circleBeingMoved.guiData.beat
             circleBeingMovedNewBeatNumber = circleBeingMovedOldBeatNumber
             setNoteTrashBinVisibility(true)
+            noteTrashBinContainer.stroke = 'transparent'
             sequencer.playDrumSampleNow(circleBeingMoved.guiData.sampleName)
         });
 
@@ -1089,6 +1203,8 @@ window.onload = () => {
     }
 
     function pauseButtonClickHandler(event) {
+        lastButtonClickTimeTrackers.pause.lastClickTime = sequencer.currentTime
+        pauseButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
         togglePaused()
     }
 
@@ -1186,6 +1302,7 @@ window.onload = () => {
 
     function initializeRowSelectionVariablesAndVisuals(rowIndex) {
         setNoteTrashBinVisibility(true)
+        noteTrashBinContainer.stroke = 'transparent'
         // save relevant info about whichever row is selected
         selectedRowIndex = rowIndex;
         // save a list, of all the shapes that are associated with the selected row.
@@ -1213,11 +1330,17 @@ window.onload = () => {
         }
         rowSelecionTracker.rowHandleStartingPosition.x = sequencerRowHandles[rowIndex].translation.x
         rowSelecionTracker.rowHandleStartingPosition.y = sequencerRowHandles[rowIndex].translation.y
-        // do the exact same thing for dom elements (subdivision and reference line text inputs, quantization checkbox) next
+        // do the exact same thing for dom elements (subdivision and reference line text inputs, quantization checkbox, images) next
         rowSelecionTracker.domElements = [];
         rowSelecionTracker.domElements.push(subdivisionTextInputs[rowIndex])
         rowSelecionTracker.domElements.push(referenceLineTextInputs[rowIndex])
-        rowSelecionTracker.domElements.push(quantizationCheckboxes[rowIndex])
+        if (HIDE_ICONS) {
+            rowSelecionTracker.domElements.push(quantizationCheckboxes[rowIndex])
+        } else {
+            rowSelecionTracker.domElements.push(lockedIcons[rowIndex]);
+            rowSelecionTracker.domElements.push(unlockedIcons[rowIndex]);
+            rowSelecionTracker.domElements.push(clearRowIcons[rowIndex]);
+        }
         rowSelecionTracker.domElementsOriginalPositions = [];
         for (let domElement of rowSelecionTracker.domElements) {
             rowSelecionTracker.domElementsOriginalPositions.push({
@@ -1270,12 +1393,19 @@ window.onload = () => {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
                 shape: clearNotesForRowButtonShapes[rowIndex],
             }
+            clearNotesForRowButtonShapes[rowIndex]._renderer.elem.removeEventListener('click', (event) => {
+                clearRowButtonClickHandler(event, rowIndex)
+            });
             clearNotesForRowButtonShapes[rowIndex]._renderer.elem.addEventListener('click', (event) => {
-                lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = sequencer.currentTime
-                clearNotesForRowButtonShapes[rowIndex].fill = guiConfigurations.buttonBehavior.clickedButtonColor
-                clearNotesForRow(rowIndex);
-            })
+                clearRowButtonClickHandler(event, rowIndex)
+            });
         }
+    }
+
+    function clearRowButtonClickHandler(event, rowIndex) {
+        lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = sequencer.currentTime
+        clearNotesForRowButtonShapes[rowIndex].fill = guiConfigurations.buttonBehavior.clickedButtonColor
+        clearNotesForRow(rowIndex);
     }
 
     function initializeAddRowButtonActionListener() {
@@ -1335,12 +1465,12 @@ window.onload = () => {
         initializeQuantizationCheckboxActionListeners();
         initializeAddRowButtonActionListener();
         initializeSequencerRowHandlesActionListeners();
+        // initialize, format, and move button icons into place
+        initializeIcons(HIDE_ICONS)
         if (selectedRowIndex !== null) {
             // if a row is selected, set variables appropriately for moving it around
             initializeRowSelectionVariablesAndVisuals(selectedRowIndex);
         }
-        // initialize, format, and move button icons into place
-        initializeIcons(true)
     }
 
     // show or hide the note trash bin (show if visible === true, hide otherwise)
@@ -1368,7 +1498,6 @@ window.onload = () => {
         if (!sequencer.paused) {
             sequencer.pause();
         }
-        pauseButtonShape.fill = "#bfbfbf"
         domElements.images.pauseIcon.style.display = 'none'
         domElements.images.playIcon.style.display = 'block'
     }
@@ -1377,7 +1506,6 @@ window.onload = () => {
         if (sequencer.paused) {
             sequencer.unpause();
         }
-        pauseButtonShape.fill = "transparent"
         domElements.images.pauseIcon.style.display = 'block'
         domElements.images.playIcon.style.display = 'none'
     }

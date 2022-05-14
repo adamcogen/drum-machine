@@ -15,7 +15,7 @@ let guiConfigurations = {
         lineWidth: 3,
     },
     defaultFont: {
-        color: "#575757",
+        color: 'black' // "#575757",
     },
     notes: {
         unplayedCircleRadius: 8,
@@ -30,7 +30,7 @@ let guiConfigurations = {
     },
     timeTrackingLines: {
         height: 20,
-        color: defaultSequencerLineColor, // 'black'
+        color: 'black', // defaultSequencerLineColor,
     },
     subdivisionLines: {
         height: 20,
@@ -47,8 +47,8 @@ let guiConfigurations = {
         height: 48,
         color: "red",
         icon: {
-            height: 40,
-            width: 40,
+            height: 48,
+            width: 48,
             topPadding: 0,
             leftPadding: 0,
         }
@@ -59,8 +59,8 @@ let guiConfigurations = {
         width: 48,
         height: 48,
         icon: {
-            height: 40,
-            width: 40,
+            height: 48,
+            width: 48,
             topPadding: 0,
             leftPadding: 0,
         }
@@ -71,8 +71,8 @@ let guiConfigurations = {
         width: 48,
         height: 48,
         icon: {
-            width: 40,
-            height: 40,
+            width: 48,
+            height: 48,
             topPadding: 0,
             leftPadding: 0,
         }
@@ -83,22 +83,22 @@ let guiConfigurations = {
         width: 48,
         height: 48,
         icon: {
-            width: 40,
-            height: 40,
+            width: 48,
+            height: 48,
             topPadding: 0,
             leftPadding: 0,
         }
     },
     mouseEvents: {
         notePlacementPadding: 20, // give this many pixels of padding on either side of things when we're placing, so we don't have to place them _precisely_ on the line, the trash bin, etc.
-        throwNoteAwaySidesPadding: 50, // throw notes away if they are this far from the side of the sequencer
+        throwNoteAwaySidesPadding: 50, // 90, // throw notes away if they are this far from the side of the sequencer
         throwNoteAwayTopAndBottomPadding: 50, // throw notes away if they are this far from the top or bottom of the sequencer
         throwRowAwaySidesPadding: 70,
         throwRowAwayTopAndBottomPadding: 70,
     },
     tempoTextInput: {
         top: 25,
-        left: 477,
+        left: 560,
         maximumValue: 99999 // fractional numbers less than this could go over the width of the text input
     },
     subdivionLineTextInputs: {
@@ -112,7 +112,7 @@ let guiConfigurations = {
         maximumValue: 1000,
     },
     buttonBehavior: {
-        showClicksForHowManyMilliseconds: 200,
+        showClicksForHowManyMilliseconds: 100,
         clickedButtonColor: "#c4c4c4",
     },
     clearRowButtons: {
@@ -120,6 +120,12 @@ let guiConfigurations = {
         leftPaddingPerRow: 102,
         height: 20,
         width: 20,
+        icon: {
+            height: 20,
+            width: 20,
+            topPadding: 0,
+            leftPadding: 0,
+        }
     },
     addRowButton: {
         topPadding: 50,
@@ -127,8 +133,8 @@ let guiConfigurations = {
         height: 48,
         width: 48,
         icon: {
-            height: 40,
-            width: 40,
+            height: 48,
+            width: 48,
             topPadding: 0,
             leftPadding: 0,
         },
@@ -145,5 +151,13 @@ let guiConfigurations = {
         topPadding: -40,
         width: 200,
         height: 80,
+    },
+    quantizationButtons: {
+        icon: {
+            width: 42,
+            height: 42,
+            topPaddingPerRow: -1,
+            leftPaddingPerRow: 66,
+        }
     }
 }
