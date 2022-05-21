@@ -67,18 +67,19 @@
         <script src='code/sequencer.js'></script>
         <script src='code/audio-drivers.js'></script>
         <script src='code/gui-configurations.js'></script>
+        <script src='code/sequencer-url-parser.js'></script>
         <script src='code/drum-machine.js'></script>
         <div id="tempo-text-inputs">
             <textarea id="text-input-loop-length-millis" rows="1" cols="4"></textarea>
         </div>
         <div id="subdivision-text-inputs"></div>
-        <img src="./assets/pause.png" id="pause-icon" draggable="false"/>
-        <img src="./assets/play.png" id="play-icon" draggable="false"/>
-        <img src="./assets/clear-all.png" id="clear-all-icon" draggable="false"/>
-        <img src="./assets/restart.png" id="restart-icon" draggable="false"/>
-        <img src="./assets/add.png" id="add-icon" draggable="false"/>
-        <img src="./assets/clear-row.png" id="clear-row-icon" draggable="false"/>
-        <img src="./assets/locked.png" id="locked-icon" draggable="false"/>
-        <img src="./assets/unlocked.png" id="unlocked-icon" draggable="false"/>
+        <img src="./assets/pause.png" id="pause-icon" draggable="false" title="Pause sequencer"/>
+        <img src="./assets/play.png" id="play-icon" draggable="false" title="Play sequencer"/>
+        <img src="./assets/clear-all.png" id="clear-all-icon" draggable="false" title="Clear all notes"/>
+        <img src="./assets/restart.png" id="restart-icon" draggable="false" title="Restart sequencer"/>
+        <img src="./assets/add.png" id="add-icon" draggable="false" title="Add new sequencer row"/>
+        <img src="./assets/clear-row.png" id="clear-row-icon" draggable="false" title="Clear notes for row"/>
+        <img src="./assets/locked.png" id="locked-icon" draggable="false" title="Un-quantize notes (turn off snap-to-grid)"/>
+        <img src="./assets/unlocked.png" id="unlocked-icon" draggable="false" title="Quantize notes (turn on snap-to-grid)"/>
     </body>
 </html>

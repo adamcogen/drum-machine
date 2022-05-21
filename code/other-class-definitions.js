@@ -40,14 +40,15 @@ class SampleBankNodeGenerator {
     }
 
     createNewNodeForSample(sampleName) {
-        if (this.sampleNameList.includes(sampleName)) {
+        let sampleIndex = this.sampleNameList.indexOf(sampleName);
+        if (sampleIndex != -1) {
             return new PriorityLinkedListNode(this.idGenerator.getNextId(), -1, {
                 lastScheduledOnIteration: -1,
                 sampleName: sampleName,
                 beat: -1,
             })
         } else {
-            throw "requested a sample name from the sample bank that doesn't exist! requested sample name: " + sampleName + ". sample list: " + sampleList + "."
+            throw "requested a sample name from the sample bank that doesn't exist! requested sample name: " + sampleName + ". sample list: " + this.sampleNameList + "."
         }
     }
 
