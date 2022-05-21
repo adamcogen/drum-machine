@@ -85,6 +85,8 @@ window.onload = () => {
     // initialize sequencer data structure
     let sequencer = new Sequencer([webAudioDriver], 0, defaultLoopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
 
+    let gui = new DrumMachineGui();
+
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
     let sequencerRowSelectionRectangles = initializeSequencerRowSelectionRectangles();
     let referenceLineLists = initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
@@ -93,11 +95,11 @@ window.onload = () => {
     let timeTrackingLines = initializeTimeTrackingLines() // list of lines that move to represent the current time within the loop
     let noteBankContainer = initializeNoteBankContainer() // a rectangle that goes around the note bank
     let noteTrashBinContainer = initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
-    let pauseButtonShape = initializeRectangleShape(guiConfigurations.pauseButton.top, guiConfigurations.pauseButton.left, guiConfigurations.pauseButton.height, guiConfigurations.pauseButton.width) // a rectangle that will act as the pause button for now
-    let restartSequencerButtonShape = initializeRectangleShape(guiConfigurations.restartSequencerButton.top, guiConfigurations.restartSequencerButton.left, guiConfigurations.restartSequencerButton.height, guiConfigurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
-    let clearAllNotesButtonShape = initializeRectangleShape(guiConfigurations.clearAllNotesButton.top, guiConfigurations.clearAllNotesButton.left, guiConfigurations.clearAllNotesButton.height, guiConfigurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
-    let clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(guiConfigurations.clearRowButtons.topPaddingPerRow, guiConfigurations.clearRowButtons.leftPaddingPerRow, guiConfigurations.clearRowButtons.height, guiConfigurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
-    let addRowButtonShape = initializeRectangleShape(guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + guiConfigurations.addRowButton.topPadding, guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width / 2) + guiConfigurations.addRowButton.leftPadding - (guiConfigurations.addRowButton.width / 2), guiConfigurations.addRowButton.height, guiConfigurations.addRowButton.width)
+    let pauseButtonShape = initializeRectangleShape(gui.configurations.pauseButton.top, gui.configurations.pauseButton.left, gui.configurations.pauseButton.height, gui.configurations.pauseButton.width) // a rectangle that will act as the pause button for now
+    let restartSequencerButtonShape = initializeRectangleShape(gui.configurations.restartSequencerButton.top, gui.configurations.restartSequencerButton.left, gui.configurations.restartSequencerButton.height, gui.configurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
+    let clearAllNotesButtonShape = initializeRectangleShape(gui.configurations.clearAllNotesButton.top, gui.configurations.clearAllNotesButton.left, gui.configurations.clearAllNotesButton.height, gui.configurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
+    let clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(gui.configurations.clearRowButtons.topPaddingPerRow, gui.configurations.clearRowButtons.leftPaddingPerRow, gui.configurations.clearRowButtons.height, gui.configurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
+    let addRowButtonShape = initializeRectangleShape(gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding, gui.configurations.sequencer.left + (gui.configurations.sequencer.width / 2) + gui.configurations.addRowButton.leftPadding - (gui.configurations.addRowButton.width / 2), gui.configurations.addRowButton.height, gui.configurations.addRowButton.width)
     let sequencerRowHandles = initializeSequencerRowHandles()
     setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
 
@@ -213,7 +215,7 @@ window.onload = () => {
     function draw() {
         sequencer.update() // update timekeeping variables and schedule any upcoming notes, using the sequencer
 
-        let timeTrackingLinesXPosition = guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width * (sequencer.timekeeping.currentTimeWithinCurrentLoop / sequencer.loopLengthInMillis))
+        let timeTrackingLinesXPosition = gui.configurations.sequencer.left + (gui.configurations.sequencer.width * (sequencer.timekeeping.currentTimeWithinCurrentLoop / sequencer.loopLengthInMillis))
 
         for (let timeTrackingLine of timeTrackingLines) {
             timeTrackingLine.position.x = timeTrackingLinesXPosition
@@ -221,16 +223,16 @@ window.onload = () => {
 
         // make circles get bigger when they play.
         for (let circle of allDrawnCircles) {
-            let radiusToSetUnplayedCircleTo = guiConfigurations.notes.unplayedCircleRadius
+            let radiusToSetUnplayedCircleTo = gui.configurations.notes.unplayedCircleRadius
             if (circleBeingMoved !== null && circleBeingMoved.guiData.label === circle.guiData.label) {
                 // if we are moving this circle, make its unplayed radius slightly bigger than normal
-                radiusToSetUnplayedCircleTo = guiConfigurations.notes.movingCircleRadius;
+                radiusToSetUnplayedCircleTo = gui.configurations.notes.movingCircleRadius;
             }
-            let circleResizeRange = guiConfigurations.sequencer.width / 25
+            let circleResizeRange = gui.configurations.sequencer.width / 25
             if (circle.translation.x <= timeTrackingLinesXPosition - circleResizeRange || circle.translation.x >= timeTrackingLinesXPosition + circleResizeRange) {
                 circle.radius = radiusToSetUnplayedCircleTo
             } else {
-                circle.radius = guiConfigurations.notes.playedCircleRadius
+                circle.radius = gui.configurations.notes.playedCircleRadius
             }
         }
 
@@ -244,7 +246,7 @@ window.onload = () => {
          */
         for (buttonName in lastButtonClickTimeTrackers) {
             let buttonClickTimeTracker = lastButtonClickTimeTrackers[buttonName]
-            if (sequencer.currentTime - buttonClickTimeTracker.lastClickTime > guiConfigurations.buttonBehavior.showClicksForHowManyMilliseconds) {
+            if (sequencer.currentTime - buttonClickTimeTracker.lastClickTime > gui.configurations.buttonBehavior.showClicksForHowManyMilliseconds) {
                 buttonClickTimeTracker.shape.fill = "transparent"
             }
         }
@@ -274,10 +276,10 @@ window.onload = () => {
              * (i.e. the sequence will update in real time even before the note being moved is released).
              */
             // check if the note is within range to be placed in the trash bin. if so, move the circle to the center of the trash bin.
-            centerOfTrashBinX = guiConfigurations.noteTrashBin.left + (guiConfigurations.noteTrashBin.width / 2)
-            centerOfTrashBinY = guiConfigurations.noteTrashBin.top + (guiConfigurations.noteTrashBin.height / 2)
-            let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= guiConfigurations.noteTrashBin.left - guiConfigurations.mouseEvents.notePlacementPadding) && (mouseX <= guiConfigurations.noteTrashBin.left + guiConfigurations.noteTrashBin.width + guiConfigurations.mouseEvents.notePlacementPadding)
-            let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= guiConfigurations.noteTrashBin.top - guiConfigurations.mouseEvents.notePlacementPadding) && (mouseY <= guiConfigurations.noteTrashBin.top + guiConfigurations.noteTrashBin.height + guiConfigurations.mouseEvents.notePlacementPadding)
+            centerOfTrashBinX = gui.configurations.noteTrashBin.left + (gui.configurations.noteTrashBin.width / 2)
+            centerOfTrashBinY = gui.configurations.noteTrashBin.top + (gui.configurations.noteTrashBin.height / 2)
+            let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= gui.configurations.noteTrashBin.left - gui.configurations.mouseEvents.notePlacementPadding) && (mouseX <= gui.configurations.noteTrashBin.left + gui.configurations.noteTrashBin.width + gui.configurations.mouseEvents.notePlacementPadding)
+            let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= gui.configurations.noteTrashBin.top - gui.configurations.mouseEvents.notePlacementPadding) && (mouseY <= gui.configurations.noteTrashBin.top + gui.configurations.noteTrashBin.height + gui.configurations.mouseEvents.notePlacementPadding)
             if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
                 circleBeingMoved.translation.x = centerOfTrashBinX
                 circleBeingMoved.translation.y = centerOfTrashBinY
@@ -290,23 +292,23 @@ window.onload = () => {
                 noteTrashBinContainer.stroke = 'transparent'
             }
             // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
-            let sequencerLeftBoundary = guiConfigurations.sequencer.left - guiConfigurations.mouseEvents.notePlacementPadding
-            let sequencerRightBoundary = (guiConfigurations.sequencer.left + guiConfigurations.sequencer.width) + guiConfigurations.mouseEvents.notePlacementPadding
-            let sequencerTopBoundary = guiConfigurations.sequencer.top - guiConfigurations.mouseEvents.notePlacementPadding
-            let sequencerBottomBoundary = guiConfigurations.sequencer.top + ((sequencer.numberOfRows - 1) * guiConfigurations.sequencer.spaceBetweenRows) + guiConfigurations.mouseEvents.notePlacementPadding
+            let sequencerLeftBoundary = gui.configurations.sequencer.left - gui.configurations.mouseEvents.notePlacementPadding
+            let sequencerRightBoundary = (gui.configurations.sequencer.left + gui.configurations.sequencer.width) + gui.configurations.mouseEvents.notePlacementPadding
+            let sequencerTopBoundary = gui.configurations.sequencer.top - gui.configurations.mouseEvents.notePlacementPadding
+            let sequencerBottomBoundary = gui.configurations.sequencer.top + ((sequencer.numberOfRows - 1) * gui.configurations.sequencer.spaceBetweenRows) + gui.configurations.mouseEvents.notePlacementPadding
             let withinHorizonalBoundaryOfSequencer = (mouseX >= sequencerLeftBoundary) && (mouseX <= sequencerRightBoundary)
             let withinVerticalBoundaryOfSequencer = (mouseY >= sequencerTopBoundary) && (mouseY <= sequencerBottomBoundary)
             if (withinHorizonalBoundaryOfSequencer && withinVerticalBoundaryOfSequencer) {
                 // if we get here, we know the circle is within the vertical and horizontal boundaries of the sequencer.
                 // next we want to do a more fine-grained calculation, for whether it is in range to be placed onto one of the sequencer lines.
                 for(let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
-                    rowActualVerticalLocation = guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)
-                    rowActualLeftBound = guiConfigurations.sequencer.left
-                    rowActualRightBound = guiConfigurations.sequencer.left + guiConfigurations.sequencer.width
-                    rowTopLimit = rowActualVerticalLocation - guiConfigurations.mouseEvents.notePlacementPadding
-                    rowBottomLimit = rowActualVerticalLocation + guiConfigurations.mouseEvents.notePlacementPadding
-                    rowLeftLimit = rowActualLeftBound - guiConfigurations.mouseEvents.notePlacementPadding
-                    rowRightLimit = rowActualRightBound + guiConfigurations.mouseEvents.notePlacementPadding
+                    rowActualVerticalLocation = gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows)
+                    rowActualLeftBound = gui.configurations.sequencer.left
+                    rowActualRightBound = gui.configurations.sequencer.left + gui.configurations.sequencer.width
+                    rowTopLimit = rowActualVerticalLocation - gui.configurations.mouseEvents.notePlacementPadding
+                    rowBottomLimit = rowActualVerticalLocation + gui.configurations.mouseEvents.notePlacementPadding
+                    rowLeftLimit = rowActualLeftBound - gui.configurations.mouseEvents.notePlacementPadding
+                    rowRightLimit = rowActualRightBound + gui.configurations.mouseEvents.notePlacementPadding
                     if (mouseX >= rowLeftLimit && mouseX <= rowRightLimit && mouseY >= rowTopLimit && mouseY <= rowBottomLimit) {
                         // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
                         if (sequencer.rows[rowIndex].quantized === true) {
@@ -325,8 +327,8 @@ window.onload = () => {
                 }
             } else {
                 // new secondary trash bin logic: if the note is far enough away from the sequencer, we will throw it out
-                let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - guiConfigurations.mouseEvents.throwNoteAwaySidesPadding) || (mouseX >= sequencerRightBoundary + guiConfigurations.mouseEvents.throwNoteAwaySidesPadding)
-                let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - guiConfigurations.mouseEvents.throwNoteAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + guiConfigurations.mouseEvents.throwNoteAwayTopAndBottomPadding)
+                let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - gui.configurations.mouseEvents.throwNoteAwaySidesPadding) || (mouseX >= sequencerRightBoundary + gui.configurations.mouseEvents.throwNoteAwaySidesPadding)
+                let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - gui.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + gui.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding)
                 if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
                     circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
                     circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
@@ -344,9 +346,9 @@ window.onload = () => {
             let circle = sequencerRowHandles[selectedRowIndex]
             circle.stroke = 'black'
             circle.linewidth = 2
-            circle.fill = guiConfigurations.sequencerRowHandles.selectedColor
+            circle.fill = gui.configurations.sequencerRowHandles.selectedColor
             let rowSelectionRectangle = sequencerRowSelectionRectangles[selectedRowIndex]
-            rowSelectionRectangle.stroke = guiConfigurations.sequencerRowHandles.selectedColor
+            rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.selectedColor
             domElements.images.trashClosedIcon.style.display = 'block'
             domElements.images.trashOpenIcon.style.display = 'none'
 
@@ -354,10 +356,10 @@ window.onload = () => {
             sequencerRowHandles[selectedRowIndex].translation.y = mouseY
 
             // check if the row handle is within range to be placed in the trash bin. if so, move the handle to the center of the trash bin.
-            centerOfTrashBinX = guiConfigurations.noteTrashBin.left + (guiConfigurations.noteTrashBin.width / 2)
-            centerOfTrashBinY = guiConfigurations.noteTrashBin.top + (guiConfigurations.noteTrashBin.height / 2)
-            let withinHorizontalBoundaryOfTrashBin = (mouseX >= guiConfigurations.noteTrashBin.left - guiConfigurations.mouseEvents.notePlacementPadding) && (mouseX <= guiConfigurations.noteTrashBin.left + guiConfigurations.noteTrashBin.width + guiConfigurations.mouseEvents.notePlacementPadding)
-            let withinVerticalBoundaryOfTrashBin = (mouseY >= guiConfigurations.noteTrashBin.top - guiConfigurations.mouseEvents.notePlacementPadding) && (mouseY <= guiConfigurations.noteTrashBin.top + guiConfigurations.noteTrashBin.height + guiConfigurations.mouseEvents.notePlacementPadding)
+            centerOfTrashBinX = gui.configurations.noteTrashBin.left + (gui.configurations.noteTrashBin.width / 2)
+            centerOfTrashBinY = gui.configurations.noteTrashBin.top + (gui.configurations.noteTrashBin.height / 2)
+            let withinHorizontalBoundaryOfTrashBin = (mouseX >= gui.configurations.noteTrashBin.left - gui.configurations.mouseEvents.notePlacementPadding) && (mouseX <= gui.configurations.noteTrashBin.left + gui.configurations.noteTrashBin.width + gui.configurations.mouseEvents.notePlacementPadding)
+            let withinVerticalBoundaryOfTrashBin = (mouseY >= gui.configurations.noteTrashBin.top - gui.configurations.mouseEvents.notePlacementPadding) && (mouseY <= gui.configurations.noteTrashBin.top + gui.configurations.noteTrashBin.height + gui.configurations.mouseEvents.notePlacementPadding)
             if (withinHorizontalBoundaryOfTrashBin && withinVerticalBoundaryOfTrashBin) {
                 circle.translation.x = centerOfTrashBinX
                 circle.translation.y = centerOfTrashBinY
@@ -386,12 +388,12 @@ window.onload = () => {
             }
 
             // if the row is far enough away from the sequencer, we will throw it out
-            let sequencerLeftBoundary = guiConfigurations.sequencer.left - guiConfigurations.mouseEvents.notePlacementPadding
-            let sequencerRightBoundary = (guiConfigurations.sequencer.left + guiConfigurations.sequencer.width) + guiConfigurations.mouseEvents.notePlacementPadding
-            let sequencerTopBoundary = guiConfigurations.sequencer.top - guiConfigurations.mouseEvents.notePlacementPadding
-            let sequencerBottomBoundary = guiConfigurations.sequencer.top + ((sequencer.numberOfRows - 1) * guiConfigurations.sequencer.spaceBetweenRows) + guiConfigurations.mouseEvents.notePlacementPadding
-            let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - guiConfigurations.mouseEvents.throwRowAwaySidesPadding) || (mouseX >= sequencerRightBoundary + guiConfigurations.mouseEvents.throwRowAwaySidesPadding)
-            let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - guiConfigurations.mouseEvents.throwRowAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + guiConfigurations.mouseEvents.throwRowAwayTopAndBottomPadding)
+            let sequencerLeftBoundary = gui.configurations.sequencer.left - gui.configurations.mouseEvents.notePlacementPadding
+            let sequencerRightBoundary = (gui.configurations.sequencer.left + gui.configurations.sequencer.width) + gui.configurations.mouseEvents.notePlacementPadding
+            let sequencerTopBoundary = gui.configurations.sequencer.top - gui.configurations.mouseEvents.notePlacementPadding
+            let sequencerBottomBoundary = gui.configurations.sequencer.top + ((sequencer.numberOfRows - 1) * gui.configurations.sequencer.spaceBetweenRows) + gui.configurations.mouseEvents.notePlacementPadding
+            let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - gui.configurations.mouseEvents.throwRowAwaySidesPadding) || (mouseX >= sequencerRightBoundary + gui.configurations.mouseEvents.throwRowAwaySidesPadding)
+            let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - gui.configurations.mouseEvents.throwRowAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + gui.configurations.mouseEvents.throwRowAwayTopAndBottomPadding)
             if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
                 circle.stroke = "red"
                 rowSelectionRectangle.stroke = "red"
@@ -405,12 +407,12 @@ window.onload = () => {
                 if (rowIndex === selectedRowIndex) {
                     continue;
                 }
-                let rowHandleActualVerticalLocation = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * rowIndex) + guiConfigurations.sequencerRowHandles.topPadding;
-                let rowHandleActualHorizontalLocation = guiConfigurations.sequencer.left + guiConfigurations.sequencerRowHandles.leftPadding;
-                let topLimit = rowHandleActualVerticalLocation - guiConfigurations.mouseEvents.notePlacementPadding
-                let bottomLimit = rowHandleActualVerticalLocation + guiConfigurations.mouseEvents.notePlacementPadding
-                let leftLimit = rowHandleActualHorizontalLocation - guiConfigurations.mouseEvents.notePlacementPadding
-                let rightLimit = rowHandleActualHorizontalLocation + guiConfigurations.mouseEvents.notePlacementPadding + guiConfigurations.sequencer.width
+                let rowHandleActualVerticalLocation = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * rowIndex) + gui.configurations.sequencerRowHandles.topPadding;
+                let rowHandleActualHorizontalLocation = gui.configurations.sequencer.left + gui.configurations.sequencerRowHandles.leftPadding;
+                let topLimit = rowHandleActualVerticalLocation - gui.configurations.mouseEvents.notePlacementPadding
+                let bottomLimit = rowHandleActualVerticalLocation + gui.configurations.mouseEvents.notePlacementPadding
+                let leftLimit = rowHandleActualHorizontalLocation - gui.configurations.mouseEvents.notePlacementPadding
+                let rightLimit = rowHandleActualHorizontalLocation + gui.configurations.mouseEvents.notePlacementPadding + gui.configurations.sequencer.width
 
                 if (mouseX >= leftLimit && mouseX <= rightLimit && mouseY >= topLimit && mouseY <= bottomLimit) {
                     sequencer.moveRowToNewIndex(selectedRowIndex, rowIndex);
@@ -509,7 +511,7 @@ window.onload = () => {
                     drawNoteBankCircleForSample(circleBeingMoved.guiData.sampleName) // if the note was taken from the sound bank, refill the sound bank
                 }
                 // convert the note's new y position into a sequencer timestamp, and set the node's 'priority' to its new timestamp
-                let newNodeTimestampMillis = sequencer.loopLengthInMillis * ((circleNewXPosition - guiConfigurations.sequencer.left) / guiConfigurations.sequencer.width)
+                let newNodeTimestampMillis = sequencer.loopLengthInMillis * ((circleNewXPosition - gui.configurations.sequencer.left) / gui.configurations.sequencer.width)
                 node.priority = newNodeTimestampMillis
                 // add the moved note to its new sequencer row
                 sequencer.rows[circleBeingMovedNewRow].insertNode(node, circleBeingMoved.guiData.label)
@@ -562,42 +564,42 @@ window.onload = () => {
             return;
         }
         // "add row" button icon
-        domElements.images.addIcon.style.width = "" + guiConfigurations.addRowButton.icon.width + "px"
-        domElements.images.addIcon.style.height = "" + guiConfigurations.addRowButton.icon.height + "px"
-        let addRowButtonTop = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + guiConfigurations.addRowButton.topPadding
-        let addRowButtonLeft = guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width / 2) + guiConfigurations.addRowButton.leftPadding - (guiConfigurations.addRowButton.width / 2)
+        domElements.images.addIcon.style.width = "" + gui.configurations.addRowButton.icon.width + "px"
+        domElements.images.addIcon.style.height = "" + gui.configurations.addRowButton.icon.height + "px"
+        let addRowButtonTop = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding
+        let addRowButtonLeft = gui.configurations.sequencer.left + (gui.configurations.sequencer.width / 2) + gui.configurations.addRowButton.leftPadding - (gui.configurations.addRowButton.width / 2)
         domElements.images.addIcon.style.top = "" + (addRowButtonTop) + "px"
         domElements.images.addIcon.style.left = "" + (addRowButtonLeft) + "px"
         // trash bin icon: open
-        domElements.images.trashOpenIcon.style.width = "" + guiConfigurations.noteTrashBin.icon.width + "px"
-        domElements.images.trashOpenIcon.style.height = "" + guiConfigurations.noteTrashBin.icon.height + "px"
-        domElements.images.trashOpenIcon.style.left = "" + guiConfigurations.noteTrashBin.left + "px"
-        domElements.images.trashOpenIcon.style.top = "" + guiConfigurations.noteTrashBin.top + "px"
+        domElements.images.trashOpenIcon.style.width = "" + gui.configurations.noteTrashBin.icon.width + "px"
+        domElements.images.trashOpenIcon.style.height = "" + gui.configurations.noteTrashBin.icon.height + "px"
+        domElements.images.trashOpenIcon.style.left = "" + gui.configurations.noteTrashBin.left + "px"
+        domElements.images.trashOpenIcon.style.top = "" + gui.configurations.noteTrashBin.top + "px"
         // trash bin icon: closed
-        domElements.images.trashClosedIcon.style.width = "" + guiConfigurations.noteTrashBin.icon.width + "px"
-        domElements.images.trashClosedIcon.style.height = "" + guiConfigurations.noteTrashBin.icon.height + "px"
-        domElements.images.trashClosedIcon.style.left = "" + guiConfigurations.noteTrashBin.left + "px"
-        domElements.images.trashClosedIcon.style.top = "" + guiConfigurations.noteTrashBin.top + "px"
+        domElements.images.trashClosedIcon.style.width = "" + gui.configurations.noteTrashBin.icon.width + "px"
+        domElements.images.trashClosedIcon.style.height = "" + gui.configurations.noteTrashBin.icon.height + "px"
+        domElements.images.trashClosedIcon.style.left = "" + gui.configurations.noteTrashBin.left + "px"
+        domElements.images.trashClosedIcon.style.top = "" + gui.configurations.noteTrashBin.top + "px"
         // "clear all rows" button
-        domElements.images.clearAllIcon.style.width = "" + guiConfigurations.clearAllNotesButton.icon.width + "px"
-        domElements.images.clearAllIcon.style.height = "" + guiConfigurations.clearAllNotesButton.icon.height + "px"
-        domElements.images.clearAllIcon.style.left = "" + guiConfigurations.clearAllNotesButton.left + "px"
-        domElements.images.clearAllIcon.style.top = "" + guiConfigurations.clearAllNotesButton.top + "px"
+        domElements.images.clearAllIcon.style.width = "" + gui.configurations.clearAllNotesButton.icon.width + "px"
+        domElements.images.clearAllIcon.style.height = "" + gui.configurations.clearAllNotesButton.icon.height + "px"
+        domElements.images.clearAllIcon.style.left = "" + gui.configurations.clearAllNotesButton.left + "px"
+        domElements.images.clearAllIcon.style.top = "" + gui.configurations.clearAllNotesButton.top + "px"
         // restart
-        domElements.images.restartIcon.style.width = "" + guiConfigurations.restartSequencerButton.icon.width + "px"
-        domElements.images.restartIcon.style.height = "" + guiConfigurations.restartSequencerButton.icon.height + "px"
-        domElements.images.restartIcon.style.left = "" + guiConfigurations.restartSequencerButton.left + "px"
-        domElements.images.restartIcon.style.top = "" + guiConfigurations.restartSequencerButton.top + "px"
+        domElements.images.restartIcon.style.width = "" + gui.configurations.restartSequencerButton.icon.width + "px"
+        domElements.images.restartIcon.style.height = "" + gui.configurations.restartSequencerButton.icon.height + "px"
+        domElements.images.restartIcon.style.left = "" + gui.configurations.restartSequencerButton.left + "px"
+        domElements.images.restartIcon.style.top = "" + gui.configurations.restartSequencerButton.top + "px"
         // pause
-        domElements.images.pauseIcon.style.width = "" + guiConfigurations.pauseButton.icon.width + "px"
-        domElements.images.pauseIcon.style.height = "" + guiConfigurations.pauseButton.icon.height + "px"
-        domElements.images.pauseIcon.style.left = "" + guiConfigurations.pauseButton.left + "px"
-        domElements.images.pauseIcon.style.top = "" + guiConfigurations.pauseButton.top + "px"
+        domElements.images.pauseIcon.style.width = "" + gui.configurations.pauseButton.icon.width + "px"
+        domElements.images.pauseIcon.style.height = "" + gui.configurations.pauseButton.icon.height + "px"
+        domElements.images.pauseIcon.style.left = "" + gui.configurations.pauseButton.left + "px"
+        domElements.images.pauseIcon.style.top = "" + gui.configurations.pauseButton.top + "px"
         // play
-        domElements.images.playIcon.style.width = "" + guiConfigurations.pauseButton.icon.width + "px"
-        domElements.images.playIcon.style.height = "" + guiConfigurations.pauseButton.icon.height + "px"
-        domElements.images.playIcon.style.left = "" + guiConfigurations.pauseButton.left + "px"
-        domElements.images.playIcon.style.top = "" + guiConfigurations.pauseButton.top + "px"
+        domElements.images.playIcon.style.width = "" + gui.configurations.pauseButton.icon.width + "px"
+        domElements.images.playIcon.style.height = "" + gui.configurations.pauseButton.icon.height + "px"
+        domElements.images.playIcon.style.left = "" + gui.configurations.pauseButton.left + "px"
+        domElements.images.playIcon.style.top = "" + gui.configurations.pauseButton.top + "px"
         // clear row buttons -- one per row
         for (icon of clearRowIcons) {
             icon.remove();
@@ -609,10 +611,10 @@ window.onload = () => {
             // make the copy visible
             clearRowIcon.style.display = 'block'
             // set the copy's position -- we will have one per row
-            clearRowIcon.style.width = "" + guiConfigurations.clearRowButtons.icon.width + "px";
-            clearRowIcon.style.height = "" + guiConfigurations.clearRowButtons.icon.height + "px"
-            clearRowIcon.style.left = "" + (guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + guiConfigurations.clearRowButtons.leftPaddingPerRow) + "px"
-            clearRowIcon.style.top = "" + (guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows) + guiConfigurations.clearRowButtons.topPaddingPerRow) + "px"
+            clearRowIcon.style.width = "" + gui.configurations.clearRowButtons.icon.width + "px";
+            clearRowIcon.style.height = "" + gui.configurations.clearRowButtons.icon.height + "px"
+            clearRowIcon.style.left = "" + (gui.configurations.sequencer.left + gui.configurations.sequencer.width + gui.configurations.clearRowButtons.leftPaddingPerRow) + "px"
+            clearRowIcon.style.top = "" + (gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows) + gui.configurations.clearRowButtons.topPaddingPerRow) + "px"
             // add event listeners to our icon
             clearRowIcon.removeEventListener('click', (event) => {
                 clearRowButtonClickHandler(event, rowIndex)
@@ -651,14 +653,14 @@ window.onload = () => {
                 unlockedIcon.style.display = 'block'
             }
             // put each lock icon into the right place, resize it, etc.
-            let lockIconsVerticalPosition = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * rowIndex) + guiConfigurations.subdivionLineTextInputs.topPaddingPerRow + guiConfigurations.quantizationButtons.icon.topPaddingPerRow
-            let lockIconsHorizontalPosition = guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + guiConfigurations.quantizationButtons.icon.leftPaddingPerRow
-            lockedIcon.style.width = "" + guiConfigurations.quantizationButtons.icon.width + "px"
-            lockedIcon.style.height = "" + guiConfigurations.quantizationButtons.icon.height + "px"
+            let lockIconsVerticalPosition = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * rowIndex) + gui.configurations.subdivionLineTextInputs.topPaddingPerRow + gui.configurations.quantizationButtons.icon.topPaddingPerRow
+            let lockIconsHorizontalPosition = gui.configurations.sequencer.left + gui.configurations.sequencer.width + gui.configurations.quantizationButtons.icon.leftPaddingPerRow
+            lockedIcon.style.width = "" + gui.configurations.quantizationButtons.icon.width + "px"
+            lockedIcon.style.height = "" + gui.configurations.quantizationButtons.icon.height + "px"
             lockedIcon.style.left = "" + lockIconsHorizontalPosition + "px"
             lockedIcon.style.top = "" + lockIconsVerticalPosition + "px"
-            unlockedIcon.style.width = "" + guiConfigurations.quantizationButtons.icon.width + "px"
-            unlockedIcon.style.height = "" + guiConfigurations.quantizationButtons.icon.height + "px"
+            unlockedIcon.style.width = "" + gui.configurations.quantizationButtons.icon.width + "px"
+            unlockedIcon.style.height = "" + gui.configurations.quantizationButtons.icon.height + "px"
             unlockedIcon.style.left = "" + lockIconsHorizontalPosition + "px"
             unlockedIcon.style.top = "" + lockIconsVerticalPosition + "px"
             // add event listeners
@@ -708,8 +710,8 @@ window.onload = () => {
         }
         quantizationCheckboxes = []
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            let verticalPosition = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * rowIndex) + guiConfigurations.subdivionLineTextInputs.topPaddingPerRow + 4
-            let horizontalPosition = guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + 73
+            let verticalPosition = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * rowIndex) + gui.configurations.subdivionLineTextInputs.topPaddingPerRow + 4
+            let horizontalPosition = gui.configurations.sequencer.left + gui.configurations.sequencer.width + 73
             let checkbox = initializeCheckbox(verticalPosition, horizontalPosition)
             if (sequencer.rows[rowIndex].quantized) {
                 checkbox.checked = true;
@@ -766,8 +768,8 @@ window.onload = () => {
      * number. that will be handled elsewhere.
      */
     function getIndexOfClosestSubdivisionLine(mouseX, numberOfSubdivisions) {
-        let sequencerLeftEdge = guiConfigurations.sequencer.left
-        let widthOfEachSubdivision = guiConfigurations.sequencer.width / numberOfSubdivisions
+        let sequencerLeftEdge = gui.configurations.sequencer.left
+        let widthOfEachSubdivision = gui.configurations.sequencer.width / numberOfSubdivisions
         let mouseXWithinSequencer = mouseX - sequencerLeftEdge
         let subdivisionNumberToLeftOfMouse = Math.floor(mouseXWithinSequencer / widthOfEachSubdivision)
         let mouseIsCloserToRightSubdivisionThanLeft = (mouseXWithinSequencer % widthOfEachSubdivision) > (widthOfEachSubdivision / 2)
@@ -789,8 +791,8 @@ window.onload = () => {
      * above, where we find the x coordinate for a given beat number.
      */
     function getXPositionOfSubdivisionLine(subdivisionIndex, numberOfSubdivisions) {
-        let sequencerLeftEdge = guiConfigurations.sequencer.left
-        let widthOfEachSubdivision = guiConfigurations.sequencer.width / numberOfSubdivisions
+        let sequencerLeftEdge = gui.configurations.sequencer.left
+        let widthOfEachSubdivision = gui.configurations.sequencer.width / numberOfSubdivisions
         return sequencerLeftEdge + (widthOfEachSubdivision * subdivisionIndex)
     }
 
@@ -906,8 +908,8 @@ window.onload = () => {
         for(let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
             let noteToDraw = sequencer.rows[sequencerRowIndex]._notesList.head // we are reading notes lists directly so that we can draw them, but making no changes to them
             while (noteToDraw !== null) {
-                let xPosition = guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width * (noteToDraw.priority / sequencer.loopLengthInMillis))
-                let yPosition = guiConfigurations.sequencer.top + (sequencerRowIndex * guiConfigurations.sequencer.spaceBetweenRows)
+                let xPosition = gui.configurations.sequencer.left + (gui.configurations.sequencer.width * (noteToDraw.priority / sequencer.loopLengthInMillis))
+                let yPosition = gui.configurations.sequencer.top + (sequencerRowIndex * gui.configurations.sequencer.spaceBetweenRows)
                 let sampleName = noteToDraw.data.sampleName
                 let row = sequencerRowIndex
                 let label = noteToDraw.label
@@ -928,8 +930,8 @@ window.onload = () => {
         if (indexOfSampleInNoteBank === -1) { // we don't expect to reach this case, where the given sample isn't found in the sample names list
             throw "unexpected problem: couldn't find the given sample in the sample list when trying to add it to the note bank. was looking for sample name: " + sampleName + ". expected sample name to be one of: " + sampleNameList + "."
         }
-        let xPosition = guiConfigurations.sampleBank.left + guiConfigurations.sampleBank.borderPadding + (guiConfigurations.notes.unplayedCircleRadius / 2)
-        let yPosition = guiConfigurations.sampleBank.top + guiConfigurations.sampleBank.borderPadding + (indexOfSampleInNoteBank * guiConfigurations.notes.unplayedCircleRadius) + (indexOfSampleInNoteBank * guiConfigurations.sampleBank.spaceBetweenNotes)
+        let xPosition = gui.configurations.sampleBank.left + gui.configurations.sampleBank.borderPadding + (gui.configurations.notes.unplayedCircleRadius / 2)
+        let yPosition = gui.configurations.sampleBank.top + gui.configurations.sampleBank.borderPadding + (indexOfSampleInNoteBank * gui.configurations.notes.unplayedCircleRadius) + (indexOfSampleInNoteBank * gui.configurations.sampleBank.spaceBetweenNotes)
         let row = NOTE_BANK_ROW_NUMBER // for cirlces on the note bank, the circle is not in a real row yet, so use -2 as a placeholder row number
         /**
          * the top note in the note bank will have label '-1', next one down will be '-2', etc.
@@ -946,7 +948,7 @@ window.onload = () => {
     // add the newly created circle to the list of all drawn cricles.
     function drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat) {
         // initialize the new circle and set its colors
-        let circle = two.makeCircle(xPosition, yPosition, guiConfigurations.notes.unplayedCircleRadius)
+        let circle = two.makeCircle(xPosition, yPosition, gui.configurations.notes.unplayedCircleRadius)
         circle.fill = samples[sampleName].color
         circle.stroke = 'transparent'
 
@@ -1030,13 +1032,13 @@ window.onload = () => {
     function initializeSequencerRowLine(rowIndex) {
         let sequencerRowLine = two.makePath(
             [
-                new Two.Anchor(guiConfigurations.sequencer.left, guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
-                new Two.Anchor(guiConfigurations.sequencer.left + guiConfigurations.sequencer.width, guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
+                new Two.Anchor(gui.configurations.sequencer.left, gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows)),
+                new Two.Anchor(gui.configurations.sequencer.left + gui.configurations.sequencer.width, gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows)),
             ], 
             false
         );
-        sequencerRowLine.linewidth = guiConfigurations.sequencer.lineWidth;
-        sequencerRowLine.stroke = guiConfigurations.sequencer.color
+        sequencerRowLine.linewidth = gui.configurations.sequencer.lineWidth;
+        sequencerRowLine.stroke = gui.configurations.sequencer.color
         return sequencerRowLine
     }
 
@@ -1070,17 +1072,17 @@ window.onload = () => {
         if (sequencer.rows[rowIndex].getNumberOfSubdivisions() <= 0) {
             return [] // don't draw subdivisions for this row if it has 0 or fewer subdivisions
         }
-        let xIncrementBetweenSubdivisions = guiConfigurations.sequencer.width / sequencer.rows[rowIndex].getNumberOfSubdivisions()
+        let xIncrementBetweenSubdivisions = gui.configurations.sequencer.width / sequencer.rows[rowIndex].getNumberOfSubdivisions()
         for (let subdivisionsDrawnForRow = 0; subdivisionsDrawnForRow < sequencer.rows[rowIndex].getNumberOfSubdivisions(); subdivisionsDrawnForRow++) {
             let subdivisionLine = two.makePath(
                 [
-                    new Two.Anchor(guiConfigurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), guiConfigurations.sequencer.top - 1 + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
-                    new Two.Anchor(guiConfigurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows) + guiConfigurations.subdivisionLines.height),
+                    new Two.Anchor(gui.configurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), gui.configurations.sequencer.top - 1 + (rowIndex * gui.configurations.sequencer.spaceBetweenRows)),
+                    new Two.Anchor(gui.configurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows) + gui.configurations.subdivisionLines.height),
                 ], 
                 false
             );
-            subdivisionLine.linewidth = guiConfigurations.sequencer.lineWidth;
-            subdivisionLine.stroke = guiConfigurations.subdivisionLines.color
+            subdivisionLine.linewidth = gui.configurations.sequencer.lineWidth;
+            subdivisionLine.stroke = gui.configurations.subdivisionLines.color
 
             subdivisionLinesForRow.push(subdivisionLine) // keep a list of all subdivision lines for the current row
         }
@@ -1119,17 +1121,17 @@ window.onload = () => {
         if (sequencer.rows[rowIndex].getNumberOfReferenceLines() <= 0) {
             return [] // don't draw reference lines for this row if it has 0 or fewer
         }
-        let xIncrementBetweenLines = guiConfigurations.sequencer.width / sequencer.rows[rowIndex].getNumberOfReferenceLines()
+        let xIncrementBetweenLines = gui.configurations.sequencer.width / sequencer.rows[rowIndex].getNumberOfReferenceLines()
         for (let linesDrawnForRow = 0; linesDrawnForRow < sequencer.rows[rowIndex].getNumberOfReferenceLines(); linesDrawnForRow++) {
             let referenceLine = two.makePath(
                 [
-                    new Two.Anchor(guiConfigurations.sequencer.left + (xIncrementBetweenLines * linesDrawnForRow), guiConfigurations.sequencer.top - 1 + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
-                    new Two.Anchor(guiConfigurations.sequencer.left + (xIncrementBetweenLines * linesDrawnForRow), guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows) - guiConfigurations.referenceLines.height),
+                    new Two.Anchor(gui.configurations.sequencer.left + (xIncrementBetweenLines * linesDrawnForRow), gui.configurations.sequencer.top - 1 + (rowIndex * gui.configurations.sequencer.spaceBetweenRows)),
+                    new Two.Anchor(gui.configurations.sequencer.left + (xIncrementBetweenLines * linesDrawnForRow), gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows) - gui.configurations.referenceLines.height),
                 ], 
                 false
             );
-            referenceLine.linewidth = guiConfigurations.sequencer.lineWidth;
-            referenceLine.stroke = guiConfigurations.referenceLines.color
+            referenceLine.linewidth = gui.configurations.sequencer.lineWidth;
+            referenceLine.stroke = gui.configurations.referenceLines.color
 
             referenceLinesForRow.push(referenceLine) // keep a list of all reference lines for the current row
         }
@@ -1158,13 +1160,13 @@ window.onload = () => {
     function initializeTimeTrackingLineForRow(rowIndex) {
         let line = two.makePath(
             [
-                new Two.Anchor(guiConfigurations.sequencer.left, guiConfigurations.sequencer.top + guiConfigurations.timeTrackingLines.height + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
-                new Two.Anchor(guiConfigurations.sequencer.left, guiConfigurations.sequencer.top - guiConfigurations.timeTrackingLines.height + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows)),
+                new Two.Anchor(gui.configurations.sequencer.left, gui.configurations.sequencer.top + gui.configurations.timeTrackingLines.height + (rowIndex * gui.configurations.sequencer.spaceBetweenRows)),
+                new Two.Anchor(gui.configurations.sequencer.left, gui.configurations.sequencer.top - gui.configurations.timeTrackingLines.height + (rowIndex * gui.configurations.sequencer.spaceBetweenRows)),
             ], 
             false
         );
-        line.linewidth = guiConfigurations.sequencer.lineWidth;
-        line.stroke = guiConfigurations.timeTrackingLines.color // 'black'
+        line.linewidth = gui.configurations.sequencer.lineWidth;
+        line.stroke = gui.configurations.timeTrackingLines.color // 'black'
 
         return line
     }
@@ -1172,11 +1174,11 @@ window.onload = () => {
     // draw the physical note bank container on the screen. for now that's just a rectangle.
     // return the note bank shape. this will be a Two.js path object.
     function initializeNoteBankContainer() {
-        let width  = guiConfigurations.notes.unplayedCircleRadius + (guiConfigurations.sampleBank.borderPadding * 2)
-        let height = (guiConfigurations.notes.unplayedCircleRadius * (sampleNameList.length - 1)) + ((sampleNameList.length - 1) * guiConfigurations.sampleBank.spaceBetweenNotes) + (guiConfigurations.sampleBank.borderPadding * 2)
-        let noteBankContainer = initializeRectangleShape(guiConfigurations.sampleBank.top, guiConfigurations.sampleBank.left, height, width)
-        noteBankContainer.linewidth = guiConfigurations.sequencer.lineWidth;
-        noteBankContainer.stroke = guiConfigurations.sequencer.color
+        let width  = gui.configurations.notes.unplayedCircleRadius + (gui.configurations.sampleBank.borderPadding * 2)
+        let height = (gui.configurations.notes.unplayedCircleRadius * (sampleNameList.length - 1)) + ((sampleNameList.length - 1) * gui.configurations.sampleBank.spaceBetweenNotes) + (gui.configurations.sampleBank.borderPadding * 2)
+        let noteBankContainer = initializeRectangleShape(gui.configurations.sampleBank.top, gui.configurations.sampleBank.left, height, width)
+        noteBankContainer.linewidth = gui.configurations.sequencer.lineWidth;
+        noteBankContainer.stroke = gui.configurations.sequencer.color
         noteBankContainer.fill = 'transparent'
         return noteBankContainer
     }
@@ -1184,8 +1186,8 @@ window.onload = () => {
     // draw the 'trash bin' for throwing out (deleting) notes. for now it's just
     // a red rectangle, will make it something better for user experience later.
     function initializeNoteTrashBinContainer() {
-        let noteTrashBinContainer = initializeRectangleShape(guiConfigurations.noteTrashBin.top, guiConfigurations.noteTrashBin.left, guiConfigurations.noteTrashBin.height, guiConfigurations.noteTrashBin.width)
-        noteTrashBinContainer.linewidth = guiConfigurations.sequencer.lineWidth
+        let noteTrashBinContainer = initializeRectangleShape(gui.configurations.noteTrashBin.top, gui.configurations.noteTrashBin.left, gui.configurations.noteTrashBin.height, gui.configurations.noteTrashBin.width)
+        noteTrashBinContainer.linewidth = gui.configurations.sequencer.lineWidth
         noteTrashBinContainer.stroke = 'transparent'
         noteTrashBinContainer.fill = 'transparent'
         return noteTrashBinContainer
@@ -1204,15 +1206,15 @@ window.onload = () => {
 
     function pauseButtonClickHandler(event) {
         lastButtonClickTimeTrackers.pause.lastClickTime = sequencer.currentTime
-        pauseButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
+        pauseButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         togglePaused()
     }
 
     function initializeRectangleShape(top, left, height, width, radius=4) {
         // new button rectangle: make a rectangle with rounded corners
         button = two.makeRoundedRectangle(left + (width / 2), top + (height / 2), width, height, radius)
-        button.linewidth = guiConfigurations.sequencer.lineWidth
-        button.stroke = guiConfigurations.sequencer.color
+        button.linewidth = gui.configurations.sequencer.lineWidth
+        button.stroke = gui.configurations.sequencer.color
         button.fill = 'transparent'
         return button
     }
@@ -1220,8 +1222,8 @@ window.onload = () => {
     function initializeButtonPerSequencerRow(topPaddingPerRow, leftPaddingPerRow, height, width) {
         shapes = []
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            let top = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * rowIndex) + topPaddingPerRow
-            let left = guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + leftPaddingPerRow
+            let top = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * rowIndex) + topPaddingPerRow
+            let left = gui.configurations.sequencer.left + gui.configurations.sequencer.width + leftPaddingPerRow
             shapes[rowIndex] = initializeRectangleShape(top, left, height, width)
         }
         return shapes
@@ -1233,11 +1235,11 @@ window.onload = () => {
     function initializeSequencerRowHandles() {
         let allCircles = []
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            let horizontalPosition = guiConfigurations.sequencer.left + guiConfigurations.sequencerRowHandles.leftPadding
-            let verticalPosition = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * rowIndex) + guiConfigurations.sequencerRowHandles.topPadding
-            let radius = guiConfigurations.sequencerRowHandles.radius
+            let horizontalPosition = gui.configurations.sequencer.left + gui.configurations.sequencerRowHandles.leftPadding
+            let verticalPosition = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * rowIndex) + gui.configurations.sequencerRowHandles.topPadding
+            let radius = gui.configurations.sequencerRowHandles.radius
             let circle = two.makeCircle(horizontalPosition, verticalPosition, radius);
-            circle.fill = guiConfigurations.sequencerRowHandles.unselectedColor
+            circle.fill = gui.configurations.sequencerRowHandles.unselectedColor
             circle.stroke = "transparent"
             allCircles.push(circle)
         }
@@ -1250,10 +1252,10 @@ window.onload = () => {
     function initializeSequencerRowSelectionRectangles() {
         allRectangles = []
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            let top = guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * rowIndex) + guiConfigurations.sequencerRowSelections.topPadding
-            let left = guiConfigurations.sequencer.left + guiConfigurations.sequencerRowSelections.leftPadding
-            let width = guiConfigurations.sequencer.width + guiConfigurations.sequencerRowSelections.width
-            let height = guiConfigurations.sequencerRowSelections.height
+            let top = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * rowIndex) + gui.configurations.sequencerRowSelections.topPadding
+            let left = gui.configurations.sequencer.left + gui.configurations.sequencerRowSelections.leftPadding
+            let width = gui.configurations.sequencer.width + gui.configurations.sequencerRowSelections.width
+            let height = gui.configurations.sequencerRowSelections.height
             let rectangle = initializeRectangleShape(top, left, height, width);
             rectangle.stroke = 'transparent'
             allRectangles.push(rectangle)
@@ -1271,14 +1273,14 @@ window.onload = () => {
                 if (selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
                     circle.stroke = 'black'
                     circle.linewidth = 2
-                    circle.fill = guiConfigurations.sequencerRowHandles.unselectedColor
-                    rowSelectionRectangle.stroke = guiConfigurations.sequencerRowHandles.unselectedColor
+                    circle.fill = gui.configurations.sequencerRowHandles.unselectedColor
+                    rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.unselectedColor
                 }
             });
             // remove border from circle when mouse is no longer over it
             circle._renderer.elem.addEventListener('mouseleave', (event) => {
                 circle.stroke = 'transparent'
-                circle.fill = guiConfigurations.sequencerRowHandles.unselectedColor
+                circle.fill = gui.configurations.sequencerRowHandles.unselectedColor
                 rowSelectionRectangle.stroke = 'transparent'
             });
             // when you hold your mouse down on the row handle circle, select that row.
@@ -1294,8 +1296,8 @@ window.onload = () => {
             circle._renderer.elem.addEventListener('mouseup', (event) => {
                 circle.stroke = 'black'
                 circle.linewidth = 2
-                circle.fill = guiConfigurations.sequencerRowHandles.unselectedColor
-                rowSelectionRectangle.stroke = guiConfigurations.sequencerRowHandles.unselectedColor
+                circle.fill = gui.configurations.sequencerRowHandles.unselectedColor
+                rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.unselectedColor
             });
         }
     }
@@ -1352,9 +1354,9 @@ window.onload = () => {
         let circle = sequencerRowHandles[rowIndex]
         circle.stroke = 'black'
         circle.linewidth = 2
-        circle.fill = guiConfigurations.sequencerRowHandles.selectedColor
+        circle.fill = gui.configurations.sequencerRowHandles.selectedColor
         let rowSelectionRectangle = sequencerRowSelectionRectangles[rowIndex];
-        rowSelectionRectangle.stroke = guiConfigurations.sequencerRowHandles.selectedColor
+        rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.selectedColor
     }
 
     function addRestartSequencerButtonActionListeners() {
@@ -1368,7 +1370,7 @@ window.onload = () => {
 
     function restartSequencerButtonClickHandler(event) {
         lastButtonClickTimeTrackers.restartSequencer.lastClickTime = sequencer.currentTime
-        restartSequencerButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
+        restartSequencerButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         restartSequencer()
     }
 
@@ -1383,7 +1385,7 @@ window.onload = () => {
 
     function clearAllNotesButtonClickHandler(event) {
         lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = sequencer.currentTime
-        clearAllNotesButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
+        clearAllNotesButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         clearAllNotes();
     }
 
@@ -1404,7 +1406,7 @@ window.onload = () => {
 
     function clearRowButtonClickHandler(event, rowIndex) {
         lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = sequencer.currentTime
-        clearNotesForRowButtonShapes[rowIndex].fill = guiConfigurations.buttonBehavior.clickedButtonColor
+        clearNotesForRowButtonShapes[rowIndex].fill = gui.configurations.buttonBehavior.clickedButtonColor
         clearNotesForRow(rowIndex);
     }
 
@@ -1420,7 +1422,7 @@ window.onload = () => {
 
     function addRowClickHandler(event) {
         lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
-        addRowButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
+        addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         addEmptySequencerRow();
         // redraw the sequencer
         redrawSequencer()
@@ -1452,10 +1454,10 @@ window.onload = () => {
             shape.remove()
         }
         clearNotesForRowButtonShapes = []
-        clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(guiConfigurations.clearRowButtons.topPaddingPerRow, guiConfigurations.clearRowButtons.leftPaddingPerRow, guiConfigurations.clearRowButtons.height, guiConfigurations.clearRowButtons.width); // this is a list of button rectangles, one per row, to clear the notes on that row
+        clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(gui.configurations.clearRowButtons.topPaddingPerRow, gui.configurations.clearRowButtons.leftPaddingPerRow, gui.configurations.clearRowButtons.height, gui.configurations.clearRowButtons.width); // this is a list of button rectangles, one per row, to clear the notes on that row
         addRowButtonShape.remove();
-        addRowButtonShape = initializeRectangleShape(guiConfigurations.sequencer.top + (guiConfigurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + guiConfigurations.addRowButton.topPadding, guiConfigurations.sequencer.left + (guiConfigurations.sequencer.width / 2) + guiConfigurations.addRowButton.leftPadding - (guiConfigurations.addRowButton.width / 2), guiConfigurations.addRowButton.height, guiConfigurations.addRowButton.width)
-        addRowButtonShape.fill = guiConfigurations.buttonBehavior.clickedButtonColor
+        addRowButtonShape = initializeRectangleShape(gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding, gui.configurations.sequencer.left + (gui.configurations.sequencer.width / 2) + gui.configurations.addRowButton.leftPadding - (gui.configurations.addRowButton.width / 2), gui.configurations.addRowButton.height, gui.configurations.addRowButton.width)
+        addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         // update two.js so we can add action listeners to shapes
         two.update()
         // initialize action listeners
@@ -1476,7 +1478,7 @@ window.onload = () => {
     // show or hide the note trash bin (show if visible === true, hide otherwise)
     function setNoteTrashBinVisibility(visible) {
         if (visible) {
-            noteTrashBinContainer.stroke = guiConfigurations.noteTrashBin.color
+            noteTrashBinContainer.stroke = gui.configurations.noteTrashBin.color
             domElements.images.trashClosedIcon.style.display = 'block'
         } else {
             noteTrashBinContainer.stroke = 'transparent'
@@ -1511,11 +1513,11 @@ window.onload = () => {
     }
 
     function initializeTempoTextInputValuesAndStyles() {
-        domElements.divs.tempoTextInputs.style.left = "" + guiConfigurations.tempoTextInput.left + "px"
-        domElements.divs.tempoTextInputs.style.top = "" + guiConfigurations.tempoTextInput.top + "px"
+        domElements.divs.tempoTextInputs.style.left = "" + gui.configurations.tempoTextInput.left + "px"
+        domElements.divs.tempoTextInputs.style.top = "" + gui.configurations.tempoTextInput.top + "px"
         domElements.textInputs.loopLengthMillis.value = sequencer.loopLengthInMillis
-        domElements.textInputs.loopLengthMillis.style.borderColor = guiConfigurations.sequencer.color
-        domElements.textInputs.loopLengthMillis.style.color = guiConfigurations.defaultFont.color // set font color
+        domElements.textInputs.loopLengthMillis.style.borderColor = gui.configurations.sequencer.color
+        domElements.textInputs.loopLengthMillis.style.color = gui.configurations.defaultFont.color // set font color
     }
 
     function initializeTempoTextInputActionListeners() {
@@ -1533,7 +1535,7 @@ window.onload = () => {
             }
             newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
             // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
-            newTextInputValue = confineNumberToBounds(newTextInputValue, LOOK_AHEAD_MILLIS, guiConfigurations.tempoTextInput.maximumValue)
+            newTextInputValue = confineNumberToBounds(newTextInputValue, LOOK_AHEAD_MILLIS, gui.configurations.tempoTextInput.maximumValue)
             domElements.textInputs.loopLengthMillis.value = newTextInputValue
             updateSequencerLoopLength(newTextInputValue)
         })
@@ -1582,11 +1584,11 @@ window.onload = () => {
             textArea.cols = "3"
             textArea.rows = "1"
             textArea.style.position = "absolute"
-            textArea.style.top = "" + (guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows) + guiConfigurations.subdivionLineTextInputs.topPaddingPerRow) + "px"
-            textArea.style.left = "" + (guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + guiConfigurations.subdivionLineTextInputs.leftPaddingPerRow) + "px"
-            textArea.style.borderColor = guiConfigurations.sequencer.color
+            textArea.style.top = "" + (gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows) + gui.configurations.subdivionLineTextInputs.topPaddingPerRow) + "px"
+            textArea.style.left = "" + (gui.configurations.sequencer.left + gui.configurations.sequencer.width + gui.configurations.subdivionLineTextInputs.leftPaddingPerRow) + "px"
+            textArea.style.borderColor = gui.configurations.sequencer.color
             textArea.value = sequencer.rows[rowIndex].getNumberOfSubdivisions()
-            textArea.style.color = guiConfigurations.defaultFont.color // set font color
+            textArea.style.color = gui.configurations.defaultFont.color // set font color
             domElements.divs.subdivisionTextInputs.appendChild(textArea);
             // note for later: the opposite of appendChild is removeChild
             subdivisionTextInputs.push(textArea)
@@ -1603,7 +1605,7 @@ window.onload = () => {
                     newTextInputValue = sequencer.rows[rowIndex].getNumberOfSubdivisions()
                 }
                 newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
-                newTextInputValue = confineNumberToBounds(newTextInputValue, 0, guiConfigurations.subdivionLineTextInputs.maximumValue)
+                newTextInputValue = confineNumberToBounds(newTextInputValue, 0, gui.configurations.subdivionLineTextInputs.maximumValue)
                 subdivisionTextInput.value = newTextInputValue
                 updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
             })
@@ -1621,14 +1623,14 @@ window.onload = () => {
             textArea.cols = "3"
             textArea.rows = "1"
             textArea.style.position = "absolute"
-            textArea.style.top = "" + (guiConfigurations.sequencer.top + (rowIndex * guiConfigurations.sequencer.spaceBetweenRows) + guiConfigurations.referenceLineTextInputs.topPaddingPerRow) + "px"
-            textArea.style.left = "" + (guiConfigurations.sequencer.left + guiConfigurations.sequencer.width + guiConfigurations.referenceLineTextInputs.leftPaddingPerRow) + "px"
-            textArea.style.borderColor = guiConfigurations.referenceLines.color
+            textArea.style.top = "" + (gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows) + gui.configurations.referenceLineTextInputs.topPaddingPerRow) + "px"
+            textArea.style.left = "" + (gui.configurations.sequencer.left + gui.configurations.sequencer.width + gui.configurations.referenceLineTextInputs.leftPaddingPerRow) + "px"
+            textArea.style.borderColor = gui.configurations.referenceLines.color
             textArea.value = sequencer.rows[rowIndex].getNumberOfReferenceLines()
             if (sequencer.rows[rowIndex].getNumberOfReferenceLines() === 0) {
-                textArea.style.color = guiConfigurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
+                textArea.style.color = gui.configurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
             } else {
-                textArea.style.color = guiConfigurations.defaultFont.color // set font color
+                textArea.style.color = gui.configurations.defaultFont.color // set font color
             }
             domElements.divs.subdivisionTextInputs.appendChild(textArea);
             // note for later: the opposite of appendChild is removeChild
@@ -1646,11 +1648,11 @@ window.onload = () => {
                     newTextInputValue = sequencer.rows[rowIndex].getNumberOfReferenceLines()
                 }
                 newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
-                newTextInputValue = confineNumberToBounds(newTextInputValue, 0, guiConfigurations.referenceLineTextInputs.maximumValue)
+                newTextInputValue = confineNumberToBounds(newTextInputValue, 0, gui.configurations.referenceLineTextInputs.maximumValue)
                 if (newTextInputValue === 0) {
-                    referenceLineTextInput.style.color = guiConfigurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
+                    referenceLineTextInput.style.color = gui.configurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
                 } else {
-                    referenceLineTextInput.style.color = guiConfigurations.defaultFont.color // set font color
+                    referenceLineTextInput.style.color = gui.configurations.defaultFont.color // set font color
                 }
                 referenceLineTextInput.value = newTextInputValue
                 updateNumberOfReferenceLinesForRow(newTextInputValue, rowIndex)
