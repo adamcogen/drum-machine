@@ -88,7 +88,6 @@ window.onload = () => {
     let gui = new DrumMachineGui(sequencer, two);
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
-    let sequencerRowLines = initializeAllSequencerRowLines() // list of sequencer row lines
     let subdivisionLineLists = initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
     let timeTrackingLines = initializeTimeTrackingLines() // list of lines that move to represent the current time within the loop
     let noteBankContainer = initializeNoteBankContainer() // a rectangle that goes around the note bank
@@ -1017,34 +1016,6 @@ window.onload = () => {
         }
     }
 
-    // draw lines for sequencer rows. return a list of the drawn lines. these will be Two.js 'path' objects.
-    function initializeAllSequencerRowLines() {
-        let sequencerRowLines = []
-        for (let rowsDrawn = 0; rowsDrawn < sequencer.numberOfRows; rowsDrawn++) {
-            let sequencerRowLine = initializeSequencerRowLine(rowsDrawn)
-            sequencerRowLines.push(sequencerRowLine)
-        }
-        return sequencerRowLines
-    }
-
-    function initializeSequencerRowLine(rowIndex) {
-        let sequencerRowLine = two.makePath(
-            [
-                new Two.Anchor(gui.configurations.sequencer.left, gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows)),
-                new Two.Anchor(gui.configurations.sequencer.left + gui.configurations.sequencer.width, gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows)),
-            ], 
-            false
-        );
-        sequencerRowLine.linewidth = gui.configurations.sequencer.lineWidth;
-        sequencerRowLine.stroke = gui.configurations.sequencer.color
-        return sequencerRowLine
-    }
-
-    function removeSequencerRowLine(rowIndex) {
-        sequencerRowLines[rowIndex].remove();
-        sequencerRowLines[rowIndex] = null;
-    }
-
     function removeTimeTrackingLine(rowIndex) {
         timeTrackingLines[rowIndex].remove();
         timeTrackingLines[rowIndex] = null;
@@ -1252,7 +1223,7 @@ window.onload = () => {
         }
         rowSelecionTracker.shapes.push(...subdivisionLineLists[rowIndex])
         rowSelecionTracker.shapes.push(...gui.components.referenceLineLists[rowIndex])
-        rowSelecionTracker.shapes.push(sequencerRowLines[rowIndex])
+        rowSelecionTracker.shapes.push(gui.components.sequencerRowLines[rowIndex])
         rowSelecionTracker.shapes.push(gui.components.sequencerRowSelectionRectangles[rowIndex])
         rowSelecionTracker.shapes.push(clearNotesForRowButtonShapes[rowIndex])
         // this part gets a little weird. save a list of all of the starting positions of each
@@ -1649,10 +1620,10 @@ window.onload = () => {
             list = [];
         }
         gui.components.referenceLineLists = []
-        for (line of sequencerRowLines) {
+        for (line of gui.components.sequencerRowLines) {
             line.remove();
         }
-        sequencerRowLines = [];
+        gui.components.sequencerRowLines = [];
         for (line of timeTrackingLines) {
             line.remove();
         }
@@ -1668,7 +1639,7 @@ window.onload = () => {
         gui.components.sequencerRowSelectionRectangles = gui.initializeSequencerRowSelectionRectangles();
         gui.components.referenceLineLists = gui.initializeAllReferenceLines();
         subdivisionLineLists = initializeAllSubdivisionLines();
-        sequencerRowLines = initializeAllSequencerRowLines();
+        gui.components.sequencerRowLines = gui.initializeAllSequencerRowLines();
         sequencerRowHandles = initializeSequencerRowHandles();
         timeTrackingLines = initializeTimeTrackingLines();
         drawAllNoteBankCircles();
@@ -1696,12 +1667,12 @@ window.onload = () => {
         // next we will delete all lines for the changed row
         removeSubdivisionLinesForRow(rowIndex)
         gui.removeReferenceLinesForRow(rowIndex)
-        removeSequencerRowLine(rowIndex)
+        gui.removeSequencerRowLine(rowIndex)
         removeTimeTrackingLine(rowIndex)
         // then we will draw all the lines for the changed row, starting with reference lines since they need to be the bottom layer
         gui.components.referenceLineLists[rowIndex] = gui.initializeReferenceLinesForRow(rowIndex)
         subdivisionLineLists[rowIndex] = initializeSubdivisionLinesForRow(rowIndex)
-        sequencerRowLines[rowIndex] = initializeSequencerRowLine(rowIndex)
+        gui.components.sequencerRowLines[rowIndex] = gui.initializeSequencerRowLine(rowIndex)
         timeTrackingLines[rowIndex] = initializeTimeTrackingLineForRow(rowIndex)
         // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
         drawAllNoteBankCircles()

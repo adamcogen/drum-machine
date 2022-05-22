@@ -13,11 +13,13 @@ class DrumMachineGui {
         this.initializeComponentEventListeners();
         this.initializeWindowEventListeners();
     }
-
+    
+    // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
     initializeGuiComponents() {
         let components = {};
         components.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
         components.referenceLineLists = this.initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
+        components.sequencerRowLines = this.initializeAllSequencerRowLines() // list of sequencer row lines
         return components;
     }
 
@@ -91,6 +93,38 @@ class DrumMachineGui {
             referenceLinesForRow.push(referenceLine) // keep a list of all reference lines for the current row
         }
         return referenceLinesForRow
+    }
+
+    /**
+     * sequencer row lines
+     */
+
+    // draw lines for sequencer rows. return a list of the drawn lines. these will be Two.js 'path' objects.
+    initializeAllSequencerRowLines() {
+        let sequencerRowLines = []
+        for (let rowsDrawn = 0; rowsDrawn < this.sequencer.numberOfRows; rowsDrawn++) {
+            let sequencerRowLine = this.initializeSequencerRowLine(rowsDrawn)
+            sequencerRowLines.push(sequencerRowLine)
+        }
+        return sequencerRowLines
+    }
+
+    initializeSequencerRowLine(rowIndex) {
+        let sequencerRowLine = this.two.makePath(
+            [
+                new Two.Anchor(this.configurations.sequencer.left, this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows)),
+                new Two.Anchor(this.configurations.sequencer.left + this.configurations.sequencer.width, this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows)),
+            ], 
+            false
+        );
+        sequencerRowLine.linewidth = this.configurations.sequencer.lineWidth;
+        sequencerRowLine.stroke = this.configurations.sequencer.color
+        return sequencerRowLine
+    }
+
+    removeSequencerRowLine(rowIndex) {
+        this.components.sequencerRowLines[rowIndex].remove();
+        this.components.sequencerRowLines[rowIndex] = null;
     }
 
     /**
