@@ -159,15 +159,16 @@ class DrumMachineGui {
         }
         let xIncrementBetweenSubdivisions = this.configurations.sequencer.width / this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
         for (let subdivisionsDrawnForRow = 0; subdivisionsDrawnForRow < this.sequencer.rows[rowIndex].getNumberOfSubdivisions(); subdivisionsDrawnForRow++) {
-            let subdivisionLine = this.two.makePath(
-                [
-                    new Two.Anchor(this.configurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), this.configurations.sequencer.top - 1 + (rowIndex * this.configurations.sequencer.spaceBetweenRows)),
-                    new Two.Anchor(this.configurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.subdivisionLines.height),
-                ], 
-                false
-            );
-            subdivisionLine.linewidth = this.configurations.sequencer.lineWidth;
-            subdivisionLine.stroke = this.configurations.subdivisionLines.color
+            let sequencerLineCenterY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows)
+            let lineStart = {
+                x: this.configurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow),
+                y: sequencerLineCenterY - Math.floor(this.configurations.sequencer.lineWidth / 2) // make sure to account for 'line width' when trying to make subdivision lines reach the top of the sequencer line. that's why we subtract the value here
+            }
+            let lineEnd = {
+                x: lineStart.x,
+                y: sequencerLineCenterY + this.configurations.subdivisionLines.height
+            }
+            let subdivisionLine = this.initializeLine(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y, this.configurations.sequencer.lineWidth, this.configurations.subdivisionLines.color);
 
             subdivisionLinesForRow.push(subdivisionLine) // keep a list of all subdivision lines for the current row
         }
@@ -206,13 +207,17 @@ class DrumMachineGui {
     }
 
     initializeTimeTrackingLineForRow(rowIndex) {
-        // start and end x position -- this is a vertical line, so x will stay the same.
-        let startAndEndX = this.configurations.sequencer.left;
-        // start and end y positions. this is a verical line, so start from the center point, and calculate start and end by adding or subtracting a constant value.
-        let centerY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows);
-        let startY = centerY - this.configurations.timeTrackingLines.height
-        let endY = centerY + this.configurations.timeTrackingLines.height
-        return this.initializeLine(startAndEndX, startY, startAndEndX, endY, this.configurations.sequencer.lineWidth, this.configurations.timeTrackingLines.color);
+        let sequencerLineCenterY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows);
+        // this is a verical line, so for Y, start from the center point, and calculate start and end Y positions by either adding or subtracting a constant value from that center.
+        let lineStart = {
+            x: this.configurations.sequencer.left,
+            y: sequencerLineCenterY - this.configurations.timeTrackingLines.height
+        }
+        let lineEnd = {
+            x: lineStart.x,
+            y: sequencerLineCenterY + this.configurations.timeTrackingLines.height
+        }
+        return this.initializeLine(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y, this.configurations.sequencer.lineWidth, this.configurations.timeTrackingLines.color);
     }
 
     /**
