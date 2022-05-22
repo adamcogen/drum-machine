@@ -5,9 +5,10 @@
  * For now this class will just initialize the GUI configurations object.
  */
 class DrumMachineGui {
-    constructor(sequencer, two) {
+    constructor(sequencer, two, sampleNameList) {
         this.sequencer = sequencer
         this.two = two
+        this.sampleNameList = sampleNameList
         this.configurations = getGuiConfigurations()
         this.components = this.initializeGuiComponents();
         this.initializeComponentEventListeners();
@@ -24,6 +25,7 @@ class DrumMachineGui {
         components.sequencerRowLines = this.initializeAllSequencerRowLines() // list of sequencer row lines
         components.subdivisionLineLists = this.initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
         components.timeTrackingLines = this.initializeTimeTrackingLines() // list of lines that move to represent the current time within the loop
+        components.noteBankContainer = this.initializeNoteBankContainer() // a rectangle that goes around the note bank
         return components;
     }
 
@@ -221,6 +223,22 @@ class DrumMachineGui {
     }
 
     /**
+     * note bank container
+     */
+
+    // draw the physical note bank container on the screen. for now that's just a rectangle.
+    // return the note bank shape. this will be a Two.js path object.
+    initializeNoteBankContainer() {
+        let width  = this.configurations.notes.unplayedCircleRadius + (this.configurations.sampleBank.borderPadding * 2)
+        let height = (this.configurations.notes.unplayedCircleRadius * (this.sampleNameList.length - 1)) + ((this.sampleNameList.length - 1) * this.configurations.sampleBank.spaceBetweenNotes) + (this.configurations.sampleBank.borderPadding * 2)
+        let noteBankContainer = this.initializeRectangleShape(this.configurations.sampleBank.top, this.configurations.sampleBank.left, height, width)
+        noteBankContainer.linewidth = this.configurations.sequencer.lineWidth;
+        noteBankContainer.stroke = this.configurations.sequencer.color
+        noteBankContainer.fill = 'transparent'
+        return noteBankContainer
+    }
+
+    /**
      * general helper methods
      */
 
@@ -239,11 +257,11 @@ class DrumMachineGui {
 
     initializeRectangleShape(top, left, height, width, radius=4) {
         // new button rectangle: make a rectangle with rounded corners
-        button = this.two.makeRoundedRectangle(left + (width / 2), top + (height / 2), width, height, radius)
-        button.linewidth = this.configurations.sequencer.lineWidth
-        button.stroke = this.configurations.sequencer.color
-        button.fill = 'transparent'
-        return button
+        let shape = this.two.makeRoundedRectangle(left + (width / 2), top + (height / 2), width, height, radius)
+        shape.linewidth = this.configurations.sequencer.lineWidth
+        shape.stroke = this.configurations.sequencer.color
+        shape.fill = 'transparent'
+        return shape
     }
 
 }

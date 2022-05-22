@@ -85,10 +85,9 @@ window.onload = () => {
     // initialize sequencer data structure
     let sequencer = new Sequencer([webAudioDriver], 0, defaultLoopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
 
-    let gui = new DrumMachineGui(sequencer, two);
+    let gui = new DrumMachineGui(sequencer, two, sampleNameList);
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
-    let noteBankContainer = initializeNoteBankContainer() // a rectangle that goes around the note bank
     let noteTrashBinContainer = initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
     let pauseButtonShape = initializeRectangleShape(gui.configurations.pauseButton.top, gui.configurations.pauseButton.left, gui.configurations.pauseButton.height, gui.configurations.pauseButton.width) // a rectangle that will act as the pause button for now
     let restartSequencerButtonShape = initializeRectangleShape(gui.configurations.restartSequencerButton.top, gui.configurations.restartSequencerButton.left, gui.configurations.restartSequencerButton.height, gui.configurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
@@ -1012,18 +1011,6 @@ window.onload = () => {
         for (let note of allDrawnCirclesCopy) {
             removeCircleFromDisplay(note.guiData.label)
         }
-    }
-
-    // draw the physical note bank container on the screen. for now that's just a rectangle.
-    // return the note bank shape. this will be a Two.js path object.
-    function initializeNoteBankContainer() {
-        let width  = gui.configurations.notes.unplayedCircleRadius + (gui.configurations.sampleBank.borderPadding * 2)
-        let height = (gui.configurations.notes.unplayedCircleRadius * (sampleNameList.length - 1)) + ((sampleNameList.length - 1) * gui.configurations.sampleBank.spaceBetweenNotes) + (gui.configurations.sampleBank.borderPadding * 2)
-        let noteBankContainer = initializeRectangleShape(gui.configurations.sampleBank.top, gui.configurations.sampleBank.left, height, width)
-        noteBankContainer.linewidth = gui.configurations.sequencer.lineWidth;
-        noteBankContainer.stroke = gui.configurations.sequencer.color
-        noteBankContainer.fill = 'transparent'
-        return noteBankContainer
     }
 
     // draw the 'trash bin' for throwing out (deleting) notes. for now it's just
