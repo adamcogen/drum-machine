@@ -14,7 +14,9 @@ class DrumMachineGui {
         this.initializeWindowEventListeners();
     }
     
-    // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
+    // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects).
+    // these are drawn in the order that they are layered on-screen, i.e. the bottom layer 
+    // is drawn first.
     initializeGuiComponents() {
         let components = {};
         components.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
@@ -26,7 +28,9 @@ class DrumMachineGui {
     }
 
     initializeComponentEventListeners() {
-        // do nothing yet
+        // do nothing yet. we will set this up so that for the most part, all shapes are initialized first, 
+        // then event listeners are added to all of them. this is necessary because some event listeners make
+        // changes to existing shapes, which can't be done unless those shapes already exist. 
     }
 
     initializeWindowEventListeners() {
@@ -202,22 +206,31 @@ class DrumMachineGui {
     }
 
     initializeTimeTrackingLineForRow(rowIndex) {
-        let line = this.two.makePath(
-            [
-                new Two.Anchor(this.configurations.sequencer.left, this.configurations.sequencer.top + this.configurations.timeTrackingLines.height + (rowIndex * this.configurations.sequencer.spaceBetweenRows)),
-                new Two.Anchor(this.configurations.sequencer.left, this.configurations.sequencer.top - this.configurations.timeTrackingLines.height + (rowIndex * this.configurations.sequencer.spaceBetweenRows)),
-            ], 
-            false
-        );
-        line.linewidth = this.configurations.sequencer.lineWidth;
-        line.stroke = this.configurations.timeTrackingLines.color // 'black'
-
-        return line
+        // start and end x position -- this is a vertical line, so x will stay the same.
+        let startAndEndX = this.configurations.sequencer.left;
+        // start and end y positions. this is a verical line, so start from the center point, and calculate start and end by adding or subtracting a constant value.
+        let centerY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows);
+        let startY = centerY - this.configurations.timeTrackingLines.height
+        let endY = centerY + this.configurations.timeTrackingLines.height
+        return this.initializeLine(startAndEndX, startY, startAndEndX, endY, this.configurations.sequencer.lineWidth, this.configurations.timeTrackingLines.color);
     }
 
     /**
      * general helper methods
      */
+
+    initializeLine(startX, startY, endX, endY, lineWidth, color) {
+        let line = this.two.makePath(
+            [
+                new Two.Anchor(startX, startY),
+                new Two.Anchor(endX, endY),
+            ], 
+            false
+        );
+        line.linewidth = lineWidth;
+        line.stroke = color;
+        return line;
+    }
 
     initializeRectangleShape(top, left, height, width, radius=4) {
         // new button rectangle: make a rectangle with rounded corners
