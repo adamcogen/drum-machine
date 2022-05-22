@@ -26,6 +26,7 @@ class DrumMachineGui {
         components.subdivisionLineLists = this.initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
         components.timeTrackingLines = this.initializeTimeTrackingLines() // list of lines that move to represent the current time within the loop
         components.noteBankContainer = this.initializeNoteBankContainer() // a rectangle that goes around the note bank
+        components.noteTrashBinContainer = this.initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
         return components;
     }
 
@@ -236,6 +237,19 @@ class DrumMachineGui {
         noteBankContainer.stroke = this.configurations.sequencer.color
         noteBankContainer.fill = 'transparent'
         return noteBankContainer
+    }
+
+    /**
+     * trash bin container
+     */
+
+    // draw the 'trash bin' for throwing out (deleting) notes and rows. for now it's just a red rectangle.
+    initializeNoteTrashBinContainer() {
+        let noteTrashBinContainer = this.initializeRectangleShape(this.configurations.noteTrashBin.top, this.configurations.noteTrashBin.left, this.configurations.noteTrashBin.height, this.configurations.noteTrashBin.width)
+        noteTrashBinContainer.linewidth = this.configurations.sequencer.lineWidth
+        noteTrashBinContainer.stroke = 'transparent'
+        noteTrashBinContainer.fill = 'transparent'
+        return noteTrashBinContainer
     }
 
     /**

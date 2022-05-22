@@ -88,7 +88,6 @@ window.onload = () => {
     let gui = new DrumMachineGui(sequencer, two, sampleNameList);
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
-    let noteTrashBinContainer = initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
     let pauseButtonShape = initializeRectangleShape(gui.configurations.pauseButton.top, gui.configurations.pauseButton.left, gui.configurations.pauseButton.height, gui.configurations.pauseButton.width) // a rectangle that will act as the pause button for now
     let restartSequencerButtonShape = initializeRectangleShape(gui.configurations.restartSequencerButton.top, gui.configurations.restartSequencerButton.left, gui.configurations.restartSequencerButton.height, gui.configurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
     let clearAllNotesButtonShape = initializeRectangleShape(gui.configurations.clearAllNotesButton.top, gui.configurations.clearAllNotesButton.left, gui.configurations.clearAllNotesButton.height, gui.configurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
@@ -281,9 +280,9 @@ window.onload = () => {
                 circleBeingMoved.stroke = "red"
                 domElements.images.trashClosedIcon.style.display = 'none'
                 domElements.images.trashOpenIcon.style.display = 'block'
-                noteTrashBinContainer.stroke = 'red'
+                gui.components.noteTrashBinContainer.stroke = 'red'
             } else {
-                noteTrashBinContainer.stroke = 'transparent'
+                gui.components.noteTrashBinContainer.stroke = 'transparent'
             }
             // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
             let sequencerLeftBoundary = gui.configurations.sequencer.left - gui.configurations.mouseEvents.notePlacementPadding
@@ -328,7 +327,7 @@ window.onload = () => {
                     circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
                     domElements.images.trashClosedIcon.style.display = 'none'
                     domElements.images.trashOpenIcon.style.display = 'block'
-                    noteTrashBinContainer.stroke = 'red'
+                    gui.components.noteTrashBinContainer.stroke = 'red'
                 }
             }
         }
@@ -362,10 +361,10 @@ window.onload = () => {
                 circle.stroke = "red"
                 domElements.images.trashClosedIcon.style.display = 'none'
                 domElements.images.trashOpenIcon.style.display = 'block'
-                noteTrashBinContainer.stroke = 'red'
+                gui.components.noteTrashBinContainer.stroke = 'red'
             } else {
                 rowSelecionTracker.removeRow = false;
-                noteTrashBinContainer.stroke = 'transparent'
+                gui.components.noteTrashBinContainer.stroke = 'transparent'
             }
 
             let xChangeFromStart = sequencerRowHandles[selectedRowIndex].translation.x - rowSelecionTracker.rowHandleStartingPosition.x
@@ -394,7 +393,7 @@ window.onload = () => {
                 rowSelecionTracker.removeRow = true;
                 domElements.images.trashClosedIcon.style.display = 'none'
                 domElements.images.trashOpenIcon.style.display = 'block'
-                noteTrashBinContainer.stroke = 'red'
+                gui.components.noteTrashBinContainer.stroke = 'red'
             }
 
             for(let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
@@ -968,7 +967,7 @@ window.onload = () => {
             circleBeingMovedOldBeatNumber = circleBeingMoved.guiData.beat
             circleBeingMovedNewBeatNumber = circleBeingMovedOldBeatNumber
             setNoteTrashBinVisibility(true)
-            noteTrashBinContainer.stroke = 'transparent'
+            gui.components.noteTrashBinContainer.stroke = 'transparent'
             sequencer.playDrumSampleNow(circleBeingMoved.guiData.sampleName)
         });
 
@@ -1011,16 +1010,6 @@ window.onload = () => {
         for (let note of allDrawnCirclesCopy) {
             removeCircleFromDisplay(note.guiData.label)
         }
-    }
-
-    // draw the 'trash bin' for throwing out (deleting) notes. for now it's just
-    // a red rectangle, will make it something better for user experience later.
-    function initializeNoteTrashBinContainer() {
-        let noteTrashBinContainer = initializeRectangleShape(gui.configurations.noteTrashBin.top, gui.configurations.noteTrashBin.left, gui.configurations.noteTrashBin.height, gui.configurations.noteTrashBin.width)
-        noteTrashBinContainer.linewidth = gui.configurations.sequencer.lineWidth
-        noteTrashBinContainer.stroke = 'transparent'
-        noteTrashBinContainer.fill = 'transparent'
-        return noteTrashBinContainer
     }
 
     function addPauseButtonActionListeners() {
@@ -1117,7 +1106,7 @@ window.onload = () => {
 
     function initializeRowSelectionVariablesAndVisuals(rowIndex) {
         setNoteTrashBinVisibility(true)
-        noteTrashBinContainer.stroke = 'transparent'
+        gui.components.noteTrashBinContainer.stroke = 'transparent'
         // save relevant info about whichever row is selected
         selectedRowIndex = rowIndex;
         // save a list, of all the shapes that are associated with the selected row.
@@ -1291,10 +1280,10 @@ window.onload = () => {
     // show or hide the note trash bin (show if visible === true, hide otherwise)
     function setNoteTrashBinVisibility(visible) {
         if (visible) {
-            noteTrashBinContainer.stroke = gui.configurations.noteTrashBin.color
+            gui.components.noteTrashBinContainer.stroke = gui.configurations.noteTrashBin.color
             domElements.images.trashClosedIcon.style.display = 'block'
         } else {
-            noteTrashBinContainer.stroke = 'transparent'
+            gui.components.noteTrashBinContainer.stroke = 'transparent'
             domElements.images.trashClosedIcon.style.display = 'none'
             domElements.images.trashOpenIcon.style.display = 'none'
         }
