@@ -89,16 +89,17 @@ class DrumMachineGui {
         }
         let xIncrementBetweenLines = this.configurations.sequencer.width / this.sequencer.rows[rowIndex].getNumberOfReferenceLines()
         for (let linesDrawnForRow = 0; linesDrawnForRow < this.sequencer.rows[rowIndex].getNumberOfReferenceLines(); linesDrawnForRow++) {
-            let referenceLine = this.two.makePath(
-                [
-                    new Two.Anchor(this.configurations.sequencer.left + (xIncrementBetweenLines * linesDrawnForRow), this.configurations.sequencer.top - 1 + (rowIndex * this.configurations.sequencer.spaceBetweenRows)),
-                    new Two.Anchor(this.configurations.sequencer.left + (xIncrementBetweenLines * linesDrawnForRow), this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) - this.configurations.referenceLines.height),
-                ], 
-                false
-            );
-            referenceLine.linewidth = this.configurations.sequencer.lineWidth;
-            referenceLine.stroke = this.configurations.referenceLines.color
-
+            let sequencerLineCenterY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows)
+            let halfOfLineWidth = Math.floor(this.configurations.sequencer.lineWidth / 2)
+            let lineStart = {
+                x: this.configurations.sequencer.left + (xIncrementBetweenLines * linesDrawnForRow),
+                y: sequencerLineCenterY - halfOfLineWidth // make sure to account for 'line width' when trying to make these lines reach the top of the sequencer line. that's why we subtract the value here
+            }
+            let lineEnd = {
+                x: lineStart.x,
+                y: sequencerLineCenterY - this.configurations.subdivisionLines.height
+            }
+            let referenceLine = this.initializeLine(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y, this.configurations.sequencer.lineWidth, this.configurations.referenceLines.color);
             referenceLinesForRow.push(referenceLine) // keep a list of all reference lines for the current row
         }
         return referenceLinesForRow
@@ -119,15 +120,17 @@ class DrumMachineGui {
     }
 
     initializeSequencerRowLine(rowIndex) {
-        let sequencerRowLine = this.two.makePath(
-            [
-                new Two.Anchor(this.configurations.sequencer.left, this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows)),
-                new Two.Anchor(this.configurations.sequencer.left + this.configurations.sequencer.width, this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows)),
-            ], 
-            false
-        );
-        sequencerRowLine.linewidth = this.configurations.sequencer.lineWidth;
-        sequencerRowLine.stroke = this.configurations.sequencer.color
+        let sequencerLineCenterY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows)
+        let halfOfLineWidth = Math.floor(this.configurations.sequencer.lineWidth / 2)
+        let lineStart = {
+            x: this.configurations.sequencer.left - halfOfLineWidth, // make sure to account for 'line width' when trying to make these lines reach the top of the sequencer line. that's why we subtract the value here
+            y: sequencerLineCenterY
+        }
+        let lineEnd = {
+            x: this.configurations.sequencer.left + this.configurations.sequencer.width + halfOfLineWidth,
+            y: sequencerLineCenterY
+        }
+        let sequencerRowLine = this.initializeLine(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y, this.configurations.sequencer.lineWidth, this.configurations.sequencer.color);
         return sequencerRowLine
     }
 
@@ -163,9 +166,10 @@ class DrumMachineGui {
         let xIncrementBetweenSubdivisions = this.configurations.sequencer.width / this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
         for (let subdivisionsDrawnForRow = 0; subdivisionsDrawnForRow < this.sequencer.rows[rowIndex].getNumberOfSubdivisions(); subdivisionsDrawnForRow++) {
             let sequencerLineCenterY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows)
+            let halfOfLineWidth = Math.floor(this.configurations.sequencer.lineWidth / 2)
             let lineStart = {
                 x: this.configurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow),
-                y: sequencerLineCenterY - Math.floor(this.configurations.sequencer.lineWidth / 2) // make sure to account for 'line width' when trying to make subdivision lines reach the top of the sequencer line. that's why we subtract the value here
+                y: sequencerLineCenterY - halfOfLineWidth // make sure to account for 'line width' when trying to make subdivision lines reach the top of the sequencer line. that's why we subtract the value here
             }
             let lineEnd = {
                 x: lineStart.x,
