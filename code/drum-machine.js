@@ -85,10 +85,9 @@ window.onload = () => {
     // initialize sequencer data structure
     let sequencer = new Sequencer([webAudioDriver], 0, defaultLoopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
 
-    let gui = new DrumMachineGui();
+    let gui = new DrumMachineGui(sequencer, two);
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
-    let sequencerRowSelectionRectangles = initializeSequencerRowSelectionRectangles();
     let referenceLineLists = initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
     let sequencerRowLines = initializeAllSequencerRowLines() // list of sequencer row lines
     let subdivisionLineLists = initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
@@ -347,7 +346,7 @@ window.onload = () => {
             circle.stroke = 'black'
             circle.linewidth = 2
             circle.fill = gui.configurations.sequencerRowHandles.selectedColor
-            let rowSelectionRectangle = sequencerRowSelectionRectangles[selectedRowIndex]
+            let rowSelectionRectangle = gui.components.sequencerRowSelectionRectangles[selectedRowIndex]
             rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.selectedColor
             domElements.images.trashClosedIcon.style.display = 'block'
             domElements.images.trashOpenIcon.style.display = 'none'
@@ -1246,27 +1245,10 @@ window.onload = () => {
         return allCircles
     }
 
-    // if a row is selected, we draw a rectangle around it.
-    // this will initialize them (one per row) and make them
-    // transparent. we can make them visible once a row is selected.
-    function initializeSequencerRowSelectionRectangles() {
-        allRectangles = []
-        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            let top = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * rowIndex) + gui.configurations.sequencerRowSelections.topPadding
-            let left = gui.configurations.sequencer.left + gui.configurations.sequencerRowSelections.leftPadding
-            let width = gui.configurations.sequencer.width + gui.configurations.sequencerRowSelections.width
-            let height = gui.configurations.sequencerRowSelections.height
-            let rectangle = initializeRectangleShape(top, left, height, width);
-            rectangle.stroke = 'transparent'
-            allRectangles.push(rectangle)
-        }
-        return allRectangles;
-    }
-
     function initializeSequencerRowHandlesActionListeners() {
         for (let rowIndex = 0; rowIndex < sequencerRowHandles.length; rowIndex++) {
             let circle = sequencerRowHandles[rowIndex];
-            let rowSelectionRectangle = sequencerRowSelectionRectangles[rowIndex]
+            let rowSelectionRectangle = gui.components.sequencerRowSelectionRectangles[rowIndex]
 
             // add border to circle on mouseover
             circle._renderer.elem.addEventListener('mouseenter', (event) => {
@@ -1318,7 +1300,7 @@ window.onload = () => {
         rowSelecionTracker.shapes.push(...subdivisionLineLists[rowIndex])
         rowSelecionTracker.shapes.push(...referenceLineLists[rowIndex])
         rowSelecionTracker.shapes.push(sequencerRowLines[rowIndex])
-        rowSelecionTracker.shapes.push(sequencerRowSelectionRectangles[rowIndex])
+        rowSelecionTracker.shapes.push(gui.components.sequencerRowSelectionRectangles[rowIndex])
         rowSelecionTracker.shapes.push(clearNotesForRowButtonShapes[rowIndex])
         // this part gets a little weird. save a list of all of the starting positions of each
         // shape that is being moved. that way we can translate them proporionally to how far
@@ -1355,7 +1337,7 @@ window.onload = () => {
         circle.stroke = 'black'
         circle.linewidth = 2
         circle.fill = gui.configurations.sequencerRowHandles.selectedColor
-        let rowSelectionRectangle = sequencerRowSelectionRectangles[rowIndex];
+        let rowSelectionRectangle = gui.components.sequencerRowSelectionRectangles[rowIndex];
         rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.selectedColor
     }
 
@@ -1726,11 +1708,11 @@ window.onload = () => {
             circle.remove();
         }
         sequencerRowHandles = []
-        for (rectangle of sequencerRowSelectionRectangles) {
+        for (rectangle of gui.components.sequencerRowSelectionRectangles) {
             rectangle.remove();
         }
-        sequencerRowSelectionRectangles = []
-        sequencerRowSelectionRectangles = initializeSequencerRowSelectionRectangles();
+        gui.components.sequencerRowSelectionRectangles = []
+        gui.components.sequencerRowSelectionRectangles = gui.initializeSequencerRowSelectionRectangles();
         referenceLineLists = initializeAllReferenceLines();
         subdivisionLineLists = initializeAllSubdivisionLines();
         sequencerRowLines = initializeAllSequencerRowLines();
