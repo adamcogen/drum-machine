@@ -21,6 +21,7 @@ class DrumMachineGui {
         components.referenceLineLists = this.initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
         components.sequencerRowLines = this.initializeAllSequencerRowLines() // list of sequencer row lines
         components.subdivisionLineLists = this.initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
+        components.timeTrackingLines = this.initializeTimeTrackingLines() // list of lines that move to represent the current time within the loop
         return components;
     }
 
@@ -177,6 +178,41 @@ class DrumMachineGui {
             line.remove()
         }
         this.components.subdivisionLineLists[rowIndex] = []
+    }
+
+    /** 
+     * time tracking lines
+     */
+
+    removeTimeTrackingLine(rowIndex) {
+        this.components.timeTrackingLines[rowIndex].remove();
+        this.components.timeTrackingLines[rowIndex] = null;
+    }
+
+    // draw lines for the 'time trackers' for each sequencer row.
+    // these are the little lines above each sequencer line that track the current time within the loop.
+    // return a list of the drawn lines. these will be Two.js 'path' objects.
+    initializeTimeTrackingLines() {
+        let lines = []
+        for (let linesDrawn = 0; linesDrawn < this.sequencer.numberOfRows; linesDrawn++) {
+            let timeTrackingLine = this.initializeTimeTrackingLineForRow(linesDrawn)
+            lines.push(timeTrackingLine)
+        }
+        return lines
+    }
+
+    initializeTimeTrackingLineForRow(rowIndex) {
+        let line = this.two.makePath(
+            [
+                new Two.Anchor(this.configurations.sequencer.left, this.configurations.sequencer.top + this.configurations.timeTrackingLines.height + (rowIndex * this.configurations.sequencer.spaceBetweenRows)),
+                new Two.Anchor(this.configurations.sequencer.left, this.configurations.sequencer.top - this.configurations.timeTrackingLines.height + (rowIndex * this.configurations.sequencer.spaceBetweenRows)),
+            ], 
+            false
+        );
+        line.linewidth = this.configurations.sequencer.lineWidth;
+        line.stroke = this.configurations.timeTrackingLines.color // 'black'
+
+        return line
     }
 
     /**
