@@ -88,7 +88,6 @@ window.onload = () => {
     let gui = new DrumMachineGui(sequencer, two);
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
-    let subdivisionLineLists = initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
     let timeTrackingLines = initializeTimeTrackingLines() // list of lines that move to represent the current time within the loop
     let noteBankContainer = initializeNoteBankContainer() // a rectangle that goes around the note bank
     let noteTrashBinContainer = initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
@@ -1021,53 +1020,6 @@ window.onload = () => {
         timeTrackingLines[rowIndex] = null;
     }
 
-    // add 'subdivision lines' to each sequencer row. these lines divide each row into the given number of evenly-sized sections.
-    // in other words, if a row's 'subdivision count' is 5, that row will be divided into 5 even chunks (it will have 5 subdivision
-    // lines). subdivision lines pretty much represent 'beats', so a line that is subdivided into 5 sections shows 5 beats.
-    function initializeAllSubdivisionLines() {
-        let allSubdivisionLineLists = []
-        let subdivisionLinesForRow = []
-        for (let rowsDrawn = 0; rowsDrawn < sequencer.numberOfRows; rowsDrawn++) {
-            subdivisionLinesForRow = initializeSubdivisionLinesForRow(rowsDrawn)
-            allSubdivisionLineLists.push(subdivisionLinesForRow) // keep a list of all rows' subdivision line lists
-        }
-        return allSubdivisionLineLists
-    }
-
-    // draw subdivision lines for a single sequencer row, with the given row index.
-    // return a list of two.js 'path' objects representing each subdivision line for the sequncer row with the given index.
-    function initializeSubdivisionLinesForRow(rowIndex) {
-        let subdivisionLinesForRow = []
-        if (sequencer.rows[rowIndex].getNumberOfSubdivisions() <= 0) {
-            return [] // don't draw subdivisions for this row if it has 0 or fewer subdivisions
-        }
-        let xIncrementBetweenSubdivisions = gui.configurations.sequencer.width / sequencer.rows[rowIndex].getNumberOfSubdivisions()
-        for (let subdivisionsDrawnForRow = 0; subdivisionsDrawnForRow < sequencer.rows[rowIndex].getNumberOfSubdivisions(); subdivisionsDrawnForRow++) {
-            let subdivisionLine = two.makePath(
-                [
-                    new Two.Anchor(gui.configurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), gui.configurations.sequencer.top - 1 + (rowIndex * gui.configurations.sequencer.spaceBetweenRows)),
-                    new Two.Anchor(gui.configurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows) + gui.configurations.subdivisionLines.height),
-                ], 
-                false
-            );
-            subdivisionLine.linewidth = gui.configurations.sequencer.lineWidth;
-            subdivisionLine.stroke = gui.configurations.subdivisionLines.color
-
-            subdivisionLinesForRow.push(subdivisionLine) // keep a list of all subdivision lines for the current row
-        }
-        return subdivisionLinesForRow
-    }
-
-    // given the index of a sequencer row, remove all subdivision lines from the display for that row.
-    // the current intent of this is to delete them all so that they can be re-drawn afterwards (such as
-    // when the number of subdivisions in a particular row is changed).
-    function removeSubdivisionLinesForRow(rowIndex) {
-        for (line of subdivisionLineLists[rowIndex]) {
-            line.remove()
-        }
-        subdivisionLineLists[rowIndex] = []
-    }
-
     // draw lines for the 'time trackers' for each sequencer row.
     // these are the little lines above each sequencer line that track the current time within the loop.
     // return a list of the drawn lines. these will be Two.js 'path' objects.
@@ -1221,7 +1173,7 @@ window.onload = () => {
                 rowSelecionTracker.shapes.push(circle)
             }
         }
-        rowSelecionTracker.shapes.push(...subdivisionLineLists[rowIndex])
+        rowSelecionTracker.shapes.push(...gui.components.subdivisionLineLists[rowIndex])
         rowSelecionTracker.shapes.push(...gui.components.referenceLineLists[rowIndex])
         rowSelecionTracker.shapes.push(gui.components.sequencerRowLines[rowIndex])
         rowSelecionTracker.shapes.push(gui.components.sequencerRowSelectionRectangles[rowIndex])
@@ -1606,13 +1558,13 @@ window.onload = () => {
 
     function resetNotesAndLinesDisplayForAllRows() {
         removeAllCirclesFromDisplay()
-        for (list of subdivisionLineLists) {
+        for (list of gui.components.subdivisionLineLists) {
             for (line of list) {
                 line.remove();
             }
             list = [];
         }
-        subdivisionLineLists = []
+        gui.components.subdivisionLineLists = []
         for (list of gui.components.referenceLineLists) {
             for (line of list) {
                 line.remove();
@@ -1638,7 +1590,7 @@ window.onload = () => {
         gui.components.sequencerRowSelectionRectangles = []
         gui.components.sequencerRowSelectionRectangles = gui.initializeSequencerRowSelectionRectangles();
         gui.components.referenceLineLists = gui.initializeAllReferenceLines();
-        subdivisionLineLists = initializeAllSubdivisionLines();
+        gui.components.subdivisionLineLists = gui.initializeAllSubdivisionLines();
         gui.components.sequencerRowLines = gui.initializeAllSequencerRowLines();
         sequencerRowHandles = initializeSequencerRowHandles();
         timeTrackingLines = initializeTimeTrackingLines();
@@ -1665,13 +1617,13 @@ window.onload = () => {
         // redrawing now.
         removeAllCirclesFromDisplay()
         // next we will delete all lines for the changed row
-        removeSubdivisionLinesForRow(rowIndex)
+        gui.removeSubdivisionLinesForRow(rowIndex)
         gui.removeReferenceLinesForRow(rowIndex)
         gui.removeSequencerRowLine(rowIndex)
         removeTimeTrackingLine(rowIndex)
         // then we will draw all the lines for the changed row, starting with reference lines since they need to be the bottom layer
         gui.components.referenceLineLists[rowIndex] = gui.initializeReferenceLinesForRow(rowIndex)
-        subdivisionLineLists[rowIndex] = initializeSubdivisionLinesForRow(rowIndex)
+        gui.components.subdivisionLineLists[rowIndex] = gui.initializeSubdivisionLinesForRow(rowIndex)
         gui.components.sequencerRowLines[rowIndex] = gui.initializeSequencerRowLine(rowIndex)
         timeTrackingLines[rowIndex] = initializeTimeTrackingLineForRow(rowIndex)
         // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.

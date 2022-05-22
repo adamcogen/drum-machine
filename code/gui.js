@@ -20,6 +20,7 @@ class DrumMachineGui {
         components.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
         components.referenceLineLists = this.initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
         components.sequencerRowLines = this.initializeAllSequencerRowLines() // list of sequencer row lines
+        components.subdivisionLineLists = this.initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
         return components;
     }
 
@@ -125,6 +126,57 @@ class DrumMachineGui {
     removeSequencerRowLine(rowIndex) {
         this.components.sequencerRowLines[rowIndex].remove();
         this.components.sequencerRowLines[rowIndex] = null;
+    }
+
+    /**
+     * sequencer row subdivision lines
+     */
+
+    // add 'subdivision lines' to each sequencer row. these lines divide each row into the given number of evenly-sized sections.
+    // in other words, if a row's 'subdivision count' is 5, that row will be divided into 5 even chunks (it will have 5 subdivision
+    // lines). subdivision lines pretty much represent 'beats', so a line that is subdivided into 5 sections shows 5 beats.
+    initializeAllSubdivisionLines() {
+        let allSubdivisionLineLists = []
+        let subdivisionLinesForRow = []
+        for (let rowsDrawn = 0; rowsDrawn < this.sequencer.numberOfRows; rowsDrawn++) {
+            subdivisionLinesForRow = this.initializeSubdivisionLinesForRow(rowsDrawn)
+            allSubdivisionLineLists.push(subdivisionLinesForRow) // keep a list of all rows' subdivision line lists
+        }
+        return allSubdivisionLineLists
+    }
+
+    // draw subdivision lines for a single sequencer row, with the given row index.
+    // return a list of two.js 'path' objects representing each subdivision line for the sequncer row with the given index.
+    initializeSubdivisionLinesForRow(rowIndex) {
+        let subdivisionLinesForRow = []
+        if (this.sequencer.rows[rowIndex].getNumberOfSubdivisions() <= 0) {
+            return [] // don't draw subdivisions for this row if it has 0 or fewer subdivisions
+        }
+        let xIncrementBetweenSubdivisions = this.configurations.sequencer.width / this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
+        for (let subdivisionsDrawnForRow = 0; subdivisionsDrawnForRow < this.sequencer.rows[rowIndex].getNumberOfSubdivisions(); subdivisionsDrawnForRow++) {
+            let subdivisionLine = this.two.makePath(
+                [
+                    new Two.Anchor(this.configurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), this.configurations.sequencer.top - 1 + (rowIndex * this.configurations.sequencer.spaceBetweenRows)),
+                    new Two.Anchor(this.configurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow), this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.subdivisionLines.height),
+                ], 
+                false
+            );
+            subdivisionLine.linewidth = this.configurations.sequencer.lineWidth;
+            subdivisionLine.stroke = this.configurations.subdivisionLines.color
+
+            subdivisionLinesForRow.push(subdivisionLine) // keep a list of all subdivision lines for the current row
+        }
+        return subdivisionLinesForRow
+    }
+
+    // given the index of a sequencer row, remove all subdivision lines from the display for that row.
+    // the current intent of this is to delete them all so that they can be re-drawn afterwards (such as
+    // when the number of subdivisions in a particular row is changed).
+    removeSubdivisionLinesForRow(rowIndex) {
+        for (line of this.components.subdivisionLineLists[rowIndex]) {
+            line.remove()
+        }
+        this.components.subdivisionLineLists[rowIndex] = []
     }
 
     /**
