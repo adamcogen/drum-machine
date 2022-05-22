@@ -88,7 +88,6 @@ window.onload = () => {
     let gui = new DrumMachineGui(sequencer, two);
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
-    let referenceLineLists = initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
     let sequencerRowLines = initializeAllSequencerRowLines() // list of sequencer row lines
     let subdivisionLineLists = initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
     let timeTrackingLines = initializeTimeTrackingLines() // list of lines that move to represent the current time within the loop
@@ -1098,52 +1097,6 @@ window.onload = () => {
         subdivisionLineLists[rowIndex] = []
     }
 
-    function removeReferenceLinesForRow(rowIndex) {
-        for (line of referenceLineLists[rowIndex]) {
-            line.remove()
-        }
-        referenceLineLists[rowIndex] = []
-    }
-
-    function initializeAllReferenceLines() {
-        let allReferenceLineLists = []
-        let referenceLinesForRow = []
-        for (let rowsDrawn = 0; rowsDrawn < sequencer.numberOfRows; rowsDrawn++) {
-            referenceLinesForRow = initializeReferenceLinesForRow(rowsDrawn)
-            allReferenceLineLists.push(referenceLinesForRow) // keep a list of all rows' reference line lists
-        }
-        return allReferenceLineLists
-    }
-
-    function initializeReferenceLinesForRow(rowIndex) {
-        let referenceLinesForRow = []
-        if (sequencer.rows[rowIndex].getNumberOfReferenceLines() <= 0) {
-            return [] // don't draw reference lines for this row if it has 0 or fewer
-        }
-        let xIncrementBetweenLines = gui.configurations.sequencer.width / sequencer.rows[rowIndex].getNumberOfReferenceLines()
-        for (let linesDrawnForRow = 0; linesDrawnForRow < sequencer.rows[rowIndex].getNumberOfReferenceLines(); linesDrawnForRow++) {
-            let referenceLine = two.makePath(
-                [
-                    new Two.Anchor(gui.configurations.sequencer.left + (xIncrementBetweenLines * linesDrawnForRow), gui.configurations.sequencer.top - 1 + (rowIndex * gui.configurations.sequencer.spaceBetweenRows)),
-                    new Two.Anchor(gui.configurations.sequencer.left + (xIncrementBetweenLines * linesDrawnForRow), gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows) - gui.configurations.referenceLines.height),
-                ], 
-                false
-            );
-            referenceLine.linewidth = gui.configurations.sequencer.lineWidth;
-            referenceLine.stroke = gui.configurations.referenceLines.color
-
-            referenceLinesForRow.push(referenceLine) // keep a list of all reference lines for the current row
-        }
-        return referenceLinesForRow
-    }
-
-    function removeReferenceLinesForRow(rowIndex) {
-        for (referenceLine of referenceLineLists[rowIndex]) {
-            referenceLine.remove()
-        }
-        referenceLineLists[rowIndex] = []
-    }
-
     // draw lines for the 'time trackers' for each sequencer row.
     // these are the little lines above each sequencer line that track the current time within the loop.
     // return a list of the drawn lines. these will be Two.js 'path' objects.
@@ -1298,7 +1251,7 @@ window.onload = () => {
             }
         }
         rowSelecionTracker.shapes.push(...subdivisionLineLists[rowIndex])
-        rowSelecionTracker.shapes.push(...referenceLineLists[rowIndex])
+        rowSelecionTracker.shapes.push(...gui.components.referenceLineLists[rowIndex])
         rowSelecionTracker.shapes.push(sequencerRowLines[rowIndex])
         rowSelecionTracker.shapes.push(gui.components.sequencerRowSelectionRectangles[rowIndex])
         rowSelecionTracker.shapes.push(clearNotesForRowButtonShapes[rowIndex])
@@ -1689,13 +1642,13 @@ window.onload = () => {
             list = [];
         }
         subdivisionLineLists = []
-        for (list of referenceLineLists) {
+        for (list of gui.components.referenceLineLists) {
             for (line of list) {
                 line.remove();
             }
             list = [];
         }
-        referenceLineLists = []
+        gui.components.referenceLineLists = []
         for (line of sequencerRowLines) {
             line.remove();
         }
@@ -1713,7 +1666,7 @@ window.onload = () => {
         }
         gui.components.sequencerRowSelectionRectangles = []
         gui.components.sequencerRowSelectionRectangles = gui.initializeSequencerRowSelectionRectangles();
-        referenceLineLists = initializeAllReferenceLines();
+        gui.components.referenceLineLists = gui.initializeAllReferenceLines();
         subdivisionLineLists = initializeAllSubdivisionLines();
         sequencerRowLines = initializeAllSequencerRowLines();
         sequencerRowHandles = initializeSequencerRowHandles();
@@ -1742,11 +1695,11 @@ window.onload = () => {
         removeAllCirclesFromDisplay()
         // next we will delete all lines for the changed row
         removeSubdivisionLinesForRow(rowIndex)
-        removeReferenceLinesForRow(rowIndex)
+        gui.removeReferenceLinesForRow(rowIndex)
         removeSequencerRowLine(rowIndex)
         removeTimeTrackingLine(rowIndex)
         // then we will draw all the lines for the changed row, starting with reference lines since they need to be the bottom layer
-        referenceLineLists[rowIndex] = initializeReferenceLinesForRow(rowIndex)
+        gui.components.referenceLineLists[rowIndex] = gui.initializeReferenceLinesForRow(rowIndex)
         subdivisionLineLists[rowIndex] = initializeSubdivisionLinesForRow(rowIndex)
         sequencerRowLines[rowIndex] = initializeSequencerRowLine(rowIndex)
         timeTrackingLines[rowIndex] = initializeTimeTrackingLineForRow(rowIndex)
