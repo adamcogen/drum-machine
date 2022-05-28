@@ -38,10 +38,12 @@ window.onload = () => {
     const HI_HAT_OPEN = 'hi-hat-open';
     const SNARE = 'snare';
     const WOODBLOCK = 'woodblock';
+    const TOM = 'tom'
+    const CLAP = 'clap'
     const WAV_EXTENSION = '.wav';
 
     // initialize the list of sample names we will use. the order of this list determines the order of sounds on the sound bank
-    let sampleNameList = [WOODBLOCK, HI_HAT_CLOSED, HI_HAT_OPEN, SNARE, BASS_DRUM]
+    let sampleNameList = [WOODBLOCK, HI_HAT_CLOSED, HI_HAT_OPEN, CLAP, SNARE, TOM, BASS_DRUM]
 
     /**
      * load sound files
@@ -50,8 +52,10 @@ window.onload = () => {
     samples[WOODBLOCK] = new SequencerNoteType(null, '#bd3b07')
     samples[HI_HAT_CLOSED] = new SequencerNoteType(null, '#cf6311') // or try #b58f04 , this was yellow before
     samples[HI_HAT_OPEN] = new SequencerNoteType(null, '#b8961c') // or try #bf3d5e , this was red before
+    samples[CLAP] = new SequencerNoteType(null, '#689620')
     samples[SNARE] = new SequencerNoteType(null, '#0e6e21')
-    samples[BASS_DRUM] = new SequencerNoteType(null, '#1b617a')
+    samples[TOM] = new SequencerNoteType(null, '#1b617a')
+    samples[BASS_DRUM] = new SequencerNoteType(null, '#5b3787')
     // load all of the drum samples
     for (sampleName of sampleNameList) {
         loadDrumSample(SOUND_FILES_PATH, sampleName, WAV_EXTENSION)
@@ -807,6 +811,25 @@ window.onload = () => {
     function initializeSimpleDefaultSequencerPattern(){
         sequencer.setNumberOfRows(0)
         addEmptySequencerRow();
+        sequencer.rows[0].setNumberOfSubdivisions(16)
+        sequencer.rows[0].setNumberOfReferenceLines(4)
+        sequencer.rows[0].setQuantization(true)
+        addEmptySequencerRow();
+        sequencer.rows[1].setNumberOfSubdivisions(8)
+        sequencer.rows[1].setNumberOfReferenceLines(4)
+        sequencer.rows[1].setQuantization(true)
+        addEmptySequencerRow();
+        sequencer.rows[2].setNumberOfSubdivisions(8)
+        sequencer.rows[2].setNumberOfReferenceLines(4)
+        sequencer.rows[2].setQuantization(true)
+        addEmptySequencerRow();
+        sequencer.rows[3].setNumberOfSubdivisions(8)
+        sequencer.rows[3].setNumberOfReferenceLines(4)
+        sequencer.rows[3].setQuantization(false)
+        addEmptySequencerRow();
+        sequencer.rows[4].setNumberOfSubdivisions(4)
+        sequencer.rows[4].setNumberOfReferenceLines(4)
+        sequencer.rows[4].setQuantization(true)
     }
 
     // set up a default initial drum sequence with some notes in it.

@@ -42,7 +42,7 @@ function getGuiConfigurations() {
             color: lighterSequencerColor, // meant to be slightly lighter than the subdivision line color
         },
         noteTrashBin: {
-            top: 500,
+            top: 595,
             left: 40,
             width: 48,
             height: 48,
@@ -67,7 +67,7 @@ function getGuiConfigurations() {
             }
         },
         restartSequencerButton: {
-            top: 380,
+            top: 475,
             left: 40,
             width: 48,
             height: 48,
@@ -79,7 +79,7 @@ function getGuiConfigurations() {
             }
         },
         clearAllNotesButton: {
-            top: 440,
+            top: 535,
             left: 40,
             width: 48,
             height: 48,
