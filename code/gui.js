@@ -27,6 +27,10 @@ class DrumMachineGui {
         components.timeTrackingLines = this.initializeTimeTrackingLines() // list of lines that move to represent the current time within the loop
         components.noteBankContainer = this.initializeNoteBankContainer() // a rectangle that goes around the note bank
         components.noteTrashBinContainer = this.initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
+        components.pauseButtonShape = this.initializeRectangleShape(this.configurations.pauseButton.top, this.configurations.pauseButton.left, this.configurations.pauseButton.height, this.configurations.pauseButton.width) // a rectangle that will act as the pause button for now
+        components.restartSequencerButtonShape = this.initializeRectangleShape(this.configurations.restartSequencerButton.top, this.configurations.restartSequencerButton.left, this.configurations.restartSequencerButton.height, this.configurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
+        components.clearAllNotesButtonShape = this.initializeRectangleShape(this.configurations.clearAllNotesButton.top, this.configurations.clearAllNotesButton.left, this.configurations.clearAllNotesButton.height, this.configurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
+        components.addRowButtonShape = this.initializeRectangleShape(this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * (this.sequencer.rows.length - 1)) + this.configurations.addRowButton.topPadding, this.configurations.sequencer.left + (this.configurations.sequencer.width / 2) + this.configurations.addRowButton.leftPadding - (this.configurations.addRowButton.width / 2), this.configurations.addRowButton.height, this.configurations.addRowButton.width)
         return components;
     }
 
@@ -66,7 +70,7 @@ class DrumMachineGui {
      */
 
     removeReferenceLinesForRow(rowIndex) {
-        for (line of this.components.referenceLineLists[rowIndex]) {
+        for (let line of this.components.referenceLineLists[rowIndex]) {
             line.remove()
         }
         this.components.referenceLineLists[rowIndex] = []
@@ -186,7 +190,7 @@ class DrumMachineGui {
     // the current intent of this is to delete them all so that they can be re-drawn afterwards (such as
     // when the number of subdivisions in a particular row is changed).
     removeSubdivisionLinesForRow(rowIndex) {
-        for (line of this.components.subdivisionLineLists[rowIndex]) {
+        for (let line of this.components.subdivisionLineLists[rowIndex]) {
             line.remove()
         }
         this.components.subdivisionLineLists[rowIndex] = []

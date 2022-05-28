@@ -92,11 +92,7 @@ window.onload = () => {
     let gui = new DrumMachineGui(sequencer, two, sampleNameList);
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
-    let pauseButtonShape = initializeRectangleShape(gui.configurations.pauseButton.top, gui.configurations.pauseButton.left, gui.configurations.pauseButton.height, gui.configurations.pauseButton.width) // a rectangle that will act as the pause button for now
-    let restartSequencerButtonShape = initializeRectangleShape(gui.configurations.restartSequencerButton.top, gui.configurations.restartSequencerButton.left, gui.configurations.restartSequencerButton.height, gui.configurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
-    let clearAllNotesButtonShape = initializeRectangleShape(gui.configurations.clearAllNotesButton.top, gui.configurations.clearAllNotesButton.left, gui.configurations.clearAllNotesButton.height, gui.configurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
     let clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(gui.configurations.clearRowButtons.topPaddingPerRow, gui.configurations.clearRowButtons.leftPaddingPerRow, gui.configurations.clearRowButtons.height, gui.configurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
-    let addRowButtonShape = initializeRectangleShape(gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding, gui.configurations.sequencer.left + (gui.configurations.sequencer.width / 2) + gui.configurations.addRowButton.leftPadding - (gui.configurations.addRowButton.width / 2), gui.configurations.addRowButton.height, gui.configurations.addRowButton.width)
     let sequencerRowHandles = initializeSequencerRowHandles()
     setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
 
@@ -108,19 +104,19 @@ window.onload = () => {
     lastButtonClickTimeTrackers = {
         pause: {
             lastClickTime: Number.MIN_SAFE_INTEGER,
-            shape: pauseButtonShape,
+            shape: gui.components.pauseButtonShape,
         },
         restartSequencer: {
             lastClickTime: Number.MIN_SAFE_INTEGER,
-            shape: restartSequencerButtonShape,
+            shape: gui.components.restartSequencerButtonShape,
         },
         clearAllNotes: {
             lastClickTime: Number.MIN_SAFE_INTEGER,
-            shape: clearAllNotesButtonShape,
+            shape: gui.components.clearAllNotesButtonShape,
         },
         addRow: {
             lastClickTime: Number.MIN_SAFE_INTEGER,
-            shape: addRowButtonShape
+            shape: gui.components.addRowButtonShape,
         }
     }
 
@@ -1037,18 +1033,18 @@ window.onload = () => {
 
     function addPauseButtonActionListeners() {
         // remove event listeners to avoid duplicates
-        pauseButtonShape._renderer.elem.removeEventListener('click', pauseButtonClickHandler)
+        gui.components.pauseButtonShape._renderer.elem.removeEventListener('click', pauseButtonClickHandler)
         domElements.images.pauseIcon.removeEventListener('click', pauseButtonClickHandler)
         domElements.images.playIcon.removeEventListener('click', pauseButtonClickHandler)
         // then add the event listeners
-        pauseButtonShape._renderer.elem.addEventListener('click', pauseButtonClickHandler)
+        gui.components.pauseButtonShape._renderer.elem.addEventListener('click', pauseButtonClickHandler)
         domElements.images.pauseIcon.addEventListener('click', pauseButtonClickHandler)
         domElements.images.playIcon.addEventListener('click', pauseButtonClickHandler)
     }
 
     function pauseButtonClickHandler(event) {
         lastButtonClickTimeTrackers.pause.lastClickTime = sequencer.currentTime
-        pauseButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
+        gui.components.pauseButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         togglePaused()
     }
 
@@ -1186,31 +1182,31 @@ window.onload = () => {
 
     function addRestartSequencerButtonActionListeners() {
         // remove event listeners first to avoid duplicates
-        restartSequencerButtonShape._renderer.elem.removeEventListener('click', restartSequencerButtonClickHandler)
+        gui.components.restartSequencerButtonShape._renderer.elem.removeEventListener('click', restartSequencerButtonClickHandler)
         domElements.images.restartIcon.removeEventListener('click', restartSequencerButtonClickHandler)
         // then add the event listeners
-        restartSequencerButtonShape._renderer.elem.addEventListener('click', restartSequencerButtonClickHandler)
+        gui.components.restartSequencerButtonShape._renderer.elem.addEventListener('click', restartSequencerButtonClickHandler)
         domElements.images.restartIcon.addEventListener('click', restartSequencerButtonClickHandler)
     }
 
     function restartSequencerButtonClickHandler(event) {
         lastButtonClickTimeTrackers.restartSequencer.lastClickTime = sequencer.currentTime
-        restartSequencerButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
+        gui.components.restartSequencerButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         restartSequencer()
     }
 
     function addClearAllNotesButtonActionListeners() {
         // remove event listeners to prevent duplicates
-        clearAllNotesButtonShape._renderer.elem.removeEventListener('click', clearAllNotesButtonClickHandler)
+        gui.components.clearAllNotesButtonShape._renderer.elem.removeEventListener('click', clearAllNotesButtonClickHandler)
         domElements.images.clearAllIcon.removeEventListener('click', clearAllNotesButtonClickHandler)
         // add event listners
-        clearAllNotesButtonShape._renderer.elem.addEventListener('click', clearAllNotesButtonClickHandler)
+        gui.components.clearAllNotesButtonShape._renderer.elem.addEventListener('click', clearAllNotesButtonClickHandler)
         domElements.images.clearAllIcon.addEventListener('click', clearAllNotesButtonClickHandler)
     }
 
     function clearAllNotesButtonClickHandler(event) {
         lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = sequencer.currentTime
-        clearAllNotesButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
+        gui.components.clearAllNotesButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         clearAllNotes();
     }
 
@@ -1236,10 +1232,10 @@ window.onload = () => {
     }
 
     function initializeAddRowButtonActionListener() {
-        lastButtonClickTimeTrackers.addRow.shape = addRowButtonShape;
+        lastButtonClickTimeTrackers.addRow.shape = gui.components.addRowButtonShape;
         // remove any existing click listeners to prevent duplicates
-        addRowButtonShape._renderer.elem.removeEventListener('click', addRowClickHandler)
-        addRowButtonShape._renderer.elem.addEventListener('click', addRowClickHandler)
+        gui.components.addRowButtonShape._renderer.elem.removeEventListener('click', addRowClickHandler)
+        gui.components.addRowButtonShape._renderer.elem.addEventListener('click', addRowClickHandler)
         // add new click listeners
         domElements.images.addIcon.removeEventListener('click', addRowClickHandler)
         domElements.images.addIcon.addEventListener('click', addRowClickHandler)
@@ -1247,7 +1243,7 @@ window.onload = () => {
 
     function addRowClickHandler(event) {
         lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
-        addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
+        gui.components.addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         addEmptySequencerRow();
         // redraw the sequencer
         redrawSequencer()
@@ -1280,9 +1276,9 @@ window.onload = () => {
         }
         clearNotesForRowButtonShapes = []
         clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(gui.configurations.clearRowButtons.topPaddingPerRow, gui.configurations.clearRowButtons.leftPaddingPerRow, gui.configurations.clearRowButtons.height, gui.configurations.clearRowButtons.width); // this is a list of button rectangles, one per row, to clear the notes on that row
-        addRowButtonShape.remove();
-        addRowButtonShape = initializeRectangleShape(gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding, gui.configurations.sequencer.left + (gui.configurations.sequencer.width / 2) + gui.configurations.addRowButton.leftPadding - (gui.configurations.addRowButton.width / 2), gui.configurations.addRowButton.height, gui.configurations.addRowButton.width)
-        addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
+        gui.components.addRowButtonShape.remove();
+        gui.components.addRowButtonShape = initializeRectangleShape(gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding, gui.configurations.sequencer.left + (gui.configurations.sequencer.width / 2) + gui.configurations.addRowButton.leftPadding - (gui.configurations.addRowButton.width / 2), gui.configurations.addRowButton.height, gui.configurations.addRowButton.width)
+        gui.components.addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         // update two.js so we can add action listeners to shapes
         two.update()
         // initialize action listeners
