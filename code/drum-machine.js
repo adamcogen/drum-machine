@@ -92,7 +92,6 @@ window.onload = () => {
     let gui = new DrumMachineGui(sequencer, two, sampleNameList);
 
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
-    let clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(gui.configurations.clearRowButtons.topPaddingPerRow, gui.configurations.clearRowButtons.leftPaddingPerRow, gui.configurations.clearRowButtons.height, gui.configurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
     let sequencerRowHandles = initializeSequencerRowHandles()
     setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
 
@@ -1140,7 +1139,7 @@ window.onload = () => {
         rowSelecionTracker.shapes.push(...gui.components.referenceLineLists[rowIndex])
         rowSelecionTracker.shapes.push(gui.components.sequencerRowLines[rowIndex])
         rowSelecionTracker.shapes.push(gui.components.sequencerRowSelectionRectangles[rowIndex])
-        rowSelecionTracker.shapes.push(clearNotesForRowButtonShapes[rowIndex])
+        rowSelecionTracker.shapes.push(gui.components.clearNotesForRowButtonShapes[rowIndex])
         // this part gets a little weird. save a list of all of the starting positions of each
         // shape that is being moved. that way we can translate them proporionally to how far
         // the row handle has moved.
@@ -1214,12 +1213,12 @@ window.onload = () => {
         for(let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
             lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex] = {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
-                shape: clearNotesForRowButtonShapes[rowIndex],
+                shape: gui.components.clearNotesForRowButtonShapes[rowIndex],
             }
-            clearNotesForRowButtonShapes[rowIndex]._renderer.elem.removeEventListener('click', (event) => {
+            gui.components.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.removeEventListener('click', (event) => {
                 clearRowButtonClickHandler(event, rowIndex)
             });
-            clearNotesForRowButtonShapes[rowIndex]._renderer.elem.addEventListener('click', (event) => {
+            gui.components.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.addEventListener('click', (event) => {
                 clearRowButtonClickHandler(event, rowIndex)
             });
         }
@@ -1227,7 +1226,7 @@ window.onload = () => {
 
     function clearRowButtonClickHandler(event, rowIndex) {
         lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = sequencer.currentTime
-        clearNotesForRowButtonShapes[rowIndex].fill = gui.configurations.buttonBehavior.clickedButtonColor
+        gui.components.clearNotesForRowButtonShapes[rowIndex].fill = gui.configurations.buttonBehavior.clickedButtonColor
         clearNotesForRow(rowIndex);
     }
 
@@ -1271,11 +1270,11 @@ window.onload = () => {
         // todo: make methods for these so we don't have to pass in the GUI configurations twice when initializing.
         // todo: clean up first GUI initialization so that we can just call a 'redraw' method the first time as well, 
         //       to avoid duplicated code
-        for (shape of clearNotesForRowButtonShapes) {
+        for (shape of gui.components.clearNotesForRowButtonShapes) {
             shape.remove()
         }
-        clearNotesForRowButtonShapes = []
-        clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(gui.configurations.clearRowButtons.topPaddingPerRow, gui.configurations.clearRowButtons.leftPaddingPerRow, gui.configurations.clearRowButtons.height, gui.configurations.clearRowButtons.width); // this is a list of button rectangles, one per row, to clear the notes on that row
+        gui.components.clearNotesForRowButtonShapes = []
+        gui.components.clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(gui.configurations.clearRowButtons.topPaddingPerRow, gui.configurations.clearRowButtons.leftPaddingPerRow, gui.configurations.clearRowButtons.height, gui.configurations.clearRowButtons.width); // this is a list of button rectangles, one per row, to clear the notes on that row
         gui.components.addRowButtonShape.remove();
         gui.components.addRowButtonShape = initializeRectangleShape(gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding, gui.configurations.sequencer.left + (gui.configurations.sequencer.width / 2) + gui.configurations.addRowButton.leftPadding - (gui.configurations.addRowButton.width / 2), gui.configurations.addRowButton.height, gui.configurations.addRowButton.width)
         gui.components.addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor

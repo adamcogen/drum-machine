@@ -31,6 +31,7 @@ class DrumMachineGui {
         components.restartSequencerButtonShape = this.initializeRectangleShape(this.configurations.restartSequencerButton.top, this.configurations.restartSequencerButton.left, this.configurations.restartSequencerButton.height, this.configurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
         components.clearAllNotesButtonShape = this.initializeRectangleShape(this.configurations.clearAllNotesButton.top, this.configurations.clearAllNotesButton.left, this.configurations.clearAllNotesButton.height, this.configurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
         components.addRowButtonShape = this.initializeRectangleShape(this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * (this.sequencer.rows.length - 1)) + this.configurations.addRowButton.topPadding, this.configurations.sequencer.left + (this.configurations.sequencer.width / 2) + this.configurations.addRowButton.leftPadding - (this.configurations.addRowButton.width / 2), this.configurations.addRowButton.height, this.configurations.addRowButton.width)
+        components.clearNotesForRowButtonShapes = this.initializeButtonPerSequencerRow(this.configurations.clearRowButtons.topPaddingPerRow, this.configurations.clearRowButtons.leftPaddingPerRow, this.configurations.clearRowButtons.height, this.configurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
         return components;
     }
 
@@ -284,6 +285,16 @@ class DrumMachineGui {
         shape.stroke = this.configurations.sequencer.color
         shape.fill = 'transparent'
         return shape
+    }
+
+    initializeButtonPerSequencerRow(topPaddingPerRow, leftPaddingPerRow, height, width) {
+        let shapes = []
+        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            let top = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + topPaddingPerRow
+            let left = this.configurations.sequencer.left + this.configurations.sequencer.width + leftPaddingPerRow
+            shapes[rowIndex] = this.initializeRectangleShape(top, left, height, width)
+        }
+        return shapes
     }
 
 }
