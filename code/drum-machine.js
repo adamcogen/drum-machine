@@ -91,8 +91,6 @@ window.onload = () => {
 
     let gui = new DrumMachineGui(sequencer, two, sampleNameList);
 
-    // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects)
-    let sequencerRowHandles = initializeSequencerRowHandles()
     setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
 
     /**
@@ -335,7 +333,7 @@ window.onload = () => {
             mouseX = event.pageX
             mouseY = event.pageY
 
-            let circle = sequencerRowHandles[selectedRowIndex]
+            let circle = gui.components.sequencerRowHandles[selectedRowIndex]
             circle.stroke = 'black'
             circle.linewidth = 2
             circle.fill = gui.configurations.sequencerRowHandles.selectedColor
@@ -344,8 +342,8 @@ window.onload = () => {
             domElements.images.trashClosedIcon.style.display = 'block'
             domElements.images.trashOpenIcon.style.display = 'none'
 
-            sequencerRowHandles[selectedRowIndex].translation.x = mouseX
-            sequencerRowHandles[selectedRowIndex].translation.y = mouseY
+            gui.components.sequencerRowHandles[selectedRowIndex].translation.x = mouseX
+            gui.components.sequencerRowHandles[selectedRowIndex].translation.y = mouseY
 
             // check if the row handle is within range to be placed in the trash bin. if so, move the handle to the center of the trash bin.
             centerOfTrashBinX = gui.configurations.noteTrashBin.left + (gui.configurations.noteTrashBin.width / 2)
@@ -366,8 +364,8 @@ window.onload = () => {
                 gui.components.noteTrashBinContainer.stroke = 'transparent'
             }
 
-            let xChangeFromStart = sequencerRowHandles[selectedRowIndex].translation.x - rowSelecionTracker.rowHandleStartingPosition.x
-            let yChangeFromStart = sequencerRowHandles[selectedRowIndex].translation.y - rowSelecionTracker.rowHandleStartingPosition.y
+            let xChangeFromStart = gui.components.sequencerRowHandles[selectedRowIndex].translation.x - rowSelecionTracker.rowHandleStartingPosition.x
+            let yChangeFromStart = gui.components.sequencerRowHandles[selectedRowIndex].translation.y - rowSelecionTracker.rowHandleStartingPosition.y
 
             for (let shapeIndex = 0; shapeIndex < rowSelecionTracker.shapes.length; shapeIndex++) {
                 rowSelecionTracker.shapes[shapeIndex].translation.x = rowSelecionTracker.shapesOriginalPositions[shapeIndex].x + xChangeFromStart;
@@ -1066,26 +1064,9 @@ window.onload = () => {
         return shapes
     }
 
-    // these are circles that are to the left of the sequencer, which we can click on to select sequencer rows,
-    // so that we can move those rows by clicking and dragging, to rearrange the sequencer row order, throw 
-    // rows away, etc.
-    function initializeSequencerRowHandles() {
-        let allCircles = []
-        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            let horizontalPosition = gui.configurations.sequencer.left + gui.configurations.sequencerRowHandles.leftPadding
-            let verticalPosition = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * rowIndex) + gui.configurations.sequencerRowHandles.topPadding
-            let radius = gui.configurations.sequencerRowHandles.radius
-            let circle = two.makeCircle(horizontalPosition, verticalPosition, radius);
-            circle.fill = gui.configurations.sequencerRowHandles.unselectedColor
-            circle.stroke = "transparent"
-            allCircles.push(circle)
-        }
-        return allCircles
-    }
-
     function initializeSequencerRowHandlesActionListeners() {
-        for (let rowIndex = 0; rowIndex < sequencerRowHandles.length; rowIndex++) {
-            let circle = sequencerRowHandles[rowIndex];
+        for (let rowIndex = 0; rowIndex < gui.components.sequencerRowHandles.length; rowIndex++) {
+            let circle = gui.components.sequencerRowHandles[rowIndex];
             let rowSelectionRectangle = gui.components.sequencerRowSelectionRectangles[rowIndex]
 
             // add border to circle on mouseover
@@ -1150,8 +1131,8 @@ window.onload = () => {
                 y: shape.translation.y,
             });
         }
-        rowSelecionTracker.rowHandleStartingPosition.x = sequencerRowHandles[rowIndex].translation.x
-        rowSelecionTracker.rowHandleStartingPosition.y = sequencerRowHandles[rowIndex].translation.y
+        rowSelecionTracker.rowHandleStartingPosition.x = gui.components.sequencerRowHandles[rowIndex].translation.x
+        rowSelecionTracker.rowHandleStartingPosition.y = gui.components.sequencerRowHandles[rowIndex].translation.y
         // do the exact same thing for dom elements (subdivision and reference line text inputs, quantization checkbox, images) next
         rowSelecionTracker.domElements = [];
         rowSelecionTracker.domElements.push(subdivisionTextInputs[rowIndex])
@@ -1171,7 +1152,7 @@ window.onload = () => {
             });
         }
         // update visuals
-        let circle = sequencerRowHandles[rowIndex]
+        let circle = gui.components.sequencerRowHandles[rowIndex]
         circle.stroke = 'black'
         circle.linewidth = 2
         circle.fill = gui.configurations.sequencerRowHandles.selectedColor
@@ -1542,10 +1523,10 @@ window.onload = () => {
             line.remove();
         }
         gui.components.timeTrackingLines = [];
-        for (circle of sequencerRowHandles) {
+        for (circle of gui.components.sequencerRowHandles) {
             circle.remove();
         }
-        sequencerRowHandles = []
+        gui.components.sequencerRowHandles = []
         for (rectangle of gui.components.sequencerRowSelectionRectangles) {
             rectangle.remove();
         }
@@ -1554,7 +1535,7 @@ window.onload = () => {
         gui.components.referenceLineLists = gui.initializeAllReferenceLines();
         gui.components.subdivisionLineLists = gui.initializeAllSubdivisionLines();
         gui.components.sequencerRowLines = gui.initializeAllSequencerRowLines();
-        sequencerRowHandles = initializeSequencerRowHandles();
+        gui.components.sequencerRowHandles = gui.initializeSequencerRowHandles();
         gui.components.timeTrackingLines = gui.initializeTimeTrackingLines();
         drawAllNoteBankCircles();
         drawNotesToReflectSequencerCurrentState();

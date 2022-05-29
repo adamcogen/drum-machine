@@ -32,6 +32,7 @@ class DrumMachineGui {
         components.clearAllNotesButtonShape = this.initializeRectangleShape(this.configurations.clearAllNotesButton.top, this.configurations.clearAllNotesButton.left, this.configurations.clearAllNotesButton.height, this.configurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
         components.addRowButtonShape = this.initializeRectangleShape(this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * (this.sequencer.rows.length - 1)) + this.configurations.addRowButton.topPadding, this.configurations.sequencer.left + (this.configurations.sequencer.width / 2) + this.configurations.addRowButton.leftPadding - (this.configurations.addRowButton.width / 2), this.configurations.addRowButton.height, this.configurations.addRowButton.width)
         components.clearNotesForRowButtonShapes = this.initializeButtonPerSequencerRow(this.configurations.clearRowButtons.topPaddingPerRow, this.configurations.clearRowButtons.leftPaddingPerRow, this.configurations.clearRowButtons.height, this.configurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
+        components.sequencerRowHandles = this.initializeSequencerRowHandles()
         return components;
     }
 
@@ -259,6 +260,27 @@ class DrumMachineGui {
         noteTrashBinContainer.stroke = 'transparent'
         noteTrashBinContainer.fill = 'transparent'
         return noteTrashBinContainer
+    }
+
+    /**
+     * sequencer row handles
+     */
+
+    // these are circles that are to the left of the sequencer, which we can click on to select sequencer rows,
+    // so that we can move those rows by clicking and dragging, to rearrange the sequencer row order, throw 
+    // rows away, etc.
+    initializeSequencerRowHandles() {
+        let allCircles = []
+        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            let horizontalPosition = this.configurations.sequencer.left + this.configurations.sequencerRowHandles.leftPadding
+            let verticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + this.configurations.sequencerRowHandles.topPadding
+            let radius = this.configurations.sequencerRowHandles.radius
+            let circle = this.two.makeCircle(horizontalPosition, verticalPosition, radius);
+            circle.fill = this.configurations.sequencerRowHandles.unselectedColor
+            circle.stroke = "transparent"
+            allCircles.push(circle)
+        }
+        return allCircles
     }
 
     /**
