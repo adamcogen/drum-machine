@@ -10,7 +10,10 @@ class DrumMachineGui {
         this.two = two
         this.sampleNameList = sampleNameList
         this.configurations = getGuiConfigurations()
-        this.components = this.initializeGuiComponents();
+        this.components = {
+            shapes: {}, // this hash will contain all of the two.js shapes (either as shapes, lists of shapes, or lists of lists of shapes)
+        }
+        this.components.shapes = this.initializeGuiComponents();
         this.initializeComponentEventListeners();
         this.initializeWindowEventListeners();
     }
@@ -19,21 +22,21 @@ class DrumMachineGui {
     // these are drawn in the order that they are layered on-screen, i.e. the bottom layer 
     // is drawn first.
     initializeGuiComponents() {
-        let components = {};
-        components.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
-        components.referenceLineLists = this.initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
-        components.sequencerRowLines = this.initializeAllSequencerRowLines() // list of sequencer row lines
-        components.subdivisionLineLists = this.initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
-        components.timeTrackingLines = this.initializeTimeTrackingLines() // list of lines that move to represent the current time within the loop
-        components.noteBankContainer = this.initializeNoteBankContainer() // a rectangle that goes around the note bank
-        components.noteTrashBinContainer = this.initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
-        components.pauseButtonShape = this.initializeRectangleShape(this.configurations.pauseButton.top, this.configurations.pauseButton.left, this.configurations.pauseButton.height, this.configurations.pauseButton.width) // a rectangle that will act as the pause button for now
-        components.restartSequencerButtonShape = this.initializeRectangleShape(this.configurations.restartSequencerButton.top, this.configurations.restartSequencerButton.left, this.configurations.restartSequencerButton.height, this.configurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
-        components.clearAllNotesButtonShape = this.initializeRectangleShape(this.configurations.clearAllNotesButton.top, this.configurations.clearAllNotesButton.left, this.configurations.clearAllNotesButton.height, this.configurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
-        components.addRowButtonShape = this.initializeRectangleShape(this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * (this.sequencer.rows.length - 1)) + this.configurations.addRowButton.topPadding, this.configurations.sequencer.left + (this.configurations.sequencer.width / 2) + this.configurations.addRowButton.leftPadding - (this.configurations.addRowButton.width / 2), this.configurations.addRowButton.height, this.configurations.addRowButton.width)
-        components.clearNotesForRowButtonShapes = this.initializeButtonPerSequencerRow(this.configurations.clearRowButtons.topPaddingPerRow, this.configurations.clearRowButtons.leftPaddingPerRow, this.configurations.clearRowButtons.height, this.configurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
-        components.sequencerRowHandles = this.initializeSequencerRowHandles()
-        return components;
+        let shapes = {};
+        shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
+        shapes.referenceLineLists = this.initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
+        shapes.sequencerRowLines = this.initializeAllSequencerRowLines() // list of sequencer row lines
+        shapes.subdivisionLineLists = this.initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
+        shapes.timeTrackingLines = this.initializeTimeTrackingLines() // list of lines that move to represent the current time within the loop
+        shapes.noteBankContainer = this.initializeNoteBankContainer() // a rectangle that goes around the note bank
+        shapes.noteTrashBinContainer = this.initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
+        shapes.pauseButtonShape = this.initializeRectangleShape(this.configurations.pauseButton.top, this.configurations.pauseButton.left, this.configurations.pauseButton.height, this.configurations.pauseButton.width) // a rectangle that will act as the pause button for now
+        shapes.restartSequencerButtonShape = this.initializeRectangleShape(this.configurations.restartSequencerButton.top, this.configurations.restartSequencerButton.left, this.configurations.restartSequencerButton.height, this.configurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
+        shapes.clearAllNotesButtonShape = this.initializeRectangleShape(this.configurations.clearAllNotesButton.top, this.configurations.clearAllNotesButton.left, this.configurations.clearAllNotesButton.height, this.configurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
+        shapes.addRowButtonShape = this.initializeRectangleShape(this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * (this.sequencer.rows.length - 1)) + this.configurations.addRowButton.topPadding, this.configurations.sequencer.left + (this.configurations.sequencer.width / 2) + this.configurations.addRowButton.leftPadding - (this.configurations.addRowButton.width / 2), this.configurations.addRowButton.height, this.configurations.addRowButton.width)
+        shapes.clearNotesForRowButtonShapes = this.initializeButtonPerSequencerRow(this.configurations.clearRowButtons.topPaddingPerRow, this.configurations.clearRowButtons.leftPaddingPerRow, this.configurations.clearRowButtons.height, this.configurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
+        shapes.sequencerRowHandles = this.initializeSequencerRowHandles()
+        return shapes;
     }
 
     initializeComponentEventListeners() {
@@ -72,10 +75,10 @@ class DrumMachineGui {
      */
 
     removeReferenceLinesForRow(rowIndex) {
-        for (let line of this.components.referenceLineLists[rowIndex]) {
+        for (let line of this.components.shapes.referenceLineLists[rowIndex]) {
             line.remove()
         }
-        this.components.referenceLineLists[rowIndex] = []
+        this.components.shapes.referenceLineLists[rowIndex] = []
     }
 
     initializeAllReferenceLines() {
@@ -141,8 +144,8 @@ class DrumMachineGui {
     }
 
     removeSequencerRowLine(rowIndex) {
-        this.components.sequencerRowLines[rowIndex].remove();
-        this.components.sequencerRowLines[rowIndex] = null;
+        this.components.shapes.sequencerRowLines[rowIndex].remove();
+        this.components.shapes.sequencerRowLines[rowIndex] = null;
     }
 
     /**
@@ -192,10 +195,10 @@ class DrumMachineGui {
     // the current intent of this is to delete them all so that they can be re-drawn afterwards (such as
     // when the number of subdivisions in a particular row is changed).
     removeSubdivisionLinesForRow(rowIndex) {
-        for (let line of this.components.subdivisionLineLists[rowIndex]) {
+        for (let line of this.components.shapes.subdivisionLineLists[rowIndex]) {
             line.remove()
         }
-        this.components.subdivisionLineLists[rowIndex] = []
+        this.components.shapes.subdivisionLineLists[rowIndex] = []
     }
 
     /** 
@@ -203,8 +206,8 @@ class DrumMachineGui {
      */
 
     removeTimeTrackingLine(rowIndex) {
-        this.components.timeTrackingLines[rowIndex].remove();
-        this.components.timeTrackingLines[rowIndex] = null;
+        this.components.shapes.timeTrackingLines[rowIndex].remove();
+        this.components.shapes.timeTrackingLines[rowIndex] = null;
     }
 
     // draw lines for the 'time trackers' for each sequencer row.

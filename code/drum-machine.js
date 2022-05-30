@@ -101,19 +101,19 @@ window.onload = () => {
     lastButtonClickTimeTrackers = {
         pause: {
             lastClickTime: Number.MIN_SAFE_INTEGER,
-            shape: gui.components.pauseButtonShape,
+            shape: gui.components.shapes.pauseButtonShape,
         },
         restartSequencer: {
             lastClickTime: Number.MIN_SAFE_INTEGER,
-            shape: gui.components.restartSequencerButtonShape,
+            shape: gui.components.shapes.restartSequencerButtonShape,
         },
         clearAllNotes: {
             lastClickTime: Number.MIN_SAFE_INTEGER,
-            shape: gui.components.clearAllNotesButtonShape,
+            shape: gui.components.shapes.clearAllNotesButtonShape,
         },
         addRow: {
             lastClickTime: Number.MIN_SAFE_INTEGER,
-            shape: gui.components.addRowButtonShape,
+            shape: gui.components.shapes.addRowButtonShape,
         }
     }
 
@@ -207,7 +207,7 @@ window.onload = () => {
 
         let timeTrackingLinesXPosition = gui.configurations.sequencer.left + (gui.configurations.sequencer.width * (sequencer.timekeeping.currentTimeWithinCurrentLoop / sequencer.loopLengthInMillis))
 
-        for (let timeTrackingLine of gui.components.timeTrackingLines) {
+        for (let timeTrackingLine of gui.components.shapes.timeTrackingLines) {
             timeTrackingLine.position.x = timeTrackingLinesXPosition
         }
 
@@ -277,9 +277,9 @@ window.onload = () => {
                 circleBeingMoved.stroke = "red"
                 domElements.images.trashClosedIcon.style.display = 'none'
                 domElements.images.trashOpenIcon.style.display = 'block'
-                gui.components.noteTrashBinContainer.stroke = 'red'
+                gui.components.shapes.noteTrashBinContainer.stroke = 'red'
             } else {
-                gui.components.noteTrashBinContainer.stroke = 'transparent'
+                gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             }
             // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
             let sequencerLeftBoundary = gui.configurations.sequencer.left - gui.configurations.mouseEvents.notePlacementPadding
@@ -324,7 +324,7 @@ window.onload = () => {
                     circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
                     domElements.images.trashClosedIcon.style.display = 'none'
                     domElements.images.trashOpenIcon.style.display = 'block'
-                    gui.components.noteTrashBinContainer.stroke = 'red'
+                    gui.components.shapes.noteTrashBinContainer.stroke = 'red'
                 }
             }
         }
@@ -333,17 +333,17 @@ window.onload = () => {
             mouseX = event.pageX
             mouseY = event.pageY
 
-            let circle = gui.components.sequencerRowHandles[selectedRowIndex]
+            let circle = gui.components.shapes.sequencerRowHandles[selectedRowIndex]
             circle.stroke = 'black'
             circle.linewidth = 2
             circle.fill = gui.configurations.sequencerRowHandles.selectedColor
-            let rowSelectionRectangle = gui.components.sequencerRowSelectionRectangles[selectedRowIndex]
+            let rowSelectionRectangle = gui.components.shapes.sequencerRowSelectionRectangles[selectedRowIndex]
             rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.selectedColor
             domElements.images.trashClosedIcon.style.display = 'block'
             domElements.images.trashOpenIcon.style.display = 'none'
 
-            gui.components.sequencerRowHandles[selectedRowIndex].translation.x = mouseX
-            gui.components.sequencerRowHandles[selectedRowIndex].translation.y = mouseY
+            gui.components.shapes.sequencerRowHandles[selectedRowIndex].translation.x = mouseX
+            gui.components.shapes.sequencerRowHandles[selectedRowIndex].translation.y = mouseY
 
             // check if the row handle is within range to be placed in the trash bin. if so, move the handle to the center of the trash bin.
             centerOfTrashBinX = gui.configurations.noteTrashBin.left + (gui.configurations.noteTrashBin.width / 2)
@@ -358,14 +358,14 @@ window.onload = () => {
                 circle.stroke = "red"
                 domElements.images.trashClosedIcon.style.display = 'none'
                 domElements.images.trashOpenIcon.style.display = 'block'
-                gui.components.noteTrashBinContainer.stroke = 'red'
+                gui.components.shapes.noteTrashBinContainer.stroke = 'red'
             } else {
                 rowSelecionTracker.removeRow = false;
-                gui.components.noteTrashBinContainer.stroke = 'transparent'
+                gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             }
 
-            let xChangeFromStart = gui.components.sequencerRowHandles[selectedRowIndex].translation.x - rowSelecionTracker.rowHandleStartingPosition.x
-            let yChangeFromStart = gui.components.sequencerRowHandles[selectedRowIndex].translation.y - rowSelecionTracker.rowHandleStartingPosition.y
+            let xChangeFromStart = gui.components.shapes.sequencerRowHandles[selectedRowIndex].translation.x - rowSelecionTracker.rowHandleStartingPosition.x
+            let yChangeFromStart = gui.components.shapes.sequencerRowHandles[selectedRowIndex].translation.y - rowSelecionTracker.rowHandleStartingPosition.y
 
             for (let shapeIndex = 0; shapeIndex < rowSelecionTracker.shapes.length; shapeIndex++) {
                 rowSelecionTracker.shapes[shapeIndex].translation.x = rowSelecionTracker.shapesOriginalPositions[shapeIndex].x + xChangeFromStart;
@@ -390,7 +390,7 @@ window.onload = () => {
                 rowSelecionTracker.removeRow = true;
                 domElements.images.trashClosedIcon.style.display = 'none'
                 domElements.images.trashOpenIcon.style.display = 'block'
-                gui.components.noteTrashBinContainer.stroke = 'red'
+                gui.components.shapes.noteTrashBinContainer.stroke = 'red'
             }
 
             for(let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
@@ -983,7 +983,7 @@ window.onload = () => {
             circleBeingMovedOldBeatNumber = circleBeingMoved.guiData.beat
             circleBeingMovedNewBeatNumber = circleBeingMovedOldBeatNumber
             setNoteTrashBinVisibility(true)
-            gui.components.noteTrashBinContainer.stroke = 'transparent'
+            gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             sequencer.playDrumSampleNow(circleBeingMoved.guiData.sampleName)
         });
 
@@ -1030,18 +1030,18 @@ window.onload = () => {
 
     function addPauseButtonActionListeners() {
         // remove event listeners to avoid duplicates
-        gui.components.pauseButtonShape._renderer.elem.removeEventListener('click', pauseButtonClickHandler)
+        gui.components.shapes.pauseButtonShape._renderer.elem.removeEventListener('click', pauseButtonClickHandler)
         domElements.images.pauseIcon.removeEventListener('click', pauseButtonClickHandler)
         domElements.images.playIcon.removeEventListener('click', pauseButtonClickHandler)
         // then add the event listeners
-        gui.components.pauseButtonShape._renderer.elem.addEventListener('click', pauseButtonClickHandler)
+        gui.components.shapes.pauseButtonShape._renderer.elem.addEventListener('click', pauseButtonClickHandler)
         domElements.images.pauseIcon.addEventListener('click', pauseButtonClickHandler)
         domElements.images.playIcon.addEventListener('click', pauseButtonClickHandler)
     }
 
     function pauseButtonClickHandler(event) {
         lastButtonClickTimeTrackers.pause.lastClickTime = sequencer.currentTime
-        gui.components.pauseButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
+        gui.components.shapes.pauseButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         togglePaused()
     }
 
@@ -1065,9 +1065,9 @@ window.onload = () => {
     }
 
     function initializeSequencerRowHandlesActionListeners() {
-        for (let rowIndex = 0; rowIndex < gui.components.sequencerRowHandles.length; rowIndex++) {
-            let circle = gui.components.sequencerRowHandles[rowIndex];
-            let rowSelectionRectangle = gui.components.sequencerRowSelectionRectangles[rowIndex]
+        for (let rowIndex = 0; rowIndex < gui.components.shapes.sequencerRowHandles.length; rowIndex++) {
+            let circle = gui.components.shapes.sequencerRowHandles[rowIndex];
+            let rowSelectionRectangle = gui.components.shapes.sequencerRowSelectionRectangles[rowIndex]
 
             // add border to circle on mouseover
             circle._renderer.elem.addEventListener('mouseenter', (event) => {
@@ -1105,7 +1105,7 @@ window.onload = () => {
 
     function initializeRowSelectionVariablesAndVisuals(rowIndex) {
         setNoteTrashBinVisibility(true)
-        gui.components.noteTrashBinContainer.stroke = 'transparent'
+        gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
         // save relevant info about whichever row is selected
         selectedRowIndex = rowIndex;
         rowSelecionTracker.removeRow = false // start this out false until we move the row around (i.e. into the trash bin)
@@ -1117,11 +1117,11 @@ window.onload = () => {
                 rowSelecionTracker.shapes.push(circle)
             }
         }
-        rowSelecionTracker.shapes.push(...gui.components.subdivisionLineLists[rowIndex])
-        rowSelecionTracker.shapes.push(...gui.components.referenceLineLists[rowIndex])
-        rowSelecionTracker.shapes.push(gui.components.sequencerRowLines[rowIndex])
-        rowSelecionTracker.shapes.push(gui.components.sequencerRowSelectionRectangles[rowIndex])
-        rowSelecionTracker.shapes.push(gui.components.clearNotesForRowButtonShapes[rowIndex])
+        rowSelecionTracker.shapes.push(...gui.components.shapes.subdivisionLineLists[rowIndex])
+        rowSelecionTracker.shapes.push(...gui.components.shapes.referenceLineLists[rowIndex])
+        rowSelecionTracker.shapes.push(gui.components.shapes.sequencerRowLines[rowIndex])
+        rowSelecionTracker.shapes.push(gui.components.shapes.sequencerRowSelectionRectangles[rowIndex])
+        rowSelecionTracker.shapes.push(gui.components.shapes.clearNotesForRowButtonShapes[rowIndex])
         // this part gets a little weird. save a list of all of the starting positions of each
         // shape that is being moved. that way we can translate them proporionally to how far
         // the row handle has moved.
@@ -1132,8 +1132,8 @@ window.onload = () => {
                 y: shape.translation.y,
             });
         }
-        rowSelecionTracker.rowHandleStartingPosition.x = gui.components.sequencerRowHandles[rowIndex].translation.x
-        rowSelecionTracker.rowHandleStartingPosition.y = gui.components.sequencerRowHandles[rowIndex].translation.y
+        rowSelecionTracker.rowHandleStartingPosition.x = gui.components.shapes.sequencerRowHandles[rowIndex].translation.x
+        rowSelecionTracker.rowHandleStartingPosition.y = gui.components.shapes.sequencerRowHandles[rowIndex].translation.y
         // do the exact same thing for dom elements (subdivision and reference line text inputs, quantization checkbox, images) next
         rowSelecionTracker.domElements = [];
         rowSelecionTracker.domElements.push(subdivisionTextInputs[rowIndex])
@@ -1153,41 +1153,41 @@ window.onload = () => {
             });
         }
         // update visuals
-        let circle = gui.components.sequencerRowHandles[rowIndex]
+        let circle = gui.components.shapes.sequencerRowHandles[rowIndex]
         circle.stroke = 'black'
         circle.linewidth = 2
         circle.fill = gui.configurations.sequencerRowHandles.selectedColor
-        let rowSelectionRectangle = gui.components.sequencerRowSelectionRectangles[rowIndex];
+        let rowSelectionRectangle = gui.components.shapes.sequencerRowSelectionRectangles[rowIndex];
         rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.selectedColor
     }
 
     function addRestartSequencerButtonActionListeners() {
         // remove event listeners first to avoid duplicates
-        gui.components.restartSequencerButtonShape._renderer.elem.removeEventListener('click', restartSequencerButtonClickHandler)
+        gui.components.shapes.restartSequencerButtonShape._renderer.elem.removeEventListener('click', restartSequencerButtonClickHandler)
         domElements.images.restartIcon.removeEventListener('click', restartSequencerButtonClickHandler)
         // then add the event listeners
-        gui.components.restartSequencerButtonShape._renderer.elem.addEventListener('click', restartSequencerButtonClickHandler)
+        gui.components.shapes.restartSequencerButtonShape._renderer.elem.addEventListener('click', restartSequencerButtonClickHandler)
         domElements.images.restartIcon.addEventListener('click', restartSequencerButtonClickHandler)
     }
 
     function restartSequencerButtonClickHandler(event) {
         lastButtonClickTimeTrackers.restartSequencer.lastClickTime = sequencer.currentTime
-        gui.components.restartSequencerButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
+        gui.components.shapes.restartSequencerButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         restartSequencer()
     }
 
     function addClearAllNotesButtonActionListeners() {
         // remove event listeners to prevent duplicates
-        gui.components.clearAllNotesButtonShape._renderer.elem.removeEventListener('click', clearAllNotesButtonClickHandler)
+        gui.components.shapes.clearAllNotesButtonShape._renderer.elem.removeEventListener('click', clearAllNotesButtonClickHandler)
         domElements.images.clearAllIcon.removeEventListener('click', clearAllNotesButtonClickHandler)
         // add event listners
-        gui.components.clearAllNotesButtonShape._renderer.elem.addEventListener('click', clearAllNotesButtonClickHandler)
+        gui.components.shapes.clearAllNotesButtonShape._renderer.elem.addEventListener('click', clearAllNotesButtonClickHandler)
         domElements.images.clearAllIcon.addEventListener('click', clearAllNotesButtonClickHandler)
     }
 
     function clearAllNotesButtonClickHandler(event) {
         lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = sequencer.currentTime
-        gui.components.clearAllNotesButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
+        gui.components.shapes.clearAllNotesButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         clearAllNotes();
     }
 
@@ -1195,12 +1195,12 @@ window.onload = () => {
         for(let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
             lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex] = {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
-                shape: gui.components.clearNotesForRowButtonShapes[rowIndex],
+                shape: gui.components.shapes.clearNotesForRowButtonShapes[rowIndex],
             }
-            gui.components.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.removeEventListener('click', (event) => {
+            gui.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.removeEventListener('click', (event) => {
                 clearRowButtonClickHandler(event, rowIndex)
             });
-            gui.components.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.addEventListener('click', (event) => {
+            gui.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.addEventListener('click', (event) => {
                 clearRowButtonClickHandler(event, rowIndex)
             });
         }
@@ -1208,15 +1208,15 @@ window.onload = () => {
 
     function clearRowButtonClickHandler(event, rowIndex) {
         lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = sequencer.currentTime
-        gui.components.clearNotesForRowButtonShapes[rowIndex].fill = gui.configurations.buttonBehavior.clickedButtonColor
+        gui.components.shapes.clearNotesForRowButtonShapes[rowIndex].fill = gui.configurations.buttonBehavior.clickedButtonColor
         clearNotesForRow(rowIndex);
     }
 
     function initializeAddRowButtonActionListener() {
-        lastButtonClickTimeTrackers.addRow.shape = gui.components.addRowButtonShape;
+        lastButtonClickTimeTrackers.addRow.shape = gui.components.shapes.addRowButtonShape;
         // remove any existing click listeners to prevent duplicates
-        gui.components.addRowButtonShape._renderer.elem.removeEventListener('click', addRowClickHandler)
-        gui.components.addRowButtonShape._renderer.elem.addEventListener('click', addRowClickHandler)
+        gui.components.shapes.addRowButtonShape._renderer.elem.removeEventListener('click', addRowClickHandler)
+        gui.components.shapes.addRowButtonShape._renderer.elem.addEventListener('click', addRowClickHandler)
         // add new click listeners
         domElements.images.addIcon.removeEventListener('click', addRowClickHandler)
         domElements.images.addIcon.addEventListener('click', addRowClickHandler)
@@ -1224,7 +1224,7 @@ window.onload = () => {
 
     function addRowClickHandler(event) {
         lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
-        gui.components.addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
+        gui.components.shapes.addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         addEmptySequencerRow();
         // redraw the sequencer
         redrawSequencer()
@@ -1252,14 +1252,14 @@ window.onload = () => {
         // todo: make methods for these so we don't have to pass in the GUI configurations twice when initializing.
         // todo: clean up first GUI initialization so that we can just call a 'redraw' method the first time as well, 
         //       to avoid duplicated code
-        for (shape of gui.components.clearNotesForRowButtonShapes) {
+        for (shape of gui.components.shapes.clearNotesForRowButtonShapes) {
             shape.remove()
         }
-        gui.components.clearNotesForRowButtonShapes = []
-        gui.components.clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(gui.configurations.clearRowButtons.topPaddingPerRow, gui.configurations.clearRowButtons.leftPaddingPerRow, gui.configurations.clearRowButtons.height, gui.configurations.clearRowButtons.width); // this is a list of button rectangles, one per row, to clear the notes on that row
-        gui.components.addRowButtonShape.remove();
-        gui.components.addRowButtonShape = initializeRectangleShape(gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding, gui.configurations.sequencer.left + (gui.configurations.sequencer.width / 2) + gui.configurations.addRowButton.leftPadding - (gui.configurations.addRowButton.width / 2), gui.configurations.addRowButton.height, gui.configurations.addRowButton.width)
-        gui.components.addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
+        gui.components.shapes.clearNotesForRowButtonShapes = []
+        gui.components.shapes.clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(gui.configurations.clearRowButtons.topPaddingPerRow, gui.configurations.clearRowButtons.leftPaddingPerRow, gui.configurations.clearRowButtons.height, gui.configurations.clearRowButtons.width); // this is a list of button rectangles, one per row, to clear the notes on that row
+        gui.components.shapes.addRowButtonShape.remove();
+        gui.components.shapes.addRowButtonShape = initializeRectangleShape(gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding, gui.configurations.sequencer.left + (gui.configurations.sequencer.width / 2) + gui.configurations.addRowButton.leftPadding - (gui.configurations.addRowButton.width / 2), gui.configurations.addRowButton.height, gui.configurations.addRowButton.width)
+        gui.components.shapes.addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         // update two.js so we can add action listeners to shapes
         two.update()
         // initialize action listeners
@@ -1280,10 +1280,10 @@ window.onload = () => {
     // show or hide the note trash bin (show if visible === true, hide otherwise)
     function setNoteTrashBinVisibility(visible) {
         if (visible) {
-            gui.components.noteTrashBinContainer.stroke = gui.configurations.noteTrashBin.color
+            gui.components.shapes.noteTrashBinContainer.stroke = gui.configurations.noteTrashBin.color
             domElements.images.trashClosedIcon.style.display = 'block'
         } else {
-            gui.components.noteTrashBinContainer.stroke = 'transparent'
+            gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             domElements.images.trashClosedIcon.style.display = 'none'
             domElements.images.trashOpenIcon.style.display = 'none'
         }
@@ -1502,42 +1502,42 @@ window.onload = () => {
 
     function resetNotesAndLinesDisplayForAllRows() {
         removeAllCirclesFromDisplay()
-        for (list of gui.components.subdivisionLineLists) {
+        for (list of gui.components.shapes.subdivisionLineLists) {
             for (line of list) {
                 line.remove();
             }
             list = [];
         }
-        gui.components.subdivisionLineLists = []
-        for (list of gui.components.referenceLineLists) {
+        gui.components.shapes.subdivisionLineLists = []
+        for (list of gui.components.shapes.referenceLineLists) {
             for (line of list) {
                 line.remove();
             }
             list = [];
         }
-        gui.components.referenceLineLists = []
-        for (line of gui.components.sequencerRowLines) {
+        gui.components.shapes.referenceLineLists = []
+        for (line of gui.components.shapes.sequencerRowLines) {
             line.remove();
         }
-        gui.components.sequencerRowLines = [];
-        for (line of gui.components.timeTrackingLines) {
+        gui.components.shapes.sequencerRowLines = [];
+        for (line of gui.components.shapes.timeTrackingLines) {
             line.remove();
         }
-        gui.components.timeTrackingLines = [];
-        for (circle of gui.components.sequencerRowHandles) {
+        gui.components.shapes.timeTrackingLines = [];
+        for (circle of gui.components.shapes.sequencerRowHandles) {
             circle.remove();
         }
-        gui.components.sequencerRowHandles = []
-        for (rectangle of gui.components.sequencerRowSelectionRectangles) {
+        gui.components.shapes.sequencerRowHandles = []
+        for (rectangle of gui.components.shapes.sequencerRowSelectionRectangles) {
             rectangle.remove();
         }
-        gui.components.sequencerRowSelectionRectangles = []
-        gui.components.sequencerRowSelectionRectangles = gui.initializeSequencerRowSelectionRectangles();
-        gui.components.referenceLineLists = gui.initializeAllReferenceLines();
-        gui.components.subdivisionLineLists = gui.initializeAllSubdivisionLines();
-        gui.components.sequencerRowLines = gui.initializeAllSequencerRowLines();
-        gui.components.sequencerRowHandles = gui.initializeSequencerRowHandles();
-        gui.components.timeTrackingLines = gui.initializeTimeTrackingLines();
+        gui.components.shapes.sequencerRowSelectionRectangles = []
+        gui.components.shapes.sequencerRowSelectionRectangles = gui.initializeSequencerRowSelectionRectangles();
+        gui.components.shapes.referenceLineLists = gui.initializeAllReferenceLines();
+        gui.components.shapes.subdivisionLineLists = gui.initializeAllSubdivisionLines();
+        gui.components.shapes.sequencerRowLines = gui.initializeAllSequencerRowLines();
+        gui.components.shapes.sequencerRowHandles = gui.initializeSequencerRowHandles();
+        gui.components.shapes.timeTrackingLines = gui.initializeTimeTrackingLines();
         drawAllNoteBankCircles();
         drawNotesToReflectSequencerCurrentState();
     }
@@ -1566,10 +1566,10 @@ window.onload = () => {
         gui.removeSequencerRowLine(rowIndex)
         gui.removeTimeTrackingLine(rowIndex)
         // then we will draw all the lines for the changed row, starting with reference lines since they need to be the bottom layer
-        gui.components.referenceLineLists[rowIndex] = gui.initializeReferenceLinesForRow(rowIndex)
-        gui.components.subdivisionLineLists[rowIndex] = gui.initializeSubdivisionLinesForRow(rowIndex)
-        gui.components.sequencerRowLines[rowIndex] = gui.initializeSequencerRowLine(rowIndex)
-        gui.components.timeTrackingLines[rowIndex] = gui.initializeTimeTrackingLineForRow(rowIndex)
+        gui.components.shapes.referenceLineLists[rowIndex] = gui.initializeReferenceLinesForRow(rowIndex)
+        gui.components.shapes.subdivisionLineLists[rowIndex] = gui.initializeSubdivisionLinesForRow(rowIndex)
+        gui.components.shapes.sequencerRowLines[rowIndex] = gui.initializeSequencerRowLine(rowIndex)
+        gui.components.shapes.timeTrackingLines[rowIndex] = gui.initializeTimeTrackingLineForRow(rowIndex)
         // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
         drawAllNoteBankCircles()
         drawNotesToReflectSequencerCurrentState()
