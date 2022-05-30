@@ -1108,6 +1108,7 @@ window.onload = () => {
         gui.components.noteTrashBinContainer.stroke = 'transparent'
         // save relevant info about whichever row is selected
         selectedRowIndex = rowIndex;
+        rowSelecionTracker.removeRow = false // start this out false until we move the row around (i.e. into the trash bin)
         // save a list, of all the shapes that are associated with the selected row.
         // we are saving this list so that we can move them all as we move the row around.
         rowSelecionTracker.shapes = [];
