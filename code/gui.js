@@ -12,10 +12,18 @@ class DrumMachineGui {
         this.configurations = getGuiConfigurations()
         this.components = {
             shapes: {}, // this hash will contain all of the two.js shapes (either as shapes, lists of shapes, or lists of lists of shapes)
+            domElements: {} // this hash will contain all of the HTML DOM elements (either as individual elements, lists of elements, or lists of lists of elements, etc.)
         }
         this.components.shapes = this.initializeGuiComponents();
+        this.components.domElements = this.initializeDomElements();
+        this.setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note or a sequencer row, so make sure it starts out as not visible
+        this.lastButtonClickTimeTrackers = this.initializeLastButtonClickTimeTrackers(); // a hash used keep track of the last time each button was clicked
         this.initializeComponentEventListeners();
         this.initializeWindowEventListeners();
+    }
+
+    update() {
+        // do nothing yet, eventually this will contain the main GUI update logic
     }
     
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects).
@@ -36,7 +44,73 @@ class DrumMachineGui {
         shapes.addRowButtonShape = this.initializeRectangleShape(this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * (this.sequencer.rows.length - 1)) + this.configurations.addRowButton.topPadding, this.configurations.sequencer.left + (this.configurations.sequencer.width / 2) + this.configurations.addRowButton.leftPadding - (this.configurations.addRowButton.width / 2), this.configurations.addRowButton.height, this.configurations.addRowButton.width)
         shapes.clearNotesForRowButtonShapes = this.initializeButtonPerSequencerRow(this.configurations.clearRowButtons.topPaddingPerRow, this.configurations.clearRowButtons.leftPaddingPerRow, this.configurations.clearRowButtons.height, this.configurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
         shapes.sequencerRowHandles = this.initializeSequencerRowHandles()
+        this.two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
         return shapes;
+    }
+
+    // create and store HTML DOM elements. these could include divs, images, text inputs, or any other DOM elements.
+    // some of these might be stored as lists rather than individual elements, since some elements are programmatically created (e.g
+    // text inputs are created or deleted based on how many sequencer rows there are, and a similar story for button icon images, etc.).
+    initializeDomElements() {
+        // Store DOM elements we use, so that we can access them without having to pull them from the DOM each time
+        let domElements = {
+            divs: {
+                drawShapes: document.getElementById('draw-shapes'),
+                tempoTextInputs: document.getElementById('tempo-text-inputs'),
+                subdivisionTextInputs: document.getElementById('subdivision-text-inputs')
+            },
+            textInputs: {
+                loopLengthMillis: document.getElementById('text-input-loop-length-millis'),
+            },
+            images: {
+                pauseIcon: document.getElementById('pause-icon'),
+                playIcon: document.getElementById('play-icon'),
+                clearAllIcon: document.getElementById('clear-all-icon'),
+                restartIcon: document.getElementById('restart-icon'),
+                trashClosedIcon: document.getElementById('trash-closed-icon'),
+                trashOpenIcon: document.getElementById('trash-open-icon'),
+                addIcon: document.getElementById('add-icon'),
+                clearRowIcon: document.getElementById('clear-row-icon'),
+                lockedIcon: document.getElementById('locked-icon'),
+                unlockedIcon: document.getElementById('unlocked-icon'),
+            },
+            iconLists: {
+                clearRowIcons: [], // list of icons for "clear row" buttons, one per sequencer row
+                lockedIcons: [], // list of icons for "quantize row" buttons, one per sequencer row
+                unlockedIcons: [], // list of icons for "unquantize row" buttons, one per sequencer row
+            }
+        }
+        return domElements;
+    }
+
+    // initialize a hash that is used to keep track of the last time each button was clicked. for each button it cares about, 
+    // it stores the last click time of that button, and which shapes are considered part of that button (these may undergo
+    // some change when they are recently clicked, such as giving the button's main shape a darker background).
+    initializeLastButtonClickTimeTrackers() {
+        /**
+         * keep track of when each button was last clicked, so we can make the button darker for a little while after clicking it.
+         * we also keep track of when each button was clicked for buttons that are generated one-per-row, but those are initialized
+         * within the relevant action listenever methods, not here. same for a few other of these trackers. 
+         */
+        let lastButtonClickTimeTrackers = {
+            pause: {
+                lastClickTime: Number.MIN_SAFE_INTEGER,
+                shape: this.components.shapes.pauseButtonShape,
+            },
+            restartSequencer: {
+                lastClickTime: Number.MIN_SAFE_INTEGER,
+                shape: this.components.shapes.restartSequencerButtonShape,
+            },
+            clearAllNotes: {
+                lastClickTime: Number.MIN_SAFE_INTEGER,
+                shape: this.components.shapes.clearAllNotesButtonShape,
+            },
+            addRow: {
+                lastClickTime: Number.MIN_SAFE_INTEGER,
+                shape: this.components.shapes.addRowButtonShape,
+            }
+        }
+        return lastButtonClickTimeTrackers;
     }
 
     initializeComponentEventListeners() {
@@ -263,6 +337,18 @@ class DrumMachineGui {
         noteTrashBinContainer.stroke = 'transparent'
         noteTrashBinContainer.fill = 'transparent'
         return noteTrashBinContainer
+    }
+
+    // show or hide the note trash bin (show if visible === true, hide otherwise)
+    setNoteTrashBinVisibility(visible) {
+        if (visible) {
+            this.components.shapes.noteTrashBinContainer.stroke = this.configurations.noteTrashBin.color
+            this.components.domElements.images.trashClosedIcon.style.display = 'block'
+        } else {
+            this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
+            this.components.domElements.images.trashClosedIcon.style.display = 'none'
+            this.components.domElements.images.trashOpenIcon.style.display = 'none'
+        }
     }
 
     /**

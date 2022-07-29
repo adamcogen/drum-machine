@@ -4,33 +4,6 @@
 
 window.onload = () => {
 
-    // Store DOM elements we use, so that we can access them without having to pull them from the DOM each time
-    let domElements = {
-        divs: {
-            drawShapes: document.getElementById('draw-shapes'),
-            tempoTextInputs: document.getElementById('tempo-text-inputs'),
-            subdivisionTextInputs: document.getElementById('subdivision-text-inputs')
-        },
-        textInputs: {
-            loopLengthMillis: document.getElementById('text-input-loop-length-millis'),
-        },
-        images: {
-            pauseIcon: document.getElementById('pause-icon'),
-            playIcon: document.getElementById('play-icon'),
-            clearAllIcon: document.getElementById('clear-all-icon'),
-            restartIcon: document.getElementById('restart-icon'),
-            trashClosedIcon: document.getElementById('trash-closed-icon'),
-            trashOpenIcon: document.getElementById('trash-open-icon'),
-            addIcon: document.getElementById('add-icon'),
-            clearRowIcon: document.getElementById('clear-row-icon'),
-            lockedIcon: document.getElementById('locked-icon'),
-            unlockedIcon: document.getElementById('unlocked-icon'),
-        },
-    }
-
-    // Initialize Two.js library
-    let two = initializeTwoJs(domElements.divs.drawShapes)
-
     // initialize sound file constants
     const SOUND_FILES_PATH = './sounds/';
     const BASS_DRUM = "bass-drum";
@@ -75,11 +48,8 @@ window.onload = () => {
         _audioContext.resume()
     }
 
-    const HIDE_ICONS = false
-    let clearRowIcons = []
-    let lockedIcons = []
-    let unlockedIcons = []
-
+    const HIDE_ICONS = false // if this is true, icons will not be drawn on the screen. some other small changes may also be made to the GUI to try to make sure the GUI is still usable.
+    
     /**
      * drum machine configurations
      */
@@ -89,35 +59,10 @@ window.onload = () => {
     // initialize sequencer data structure
     let sequencer = new Sequencer([webAudioDriver], 0, defaultLoopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
 
+    // Initialize Two.js library
+    let two = initializeTwoJs(document.getElementById('draw-shapes'))
+    
     let gui = new DrumMachineGui(sequencer, two, sampleNameList);
-
-    setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note
-
-    /**
-     * keep track of when each button was last clicked, so we can make the note darker for a little while after clicking it.
-     * we also keep track of when each button was clicked for buttons that are generated one-per-row, but those are initialized
-     * within the relevant action listenever methods, not here. same for a few other of these trackers. 
-     */
-    lastButtonClickTimeTrackers = {
-        pause: {
-            lastClickTime: Number.MIN_SAFE_INTEGER,
-            shape: gui.components.shapes.pauseButtonShape,
-        },
-        restartSequencer: {
-            lastClickTime: Number.MIN_SAFE_INTEGER,
-            shape: gui.components.shapes.restartSequencerButtonShape,
-        },
-        clearAllNotes: {
-            lastClickTime: Number.MIN_SAFE_INTEGER,
-            shape: gui.components.shapes.clearAllNotesButtonShape,
-        },
-        addRow: {
-            lastClickTime: Number.MIN_SAFE_INTEGER,
-            shape: gui.components.shapes.addRowButtonShape,
-        }
-    }
-
-    two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
 
     initializeTempoTextInputValuesAndStyles();
     initializeTempoTextInputActionListeners();
@@ -234,8 +179,8 @@ window.onload = () => {
          * time has elapsed. this lets us animate buttons to appear clicked, even if the action they perform
          * is done instantly after clicking.
          */
-        for (buttonName in lastButtonClickTimeTrackers) {
-            let buttonClickTimeTracker = lastButtonClickTimeTrackers[buttonName]
+        for (buttonName in gui.lastButtonClickTimeTrackers) {
+            let buttonClickTimeTracker = gui.lastButtonClickTimeTrackers[buttonName]
             if (sequencer.currentTime - buttonClickTimeTracker.lastClickTime > gui.configurations.buttonBehavior.showClicksForHowManyMilliseconds) {
                 buttonClickTimeTracker.shape.fill = "transparent"
             }
@@ -256,8 +201,8 @@ window.onload = () => {
             circleBeingMoved.translation.y = mouseY
             circleBeingMovedNewRow = HAS_NO_ROW_NUMBER // start with "it's not colliding with anything", and update the value from there if we find a collision
             circleBeingMoved.stroke = "black"
-            domElements.images.trashClosedIcon.style.display = 'block'
-            domElements.images.trashOpenIcon.style.display = 'none'
+            gui.components.domElements.images.trashClosedIcon.style.display = 'block'
+            gui.components.domElements.images.trashOpenIcon.style.display = 'none'
             /**
              * adding stuff here for new 'snap to grid on move' behavior.
              * this will be the first part of making it so that notes being moved 'snap' into place when they are close to the trash bin or a sequencer line.
@@ -275,8 +220,8 @@ window.onload = () => {
                 circleBeingMoved.translation.y = centerOfTrashBinY
                 circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
                 circleBeingMoved.stroke = "red"
-                domElements.images.trashClosedIcon.style.display = 'none'
-                domElements.images.trashOpenIcon.style.display = 'block'
+                gui.components.domElements.images.trashClosedIcon.style.display = 'none'
+                gui.components.domElements.images.trashOpenIcon.style.display = 'block'
                 gui.components.shapes.noteTrashBinContainer.stroke = 'red'
             } else {
                 gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
@@ -322,8 +267,8 @@ window.onload = () => {
                 if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
                     circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
                     circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
-                    domElements.images.trashClosedIcon.style.display = 'none'
-                    domElements.images.trashOpenIcon.style.display = 'block'
+                    gui.components.domElements.images.trashClosedIcon.style.display = 'none'
+                    gui.components.domElements.images.trashOpenIcon.style.display = 'block'
                     gui.components.shapes.noteTrashBinContainer.stroke = 'red'
                 }
             }
@@ -339,8 +284,8 @@ window.onload = () => {
             circle.fill = gui.configurations.sequencerRowHandles.selectedColor
             let rowSelectionRectangle = gui.components.shapes.sequencerRowSelectionRectangles[selectedRowIndex]
             rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.selectedColor
-            domElements.images.trashClosedIcon.style.display = 'block'
-            domElements.images.trashOpenIcon.style.display = 'none'
+            gui.components.domElements.images.trashClosedIcon.style.display = 'block'
+            gui.components.domElements.images.trashOpenIcon.style.display = 'none'
 
             gui.components.shapes.sequencerRowHandles[selectedRowIndex].translation.x = mouseX
             gui.components.shapes.sequencerRowHandles[selectedRowIndex].translation.y = mouseY
@@ -356,8 +301,8 @@ window.onload = () => {
                 rowSelectionRectangle.stroke = "red"
                 rowSelecionTracker.removeRow = true;
                 circle.stroke = "red"
-                domElements.images.trashClosedIcon.style.display = 'none'
-                domElements.images.trashOpenIcon.style.display = 'block'
+                gui.components.domElements.images.trashClosedIcon.style.display = 'none'
+                gui.components.domElements.images.trashOpenIcon.style.display = 'block'
                 gui.components.shapes.noteTrashBinContainer.stroke = 'red'
             } else {
                 rowSelecionTracker.removeRow = false;
@@ -388,8 +333,8 @@ window.onload = () => {
                 circle.stroke = "red"
                 rowSelectionRectangle.stroke = "red"
                 rowSelecionTracker.removeRow = true;
-                domElements.images.trashClosedIcon.style.display = 'none'
-                domElements.images.trashOpenIcon.style.display = 'block'
+                gui.components.domElements.images.trashClosedIcon.style.display = 'none'
+                gui.components.domElements.images.trashOpenIcon.style.display = 'block'
                 gui.components.shapes.noteTrashBinContainer.stroke = 'red'
             }
 
@@ -519,7 +464,7 @@ window.onload = () => {
             redrawSequencer();
         }
         circleBeingMoved = null
-        setNoteTrashBinVisibility(false)
+        gui.setNoteTrashBinVisibility(false)
         selectedRowIndex = null
     });
 
@@ -548,56 +493,56 @@ window.onload = () => {
 
     function initializeIcons(hideIcons=false) {
         if (hideIcons) { // gives us a mechanism to leave the icons off the sequencer display if we want to
-            for (key of Object.keys(domElements.images)) {
-                domElements.images[key].remove()
+            for (key of Object.keys(gui.components.domElements.images)) {
+                gui.components.domElements.images[key].remove()
             }
             return;
         }
         // "add row" button icon
-        domElements.images.addIcon.style.width = "" + gui.configurations.addRowButton.icon.width + "px"
-        domElements.images.addIcon.style.height = "" + gui.configurations.addRowButton.icon.height + "px"
+        gui.components.domElements.images.addIcon.style.width = "" + gui.configurations.addRowButton.icon.width + "px"
+        gui.components.domElements.images.addIcon.style.height = "" + gui.configurations.addRowButton.icon.height + "px"
         let addRowButtonTop = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding
         let addRowButtonLeft = gui.configurations.sequencer.left + (gui.configurations.sequencer.width / 2) + gui.configurations.addRowButton.leftPadding - (gui.configurations.addRowButton.width / 2)
-        domElements.images.addIcon.style.top = "" + (addRowButtonTop) + "px"
-        domElements.images.addIcon.style.left = "" + (addRowButtonLeft) + "px"
+        gui.components.domElements.images.addIcon.style.top = "" + (addRowButtonTop) + "px"
+        gui.components.domElements.images.addIcon.style.left = "" + (addRowButtonLeft) + "px"
         // trash bin icon: open
-        domElements.images.trashOpenIcon.style.width = "" + gui.configurations.noteTrashBin.icon.width + "px"
-        domElements.images.trashOpenIcon.style.height = "" + gui.configurations.noteTrashBin.icon.height + "px"
-        domElements.images.trashOpenIcon.style.left = "" + gui.configurations.noteTrashBin.left + "px"
-        domElements.images.trashOpenIcon.style.top = "" + gui.configurations.noteTrashBin.top + "px"
+        gui.components.domElements.images.trashOpenIcon.style.width = "" + gui.configurations.noteTrashBin.icon.width + "px"
+        gui.components.domElements.images.trashOpenIcon.style.height = "" + gui.configurations.noteTrashBin.icon.height + "px"
+        gui.components.domElements.images.trashOpenIcon.style.left = "" + gui.configurations.noteTrashBin.left + "px"
+        gui.components.domElements.images.trashOpenIcon.style.top = "" + gui.configurations.noteTrashBin.top + "px"
         // trash bin icon: closed
-        domElements.images.trashClosedIcon.style.width = "" + gui.configurations.noteTrashBin.icon.width + "px"
-        domElements.images.trashClosedIcon.style.height = "" + gui.configurations.noteTrashBin.icon.height + "px"
-        domElements.images.trashClosedIcon.style.left = "" + gui.configurations.noteTrashBin.left + "px"
-        domElements.images.trashClosedIcon.style.top = "" + gui.configurations.noteTrashBin.top + "px"
+        gui.components.domElements.images.trashClosedIcon.style.width = "" + gui.configurations.noteTrashBin.icon.width + "px"
+        gui.components.domElements.images.trashClosedIcon.style.height = "" + gui.configurations.noteTrashBin.icon.height + "px"
+        gui.components.domElements.images.trashClosedIcon.style.left = "" + gui.configurations.noteTrashBin.left + "px"
+        gui.components.domElements.images.trashClosedIcon.style.top = "" + gui.configurations.noteTrashBin.top + "px"
         // "clear all rows" button
-        domElements.images.clearAllIcon.style.width = "" + gui.configurations.clearAllNotesButton.icon.width + "px"
-        domElements.images.clearAllIcon.style.height = "" + gui.configurations.clearAllNotesButton.icon.height + "px"
-        domElements.images.clearAllIcon.style.left = "" + gui.configurations.clearAllNotesButton.left + "px"
-        domElements.images.clearAllIcon.style.top = "" + gui.configurations.clearAllNotesButton.top + "px"
+        gui.components.domElements.images.clearAllIcon.style.width = "" + gui.configurations.clearAllNotesButton.icon.width + "px"
+        gui.components.domElements.images.clearAllIcon.style.height = "" + gui.configurations.clearAllNotesButton.icon.height + "px"
+        gui.components.domElements.images.clearAllIcon.style.left = "" + gui.configurations.clearAllNotesButton.left + "px"
+        gui.components.domElements.images.clearAllIcon.style.top = "" + gui.configurations.clearAllNotesButton.top + "px"
         // restart
-        domElements.images.restartIcon.style.width = "" + gui.configurations.restartSequencerButton.icon.width + "px"
-        domElements.images.restartIcon.style.height = "" + gui.configurations.restartSequencerButton.icon.height + "px"
-        domElements.images.restartIcon.style.left = "" + gui.configurations.restartSequencerButton.left + "px"
-        domElements.images.restartIcon.style.top = "" + gui.configurations.restartSequencerButton.top + "px"
+        gui.components.domElements.images.restartIcon.style.width = "" + gui.configurations.restartSequencerButton.icon.width + "px"
+        gui.components.domElements.images.restartIcon.style.height = "" + gui.configurations.restartSequencerButton.icon.height + "px"
+        gui.components.domElements.images.restartIcon.style.left = "" + gui.configurations.restartSequencerButton.left + "px"
+        gui.components.domElements.images.restartIcon.style.top = "" + gui.configurations.restartSequencerButton.top + "px"
         // pause
-        domElements.images.pauseIcon.style.width = "" + gui.configurations.pauseButton.icon.width + "px"
-        domElements.images.pauseIcon.style.height = "" + gui.configurations.pauseButton.icon.height + "px"
-        domElements.images.pauseIcon.style.left = "" + gui.configurations.pauseButton.left + "px"
-        domElements.images.pauseIcon.style.top = "" + gui.configurations.pauseButton.top + "px"
+        gui.components.domElements.images.pauseIcon.style.width = "" + gui.configurations.pauseButton.icon.width + "px"
+        gui.components.domElements.images.pauseIcon.style.height = "" + gui.configurations.pauseButton.icon.height + "px"
+        gui.components.domElements.images.pauseIcon.style.left = "" + gui.configurations.pauseButton.left + "px"
+        gui.components.domElements.images.pauseIcon.style.top = "" + gui.configurations.pauseButton.top + "px"
         // play
-        domElements.images.playIcon.style.width = "" + gui.configurations.pauseButton.icon.width + "px"
-        domElements.images.playIcon.style.height = "" + gui.configurations.pauseButton.icon.height + "px"
-        domElements.images.playIcon.style.left = "" + gui.configurations.pauseButton.left + "px"
-        domElements.images.playIcon.style.top = "" + gui.configurations.pauseButton.top + "px"
+        gui.components.domElements.images.playIcon.style.width = "" + gui.configurations.pauseButton.icon.width + "px"
+        gui.components.domElements.images.playIcon.style.height = "" + gui.configurations.pauseButton.icon.height + "px"
+        gui.components.domElements.images.playIcon.style.left = "" + gui.configurations.pauseButton.left + "px"
+        gui.components.domElements.images.playIcon.style.top = "" + gui.configurations.pauseButton.top + "px"
         // clear row buttons -- one per row
-        for (icon of clearRowIcons) {
+        for (icon of gui.components.domElements.iconLists.clearRowIcons) {
             icon.remove();
         }
-        clearRowIcons = [];
+        gui.components.domElements.iconLists.clearRowIcons = [];
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
             // create a new copy of the original clear row icon
-            let clearRowIcon = domElements.images.clearRowIcon.cloneNode()
+            let clearRowIcon = gui.components.domElements.images.clearRowIcon.cloneNode()
             // make the copy visible
             clearRowIcon.style.display = 'block'
             // set the copy's position -- we will have one per row
@@ -613,23 +558,23 @@ window.onload = () => {
                 clearRowButtonClickHandler(event, rowIndex)
             });
             // add the copy to the dom and to our list that tracks these icons
-            clearRowIcons.push(clearRowIcon)
+            gui.components.domElements.iconLists.clearRowIcons.push(clearRowIcon)
             document.body.appendChild(clearRowIcon)
         }
-        domElements.images.clearRowIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
+        gui.components.domElements.images.clearRowIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         // lock / unlock (quantize / unquantize) row buttons -- need one per row
-        for (icon of lockedIcons) {
+        for (icon of gui.components.domElements.iconLists.lockedIcons) {
             icon.remove();
         }
-        lockedIcons = [];
-        for (icon of unlockedIcons) {
+        gui.components.domElements.iconLists.lockedIcons = [];
+        for (icon of gui.components.domElements.iconLists.unlockedIcons) {
             icon.remove();
         }
-        unlockedIcons = [];
+        gui.components.domElements.iconLists.unlockedIcons = [];
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
             // make copies of the original image so that we can freely throw them away or add more
-            let lockedIcon = domElements.images.lockedIcon.cloneNode()
-            let unlockedIcon = domElements.images.unlockedIcon.cloneNode()
+            let lockedIcon = gui.components.domElements.images.lockedIcon.cloneNode()
+            let unlockedIcon = gui.components.domElements.images.unlockedIcon.cloneNode()
             // set visibilty of each icon based on the row's current quantization setting
             // really, we could just make whichever icon is necessary and not make an invisible copy of the other
             // one, but making an invisible copy leaves the door open for optimizing the 'quantize' button a bit later.
@@ -667,13 +612,13 @@ window.onload = () => {
                 setQuantizationButtonClickHandler(event, rowIndex, true)
             });
             // add the icons to the dom and to our list that tracks these icons
-            lockedIcons.push(lockedIcon)
-            unlockedIcons.push(unlockedIcon)
+            gui.components.domElements.iconLists.lockedIcons.push(lockedIcon)
+            gui.components.domElements.iconLists.unlockedIcons.push(unlockedIcon)
             document.body.appendChild(lockedIcon)
             document.body.appendChild(unlockedIcon)
         }
-        domElements.images.unlockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
-        domElements.images.lockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
+        gui.components.domElements.images.unlockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
+        gui.components.domElements.images.lockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
     }
 
     function initializeCheckbox(verticalPosition, horizontalPosition) {
@@ -685,7 +630,7 @@ window.onload = () => {
         checkbox.style.width = "20px"
         checkbox.style.height = "20px"
         checkbox.style.outline = "20px"
-        domElements.divs.subdivisionTextInputs.appendChild(checkbox);
+        gui.components.domElements.divs.subdivisionTextInputs.appendChild(checkbox);
         checkbox.style.cursor = "pointer"
         return checkbox
     }
@@ -696,7 +641,7 @@ window.onload = () => {
             return 
         }
         for (let existingCheckbox of quantizationCheckboxes) {
-            domElements.divs.subdivisionTextInputs.removeChild(existingCheckbox)
+            gui.components.domElements.divs.subdivisionTextInputs.removeChild(existingCheckbox)
         }
         quantizationCheckboxes = []
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
@@ -982,7 +927,7 @@ window.onload = () => {
             circleBeingMovedNewRow = circleBeingMovedOldRow
             circleBeingMovedOldBeatNumber = circleBeingMoved.guiData.beat
             circleBeingMovedNewBeatNumber = circleBeingMovedOldBeatNumber
-            setNoteTrashBinVisibility(true)
+            gui.setNoteTrashBinVisibility(true)
             gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             sequencer.playDrumSampleNow(circleBeingMoved.guiData.sampleName)
         });
@@ -1031,16 +976,16 @@ window.onload = () => {
     function addPauseButtonActionListeners() {
         // remove event listeners to avoid duplicates
         gui.components.shapes.pauseButtonShape._renderer.elem.removeEventListener('click', pauseButtonClickHandler)
-        domElements.images.pauseIcon.removeEventListener('click', pauseButtonClickHandler)
-        domElements.images.playIcon.removeEventListener('click', pauseButtonClickHandler)
+        gui.components.domElements.images.pauseIcon.removeEventListener('click', pauseButtonClickHandler)
+        gui.components.domElements.images.playIcon.removeEventListener('click', pauseButtonClickHandler)
         // then add the event listeners
         gui.components.shapes.pauseButtonShape._renderer.elem.addEventListener('click', pauseButtonClickHandler)
-        domElements.images.pauseIcon.addEventListener('click', pauseButtonClickHandler)
-        domElements.images.playIcon.addEventListener('click', pauseButtonClickHandler)
+        gui.components.domElements.images.pauseIcon.addEventListener('click', pauseButtonClickHandler)
+        gui.components.domElements.images.playIcon.addEventListener('click', pauseButtonClickHandler)
     }
 
     function pauseButtonClickHandler(event) {
-        lastButtonClickTimeTrackers.pause.lastClickTime = sequencer.currentTime
+        gui.lastButtonClickTimeTrackers.pause.lastClickTime = sequencer.currentTime
         gui.components.shapes.pauseButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         togglePaused()
     }
@@ -1104,7 +1049,7 @@ window.onload = () => {
     }
 
     function initializeRowSelectionVariablesAndVisuals(rowIndex) {
-        setNoteTrashBinVisibility(true)
+        gui.setNoteTrashBinVisibility(true)
         gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
         // save relevant info about whichever row is selected
         selectedRowIndex = rowIndex;
@@ -1141,9 +1086,9 @@ window.onload = () => {
         if (HIDE_ICONS) {
             rowSelecionTracker.domElements.push(quantizationCheckboxes[rowIndex])
         } else {
-            rowSelecionTracker.domElements.push(lockedIcons[rowIndex]);
-            rowSelecionTracker.domElements.push(unlockedIcons[rowIndex]);
-            rowSelecionTracker.domElements.push(clearRowIcons[rowIndex]);
+            rowSelecionTracker.domElements.push(gui.components.domElements.iconLists.lockedIcons[rowIndex]);
+            rowSelecionTracker.domElements.push(gui.components.domElements.iconLists.unlockedIcons[rowIndex]);
+            rowSelecionTracker.domElements.push(gui.components.domElements.iconLists.clearRowIcons[rowIndex]);
         }
         rowSelecionTracker.domElementsOriginalPositions = [];
         for (let domElement of rowSelecionTracker.domElements) {
@@ -1164,14 +1109,14 @@ window.onload = () => {
     function addRestartSequencerButtonActionListeners() {
         // remove event listeners first to avoid duplicates
         gui.components.shapes.restartSequencerButtonShape._renderer.elem.removeEventListener('click', restartSequencerButtonClickHandler)
-        domElements.images.restartIcon.removeEventListener('click', restartSequencerButtonClickHandler)
+        gui.components.domElements.images.restartIcon.removeEventListener('click', restartSequencerButtonClickHandler)
         // then add the event listeners
         gui.components.shapes.restartSequencerButtonShape._renderer.elem.addEventListener('click', restartSequencerButtonClickHandler)
-        domElements.images.restartIcon.addEventListener('click', restartSequencerButtonClickHandler)
+        gui.components.domElements.images.restartIcon.addEventListener('click', restartSequencerButtonClickHandler)
     }
 
     function restartSequencerButtonClickHandler(event) {
-        lastButtonClickTimeTrackers.restartSequencer.lastClickTime = sequencer.currentTime
+        gui.lastButtonClickTimeTrackers.restartSequencer.lastClickTime = sequencer.currentTime
         gui.components.shapes.restartSequencerButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         restartSequencer()
     }
@@ -1179,21 +1124,21 @@ window.onload = () => {
     function addClearAllNotesButtonActionListeners() {
         // remove event listeners to prevent duplicates
         gui.components.shapes.clearAllNotesButtonShape._renderer.elem.removeEventListener('click', clearAllNotesButtonClickHandler)
-        domElements.images.clearAllIcon.removeEventListener('click', clearAllNotesButtonClickHandler)
+        gui.components.domElements.images.clearAllIcon.removeEventListener('click', clearAllNotesButtonClickHandler)
         // add event listners
         gui.components.shapes.clearAllNotesButtonShape._renderer.elem.addEventListener('click', clearAllNotesButtonClickHandler)
-        domElements.images.clearAllIcon.addEventListener('click', clearAllNotesButtonClickHandler)
+        gui.components.domElements.images.clearAllIcon.addEventListener('click', clearAllNotesButtonClickHandler)
     }
 
     function clearAllNotesButtonClickHandler(event) {
-        lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = sequencer.currentTime
+        gui.lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = sequencer.currentTime
         gui.components.shapes.clearAllNotesButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         clearAllNotes();
     }
 
     function addClearNotesForRowButtonsActionListeners() {
         for(let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex] = {
+            gui.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex] = {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
                 shape: gui.components.shapes.clearNotesForRowButtonShapes[rowIndex],
             }
@@ -1207,23 +1152,23 @@ window.onload = () => {
     }
 
     function clearRowButtonClickHandler(event, rowIndex) {
-        lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = sequencer.currentTime
+        gui.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = sequencer.currentTime
         gui.components.shapes.clearNotesForRowButtonShapes[rowIndex].fill = gui.configurations.buttonBehavior.clickedButtonColor
         clearNotesForRow(rowIndex);
     }
 
     function initializeAddRowButtonActionListener() {
-        lastButtonClickTimeTrackers.addRow.shape = gui.components.shapes.addRowButtonShape;
+        gui.lastButtonClickTimeTrackers.addRow.shape = gui.components.shapes.addRowButtonShape;
         // remove any existing click listeners to prevent duplicates
         gui.components.shapes.addRowButtonShape._renderer.elem.removeEventListener('click', addRowClickHandler)
         gui.components.shapes.addRowButtonShape._renderer.elem.addEventListener('click', addRowClickHandler)
         // add new click listeners
-        domElements.images.addIcon.removeEventListener('click', addRowClickHandler)
-        domElements.images.addIcon.addEventListener('click', addRowClickHandler)
+        gui.components.domElements.images.addIcon.removeEventListener('click', addRowClickHandler)
+        gui.components.domElements.images.addIcon.addEventListener('click', addRowClickHandler)
     }
 
     function addRowClickHandler(event) {
-        lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
+        gui.lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
         gui.components.shapes.addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         addEmptySequencerRow();
         // redraw the sequencer
@@ -1277,18 +1222,6 @@ window.onload = () => {
         }
     }
 
-    // show or hide the note trash bin (show if visible === true, hide otherwise)
-    function setNoteTrashBinVisibility(visible) {
-        if (visible) {
-            gui.components.shapes.noteTrashBinContainer.stroke = gui.configurations.noteTrashBin.color
-            domElements.images.trashClosedIcon.style.display = 'block'
-        } else {
-            gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
-            domElements.images.trashClosedIcon.style.display = 'none'
-            domElements.images.trashOpenIcon.style.display = 'none'
-        }
-    }
-
     // toggle whether the sequencer is 'paused' or not. this method gets called when we click the pause button
     function togglePaused() {
         if (sequencer.paused) { // unpause 
@@ -1302,24 +1235,24 @@ window.onload = () => {
         if (!sequencer.paused) {
             sequencer.pause();
         }
-        domElements.images.pauseIcon.style.display = 'none'
-        domElements.images.playIcon.style.display = 'block'
+        gui.components.domElements.images.pauseIcon.style.display = 'none'
+        gui.components.domElements.images.playIcon.style.display = 'block'
     }
 
     function unpause() {
         if (sequencer.paused) {
             sequencer.unpause();
         }
-        domElements.images.pauseIcon.style.display = 'block'
-        domElements.images.playIcon.style.display = 'none'
+        gui.components.domElements.images.pauseIcon.style.display = 'block'
+        gui.components.domElements.images.playIcon.style.display = 'none'
     }
 
     function initializeTempoTextInputValuesAndStyles() {
-        domElements.divs.tempoTextInputs.style.left = "" + gui.configurations.tempoTextInput.left + "px"
-        domElements.divs.tempoTextInputs.style.top = "" + gui.configurations.tempoTextInput.top + "px"
-        domElements.textInputs.loopLengthMillis.value = sequencer.loopLengthInMillis
-        domElements.textInputs.loopLengthMillis.style.borderColor = gui.configurations.sequencer.color
-        domElements.textInputs.loopLengthMillis.style.color = gui.configurations.defaultFont.color // set font color
+        gui.components.domElements.divs.tempoTextInputs.style.left = "" + gui.configurations.tempoTextInput.left + "px"
+        gui.components.domElements.divs.tempoTextInputs.style.top = "" + gui.configurations.tempoTextInput.top + "px"
+        gui.components.domElements.textInputs.loopLengthMillis.value = sequencer.loopLengthInMillis
+        gui.components.domElements.textInputs.loopLengthMillis.style.borderColor = gui.configurations.sequencer.color
+        gui.components.domElements.textInputs.loopLengthMillis.style.color = gui.configurations.defaultFont.color // set font color
     }
 
     function initializeTempoTextInputActionListeners() {
@@ -1330,18 +1263,18 @@ window.onload = () => {
          * number. if something besides a valid number is entered, the value will just go back
          * to whatever it was before, and not make any change to the sequencer.
          */
-        domElements.textInputs.loopLengthMillis.addEventListener('blur', (event) => {
-            let newTextInputValue = domElements.textInputs.loopLengthMillis.value.trim() // remove whitespace from beginning and end of input then store it
+        gui.components.domElements.textInputs.loopLengthMillis.addEventListener('blur', (event) => {
+            let newTextInputValue = gui.components.domElements.textInputs.loopLengthMillis.value.trim() // remove whitespace from beginning and end of input then store it
             if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
                 newTextInputValue = sequencer.loopLengthInMillis
             }
             newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
             // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
             newTextInputValue = confineNumberToBounds(newTextInputValue, LOOK_AHEAD_MILLIS, gui.configurations.tempoTextInput.maximumValue)
-            domElements.textInputs.loopLengthMillis.value = newTextInputValue
+            gui.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
             updateSequencerLoopLength(newTextInputValue)
         })
-        addDefaultTextInputKeypressEventListener(domElements.textInputs.loopLengthMillis, true)
+        addDefaultTextInputKeypressEventListener(gui.components.domElements.textInputs.loopLengthMillis, true)
     }
 
     function addDefaultTextInputKeypressEventListener(textarea, allowPeriods) {
@@ -1378,7 +1311,7 @@ window.onload = () => {
 
     function initializeSubdivisionTextInputsValuesAndStyles() {
         for(existingSubdivisionTextInput of subdivisionTextInputs) {
-            domElements.divs.subdivisionTextInputs.removeChild(existingSubdivisionTextInput)
+            gui.components.domElements.divs.subdivisionTextInputs.removeChild(existingSubdivisionTextInput)
         }
         subdivisionTextInputs = []
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
@@ -1391,7 +1324,7 @@ window.onload = () => {
             textArea.style.borderColor = gui.configurations.sequencer.color
             textArea.value = sequencer.rows[rowIndex].getNumberOfSubdivisions()
             textArea.style.color = gui.configurations.defaultFont.color // set font color
-            domElements.divs.subdivisionTextInputs.appendChild(textArea);
+            gui.components.domElements.divs.subdivisionTextInputs.appendChild(textArea);
             // note for later: the opposite of appendChild is removeChild
             subdivisionTextInputs.push(textArea)
             // textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
@@ -1417,7 +1350,7 @@ window.onload = () => {
 
     function initializeReferenceLineTextInputsValuesAndStyles() {
         for(existingTextInput of referenceLineTextInputs) {
-            domElements.divs.subdivisionTextInputs.removeChild(existingTextInput)
+            gui.components.domElements.divs.subdivisionTextInputs.removeChild(existingTextInput)
         }
         referenceLineTextInputs = []
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
@@ -1434,7 +1367,7 @@ window.onload = () => {
             } else {
                 textArea.style.color = gui.configurations.defaultFont.color // set font color
             }
-            domElements.divs.subdivisionTextInputs.appendChild(textArea);
+            gui.components.domElements.divs.subdivisionTextInputs.appendChild(textArea);
             // note for later: the opposite of appendChild is removeChild
             referenceLineTextInputs.push(textArea)
             // textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
