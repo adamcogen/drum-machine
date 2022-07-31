@@ -48,8 +48,6 @@ window.onload = () => {
         _audioContext.resume()
     }
 
-    const HIDE_ICONS = false // if this is true, icons will not be drawn on the screen. some other small changes may also be made to the GUI to try to make sure the GUI is still usable.
-    
     /**
      * drum machine configurations
      */
@@ -62,25 +60,13 @@ window.onload = () => {
     // Initialize Two.js library
     let two = initializeTwoJs(document.getElementById('draw-shapes'))
     
-    let gui = new DrumMachineGui(sequencer, two, sampleNameList);
+    const _HIDE_ICONS = false // if this is true, icons will not be drawn on the screen. some other small changes may also be made to the GUI to try to make sure the GUI is still usable.
+    let gui = new DrumMachineGui(sequencer, two, sampleNameList, _HIDE_ICONS);
 
-    initializeTempoTextInputValuesAndStyles();
     initializeTempoTextInputActionListeners();
-
-    // start putting together some subdivision text input proof-of-concept stuff here
-    let subdivisionTextInputs = []
-    initializeSubdivisionTextInputsValuesAndStyles();
     initializeSubdivisionTextInputsActionListeners();
-
-    let referenceLineTextInputs = []
-    initializeReferenceLineTextInputsValuesAndStyles();
     initializeReferenceLineTextInputsActionListeners();
-
-    // add checkboxes for toggling quantization on each row. these might be replaced with hand-drawn buttons of some sort later for better UI
-    let quantizationCheckboxes = []
-    initializeQuantizationCheckboxes();
     initializeQuantizationCheckboxActionListeners();
-
     addPauseButtonActionListeners()
     addRestartSequencerButtonActionListeners()
     addClearAllNotesButtonActionListeners()
@@ -621,46 +607,12 @@ window.onload = () => {
         gui.components.domElements.images.lockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
     }
 
-    function initializeCheckbox(verticalPosition, horizontalPosition) {
-        let checkbox = document.createElement("input");
-        checkbox.setAttribute("type", "checkbox");
-        checkbox.style.position = "absolute";
-        checkbox.style.top = "" + verticalPosition + "px";
-        checkbox.style.left = "" + horizontalPosition + "px";
-        checkbox.style.width = "20px"
-        checkbox.style.height = "20px"
-        checkbox.style.outline = "20px"
-        gui.components.domElements.divs.subdivisionTextInputs.appendChild(checkbox);
-        checkbox.style.cursor = "pointer"
-        return checkbox
-    }
-
-    function initializeQuantizationCheckboxes() {
-        if (!HIDE_ICONS) {
-            quantizationCheckboxes = [];
-            return 
-        }
-        for (let existingCheckbox of quantizationCheckboxes) {
-            gui.components.domElements.divs.subdivisionTextInputs.removeChild(existingCheckbox)
-        }
-        quantizationCheckboxes = []
-        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            let verticalPosition = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * rowIndex) + gui.configurations.subdivionLineTextInputs.topPaddingPerRow + 4
-            let horizontalPosition = gui.configurations.sequencer.left + gui.configurations.sequencer.width + 73
-            let checkbox = initializeCheckbox(verticalPosition, horizontalPosition)
-            if (sequencer.rows[rowIndex].quantized) {
-                checkbox.checked = true;
-            }
-            quantizationCheckboxes.push(checkbox)
-        }
-    }
-
     function initializeQuantizationCheckboxActionListeners() {
-        if (!HIDE_ICONS) {
+        if (!gui.configurations.hideIcons) {
             return 
         }
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            let checkbox = quantizationCheckboxes[rowIndex]
+            let checkbox = gui.components.domElements.checkboxes.quantizationCheckboxes[rowIndex]
             checkbox.removeEventListener('click', (event) => {
                 setQuantizationButtonClickHandler(event, rowIndex, checkbox.checked)
             });
@@ -1081,10 +1033,10 @@ window.onload = () => {
         rowSelecionTracker.rowHandleStartingPosition.y = gui.components.shapes.sequencerRowHandles[rowIndex].translation.y
         // do the exact same thing for dom elements (subdivision and reference line text inputs, quantization checkbox, images) next
         rowSelecionTracker.domElements = [];
-        rowSelecionTracker.domElements.push(subdivisionTextInputs[rowIndex])
-        rowSelecionTracker.domElements.push(referenceLineTextInputs[rowIndex])
-        if (HIDE_ICONS) {
-            rowSelecionTracker.domElements.push(quantizationCheckboxes[rowIndex])
+        rowSelecionTracker.domElements.push(gui.components.domElements.textInputs.subdivisionTextInputs[rowIndex])
+        rowSelecionTracker.domElements.push(gui.components.domElements.textInputs.referenceLineTextInputs[rowIndex])
+        if (gui.configurations.hideIcons) {
+            rowSelecionTracker.domElements.push(gui.components.domElements.checkboxes.quantizationCheckboxes[rowIndex])
         } else {
             rowSelecionTracker.domElements.push(gui.components.domElements.iconLists.lockedIcons[rowIndex]);
             rowSelecionTracker.domElements.push(gui.components.domElements.iconLists.unlockedIcons[rowIndex]);
@@ -1190,9 +1142,9 @@ window.onload = () => {
         // redraw notes so and lines
         resetNotesAndLinesDisplayForAllRows();
         // redraw html inputs, such as subdivision and reference line text areas, quantization checkboxes
-        initializeSubdivisionTextInputsValuesAndStyles();
-        initializeReferenceLineTextInputsValuesAndStyles();
-        initializeQuantizationCheckboxes()
+        gui.initializeSubdivisionTextInputsValuesAndStyles();
+        gui.initializeReferenceLineTextInputsValuesAndStyles();
+        gui.initializeQuantizationCheckboxes()
         // redraw two.js shapes, such as 'add row' and 'clear notes for row' button shapes
         // todo: make methods for these so we don't have to pass in the GUI configurations twice when initializing.
         // todo: clean up first GUI initialization so that we can just call a 'redraw' method the first time as well, 
@@ -1215,7 +1167,7 @@ window.onload = () => {
         initializeAddRowButtonActionListener();
         initializeSequencerRowHandlesActionListeners();
         // initialize, format, and move button icons into place
-        initializeIcons(HIDE_ICONS)
+        initializeIcons(gui.configurations.hideIcons)
         if (selectedRowIndex !== null) {
             // if a row is selected, set variables appropriately for moving it around
             initializeRowSelectionVariablesAndVisuals(selectedRowIndex);
@@ -1245,14 +1197,6 @@ window.onload = () => {
         }
         gui.components.domElements.images.pauseIcon.style.display = 'block'
         gui.components.domElements.images.playIcon.style.display = 'none'
-    }
-
-    function initializeTempoTextInputValuesAndStyles() {
-        gui.components.domElements.divs.tempoTextInputs.style.left = "" + gui.configurations.tempoTextInput.left + "px"
-        gui.components.domElements.divs.tempoTextInputs.style.top = "" + gui.configurations.tempoTextInput.top + "px"
-        gui.components.domElements.textInputs.loopLengthMillis.value = sequencer.loopLengthInMillis
-        gui.components.domElements.textInputs.loopLengthMillis.style.borderColor = gui.configurations.sequencer.color
-        gui.components.domElements.textInputs.loopLengthMillis.style.color = gui.configurations.defaultFont.color // set font color
     }
 
     function initializeTempoTextInputActionListeners() {
@@ -1309,31 +1253,9 @@ window.onload = () => {
         }
     }
 
-    function initializeSubdivisionTextInputsValuesAndStyles() {
-        for(existingSubdivisionTextInput of subdivisionTextInputs) {
-            gui.components.domElements.divs.subdivisionTextInputs.removeChild(existingSubdivisionTextInput)
-        }
-        subdivisionTextInputs = []
-        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            let textArea = document.createElement("textarea");
-            textArea.cols = "3"
-            textArea.rows = "1"
-            textArea.style.position = "absolute"
-            textArea.style.top = "" + (gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows) + gui.configurations.subdivionLineTextInputs.topPaddingPerRow) + "px"
-            textArea.style.left = "" + (gui.configurations.sequencer.left + gui.configurations.sequencer.width + gui.configurations.subdivionLineTextInputs.leftPaddingPerRow) + "px"
-            textArea.style.borderColor = gui.configurations.sequencer.color
-            textArea.value = sequencer.rows[rowIndex].getNumberOfSubdivisions()
-            textArea.style.color = gui.configurations.defaultFont.color // set font color
-            gui.components.domElements.divs.subdivisionTextInputs.appendChild(textArea);
-            // note for later: the opposite of appendChild is removeChild
-            subdivisionTextInputs.push(textArea)
-            // textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
-        }
-    }
-
     function initializeSubdivisionTextInputsActionListeners() {
         for (let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
-            let subdivisionTextInput = subdivisionTextInputs[rowIndex]
+            let subdivisionTextInput = gui.components.domElements.textInputs.subdivisionTextInputs[rowIndex]
             subdivisionTextInput.addEventListener('blur', (event) => {
                 let newTextInputValue = subdivisionTextInput.value.trim() // remove whitespace from beginning and end of input then store it
                 if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
@@ -1348,35 +1270,9 @@ window.onload = () => {
         }
     }
 
-    function initializeReferenceLineTextInputsValuesAndStyles() {
-        for(existingTextInput of referenceLineTextInputs) {
-            gui.components.domElements.divs.subdivisionTextInputs.removeChild(existingTextInput)
-        }
-        referenceLineTextInputs = []
-        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            let textArea = document.createElement("textarea");
-            textArea.cols = "3"
-            textArea.rows = "1"
-            textArea.style.position = "absolute"
-            textArea.style.top = "" + (gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows) + gui.configurations.referenceLineTextInputs.topPaddingPerRow) + "px"
-            textArea.style.left = "" + (gui.configurations.sequencer.left + gui.configurations.sequencer.width + gui.configurations.referenceLineTextInputs.leftPaddingPerRow) + "px"
-            textArea.style.borderColor = gui.configurations.referenceLines.color
-            textArea.value = sequencer.rows[rowIndex].getNumberOfReferenceLines()
-            if (sequencer.rows[rowIndex].getNumberOfReferenceLines() === 0) {
-                textArea.style.color = gui.configurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
-            } else {
-                textArea.style.color = gui.configurations.defaultFont.color // set font color
-            }
-            gui.components.domElements.divs.subdivisionTextInputs.appendChild(textArea);
-            // note for later: the opposite of appendChild is removeChild
-            referenceLineTextInputs.push(textArea)
-            // textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
-        }
-    }
-
     function initializeReferenceLineTextInputsActionListeners() {
         for (let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
-            let referenceLineTextInput = referenceLineTextInputs[rowIndex]
+            let referenceLineTextInput = gui.components.domElements.textInputs.referenceLineTextInputs[rowIndex]
             referenceLineTextInput.addEventListener('blur', (event) => {
                 let newTextInputValue = referenceLineTextInput.value.trim() // remove whitespace from beginning and end of input then store it
                 if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
@@ -1399,15 +1295,15 @@ window.onload = () => {
     function updateNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex) {
         // update quantization toggle checkbox, quantization settings: you can't quantize a row if it has 0 subdivisions.
         if (newNumberOfSubdivisions === 0) {
-            if (HIDE_ICONS) {
-                quantizationCheckboxes[rowIndex].checked = false
+            if (gui.configurations.hideIcons) {
+                gui.components.domElements.checkboxes.quantizationCheckboxes[rowIndex].checked = false
             }
             sequencer.rows[rowIndex].quantized = false
         }
         // update the sequencer data structure to reflect the new number of subdivisions.
         // call the sequencer's 'update subdivisions for row' method
         sequencer.setNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex)
-        subdivisionTextInputs[rowIndex].value = newNumberOfSubdivisions
+        gui.components.domElements.textInputs.subdivisionTextInputs[rowIndex].value = newNumberOfSubdivisions
         redrawSequencer()
     }
 
@@ -1415,7 +1311,7 @@ window.onload = () => {
         // update the sequencer data structure to reflect the new number of reference lines.
         // call the sequencer's 'update number of reference lines for row' method
         sequencer.setNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex)
-        referenceLineTextInputs[rowIndex].value = newNumberOfReferenceLines
+        gui.components.domElements.textInputs.referenceLineTextInputs[rowIndex].value = newNumberOfReferenceLines
         resetNotesAndLinesDisplayForRow(rowIndex)
     }
 

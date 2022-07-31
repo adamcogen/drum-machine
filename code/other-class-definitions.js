@@ -1,10 +1,10 @@
 /**
- * This file contains class definitions for note bank node generator, id generator, 
+ * This file contains class definitions for note bank node generator, ID generator, 
  * and any other small miscellaneous classes used in the drum machine implementation.
  */
 
-// class used to generate unique id numbers.
-// just increments a counter by 1 and returns the counter value each time you ask for a new id.
+// class used to generate unique ID numbers.
+// just increments a counter by 1 and returns the counter value each time you ask for a new ID.
 // could add capacity for a larger number of IDs by using base36, i.e. adding letters to IDs, not
 // just numbers. Could also consider padding with a specified number of 0s and returning as a string
 // if we wanted ID generation to be a little more uniform. none of that matters for now.

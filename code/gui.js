@@ -5,18 +5,25 @@
  * For now this class will just initialize the GUI configurations object.
  */
 class DrumMachineGui {
-    constructor(sequencer, two, sampleNameList) {
+    constructor(sequencer, two, sampleNameList, hideIcons) {
         this.sequencer = sequencer
         this.two = two
         this.sampleNameList = sampleNameList
-        this.configurations = getGuiConfigurations()
+        this.configurations = getGuiConfigurations(hideIcons)
         this.components = {
             shapes: {}, // this hash will contain all of the two.js shapes (either as shapes, lists of shapes, or lists of lists of shapes)
             domElements: {} // this hash will contain all of the HTML DOM elements (either as individual elements, lists of elements, or lists of lists of elements, etc.)
         }
         this.components.shapes = this.initializeGuiComponents();
         this.components.domElements = this.initializeDomElements();
+
+        // add more dom elements and do some additional setup of shapes and dom elements
+        this.initializeTempoTextInputValuesAndStyles();
+        this.initializeSubdivisionTextInputsValuesAndStyles();
+        this.initializeReferenceLineTextInputsValuesAndStyles();
+        this.initializeQuantizationCheckboxes(); // add checkboxes for toggling quantization on each row. these might be replaced with hand-drawn buttons of some sort later for better UI
         this.setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note or a sequencer row, so make sure it starts out as not visible
+
         this.lastButtonClickTimeTrackers = this.initializeLastButtonClickTimeTrackers(); // a hash used keep track of the last time each button was clicked
         this.initializeComponentEventListeners();
         this.initializeWindowEventListeners();
@@ -61,6 +68,11 @@ class DrumMachineGui {
             },
             textInputs: {
                 loopLengthMillis: document.getElementById('text-input-loop-length-millis'),
+                subdivisionTextInputs: [],
+                referenceLineTextInputs: [],
+            },
+            checkboxes: {
+                quantizationCheckboxes: [],
             },
             images: {
                 pauseIcon: document.getElementById('pause-icon'),
@@ -373,6 +385,97 @@ class DrumMachineGui {
     }
 
     /**
+     * Tempo text input
+     */
+
+    initializeTempoTextInputValuesAndStyles() {
+        this.components.domElements.divs.tempoTextInputs.style.left = "" + this.configurations.tempoTextInput.left + "px"
+        this.components.domElements.divs.tempoTextInputs.style.top = "" + this.configurations.tempoTextInput.top + "px"
+        this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.loopLengthInMillis
+        this.components.domElements.textInputs.loopLengthMillis.style.borderColor = this.configurations.sequencer.color
+        this.components.domElements.textInputs.loopLengthMillis.style.color = this.configurations.defaultFont.color // set font color
+    }
+
+    /**
+     * 'set number of subdivisions for row' text inputs
+     */
+
+    initializeSubdivisionTextInputsValuesAndStyles() {
+        for(let existingSubdivisionTextInput of this.components.domElements.textInputs.subdivisionTextInputs) {
+            this.components.domElements.divs.subdivisionTextInputs.removeChild(existingSubdivisionTextInput)
+        }
+        this.components.domElements.textInputs.subdivisionTextInputs = []
+        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            let textArea = document.createElement("textarea");
+            textArea.cols = "3"
+            textArea.rows = "1"
+            textArea.style.position = "absolute"
+            textArea.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.subdivionLineTextInputs.topPaddingPerRow) + "px"
+            textArea.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.subdivionLineTextInputs.leftPaddingPerRow) + "px"
+            textArea.style.borderColor = this.configurations.sequencer.color
+            textArea.value = this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
+            textArea.style.color = this.configurations.defaultFont.color // set font color
+            this.components.domElements.divs.subdivisionTextInputs.appendChild(textArea);
+            // note for later: the opposite of appendChild is removeChild
+            this.components.domElements.textInputs.subdivisionTextInputs.push(textArea)
+            // textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
+        }
+    }
+
+    /**
+     * 'set number of reference lines for row' text inputs
+     */
+    initializeReferenceLineTextInputsValuesAndStyles() {
+        for(let existingTextInput of this.components.domElements.textInputs.referenceLineTextInputs) {
+            this.components.domElements.divs.subdivisionTextInputs.removeChild(existingTextInput)
+        }
+        this.components.domElements.textInputs.referenceLineTextInputs = []
+        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            let textArea = document.createElement("textarea");
+            textArea.cols = "3"
+            textArea.rows = "1"
+            textArea.style.position = "absolute"
+            textArea.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.referenceLineTextInputs.topPaddingPerRow) + "px"
+            textArea.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.referenceLineTextInputs.leftPaddingPerRow) + "px"
+            textArea.style.borderColor = this.configurations.referenceLines.color
+            textArea.value = this.sequencer.rows[rowIndex].getNumberOfReferenceLines()
+            if (this.sequencer.rows[rowIndex].getNumberOfReferenceLines() === 0) {
+                textArea.style.color = this.configurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
+            } else {
+                textArea.style.color = this.configurations.defaultFont.color // set font color
+            }
+            this.components.domElements.divs.subdivisionTextInputs.appendChild(textArea);
+            // note for later: the opposite of appendChild is removeChild
+            this.components.domElements.textInputs.referenceLineTextInputs.push(textArea)
+            // textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
+        }
+    }
+
+    /**
+     * 'toggle quantization for row' checkboxes
+     */
+
+    initializeQuantizationCheckboxes() {
+        if (!this.configurations.hideIcons) {
+            this.components.domElements.checkboxes.quantizationCheckboxes = [];
+            return 
+        }
+        for (let existingCheckbox of this.components.domElements.checkboxes.quantizationCheckboxes) {
+            this.components.domElements.divs.subdivisionTextInputs.removeChild(existingCheckbox)
+        }
+        this.components.domElements.checkboxes.quantizationCheckboxes = []
+        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            let verticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + this.configurations.subdivionLineTextInputs.topPaddingPerRow + 4
+            let horizontalPosition = this.configurations.sequencer.left + this.configurations.sequencer.width + 73
+            let checkbox = this.initializeCheckbox(verticalPosition, horizontalPosition)
+            if (this.sequencer.rows[rowIndex].quantized) {
+                checkbox.checked = true;
+            }
+            this.components.domElements.checkboxes.quantizationCheckboxes.push(checkbox)
+        }
+    }
+
+    /**
      * general helper methods
      */
 
@@ -406,6 +509,20 @@ class DrumMachineGui {
             shapes[rowIndex] = this.initializeRectangleShape(top, left, height, width)
         }
         return shapes
+    }
+
+    initializeCheckbox(verticalPosition, horizontalPosition) {
+        let checkbox = document.createElement("input");
+        checkbox.setAttribute("type", "checkbox");
+        checkbox.style.position = "absolute";
+        checkbox.style.top = "" + verticalPosition + "px";
+        checkbox.style.left = "" + horizontalPosition + "px";
+        checkbox.style.width = "20px"
+        checkbox.style.height = "20px"
+        checkbox.style.outline = "20px"
+        this.components.domElements.divs.subdivisionTextInputs.appendChild(checkbox);
+        checkbox.style.cursor = "pointer"
+        return checkbox
     }
 
 }

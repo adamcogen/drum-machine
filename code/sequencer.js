@@ -460,9 +460,7 @@ class SequencerRow {
     }
 
     // set whether this row should be quantized or not.
-    // 'quantize' is a boolean. true and the row will be quantized,
-    // otherwise it will not be.
-    // todo: much work to be done here to allow for setting the quantization of a row with notes already on it.
+    // 'quantize' is a boolean. true and the row will be quantized, otherwise it will not be.
     setQuantization(quantize) {
         this.quantized = quantize
         /**

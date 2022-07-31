@@ -5,8 +5,9 @@
 
 let defaultSequencerLineColor = '#707070'
 let lighterSequencerColor = "#ababab"
-function getGuiConfigurations() {
+function getGuiConfigurations(hideIcons) {
     return {
+        hideIcons: hideIcons,
         sequencer: {
             top: 110,
             left: 160,
