@@ -106,44 +106,7 @@ window.onload = () => {
     // this method is the 'update' loop that will keep updating the page. after first invocation, this method basically calls itself recursively forever.
     function draw() {
         sequencer.update() // update timekeeping variables and schedule any upcoming notes, using the sequencer
-
-        let timeTrackingLinesXPosition = gui.configurations.sequencer.left + (gui.configurations.sequencer.width * (sequencer.timekeeping.currentTimeWithinCurrentLoop / sequencer.loopLengthInMillis))
-
-        for (let timeTrackingLine of gui.components.shapes.timeTrackingLines) {
-            timeTrackingLine.position.x = timeTrackingLinesXPosition
-        }
-
-        // make circles get bigger when they play.
-        for (let circle of gui.allDrawnCircles) {
-            let radiusToSetUnplayedCircleTo = gui.configurations.notes.unplayedCircleRadius
-            if (gui.circleBeingMoved !== null && gui.circleBeingMoved.guiData.label === circle.guiData.label) {
-                // if we are moving this circle, make its unplayed radius slightly bigger than normal
-                radiusToSetUnplayedCircleTo = gui.configurations.notes.movingCircleRadius;
-            }
-            let circleResizeRange = gui.configurations.sequencer.width / 25
-            if (circle.translation.x <= timeTrackingLinesXPosition - circleResizeRange || circle.translation.x >= timeTrackingLinesXPosition + circleResizeRange) {
-                circle.radius = radiusToSetUnplayedCircleTo
-            } else {
-                circle.radius = gui.configurations.notes.playedCircleRadius
-            }
-        }
-
-        /**
-         * This logic allows us to show buttons as being "pressed" for a short amount of time.
-         * After we click a button, we set its "lastClickedTime" in the "lastButtonClickTimeTrackers" hash,
-         * and we change the button's shape's background to a "clicked" color in its click listener. then in 
-         * the logic below the button's background gets set back to "transparent" after the desired amount of 
-         * time has elapsed. this lets us animate buttons to appear clicked, even if the action they perform
-         * is done instantly after clicking.
-         */
-        for (buttonName in gui.lastButtonClickTimeTrackers) {
-            let buttonClickTimeTracker = gui.lastButtonClickTimeTrackers[buttonName]
-            if (sequencer.currentTime - buttonClickTimeTracker.lastClickTime > gui.configurations.buttonBehavior.showClicksForHowManyMilliseconds) {
-                buttonClickTimeTracker.shape.fill = "transparent"
-            }
-        }
-
-        two.update() // update the GUI display
+        gui.update() // update the GUI display
         requestAnimationFrameShim(draw); // call animation frame update with this 'draw' method again
     }
 

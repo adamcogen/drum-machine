@@ -43,8 +43,48 @@ class DrumMachineGui {
         this.allDrawnCircles = []
     }
 
+    // main GUI update logic.
+    // a lot of the GUI code is event-driven, but there are also things that get updated
+    // constantly within the main recursive loop of the drum machine, such as the time-
+    // tracking lines. those and similarly time-based things will be updated here.
     update() {
-        // do nothing yet, eventually this will contain the main GUI update logic
+        let timeTrackingLinesXPosition = this.configurations.sequencer.left + (this.configurations.sequencer.width * (this.sequencer.timekeeping.currentTimeWithinCurrentLoop / this.sequencer.loopLengthInMillis))
+
+        for (let timeTrackingLine of this.components.shapes.timeTrackingLines) {
+            timeTrackingLine.position.x = timeTrackingLinesXPosition
+        }
+
+        // make circles get bigger when they play.
+        for (let circle of this.allDrawnCircles) {
+            let radiusToSetUnplayedCircleTo = this.configurations.notes.unplayedCircleRadius
+            if (this.circleBeingMoved !== null && this.circleBeingMoved.guiData.label === circle.guiData.label) {
+                // if we are moving this circle, make its unplayed radius slightly bigger than normal
+                radiusToSetUnplayedCircleTo = this.configurations.notes.movingCircleRadius;
+            }
+            let circleResizeRange = this.configurations.sequencer.width / 25
+            if (circle.translation.x <= timeTrackingLinesXPosition - circleResizeRange || circle.translation.x >= timeTrackingLinesXPosition + circleResizeRange) {
+                circle.radius = radiusToSetUnplayedCircleTo
+            } else {
+                circle.radius = this.configurations.notes.playedCircleRadius
+            }
+        }
+
+        /**
+         * This logic allows us to show buttons as being "pressed" for a short amount of time.
+         * After we click a button, we set its "lastClickedTime" in the "lastButtonClickTimeTrackers" hash,
+         * and we change the button's shape's background to a "clicked" color in its click listener. then in 
+         * the logic below the button's background gets set back to "transparent" after the desired amount of 
+         * time has elapsed. this lets us animate buttons to appear clicked, even if the action they perform
+         * is done instantly after clicking.
+         */
+        for (let buttonName in this.lastButtonClickTimeTrackers) {
+            let buttonClickTimeTracker = this.lastButtonClickTimeTrackers[buttonName]
+            if (this.sequencer.currentTime - buttonClickTimeTracker.lastClickTime > this.configurations.buttonBehavior.showClicksForHowManyMilliseconds) {
+                buttonClickTimeTracker.shape.fill = "transparent"
+            }
+        }
+
+        this.two.update() // apply the visual update the GUI display by refreshing the two.js canvas
     }
     
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects).
