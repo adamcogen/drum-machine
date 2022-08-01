@@ -5,28 +5,33 @@
  * For now this class will just initialize the GUI configurations object.
  */
 class DrumMachineGui {
-    constructor(sequencer, two, sampleNameList, hideIcons) {
+    constructor(sequencer, two, sampleNameList, samples, sampleBankNodeGenerator, hideIcons) {
         this.sequencer = sequencer
         this.two = two
         this.sampleNameList = sampleNameList
+        this.samples = samples;
+        this.sampleBankNodeGenerator = sampleBankNodeGenerator;
         this.configurations = getGuiConfigurations(hideIcons)
         this.components = {
             shapes: {}, // this hash will contain all of the two.js shapes (either as shapes, lists of shapes, or lists of lists of shapes)
             domElements: {} // this hash will contain all of the HTML DOM elements (either as individual elements, lists of elements, or lists of lists of elements, etc.)
         }
-        this.components.shapes = this.initializeGuiComponents();
+        this.components.shapes = this.initializeGuiShapes();
         this.components.domElements = this.initializeDomElements();
 
         // add more dom elements and do some additional setup of shapes and dom elements
         this.initializeTempoTextInputValuesAndStyles();
-        this.initializeSubdivisionTextInputsValuesAndStyles();
-        this.initializeReferenceLineTextInputsValuesAndStyles();
-        this.initializeQuantizationCheckboxes(); // add checkboxes for toggling quantization on each row. these might be replaced with hand-drawn buttons of some sort later for better UI
         this.setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note or a sequencer row, so make sure it starts out as not visible
 
         this.lastButtonClickTimeTrackers = this.initializeLastButtonClickTimeTrackers(); // a hash used keep track of the last time each button was clicked
         this.initializeComponentEventListeners();
         this.initializeWindowEventListeners();
+
+        // run any miscellaneous unit tests needed before starting main update loop
+        this.testConfineNumberToBounds();
+
+        // keep a list of all the circles (i.e. notes) that have been drawn on the screen
+        this.allDrawnCircles = []
     }
 
     update() {
@@ -36,7 +41,7 @@ class DrumMachineGui {
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects).
     // these are drawn in the order that they are layered on-screen, i.e. the bottom layer 
     // is drawn first.
-    initializeGuiComponents() {
+    initializeGuiShapes() {
         let shapes = {};
         shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
         shapes.referenceLineLists = this.initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
@@ -523,6 +528,33 @@ class DrumMachineGui {
         this.components.domElements.divs.subdivisionTextInputs.appendChild(checkbox);
         checkbox.style.cursor = "pointer"
         return checkbox
+    }
+
+    /**
+     * Miscellaneous re-used GUI logic
+     */
+
+    // given a number and an upper and lower bound, confine the number to be between the bounds.
+    // if the number if below the lower bound, return the lower bound.
+    // if it is above the upper bound, return the upper bound.
+    // if it is between the bounds, return the number unchanged.
+    confineNumberToBounds(number, lowerBound, upperBound) {
+        if (number < lowerBound) {
+            return lowerBound
+        } else if (number > upperBound) {
+            return upperBound
+        } else {
+            return number
+        }
+    }
+
+    // quick happy-path unit test for confineNumberToBounds()
+    testConfineNumberToBounds() {
+        assertEquals(5, this.confineNumberToBounds(4, 5, 10), "number below lower bound")
+        assertEquals(5, this.confineNumberToBounds(5, 5, 10), "number same as lower bound")
+        assertEquals(6, this.confineNumberToBounds(6, 5, 10), "number between the bounds")
+        assertEquals(10, this.confineNumberToBounds(10, 5, 10), "number same as upper bound")
+        assertEquals(10, this.confineNumberToBounds(11, 5, 10), "number above upper bound")
     }
 
 }

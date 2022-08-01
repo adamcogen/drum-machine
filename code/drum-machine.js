@@ -34,10 +34,6 @@ window.onload = () => {
         loadDrumSample(SOUND_FILES_PATH, sampleName, WAV_EXTENSION)
     }
 
-    // initialize ID generator for node / note labels, and node generator for notes taken from the sample bank.
-    let idGenerator = new IdGenerator() // we will use this same ID generator everywhere we need IDs, to make sure we track which IDs have already been generated
-    let sampleBankNodeGenerator = new SampleBankNodeGenerator(idGenerator, sampleNameList) // generates a new sequencer list node whenever we pull a note off the sound bank
-
     // initialize web audio context
     setUpAudioAndAnimationForWebAudioApi()
     let _audioContext = new AudioContext();
@@ -60,19 +56,15 @@ window.onload = () => {
     // Initialize Two.js library
     let two = initializeTwoJs(document.getElementById('draw-shapes'))
     
-    const _HIDE_ICONS = false // if this is true, icons will not be drawn on the screen. some other small changes may also be made to the GUI to try to make sure the GUI is still usable.
-    let gui = new DrumMachineGui(sequencer, two, sampleNameList, _HIDE_ICONS);
+    // initialize ID generator for node / note labels, and node generator for notes taken from the sample bank.
+    let idGenerator = new IdGenerator() // we will use this same ID generator everywhere we need IDs, to make sure we track which IDs have already been generated
+    let _sampleBankNodeGenerator = new SampleBankNodeGenerator(idGenerator, sampleNameList) // generates a new sequencer list node whenever we pull a note off the sound bank
+    let gui = new DrumMachineGui(sequencer, two, sampleNameList, samples, _sampleBankNodeGenerator, hideIcons=false);
 
     initializeTempoTextInputActionListeners();
-    initializeSubdivisionTextInputsActionListeners();
-    initializeReferenceLineTextInputsActionListeners();
-    initializeQuantizationCheckboxActionListeners();
     addPauseButtonActionListeners()
     addRestartSequencerButtonActionListeners()
     addClearAllNotesButtonActionListeners()
-    addClearNotesForRowButtonsActionListeners()
-    initializeAddRowButtonActionListener()
-    initializeSequencerRowHandlesActionListeners();
 
     // create variables which will be used to track info about the note that is being clicked and dragged
     let circleBeingMoved = null
@@ -101,25 +93,13 @@ window.onload = () => {
     const NOTE_BANK_ROW_NUMBER = -2
     const NOTE_TRASH_BIN_ROW_NUMBER = -3
 
-    // create constants that denote special beat numbers
-    const NOTE_IS_NOT_QUANTIZED = -1
-
-    // create constants that denote special 'lastPlayedOnIteration' values
-    const NOTE_HAS_NEVER_BEEN_PLAYED = -1
-
     // set up a initial example drum sequence
     initializeSimpleDefaultSequencerPattern()
-
-    // keep a list of all the circles (i.e. notes) that have been drawn on the screen
-    let allDrawnCircles = []
 
     drawAllNoteBankCircles()
     drawNotesToReflectSequencerCurrentState()
 
     refreshWindowMouseMoveEvent();
-    
-    // run any miscellaneous unit tests needed before starting main update loop
-    testConfineNumberToBounds()
 
     pause(); // start the sequencer paused
 
@@ -143,7 +123,7 @@ window.onload = () => {
         }
 
         // make circles get bigger when they play.
-        for (let circle of allDrawnCircles) {
+        for (let circle of gui.allDrawnCircles) {
             let radiusToSetUnplayedCircleTo = gui.configurations.notes.unplayedCircleRadius
             if (circleBeingMoved !== null && circleBeingMoved.guiData.label === circle.guiData.label) {
                 // if we are moving this circle, make its unplayed radius slightly bigger than normal
@@ -237,8 +217,8 @@ window.onload = () => {
                             circleBeingMovedNewBeatNumber = getIndexOfClosestSubdivisionLine(mouseX, sequencer.rows[rowIndex].getNumberOfSubdivisions())
                             circleBeingMoved.translation.x = getXPositionOfSubdivisionLine(circleBeingMovedNewBeatNumber, sequencer.rows[rowIndex].getNumberOfSubdivisions())
                         } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
-                            circleBeingMoved.translation.x = confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
-                            circleBeingMovedNewBeatNumber = NOTE_IS_NOT_QUANTIZED
+                            circleBeingMoved.translation.x = gui.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
+                            circleBeingMovedNewBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED
                         }
                         // quantization has a more complicated effect on x position than y. y position will always just be on line, so always just put it there.
                         circleBeingMoved.translation.y = rowActualVerticalLocation;
@@ -427,7 +407,7 @@ window.onload = () => {
                     }
                     // create a new node for the sample that this note bank circle was for. note bank circles have a sample in their GUI data, 
                     // but no real node that can be added to the drum sequencer's data structure, so we need to create one.
-                    node = sampleBankNodeGenerator.createNewNodeForSample(circleBeingMoved.guiData.sampleName)
+                    node = gui.sampleBankNodeGenerator.createNewNodeForSample(circleBeingMoved.guiData.sampleName)
                     circleBeingMoved.guiData.label = node.label // the newly generated node will also have a real generated ID (label), use that
                     drawNoteBankCircleForSample(circleBeingMoved.guiData.sampleName) // if the note was taken from the sound bank, refill the sound bank
                 }
@@ -436,7 +416,7 @@ window.onload = () => {
                 node.priority = newNodeTimestampMillis
                 // add the moved note to its new sequencer row
                 sequencer.rows[circleBeingMovedNewRow].insertNode(node, circleBeingMoved.guiData.label)
-                node.data.lastScheduledOnIteration = NOTE_HAS_NEVER_BEEN_PLAYED // mark note as 'not played yet on current iteration'
+                node.data.lastScheduledOnIteration = Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED // mark note as 'not played yet on current iteration'
                 node.data.beat = circleNewBeatNumber
                 circleBeingMoved.guiData.beat = circleNewBeatNumber
             }
@@ -664,7 +644,7 @@ window.onload = () => {
         if (mouseIsCloserToRightSubdivisionThanLeft) {
             subdivisionToSnapTo += 1
         }
-        return confineNumberToBounds(subdivisionToSnapTo, 0, numberOfSubdivisions - 1)
+        return gui.confineNumberToBounds(subdivisionToSnapTo, 0, numberOfSubdivisions - 1)
     }
     
     /**
@@ -739,37 +719,37 @@ window.onload = () => {
         sequencer.rows[5].setQuantization(true)
         sequencer.rows[0].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), 0, 
         {
-            lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
+            lastScheduledOnIteration: Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED,
             sampleName: HI_HAT_CLOSED,
             beat: 0,
         }
         ))
         sequencer.rows[0].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (sequencer.loopLengthInMillis / 8) * 3, 
         {
-            lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
+            lastScheduledOnIteration: Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED,
             sampleName: WOODBLOCK,
             beat: 3,
         }
         ))
         sequencer.rows[1].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (sequencer.loopLengthInMillis / 4) * 1, 
             {
-                lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
+                lastScheduledOnIteration: Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: HI_HAT_OPEN,
                 beat: 1,
             }
         ))
         sequencer.rows[2].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), ((sequencer.loopLengthInMillis / 4) * 2), 
             {
-                lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
+                lastScheduledOnIteration: Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: SNARE,
-                beat: NOTE_IS_NOT_QUANTIZED,
+                beat: Sequencer.NOTE_IS_NOT_QUANTIZED,
             }
         ))
         sequencer.rows[3].insertNode(new PriorityLinkedListNode(idGenerator.getNextId(), (sequencer.loopLengthInMillis / 4) * 3, 
             {
-                lastScheduledOnIteration: NOTE_HAS_NEVER_BEEN_PLAYED,
+                lastScheduledOnIteration: Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: BASS_DRUM,
-                beat: NOTE_IS_NOT_QUANTIZED,
+                beat: Sequencer.NOTE_IS_NOT_QUANTIZED,
             }
         ))
     }
@@ -846,7 +826,7 @@ window.onload = () => {
          * bank circle is taken fom the note bank and placed onto a real row.
          */
         let label = (indexOfSampleInNoteBank + 1) * -1 // see block comment above for info about '-1' here
-        drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, NOTE_IS_NOT_QUANTIZED)
+        drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, Sequencer.NOTE_IS_NOT_QUANTIZED)
     }
 
     // create a new circle (i.e. note) on the screen, with the specified x and y position. color is determined by sample name. 
@@ -892,7 +872,7 @@ window.onload = () => {
         circle.guiData.beat = beat
 
         // add circle to list of all drawn circles
-        allDrawnCircles.push(circle)
+        gui.allDrawnCircles.push(circle)
     }
 
     // remove a circle from the 'allDrawnCircles' list and two.js canvas, based on its label.
@@ -901,12 +881,12 @@ window.onload = () => {
     // deleted circles to get garbage-collected.
     // note that this method _only_ deletes circles from the _display_, not from the underlying sequencer data
     // structure, that needs to be handled somewhere else separately.
-    function removeCircleFromDisplay(label){
-        let indexOfListItemToRemove = allDrawnCircles.findIndex(elementFromList => elementFromList.guiData.label === label);
+    function removeCircleFromDisplay(label){``
+        let indexOfListItemToRemove = gui.allDrawnCircles.findIndex(elementFromList => elementFromList.guiData.label === label);
         if (indexOfListItemToRemove === -1) { //  we don't expect to reach this case, where a circle with the given label isn't found in the list
-            throw "unexpected problem: couldn't find the circle with the given label in the list of all drawn circles, when trying to delete it. the given label was: " + label + ". full list (labels only): " + allDrawnCircles.map((item) => item.guiData.label) + "."
+            throw "unexpected problem: couldn't find the circle with the given label in the list of all drawn circles, when trying to delete it. the given label was: " + label + ". full list (labels only): " + gui.allDrawnCircles.map((item) => item.guiData.label) + "."
         }
-        let listOfOneRemovedElement = allDrawnCircles.splice(indexOfListItemToRemove, 1) // this should go in and delete the element we want to delete!
+        let listOfOneRemovedElement = gui.allDrawnCircles.splice(indexOfListItemToRemove, 1) // this should go in and delete the element we want to delete!
         if (listOfOneRemovedElement.length !== 1) {
             throw "unexpected problem: we expected exactly one circle to be removed from the allDrawnCricles list, but some other number of circles were removed. number removed: " + listOfOneRemovedElement.length
         }
@@ -919,7 +899,7 @@ window.onload = () => {
      * this has _no effect_ on the underlying sequencer data structure, it only removes circles _from the GUI display_.
      */
     function removeAllCirclesFromDisplay() {
-        let allDrawnCirclesCopy = [...allDrawnCircles] // make a copy of the drawn circles list so we can iterate through its circles while also removing the items from the original list
+        let allDrawnCirclesCopy = [...gui.allDrawnCircles] // make a copy of the drawn circles list so we can iterate through its circles while also removing the items from the original list
         for (let note of allDrawnCirclesCopy) {
             removeCircleFromDisplay(note.guiData.label)
         }
@@ -1009,7 +989,7 @@ window.onload = () => {
         // save a list, of all the shapes that are associated with the selected row.
         // we are saving this list so that we can move them all as we move the row around.
         rowSelecionTracker.shapes = [];
-        for (let circle of allDrawnCircles) {
+        for (let circle of gui.allDrawnCircles) {
             if (circle.guiData.row === rowIndex) {
                 rowSelecionTracker.shapes.push(circle)
             }
@@ -1144,7 +1124,7 @@ window.onload = () => {
         // redraw html inputs, such as subdivision and reference line text areas, quantization checkboxes
         gui.initializeSubdivisionTextInputsValuesAndStyles();
         gui.initializeReferenceLineTextInputsValuesAndStyles();
-        gui.initializeQuantizationCheckboxes()
+        gui.initializeQuantizationCheckboxes(); // add checkboxes for toggling quantization on each row. these might be replaced with hand-drawn buttons of some sort later for better UI
         // redraw two.js shapes, such as 'add row' and 'clear notes for row' button shapes
         // todo: make methods for these so we don't have to pass in the GUI configurations twice when initializing.
         // todo: clean up first GUI initialization so that we can just call a 'redraw' method the first time as well, 
@@ -1214,7 +1194,7 @@ window.onload = () => {
             }
             newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
             // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
-            newTextInputValue = confineNumberToBounds(newTextInputValue, LOOK_AHEAD_MILLIS, gui.configurations.tempoTextInput.maximumValue)
+            newTextInputValue = gui.confineNumberToBounds(newTextInputValue, LOOK_AHEAD_MILLIS, gui.configurations.tempoTextInput.maximumValue)
             gui.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
             updateSequencerLoopLength(newTextInputValue)
         })
@@ -1262,7 +1242,7 @@ window.onload = () => {
                     newTextInputValue = sequencer.rows[rowIndex].getNumberOfSubdivisions()
                 }
                 newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
-                newTextInputValue = confineNumberToBounds(newTextInputValue, 0, gui.configurations.subdivionLineTextInputs.maximumValue)
+                newTextInputValue = gui.confineNumberToBounds(newTextInputValue, 0, gui.configurations.subdivionLineTextInputs.maximumValue)
                 subdivisionTextInput.value = newTextInputValue
                 updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
             })
@@ -1279,7 +1259,7 @@ window.onload = () => {
                     newTextInputValue = sequencer.rows[rowIndex].getNumberOfReferenceLines()
                 }
                 newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
-                newTextInputValue = confineNumberToBounds(newTextInputValue, 0, gui.configurations.referenceLineTextInputs.maximumValue)
+                newTextInputValue = gui.confineNumberToBounds(newTextInputValue, 0, gui.configurations.referenceLineTextInputs.maximumValue)
                 if (newTextInputValue === 0) {
                     referenceLineTextInput.style.color = gui.configurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
                 } else {
@@ -1402,28 +1382,5 @@ window.onload = () => {
         // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
         drawAllNoteBankCircles()
         drawNotesToReflectSequencerCurrentState()
-    }
-
-    // given a number and an upper and lower bound, confine the number to be between the bounds.
-    // if the number if below the lower bound, return the lower bound.
-    // if it is above the upper bound, return the upper bound.
-    // if it is between the bounds, return the number unchanged.
-    function confineNumberToBounds(number, lowerBound, upperBound) {
-        if (number < lowerBound) {
-            return lowerBound
-        } else if (number > upperBound) {
-            return upperBound
-        } else {
-            return number
-        }
-    }
-
-    // quick happy-path unit test for confineNumberToBounds()
-    function testConfineNumberToBounds() {
-        assertEquals(5, confineNumberToBounds(4, 5, 10), "number below lower bound")
-        assertEquals(5, confineNumberToBounds(5, 5, 10), "number same as lower bound")
-        assertEquals(6, confineNumberToBounds(6, 5, 10), "number between the bounds")
-        assertEquals(10, confineNumberToBounds(10, 5, 10), "number same as upper bound")
-        assertEquals(10, confineNumberToBounds(11, 5, 10), "number above upper bound")
     }
 }

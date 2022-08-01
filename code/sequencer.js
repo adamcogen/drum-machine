@@ -5,6 +5,12 @@
 
 // a drum sequencer, which is made up of multiple rows that can have notes placed onto them.
 class Sequencer {
+    // create constants to denote special beat numbers
+    static get NOTE_IS_NOT_QUANTIZED() { return -1 }
+
+    // create constants to denote special 'lastPlayedOnIteration' values
+    static get NOTE_HAS_NEVER_BEEN_PLAYED() { return -1 }
+
     constructor(audioDrivers, numberOfRows = 4, loopLengthInMillis = 1000, lookAheadMillis = 50, samples = []) {
         this.audioDrivers = audioDrivers
         this.numberOfRows = numberOfRows
