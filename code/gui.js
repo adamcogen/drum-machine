@@ -30,6 +30,15 @@ class DrumMachineGui {
         // run any miscellaneous unit tests needed before starting main update loop
         this.testConfineNumberToBounds();
 
+        // create variables which will be used to track info about the note that is being clicked and dragged
+        this.circleBeingMoved = null
+        this.circleBeingMovedStartingPositionX = null
+        this.circleBeingMovedStartingPositionY = null
+        this.circleBeingMovedOldRow = null
+        this.circleBeingMovedNewRow = null
+        this.circleBeingMovedOldBeatNumber = null
+        this.circleBeingMovedNewBeatNumber = null
+
         // keep a list of all the circles (i.e. notes) that have been drawn on the screen
         this.allDrawnCircles = []
     }

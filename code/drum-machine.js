@@ -66,15 +66,6 @@ window.onload = () => {
     addRestartSequencerButtonActionListeners()
     addClearAllNotesButtonActionListeners()
 
-    // create variables which will be used to track info about the note that is being clicked and dragged
-    let circleBeingMoved = null
-    let circleBeingMovedStartingPositionX = null
-    let circleBeingMovedStartingPositionY = null
-    let circleBeingMovedOldRow = null
-    let circleBeingMovedNewRow = null
-    let circleBeingMovedOldBeatNumber = null
-    let circleBeingMovedNewBeatNumber = null
-
     let selectedRowIndex = null
     let rowSelecionTracker = {
         shapes: [],
@@ -125,7 +116,7 @@ window.onload = () => {
         // make circles get bigger when they play.
         for (let circle of gui.allDrawnCircles) {
             let radiusToSetUnplayedCircleTo = gui.configurations.notes.unplayedCircleRadius
-            if (circleBeingMoved !== null && circleBeingMoved.guiData.label === circle.guiData.label) {
+            if (gui.circleBeingMoved !== null && gui.circleBeingMoved.guiData.label === circle.guiData.label) {
                 // if we are moving this circle, make its unplayed radius slightly bigger than normal
                 radiusToSetUnplayedCircleTo = gui.configurations.notes.movingCircleRadius;
             }
@@ -158,15 +149,15 @@ window.onload = () => {
 
     function windowMouseMoveEventHandler(event) {
         // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
-        if (circleBeingMoved !== null) { // handle mousemove events when a note is selected
+        if (gui.circleBeingMoved !== null) { // handle mousemove events when a note is selected
             adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
             // start with default note movement behavior, for when the note doesn't fall within range of the trash bin, a sequencer line, etc.
-            circleBeingMoved.translation.x = mouseX
-            circleBeingMoved.translation.y = mouseY
-            circleBeingMovedNewRow = HAS_NO_ROW_NUMBER // start with "it's not colliding with anything", and update the value from there if we find a collision
-            circleBeingMoved.stroke = "black"
+            gui.circleBeingMoved.translation.x = mouseX
+            gui.circleBeingMoved.translation.y = mouseY
+            gui.circleBeingMovedNewRow = HAS_NO_ROW_NUMBER // start with "it's not colliding with anything", and update the value from there if we find a collision
+            gui.circleBeingMoved.stroke = "black"
             gui.components.domElements.images.trashClosedIcon.style.display = 'block'
             gui.components.domElements.images.trashOpenIcon.style.display = 'none'
             /**
@@ -182,10 +173,10 @@ window.onload = () => {
             let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= gui.configurations.noteTrashBin.left - gui.configurations.mouseEvents.notePlacementPadding) && (mouseX <= gui.configurations.noteTrashBin.left + gui.configurations.noteTrashBin.width + gui.configurations.mouseEvents.notePlacementPadding)
             let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= gui.configurations.noteTrashBin.top - gui.configurations.mouseEvents.notePlacementPadding) && (mouseY <= gui.configurations.noteTrashBin.top + gui.configurations.noteTrashBin.height + gui.configurations.mouseEvents.notePlacementPadding)
             if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
-                circleBeingMoved.translation.x = centerOfTrashBinX
-                circleBeingMoved.translation.y = centerOfTrashBinY
-                circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
-                circleBeingMoved.stroke = "red"
+                gui.circleBeingMoved.translation.x = centerOfTrashBinX
+                gui.circleBeingMoved.translation.y = centerOfTrashBinY
+                gui.circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
+                gui.circleBeingMoved.stroke = "red"
                 gui.components.domElements.images.trashClosedIcon.style.display = 'none'
                 gui.components.domElements.images.trashOpenIcon.style.display = 'block'
                 gui.components.shapes.noteTrashBinContainer.stroke = 'red'
@@ -214,15 +205,15 @@ window.onload = () => {
                         // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
                         if (sequencer.rows[rowIndex].quantized === true) {
                             // determine which subdivision we are closest to
-                            circleBeingMovedNewBeatNumber = getIndexOfClosestSubdivisionLine(mouseX, sequencer.rows[rowIndex].getNumberOfSubdivisions())
-                            circleBeingMoved.translation.x = getXPositionOfSubdivisionLine(circleBeingMovedNewBeatNumber, sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                            gui.circleBeingMovedNewBeatNumber = getIndexOfClosestSubdivisionLine(mouseX, sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                            gui.circleBeingMoved.translation.x = getXPositionOfSubdivisionLine(gui.circleBeingMovedNewBeatNumber, sequencer.rows[rowIndex].getNumberOfSubdivisions())
                         } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
-                            circleBeingMoved.translation.x = gui.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
-                            circleBeingMovedNewBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED
+                            gui.circleBeingMoved.translation.x = gui.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
+                            gui.circleBeingMovedNewBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED
                         }
                         // quantization has a more complicated effect on x position than y. y position will always just be on line, so always just put it there.
-                        circleBeingMoved.translation.y = rowActualVerticalLocation;
-                        circleBeingMovedNewRow = rowIndex // set 'new row' to whichever row we collided with / 'snapped' to
+                        gui.circleBeingMoved.translation.y = rowActualVerticalLocation;
+                        gui.circleBeingMovedNewRow = rowIndex // set 'new row' to whichever row we collided with / 'snapped' to
                         break; // we found the row that the note will be placed on, so stop iterating thru rows early
                     }
                 }
@@ -231,8 +222,8 @@ window.onload = () => {
                 let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - gui.configurations.mouseEvents.throwNoteAwaySidesPadding) || (mouseX >= sequencerRightBoundary + gui.configurations.mouseEvents.throwNoteAwaySidesPadding)
                 let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - gui.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + gui.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding)
                 if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
-                    circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
-                    circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
+                    gui.circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
+                    gui.circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
                     gui.components.domElements.images.trashClosedIcon.style.display = 'none'
                     gui.components.domElements.images.trashOpenIcon.style.display = 'block'
                     gui.components.shapes.noteTrashBinContainer.stroke = 'red'
@@ -333,7 +324,7 @@ window.onload = () => {
     // lifting your mouse anywhere means you're no longer click-dragging
     window.addEventListener('mouseup', (event) => {
         // handle letting go of notes
-        if (circleBeingMoved !== null) {
+        if (gui.circleBeingMoved !== null) {
             /**
              * this is the workflow for determining where to put a circle that we were click-dragging once we release the mouse.
              * how this workflow works (todo: double check that this is all correct):
@@ -365,60 +356,60 @@ window.onload = () => {
              *         (since there's no real reason to actually remove anything when "removing" a note from the note bank. instead we just 
              *         create a new node for the sequencer's note list, and place that onto the row it's being added to).
              */
-            circleBeingMoved.stroke = "transparent"
+            gui.circleBeingMoved.stroke = "transparent"
             // note down starting state, current state.
-            circleNewXPosition = circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle.
-            circleNewYPosition = circleBeingMovedStartingPositionY // if the circle is not colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
-            circleNewBeatNumber = circleBeingMovedOldBeatNumber
+            circleNewXPosition = gui.circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle.
+            circleNewYPosition = gui.circleBeingMovedStartingPositionY // if the circle is not colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
+            circleNewBeatNumber = gui.circleBeingMovedOldBeatNumber
             adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
             // check for collisions with things (sequencer rows, the trash bin, etc.)and make adjustments accordingly, so that everything will be handled as explained in the block comment above
-            if (circleBeingMovedNewRow >= 0) { // this means the note is being put onto a new sequencer row
-                circleNewXPosition = circleBeingMoved.translation.x // the note should have already been 'snapped' to its new row in the 'mousemove' event, so just commit to that new location
-                circleNewYPosition = circleBeingMoved.translation.y
-                circleNewBeatNumber = circleBeingMovedNewBeatNumber
-            } else if (circleBeingMovedNewRow === HAS_NO_ROW_NUMBER) { // if the note isn't being put onto any row, just put it back wherever it came from
-                circleNewXPosition = circleBeingMovedStartingPositionX
-                circleNewYPosition = circleBeingMovedStartingPositionY
-                circleBeingMovedNewRow = circleBeingMovedOldRow // replace the 'has no row' constant value with the old row number that this was taken from (i.e. just put it back where it came from!)
-                circleNewBeatNumber = circleBeingMovedOldBeatNumber
-            } else if (circleBeingMovedNewRow === NOTE_TRASH_BIN_ROW_NUMBER) { // check if the note is being placed in the trash bin. if so, delete the circle and its associated node if there is one
-                if (circleBeingMovedOldRow === NOTE_BANK_ROW_NUMBER) { // if the note being thrown away came from the note bank, just put it back in the note bank.
-                    circleBeingMovedNewRow = NOTE_BANK_ROW_NUMBER
+            if (gui.circleBeingMovedNewRow >= 0) { // this means the note is being put onto a new sequencer row
+                circleNewXPosition = gui.circleBeingMoved.translation.x // the note should have already been 'snapped' to its new row in the 'mousemove' event, so just commit to that new location
+                circleNewYPosition = gui.circleBeingMoved.translation.y
+                circleNewBeatNumber = gui.circleBeingMovedNewBeatNumber
+            } else if (gui.circleBeingMovedNewRow === HAS_NO_ROW_NUMBER) { // if the note isn't being put onto any row, just put it back wherever it came from
+                circleNewXPosition = gui.circleBeingMovedStartingPositionX
+                circleNewYPosition = gui.circleBeingMovedStartingPositionY
+                gui.circleBeingMovedNewRow = gui.circleBeingMovedOldRow // replace the 'has no row' constant value with the old row number that this was taken from (i.e. just put it back where it came from!)
+                circleNewBeatNumber = gui.circleBeingMovedOldBeatNumber
+            } else if (gui.circleBeingMovedNewRow === NOTE_TRASH_BIN_ROW_NUMBER) { // check if the note is being placed in the trash bin. if so, delete the circle and its associated node if there is one
+                if (gui.circleBeingMovedOldRow === NOTE_BANK_ROW_NUMBER) { // if the note being thrown away came from the note bank, just put it back in the note bank.
+                    gui.circleBeingMovedNewRow = NOTE_BANK_ROW_NUMBER
                 } else { // only bother throwing away things that came from a row (throwing away note bank notes is pointless)
-                    removeCircleFromDisplay(circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles and from the two.js canvas
+                    removeCircleFromDisplay(gui.circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles and from the two.js canvas
                 }
             }
             // we are done checking for collisions with things and updating 'old row' and 'new row' values, so now move on to updating the sequencer
-            circleBeingMoved.translation.x = circleNewXPosition
-            circleBeingMoved.translation.y = circleNewYPosition
-            circleBeingMoved.guiData.row = circleBeingMovedNewRow
+            gui.circleBeingMoved.translation.x = circleNewXPosition
+            gui.circleBeingMoved.translation.y = circleNewYPosition
+            gui.circleBeingMoved.guiData.row = gui.circleBeingMovedNewRow
             let node = null
             // remove the moved note from its old sequencer row. todo: consider changing this logic to just update node's priority if it isn't switching rows.)
-            if (circleBeingMovedOldRow >= 0) { // -2 is the 'row' given to notes that are in the note bank. if old row is < 0, we don't need to remove it from any sequencer row.
-                node = sequencer.rows[circleBeingMovedOldRow].removeNode(circleBeingMoved.guiData.label)
+            if (gui.circleBeingMovedOldRow >= 0) { // -2 is the 'row' given to notes that are in the note bank. if old row is < 0, we don't need to remove it from any sequencer row.
+                node = sequencer.rows[gui.circleBeingMovedOldRow].removeNode(gui.circleBeingMoved.guiData.label)
             }
             // add the moved note to its new sequencer row.
-            if (circleBeingMovedNewRow >= 0) {
+            if (gui.circleBeingMovedNewRow >= 0) {
                 if (node === null) { // this should just mean the circle was pulled from the note bank, so we need to create a node for it
-                    if (circleBeingMovedOldRow >= 0) { // should be an unreachable case, just checking for safety
-                        throw "unexpected case: node was null but 'circleBeingMovedOldRow' was not < 0. circleBeingMovedOldRow: " + circleBeingMovedNewRow + ". node: " + node + "."
+                    if (gui.circleBeingMovedOldRow >= 0) { // should be an unreachable case, just checking for safety
+                        throw "unexpected case: node was null but 'circleBeingMovedOldRow' was not < 0. circleBeingMovedOldRow: " + gui.circleBeingMovedOldRow + ". node: " + node + "."
                     }
                     // create a new node for the sample that this note bank circle was for. note bank circles have a sample in their GUI data, 
                     // but no real node that can be added to the drum sequencer's data structure, so we need to create one.
-                    node = gui.sampleBankNodeGenerator.createNewNodeForSample(circleBeingMoved.guiData.sampleName)
-                    circleBeingMoved.guiData.label = node.label // the newly generated node will also have a real generated ID (label), use that
-                    drawNoteBankCircleForSample(circleBeingMoved.guiData.sampleName) // if the note was taken from the sound bank, refill the sound bank
+                    node = gui.sampleBankNodeGenerator.createNewNodeForSample(gui.circleBeingMoved.guiData.sampleName)
+                    gui.circleBeingMoved.guiData.label = node.label // the newly generated node will also have a real generated ID (label), use that
+                    drawNoteBankCircleForSample(gui.circleBeingMoved.guiData.sampleName) // if the note was taken from the sound bank, refill the sound bank
                 }
                 // convert the note's new y position into a sequencer timestamp, and set the node's 'priority' to its new timestamp
                 let newNodeTimestampMillis = sequencer.loopLengthInMillis * ((circleNewXPosition - gui.configurations.sequencer.left) / gui.configurations.sequencer.width)
                 node.priority = newNodeTimestampMillis
                 // add the moved note to its new sequencer row
-                sequencer.rows[circleBeingMovedNewRow].insertNode(node, circleBeingMoved.guiData.label)
+                sequencer.rows[gui.circleBeingMovedNewRow].insertNode(node, gui.circleBeingMoved.guiData.label)
                 node.data.lastScheduledOnIteration = Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED // mark note as 'not played yet on current iteration'
                 node.data.beat = circleNewBeatNumber
-                circleBeingMoved.guiData.beat = circleNewBeatNumber
+                gui.circleBeingMoved.guiData.beat = circleNewBeatNumber
             }
         }
         if (selectedRowIndex !== null) {
@@ -429,7 +420,7 @@ window.onload = () => {
             selectedRowIndex = null
             redrawSequencer();
         }
-        circleBeingMoved = null
+        gui.circleBeingMoved = null
         gui.setNoteTrashBinVisibility(false)
         selectedRowIndex = null
     });
@@ -852,16 +843,16 @@ window.onload = () => {
         });
         // select circle (for moving) if we click it
         circle._renderer.elem.addEventListener('mousedown', (event) => {
-            circleBeingMoved = circle
-            circleBeingMovedStartingPositionX = circleBeingMoved.translation.x
-            circleBeingMovedStartingPositionY = circleBeingMoved.translation.y
-            circleBeingMovedOldRow = circleBeingMoved.guiData.row
-            circleBeingMovedNewRow = circleBeingMovedOldRow
-            circleBeingMovedOldBeatNumber = circleBeingMoved.guiData.beat
-            circleBeingMovedNewBeatNumber = circleBeingMovedOldBeatNumber
+            gui.circleBeingMoved = circle
+            gui.circleBeingMovedStartingPositionX = gui.circleBeingMoved.translation.x
+            gui.circleBeingMovedStartingPositionY = gui.circleBeingMoved.translation.y
+            gui.circleBeingMovedOldRow = gui.circleBeingMoved.guiData.row
+            gui.circleBeingMovedNewRow = gui.circleBeingMovedOldRow
+            gui.circleBeingMovedOldBeatNumber = gui.circleBeingMoved.guiData.beat
+            gui.circleBeingMovedNewBeatNumber = gui.circleBeingMovedOldBeatNumber
             gui.setNoteTrashBinVisibility(true)
             gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
-            sequencer.playDrumSampleNow(circleBeingMoved.guiData.sampleName)
+            sequencer.playDrumSampleNow(gui.circleBeingMoved.guiData.sampleName)
         });
 
         // add info to the circle object that the gui uses to keep track of things
