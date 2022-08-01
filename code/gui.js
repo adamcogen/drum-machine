@@ -5,6 +5,11 @@
  * For now this class will just initialize the GUI configurations object.
  */
 class DrumMachineGui {
+    // create constants that will be used to denote special sequencer 'row' numbers, to indicate special places notes can go on the GUI, such as the note bank or the trash bin
+    static get NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW() { return -1 }
+    static get NOTE_ROW_NUMBER_FOR_NOTE_BANK() { return -2 }
+    static get NOTE_ROW_NUMBER_FOR_TRASH_BIN() { return -3 }
+
     constructor(sequencer, two, sampleNameList, samples, sampleBankNodeGenerator, hideIcons) {
         this.sequencer = sequencer
         this.two = two

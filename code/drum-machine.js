@@ -47,11 +47,10 @@ window.onload = () => {
     /**
      * drum machine configurations
      */
-    const LOOK_AHEAD_MILLIS = 50; // number of milliseconds to look ahead when scheduling notes to play. note bigger value means that there is a longer delay for sounds to stop after the 'pause' button is hit.
+    const _LOOK_AHEAD_MILLIS = 50; // number of milliseconds to look ahead when scheduling notes to play. note bigger value means that there is a longer delay for sounds to stop after the 'pause' button is hit.
     let defaultLoopLengthInMillis = 2100; // length of the whole drum sequence (loop), in millliseconds
-
-    // initialize sequencer data structure
-    let sequencer = new Sequencer([webAudioDriver], 0, defaultLoopLengthInMillis, LOOK_AHEAD_MILLIS, samples)
+    // initialize sequencer object
+    let sequencer = new Sequencer([webAudioDriver], 0, defaultLoopLengthInMillis, _LOOK_AHEAD_MILLIS, samples)
 
     // Initialize Two.js library
     let two = initializeTwoJs(document.getElementById('draw-shapes'))
@@ -78,11 +77,6 @@ window.onload = () => {
         domElementsOriginalPositions: [],
         removeRow: false,
     }
-    
-    // create constants that will be used to denote special sequencer 'row' numbers, to indicate special places notes can go such as the note bank or the trash bin
-    const HAS_NO_ROW_NUMBER = -1 // code for 'not in any row'
-    const NOTE_BANK_ROW_NUMBER = -2
-    const NOTE_TRASH_BIN_ROW_NUMBER = -3
 
     // set up a initial example drum sequence
     initializeSimpleDefaultSequencerPattern()
@@ -119,7 +113,7 @@ window.onload = () => {
             // start with default note movement behavior, for when the note doesn't fall within range of the trash bin, a sequencer line, etc.
             gui.circleBeingMoved.translation.x = mouseX
             gui.circleBeingMoved.translation.y = mouseY
-            gui.circleBeingMovedNewRow = HAS_NO_ROW_NUMBER // start with "it's not colliding with anything", and update the value from there if we find a collision
+            gui.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW // start with "it's not colliding with anything", and update the value from there if we find a collision
             gui.circleBeingMoved.stroke = "black"
             gui.components.domElements.images.trashClosedIcon.style.display = 'block'
             gui.components.domElements.images.trashOpenIcon.style.display = 'none'
@@ -138,7 +132,7 @@ window.onload = () => {
             if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
                 gui.circleBeingMoved.translation.x = centerOfTrashBinX
                 gui.circleBeingMoved.translation.y = centerOfTrashBinY
-                gui.circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
+                gui.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
                 gui.circleBeingMoved.stroke = "red"
                 gui.components.domElements.images.trashClosedIcon.style.display = 'none'
                 gui.components.domElements.images.trashOpenIcon.style.display = 'block'
@@ -186,7 +180,7 @@ window.onload = () => {
                 let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - gui.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + gui.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding)
                 if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
                     gui.circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
-                    gui.circleBeingMovedNewRow = NOTE_TRASH_BIN_ROW_NUMBER
+                    gui.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
                     gui.components.domElements.images.trashClosedIcon.style.display = 'none'
                     gui.components.domElements.images.trashOpenIcon.style.display = 'block'
                     gui.components.shapes.noteTrashBinContainer.stroke = 'red'
@@ -332,14 +326,14 @@ window.onload = () => {
                 circleNewXPosition = gui.circleBeingMoved.translation.x // the note should have already been 'snapped' to its new row in the 'mousemove' event, so just commit to that new location
                 circleNewYPosition = gui.circleBeingMoved.translation.y
                 circleNewBeatNumber = gui.circleBeingMovedNewBeatNumber
-            } else if (gui.circleBeingMovedNewRow === HAS_NO_ROW_NUMBER) { // if the note isn't being put onto any row, just put it back wherever it came from
+            } else if (gui.circleBeingMovedNewRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW) { // if the note isn't being put onto any row, just put it back wherever it came from
                 circleNewXPosition = gui.circleBeingMovedStartingPositionX
                 circleNewYPosition = gui.circleBeingMovedStartingPositionY
                 gui.circleBeingMovedNewRow = gui.circleBeingMovedOldRow // replace the 'has no row' constant value with the old row number that this was taken from (i.e. just put it back where it came from!)
                 circleNewBeatNumber = gui.circleBeingMovedOldBeatNumber
-            } else if (gui.circleBeingMovedNewRow === NOTE_TRASH_BIN_ROW_NUMBER) { // check if the note is being placed in the trash bin. if so, delete the circle and its associated node if there is one
-                if (gui.circleBeingMovedOldRow === NOTE_BANK_ROW_NUMBER) { // if the note being thrown away came from the note bank, just put it back in the note bank.
-                    gui.circleBeingMovedNewRow = NOTE_BANK_ROW_NUMBER
+            } else if (gui.circleBeingMovedNewRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN) { // check if the note is being placed in the trash bin. if so, delete the circle and its associated node if there is one
+                if (gui.circleBeingMovedOldRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK) { // if the note being thrown away came from the note bank, just put it back in the note bank.
+                    gui.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK
                 } else { // only bother throwing away things that came from a row (throwing away note bank notes is pointless)
                     removeCircleFromDisplay(gui.circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles and from the two.js canvas
                 }
@@ -772,7 +766,7 @@ window.onload = () => {
         }
         let xPosition = gui.configurations.sampleBank.left + gui.configurations.sampleBank.borderPadding + (gui.configurations.notes.unplayedCircleRadius / 2)
         let yPosition = gui.configurations.sampleBank.top + gui.configurations.sampleBank.borderPadding + (indexOfSampleInNoteBank * gui.configurations.notes.unplayedCircleRadius) + (indexOfSampleInNoteBank * gui.configurations.sampleBank.spaceBetweenNotes)
-        let row = NOTE_BANK_ROW_NUMBER // for cirlces on the note bank, the circle is not in a real row yet, so use -2 as a placeholder row number
+        let row = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK // for cirlces on the note bank, the circle is not in a real row yet, so use -2 as a placeholder row number
         /**
          * the top note in the note bank will have label '-1', next one down will be '-2', etc.
          * these negative number labels will still be unique to a particular circle in the note bank,
@@ -1148,7 +1142,7 @@ window.onload = () => {
             }
             newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
             // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
-            newTextInputValue = gui.confineNumberToBounds(newTextInputValue, LOOK_AHEAD_MILLIS, gui.configurations.tempoTextInput.maximumValue)
+            newTextInputValue = gui.confineNumberToBounds(newTextInputValue, sequencer.lookAheadMillis, gui.configurations.tempoTextInput.maximumValue)
             gui.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
             updateSequencerLoopLength(newTextInputValue)
         })
