@@ -457,7 +457,7 @@ class DrumMachineGui {
     }
 
     /**
-     * Tempo text input
+     * 'set tempo' text input logic
      */
 
     initializeTempoTextInputValuesAndStyles() {
@@ -545,6 +545,23 @@ class DrumMachineGui {
             }
             this.components.domElements.checkboxes.quantizationCheckboxes.push(checkbox)
         }
+    }
+
+    /**
+     * General text input event listeners logic
+     */
+
+    addDefaultKeypressEventListenerToTextInput(textarea, allowPeriods) {
+        textarea.addEventListener('keypress', (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault()
+                textarea.blur() // apply the change to the text area if the user presses "enter"
+            }
+            let periodCheckPassed = (event.key === "." && allowPeriods) // if the character is a period, make this value 'true' if periods are allowed. otherwise false.
+            if (isNaN(Number.parseInt(event.key)) && !periodCheckPassed) { // don't allow the user to enter things that aren't numbers (but allow periods if they're allowed)
+                event.preventDefault()
+            }
+        })
     }
 
     /**

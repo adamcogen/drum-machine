@@ -75,11 +75,7 @@ window.onload = () => {
     redrawSequencer();
 
     // start main recursive update loop, where all drum machine state updates will happen
-    requestAnimationFrameShim(loop)
-
-    /**
-     * end of main logic, start of function definitions.
-     */
+    loop()
 
     // this method is the 'recursive update loop` that will keep updating the page. after first invocation, this method basically calls itself recursively forever.
     function loop() {
@@ -790,7 +786,7 @@ window.onload = () => {
     // deleted circles to get garbage-collected.
     // note that this method _only_ deletes circles from the _display_, not from the underlying sequencer data
     // structure, that needs to be handled somewhere else separately.
-    function removeCircleFromDisplay(label){``
+    function removeCircleFromDisplay(label){
         let indexOfListItemToRemove = gui.allDrawnCircles.findIndex(elementFromList => elementFromList.guiData.label === label);
         if (indexOfListItemToRemove === -1) { //  we don't expect to reach this case, where a circle with the given label isn't found in the list
             throw "unexpected problem: couldn't find the circle with the given label in the list of all drawn circles, when trying to delete it. the given label was: " + label + ". full list (labels only): " + gui.allDrawnCircles.map((item) => item.guiData.label) + "."
@@ -1107,20 +1103,7 @@ window.onload = () => {
             gui.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
             updateSequencerLoopLength(newTextInputValue)
         })
-        addDefaultTextInputKeypressEventListener(gui.components.domElements.textInputs.loopLengthMillis, true)
-    }
-
-    function addDefaultTextInputKeypressEventListener(textarea, allowPeriods) {
-        textarea.addEventListener('keypress', (event) => {
-            if (event.key === "Enter") {
-                event.preventDefault()
-                textarea.blur() // apply the change to the text area if the user presses "enter"
-            }
-            let periodCheckPassed = (event.key === "." && allowPeriods) // if the character is a period, make this value 'true' if periods are allowed. otherwise false.
-            if (isNaN(Number.parseInt(event.key)) && !periodCheckPassed) { // don't allow the user to enter things that aren't numbers (but allow periods if they're allowed)
-                event.preventDefault()
-            }
-        })
+        gui.addDefaultKeypressEventListenerToTextInput(gui.components.domElements.textInputs.loopLengthMillis, true)
     }
 
     function updateSequencerLoopLength(newLoopLengthInMillis) {
@@ -1155,7 +1138,7 @@ window.onload = () => {
                 subdivisionTextInput.value = newTextInputValue
                 updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
             })
-            addDefaultTextInputKeypressEventListener(subdivisionTextInput, false)
+            gui.addDefaultKeypressEventListenerToTextInput(subdivisionTextInput, false)
         }
     }
 
@@ -1177,7 +1160,7 @@ window.onload = () => {
                 referenceLineTextInput.value = newTextInputValue
                 updateNumberOfReferenceLinesForRow(newTextInputValue, rowIndex)
             })
-            addDefaultTextInputKeypressEventListener(referenceLineTextInput, false)
+            gui.addDefaultKeypressEventListenerToTextInput(referenceLineTextInput, false)
         }
     }
 
