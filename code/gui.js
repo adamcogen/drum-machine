@@ -544,6 +544,20 @@ class DrumMachineGui {
         }
     }
 
+    updateNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex) {
+        // update quantization toggle checkbox, quantization settings: you can't quantize a row if it has 0 subdivisions.
+        if (newNumberOfSubdivisions === 0) {
+            if (this.configurations.hideIcons) {
+                this.components.domElements.checkboxes.quantizationCheckboxes[rowIndex].checked = false
+            }
+            this.sequencer.rows[rowIndex].quantized = false
+        }
+        // update the sequencer data structure to reflect the new number of subdivisions.
+        // call the sequencer's 'update subdivisions for row' method
+        this.sequencer.setNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex)
+        this.components.domElements.textInputs.subdivisionTextInputs[rowIndex].value = newNumberOfSubdivisions
+    }
+
     /**
      * 'set number of reference lines for row' text inputs
      */
@@ -571,6 +585,13 @@ class DrumMachineGui {
             this.components.domElements.textInputs.referenceLineTextInputs.push(textArea)
             // textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
         }
+    }
+
+    updateNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex) {
+        // update the sequencer data structure to reflect the new number of reference lines.
+        // call the sequencer's 'update number of reference lines for row' method
+        this.sequencer.setNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex)
+        this.components.domElements.textInputs.referenceLineTextInputs[rowIndex].value = newNumberOfReferenceLines
     }
 
     /**

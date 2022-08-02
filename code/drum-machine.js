@@ -531,7 +531,7 @@ window.onload = () => {
     function setQuantizationButtonClickHandler(event, rowIndex, quantize) {
         if (sequencer.rows[rowIndex].getNumberOfSubdivisions() === 0) {
             // you can't quantize a row if it has 0 subdivisions, so automatically change the value to 1 in this case
-            updateNumberOfSubdivisionsForRow(1, rowIndex)
+            gui.updateNumberOfSubdivisionsForRow(1, rowIndex)
         }
         sequencer.rows[rowIndex].setQuantization(quantize)
         redrawSequencer();
@@ -1090,7 +1090,8 @@ window.onload = () => {
                 newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
                 newTextInputValue = gui.confineNumberToBounds(newTextInputValue, 0, gui.configurations.subdivionLineTextInputs.maximumValue)
                 subdivisionTextInput.value = newTextInputValue
-                updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
+                gui.updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
+                redrawSequencer();
             })
             gui.addDefaultKeypressEventListenerToTextInput(subdivisionTextInput, false)
         }
@@ -1112,33 +1113,11 @@ window.onload = () => {
                     referenceLineTextInput.style.color = gui.configurations.defaultFont.color // set font color
                 }
                 referenceLineTextInput.value = newTextInputValue
-                updateNumberOfReferenceLinesForRow(newTextInputValue, rowIndex)
+                gui.updateNumberOfReferenceLinesForRow(newTextInputValue, rowIndex)
+                resetNotesAndLinesDisplayForRow(rowIndex)
             })
             gui.addDefaultKeypressEventListenerToTextInput(referenceLineTextInput, false)
         }
-    }
-
-    function updateNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex) {
-        // update quantization toggle checkbox, quantization settings: you can't quantize a row if it has 0 subdivisions.
-        if (newNumberOfSubdivisions === 0) {
-            if (gui.configurations.hideIcons) {
-                gui.components.domElements.checkboxes.quantizationCheckboxes[rowIndex].checked = false
-            }
-            sequencer.rows[rowIndex].quantized = false
-        }
-        // update the sequencer data structure to reflect the new number of subdivisions.
-        // call the sequencer's 'update subdivisions for row' method
-        sequencer.setNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex)
-        gui.components.domElements.textInputs.subdivisionTextInputs[rowIndex].value = newNumberOfSubdivisions
-        redrawSequencer()
-    }
-
-    function updateNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex) {
-        // update the sequencer data structure to reflect the new number of reference lines.
-        // call the sequencer's 'update number of reference lines for row' method
-        sequencer.setNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex)
-        gui.components.domElements.textInputs.referenceLineTextInputs[rowIndex].value = newNumberOfReferenceLines
-        resetNotesAndLinesDisplayForRow(rowIndex)
     }
 
     function restartSequencer() {
