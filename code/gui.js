@@ -44,6 +44,19 @@ class DrumMachineGui {
         this.circleBeingMovedOldBeatNumber = null
         this.circleBeingMovedNewBeatNumber = null
 
+        this.selectedRowIndex = null;
+        this.rowSelecionTracker = {
+            shapes: [],
+            shapesOriginalPositions: [], // this is going to be such a weird way of doing this..
+            rowHandleStartingPosition: {
+                x: 0,
+                y: 0,
+            },
+            domElements: [],
+            domElementsOriginalPositions: [],
+            removeRow: false,
+        }
+
         // keep a list of all the circles (i.e. notes) that have been drawn on the screen
         this.allDrawnCircles = []
     }

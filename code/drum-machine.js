@@ -65,19 +65,6 @@ window.onload = () => {
     addRestartSequencerButtonActionListeners()
     addClearAllNotesButtonActionListeners()
 
-    let selectedRowIndex = null
-    let rowSelecionTracker = {
-        shapes: [],
-        shapesOriginalPositions: [], // this is going to be such a weird way of doing this..
-        rowHandleStartingPosition: {
-            x: 0,
-            y: 0,
-        },
-        domElements: [],
-        domElementsOriginalPositions: [],
-        removeRow: false,
-    }
-
     // set up a initial example drum sequence
     initializeSimpleDefaultSequencerPattern()
 
@@ -187,22 +174,22 @@ window.onload = () => {
                 }
             }
         }
-        if (selectedRowIndex !== null) { // handle mousemove events when a row is selected
+        if (gui.selectedRowIndex !== null) { // handle mousemove events when a row is selected
             adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
 
-            let circle = gui.components.shapes.sequencerRowHandles[selectedRowIndex]
+            let circle = gui.components.shapes.sequencerRowHandles[gui.selectedRowIndex]
             circle.stroke = 'black'
             circle.linewidth = 2
             circle.fill = gui.configurations.sequencerRowHandles.selectedColor
-            let rowSelectionRectangle = gui.components.shapes.sequencerRowSelectionRectangles[selectedRowIndex]
+            let rowSelectionRectangle = gui.components.shapes.sequencerRowSelectionRectangles[gui.selectedRowIndex]
             rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.selectedColor
             gui.components.domElements.images.trashClosedIcon.style.display = 'block'
             gui.components.domElements.images.trashOpenIcon.style.display = 'none'
 
-            gui.components.shapes.sequencerRowHandles[selectedRowIndex].translation.x = mouseX
-            gui.components.shapes.sequencerRowHandles[selectedRowIndex].translation.y = mouseY
+            gui.components.shapes.sequencerRowHandles[gui.selectedRowIndex].translation.x = mouseX
+            gui.components.shapes.sequencerRowHandles[gui.selectedRowIndex].translation.y = mouseY
 
             // check if the row handle is within range to be placed in the trash bin. if so, move the handle to the center of the trash bin.
             centerOfTrashBinX = gui.configurations.noteTrashBin.left + (gui.configurations.noteTrashBin.width / 2)
@@ -213,27 +200,27 @@ window.onload = () => {
                 circle.translation.x = centerOfTrashBinX
                 circle.translation.y = centerOfTrashBinY
                 rowSelectionRectangle.stroke = "red"
-                rowSelecionTracker.removeRow = true;
+                gui.rowSelecionTracker.removeRow = true;
                 circle.stroke = "red"
                 gui.components.domElements.images.trashClosedIcon.style.display = 'none'
                 gui.components.domElements.images.trashOpenIcon.style.display = 'block'
                 gui.components.shapes.noteTrashBinContainer.stroke = 'red'
             } else {
-                rowSelecionTracker.removeRow = false;
+                gui.rowSelecionTracker.removeRow = false;
                 gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             }
 
-            let xChangeFromStart = gui.components.shapes.sequencerRowHandles[selectedRowIndex].translation.x - rowSelecionTracker.rowHandleStartingPosition.x
-            let yChangeFromStart = gui.components.shapes.sequencerRowHandles[selectedRowIndex].translation.y - rowSelecionTracker.rowHandleStartingPosition.y
+            let xChangeFromStart = gui.components.shapes.sequencerRowHandles[gui.selectedRowIndex].translation.x - gui.rowSelecionTracker.rowHandleStartingPosition.x
+            let yChangeFromStart = gui.components.shapes.sequencerRowHandles[gui.selectedRowIndex].translation.y - gui.rowSelecionTracker.rowHandleStartingPosition.y
 
-            for (let shapeIndex = 0; shapeIndex < rowSelecionTracker.shapes.length; shapeIndex++) {
-                rowSelecionTracker.shapes[shapeIndex].translation.x = rowSelecionTracker.shapesOriginalPositions[shapeIndex].x + xChangeFromStart;
-                rowSelecionTracker.shapes[shapeIndex].translation.y = rowSelecionTracker.shapesOriginalPositions[shapeIndex].y + yChangeFromStart;
+            for (let shapeIndex = 0; shapeIndex < gui.rowSelecionTracker.shapes.length; shapeIndex++) {
+                gui.rowSelecionTracker.shapes[shapeIndex].translation.x = gui.rowSelecionTracker.shapesOriginalPositions[shapeIndex].x + xChangeFromStart;
+                gui.rowSelecionTracker.shapes[shapeIndex].translation.y = gui.rowSelecionTracker.shapesOriginalPositions[shapeIndex].y + yChangeFromStart;
             }
 
-            for (let domElementIndex = 0; domElementIndex < rowSelecionTracker.domElements.length; domElementIndex++) {
-                rowSelecionTracker.domElements[domElementIndex].style.left = "" + (rowSelecionTracker.domElementsOriginalPositions[domElementIndex].left + xChangeFromStart) + "px"
-                rowSelecionTracker.domElements[domElementIndex].style.top = "" + (rowSelecionTracker.domElementsOriginalPositions[domElementIndex].top + yChangeFromStart) + "px";
+            for (let domElementIndex = 0; domElementIndex < gui.rowSelecionTracker.domElements.length; domElementIndex++) {
+                gui.rowSelecionTracker.domElements[domElementIndex].style.left = "" + (gui.rowSelecionTracker.domElementsOriginalPositions[domElementIndex].left + xChangeFromStart) + "px"
+                gui.rowSelecionTracker.domElements[domElementIndex].style.top = "" + (gui.rowSelecionTracker.domElementsOriginalPositions[domElementIndex].top + yChangeFromStart) + "px";
             }
 
             // if the row is far enough away from the sequencer, we will throw it out
@@ -246,14 +233,14 @@ window.onload = () => {
             if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
                 circle.stroke = "red"
                 rowSelectionRectangle.stroke = "red"
-                rowSelecionTracker.removeRow = true;
+                gui.rowSelecionTracker.removeRow = true;
                 gui.components.domElements.images.trashClosedIcon.style.display = 'none'
                 gui.components.domElements.images.trashOpenIcon.style.display = 'block'
                 gui.components.shapes.noteTrashBinContainer.stroke = 'red'
             }
 
             for(let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
-                if (rowIndex === selectedRowIndex) {
+                if (rowIndex === gui.selectedRowIndex) {
                     continue;
                 }
                 let rowHandleActualVerticalLocation = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * rowIndex) + gui.configurations.sequencerRowHandles.topPadding;
@@ -264,8 +251,8 @@ window.onload = () => {
                 let rightLimit = rowHandleActualHorizontalLocation + gui.configurations.mouseEvents.notePlacementPadding + gui.configurations.sequencer.width
 
                 if (mouseX >= leftLimit && mouseX <= rightLimit && mouseY >= topLimit && mouseY <= bottomLimit) {
-                    sequencer.moveRowToNewIndex(selectedRowIndex, rowIndex);
-                    selectedRowIndex = rowIndex
+                    sequencer.moveRowToNewIndex(gui.selectedRowIndex, rowIndex);
+                    gui.selectedRowIndex = rowIndex
                     redrawSequencer();
                     break; // we found the row that the note will be placed on, so stop iterating thru rows early
                 }
@@ -369,17 +356,17 @@ window.onload = () => {
                 gui.circleBeingMoved.guiData.beat = circleNewBeatNumber
             }
         }
-        if (selectedRowIndex !== null) {
+        if (gui.selectedRowIndex !== null) {
             // un-selecting the row will be handled in 'redraw', as long as we set selected row index to null here
-            if (rowSelecionTracker.removeRow) {
-                sequencer.removeRowAtIndex(selectedRowIndex);
+            if (gui.rowSelecionTracker.removeRow) {
+                sequencer.removeRowAtIndex(gui.selectedRowIndex);
             }
-            selectedRowIndex = null
+            gui.selectedRowIndex = null
             redrawSequencer();
         }
         gui.circleBeingMoved = null
         gui.setNoteTrashBinVisibility(false)
-        selectedRowIndex = null
+        gui.selectedRowIndex = null
     });
 
     // making a cleaner (less redundant) way to call 'loadSample()', which matches what we need for the drum sequencer.
@@ -896,7 +883,7 @@ window.onload = () => {
 
             // add border to circle on mouseover
             circle._renderer.elem.addEventListener('mouseenter', (event) => {
-                if (selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
+                if (gui.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
                     circle.stroke = 'black'
                     circle.linewidth = 2
                     circle.fill = gui.configurations.sequencerRowHandles.unselectedColor
@@ -932,47 +919,47 @@ window.onload = () => {
         gui.setNoteTrashBinVisibility(true)
         gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
         // save relevant info about whichever row is selected
-        selectedRowIndex = rowIndex;
-        rowSelecionTracker.removeRow = false // start this out false until we move the row around (i.e. into the trash bin)
+        gui.selectedRowIndex = rowIndex;
+        gui.rowSelecionTracker.removeRow = false // start this out false until we move the row around (i.e. into the trash bin)
         // save a list, of all the shapes that are associated with the selected row.
         // we are saving this list so that we can move them all as we move the row around.
-        rowSelecionTracker.shapes = [];
+        gui.rowSelecionTracker.shapes = [];
         for (let circle of gui.allDrawnCircles) {
             if (circle.guiData.row === rowIndex) {
-                rowSelecionTracker.shapes.push(circle)
+                gui.rowSelecionTracker.shapes.push(circle)
             }
         }
-        rowSelecionTracker.shapes.push(...gui.components.shapes.subdivisionLineLists[rowIndex])
-        rowSelecionTracker.shapes.push(...gui.components.shapes.referenceLineLists[rowIndex])
-        rowSelecionTracker.shapes.push(gui.components.shapes.sequencerRowLines[rowIndex])
-        rowSelecionTracker.shapes.push(gui.components.shapes.sequencerRowSelectionRectangles[rowIndex])
-        rowSelecionTracker.shapes.push(gui.components.shapes.clearNotesForRowButtonShapes[rowIndex])
+        gui.rowSelecionTracker.shapes.push(...gui.components.shapes.subdivisionLineLists[rowIndex])
+        gui.rowSelecionTracker.shapes.push(...gui.components.shapes.referenceLineLists[rowIndex])
+        gui.rowSelecionTracker.shapes.push(gui.components.shapes.sequencerRowLines[rowIndex])
+        gui.rowSelecionTracker.shapes.push(gui.components.shapes.sequencerRowSelectionRectangles[rowIndex])
+        gui.rowSelecionTracker.shapes.push(gui.components.shapes.clearNotesForRowButtonShapes[rowIndex])
         // this part gets a little weird. save a list of all of the starting positions of each
         // shape that is being moved. that way we can translate them proporionally to how far
         // the row handle has moved.
-        rowSelecionTracker.shapesOriginalPositions = []
-        for (let shape of rowSelecionTracker.shapes) {
-            rowSelecionTracker.shapesOriginalPositions.push({
+        gui.rowSelecionTracker.shapesOriginalPositions = []
+        for (let shape of gui.rowSelecionTracker.shapes) {
+            gui.rowSelecionTracker.shapesOriginalPositions.push({
                 x: shape.translation.x,
                 y: shape.translation.y,
             });
         }
-        rowSelecionTracker.rowHandleStartingPosition.x = gui.components.shapes.sequencerRowHandles[rowIndex].translation.x
-        rowSelecionTracker.rowHandleStartingPosition.y = gui.components.shapes.sequencerRowHandles[rowIndex].translation.y
+        gui.rowSelecionTracker.rowHandleStartingPosition.x = gui.components.shapes.sequencerRowHandles[rowIndex].translation.x
+        gui.rowSelecionTracker.rowHandleStartingPosition.y = gui.components.shapes.sequencerRowHandles[rowIndex].translation.y
         // do the exact same thing for dom elements (subdivision and reference line text inputs, quantization checkbox, images) next
-        rowSelecionTracker.domElements = [];
-        rowSelecionTracker.domElements.push(gui.components.domElements.textInputs.subdivisionTextInputs[rowIndex])
-        rowSelecionTracker.domElements.push(gui.components.domElements.textInputs.referenceLineTextInputs[rowIndex])
+        gui.rowSelecionTracker.domElements = [];
+        gui.rowSelecionTracker.domElements.push(gui.components.domElements.textInputs.subdivisionTextInputs[rowIndex])
+        gui.rowSelecionTracker.domElements.push(gui.components.domElements.textInputs.referenceLineTextInputs[rowIndex])
         if (gui.configurations.hideIcons) {
-            rowSelecionTracker.domElements.push(gui.components.domElements.checkboxes.quantizationCheckboxes[rowIndex])
+            gui.rowSelecionTracker.domElements.push(gui.components.domElements.checkboxes.quantizationCheckboxes[rowIndex])
         } else {
-            rowSelecionTracker.domElements.push(gui.components.domElements.iconLists.lockedIcons[rowIndex]);
-            rowSelecionTracker.domElements.push(gui.components.domElements.iconLists.unlockedIcons[rowIndex]);
-            rowSelecionTracker.domElements.push(gui.components.domElements.iconLists.clearRowIcons[rowIndex]);
+            gui.rowSelecionTracker.domElements.push(gui.components.domElements.iconLists.lockedIcons[rowIndex]);
+            gui.rowSelecionTracker.domElements.push(gui.components.domElements.iconLists.unlockedIcons[rowIndex]);
+            gui.rowSelecionTracker.domElements.push(gui.components.domElements.iconLists.clearRowIcons[rowIndex]);
         }
-        rowSelecionTracker.domElementsOriginalPositions = [];
-        for (let domElement of rowSelecionTracker.domElements) {
-            rowSelecionTracker.domElementsOriginalPositions.push({
+        gui.rowSelecionTracker.domElementsOriginalPositions = [];
+        for (let domElement of gui.rowSelecionTracker.domElements) {
+            gui.rowSelecionTracker.domElementsOriginalPositions.push({
                 left: parseInt(domElement.style.left.slice(0, -2)), // cut off "px" from the position and convert it to an integer
                 top: parseInt(domElement.style.top.slice(0, -2)),
             });
@@ -1096,9 +1083,9 @@ window.onload = () => {
         initializeSequencerRowHandlesActionListeners();
         // initialize, format, and move button icons into place
         initializeIcons(gui.configurations.hideIcons)
-        if (selectedRowIndex !== null) {
+        if (gui.selectedRowIndex !== null) {
             // if a row is selected, set variables appropriately for moving it around
-            initializeRowSelectionVariablesAndVisuals(selectedRowIndex);
+            initializeRowSelectionVariablesAndVisuals(gui.selectedRowIndex);
         }
     }
 
