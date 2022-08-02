@@ -10,9 +10,9 @@ class DrumMachineGui {
     static get NOTE_ROW_NUMBER_FOR_NOTE_BANK() { return -2 }
     static get NOTE_ROW_NUMBER_FOR_TRASH_BIN() { return -3 }
 
-    constructor(sequencer, two, sampleNameList, samples, sampleBankNodeGenerator, hideIcons) {
+    constructor(sequencer, sampleNameList, samples, sampleBankNodeGenerator, hideIcons) {
         this.sequencer = sequencer
-        this.two = two
+        this.two = this.initializeTwoJs(document.getElementById('draw-shapes')) // Initialize Two.js library
         this.sampleNameList = sampleNameList
         this.samples = samples;
         this.sampleBankNodeGenerator = sampleBankNodeGenerator;
@@ -595,6 +595,33 @@ class DrumMachineGui {
         this.components.domElements.divs.subdivisionTextInputs.appendChild(checkbox);
         checkbox.style.cursor = "pointer"
         return checkbox
+    }
+
+    /**
+     * Two.js library helper methods
+     */
+
+    // initialize Two.js library object and append it to the given DOM element
+    initializeTwoJs(twoJsDomElement) {
+        return new Two({
+            fullscreen: true,
+            type: Two.Types.svg
+        }).appendTo(twoJsDomElement);
+    }
+
+    // The SVG renderer's top left corner isn't necessarily located at (0,0), 
+    // so our mouse / touch events may be misaligned until we correct them.
+    // event.pageX and event.pageY are read-only, so this method creates and 
+    // returns a new event object rather than modifying the one that was passed in.
+    // Put any event-specific calls, such as preventDefault(), before this method is called.
+    // TODO: This currently only supports mouse events. Add support for touch events.
+    adjustEventCoordinates(event) {
+        let svgScale = $(this.two.renderer.domElement).height() / this.two.height;
+        let svgOrigin = $('#draw-shapes')[0].getBoundingClientRect();
+        return {
+            pageX: (event.pageX - svgOrigin.left) / svgScale,
+            pageY: (event.pageY - svgOrigin.top) / svgScale
+        }
     }
 
     /**

@@ -51,14 +51,11 @@ window.onload = () => {
     let defaultLoopLengthInMillis = 2100; // length of the whole drum sequence (loop), in millliseconds
     // initialize sequencer object
     let sequencer = new Sequencer([webAudioDriver], 0, defaultLoopLengthInMillis, _LOOK_AHEAD_MILLIS, samples)
-
-    // Initialize Two.js library
-    let two = initializeTwoJs(document.getElementById('draw-shapes'))
     
     // initialize ID generator for node / note labels, and node generator for notes taken from the sample bank.
     let idGenerator = new IdGenerator() // we will use this same ID generator everywhere we need IDs, to make sure we track which IDs have already been generated
     let _sampleBankNodeGenerator = new SampleBankNodeGenerator(idGenerator, sampleNameList) // generates a new sequencer list node whenever we pull a note off the sound bank
-    let gui = new DrumMachineGui(sequencer, two, sampleNameList, samples, _sampleBankNodeGenerator, hideIcons=false);
+    let gui = new DrumMachineGui(sequencer, sampleNameList, samples, _sampleBankNodeGenerator, hideIcons=false);
 
     initializeTempoTextInputActionListeners();
     addPauseButtonActionListeners()
@@ -77,24 +74,24 @@ window.onload = () => {
 
     redrawSequencer();
 
-    // start main recursive update loop, where all state updates will happen
-    requestAnimationFrameShim(draw)
+    // start main recursive update loop, where all drum machine state updates will happen
+    requestAnimationFrameShim(loop)
 
     /**
      * end of main logic, start of function definitions.
      */
 
-    // this method is the 'update' loop that will keep updating the page. after first invocation, this method basically calls itself recursively forever.
-    function draw() {
+    // this method is the 'recursive update loop` that will keep updating the page. after first invocation, this method basically calls itself recursively forever.
+    function loop() {
         sequencer.update() // update timekeeping variables and schedule any upcoming notes, using the sequencer
         gui.update() // update the GUI display
-        requestAnimationFrameShim(draw); // call animation frame update with this 'draw' method again
+        requestAnimationFrameShim(loop); // call animation frame update with this 'loop' method again
     }
 
     function windowMouseMoveEventHandler(event) {
         // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
         if (gui.circleBeingMoved !== null) { // handle mousemove events when a note is selected
-            adjustEventCoordinates(event)
+            gui.adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
             // start with default note movement behavior, for when the note doesn't fall within range of the trash bin, a sequencer line, etc.
@@ -175,7 +172,7 @@ window.onload = () => {
             }
         }
         if (gui.selectedRowIndex !== null) { // handle mousemove events when a row is selected
-            adjustEventCoordinates(event)
+            gui.adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
 
@@ -305,7 +302,7 @@ window.onload = () => {
             circleNewXPosition = gui.circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle.
             circleNewYPosition = gui.circleBeingMovedStartingPositionY // if the circle is not colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
             circleNewBeatNumber = gui.circleBeingMovedOldBeatNumber
-            adjustEventCoordinates(event)
+            gui.adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
             // check for collisions with things (sequencer rows, the trash bin, etc.)and make adjustments accordingly, so that everything will be handled as explained in the block comment above
@@ -598,21 +595,6 @@ window.onload = () => {
         return sequencerLeftEdge + (widthOfEachSubdivision * subdivisionIndex)
     }
 
-    // The SVG renderer's top left corner isn't necessarily located at (0,0), 
-    // so our mouse / touch events may be misaligned until we correct them.
-    // event.pageX and event.pageY are read-only, so this method creates and 
-    // returns a new event object rather than modifying the one that was passed in.
-    // Put any event-specific calls, such as preventDefault(), before this method is called.
-    // TODO: This currently only supports mouse events. Add support for touch events.
-    function adjustEventCoordinates(event) {
-        let svgScale = $(two.renderer.domElement).height() / two.height;
-        let svgOrigin = $('#draw-shapes')[0].getBoundingClientRect();
-        return {
-            pageX: (event.pageX - svgOrigin.left) / svgScale,
-            pageY: (event.pageY - svgOrigin.top) / svgScale
-        }
-    }
-
     function initializeSimpleDefaultSequencerPattern(){
         sequencer.setNumberOfRows(0)
         addEmptySequencerRow();
@@ -689,14 +671,6 @@ window.onload = () => {
         ))
     }
 
-    // initialize Two.js library object and append it to the given DOM element
-    function initializeTwoJs(twoJsDomElement) {
-        return new Two({
-            fullscreen: true,
-            type: Two.Types.svg
-        }).appendTo(twoJsDomElement);
-    }
-
     // set up AudioContext and requestAnimationFrame, so that they will work nicely
     // with the 'AudioContextMonkeyPatch.js' library. contents of this method were 
     // taken and adjusted from the 'Web Audio Metronome' repo by cwilso on GitHub: 
@@ -769,12 +743,12 @@ window.onload = () => {
     // add the newly created circle to the list of all drawn cricles.
     function drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat) {
         // initialize the new circle and set its colors
-        let circle = two.makeCircle(xPosition, yPosition, gui.configurations.notes.unplayedCircleRadius)
+        let circle = gui.two.makeCircle(xPosition, yPosition, gui.configurations.notes.unplayedCircleRadius)
         circle.fill = samples[sampleName].color
         circle.stroke = 'transparent'
 
         // add mouse events to the new circle
-        two.update() // this 'update' needs to go here because it is what generates the new circle's _renderer.elem 
+        gui.two.update() // this 'update' needs to go here because it is what generates the new circle's _renderer.elem 
         
         // add border to circle on mouseover
         circle._renderer.elem.addEventListener('mouseenter', (event) => {
@@ -859,7 +833,7 @@ window.onload = () => {
 
     function initializeRectangleShape(top, left, height, width, radius=4) {
         // new button rectangle: make a rectangle with rounded corners
-        button = two.makeRoundedRectangle(left + (width / 2), top + (height / 2), width, height, radius)
+        button = gui.two.makeRoundedRectangle(left + (width / 2), top + (height / 2), width, height, radius)
         button.linewidth = gui.configurations.sequencer.lineWidth
         button.stroke = gui.configurations.sequencer.color
         button.fill = 'transparent'
@@ -1073,7 +1047,7 @@ window.onload = () => {
         gui.components.shapes.addRowButtonShape = initializeRectangleShape(gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding, gui.configurations.sequencer.left + (gui.configurations.sequencer.width / 2) + gui.configurations.addRowButton.leftPadding - (gui.configurations.addRowButton.width / 2), gui.configurations.addRowButton.height, gui.configurations.addRowButton.width)
         gui.components.shapes.addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         // update two.js so we can add action listeners to shapes
-        two.update()
+        gui.two.update()
         // initialize action listeners
         initializeSubdivisionTextInputsActionListeners();
         initializeReferenceLineTextInputsActionListeners();
