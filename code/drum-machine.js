@@ -140,8 +140,8 @@ window.onload = () => {
                         // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
                         if (sequencer.rows[rowIndex].quantized === true) {
                             // determine which subdivision we are closest to
-                            gui.circleBeingMovedNewBeatNumber = getIndexOfClosestSubdivisionLine(mouseX, sequencer.rows[rowIndex].getNumberOfSubdivisions())
-                            gui.circleBeingMoved.translation.x = getXPositionOfSubdivisionLine(gui.circleBeingMovedNewBeatNumber, sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                            gui.circleBeingMovedNewBeatNumber = gui.getIndexOfClosestSubdivisionLine(mouseX, sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                            gui.circleBeingMoved.translation.x = gui.getXPositionOfSubdivisionLine(gui.circleBeingMovedNewBeatNumber, sequencer.rows[rowIndex].getNumberOfSubdivisions())
                         } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
                             gui.circleBeingMoved.translation.x = gui.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
                             gui.circleBeingMovedNewBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED
@@ -535,58 +535,6 @@ window.onload = () => {
         }
         sequencer.rows[rowIndex].setQuantization(quantize)
         redrawSequencer();
-    }
-
-    // todo: clean up the block comments for the two 'snap to' methods below for clarity
-
-    /**
-     * for a given x coordinate and number of subdivisions, return what subdivision
-     * number (i.e. what beat number) the x coordinate falls closest to.
-     * 
-     * this is used as part of 'snap note to quantized row' logic.
-     * 
-     * for a given mouse x coordinate and number of subdivisions, we need to find the 
-     * x coordinate of the subdivision line that is closest to the mouse position. in 
-     * other words, we need to quantize the mouse x position to the nearest subdivision 
-     * line. this will be used for 'snapping' notes to subdivision lines when moving 
-     * them on quantized sequencer rows.
-     * we will break the logic for doing this into two parts.
-     * 
-     * the first part of doing this is handled in this function -- we need to find the
-     * index of the closest subdivision line, in other words we need to find the beat
-     * number that we should quantize to for the given mouse x coordinate and number
-     * of subdivisions.
-     * 
-     * the other piece we will then need to do is to get the x position for a beat
-     * number. that will be handled elsewhere.
-     */
-    function getIndexOfClosestSubdivisionLine(mouseX, numberOfSubdivisions) {
-        let sequencerLeftEdge = gui.configurations.sequencer.left
-        let widthOfEachSubdivision = gui.configurations.sequencer.width / numberOfSubdivisions
-        let mouseXWithinSequencer = mouseX - sequencerLeftEdge
-        let subdivisionNumberToLeftOfMouse = Math.floor(mouseXWithinSequencer / widthOfEachSubdivision)
-        let mouseIsCloserToRightSubdivisionThanLeft = (mouseXWithinSequencer % widthOfEachSubdivision) > (widthOfEachSubdivision / 2)
-        let subdivisionToSnapTo = subdivisionNumberToLeftOfMouse
-        if (mouseIsCloserToRightSubdivisionThanLeft) {
-            subdivisionToSnapTo += 1
-        }
-        return gui.confineNumberToBounds(subdivisionToSnapTo, 0, numberOfSubdivisions - 1)
-    }
-    
-    /**
-     * for a given subdivision number and number of subdivisions, return
-     * the x coordinate of that subdivision number.
-     * 
-     * this logic is part of our 'snap note to quantized sequencer row' logic.
-     * see the block comment above for info on how this function is used.
-     * 
-     * this function is the second part of the logic explained in the block comment 
-     * above, where we find the x coordinate for a given beat number.
-     */
-    function getXPositionOfSubdivisionLine(subdivisionIndex, numberOfSubdivisions) {
-        let sequencerLeftEdge = gui.configurations.sequencer.left
-        let widthOfEachSubdivision = gui.configurations.sequencer.width / numberOfSubdivisions
-        return sequencerLeftEdge + (widthOfEachSubdivision * subdivisionIndex)
     }
 
     function initializeSimpleDefaultSequencerPattern(){
