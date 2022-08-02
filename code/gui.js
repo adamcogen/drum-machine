@@ -691,6 +691,43 @@ class DrumMachineGui {
     }
 
     /**
+     * 'add row to sequencer' logic
+     */
+
+    addEmptySequencerRow() {
+        this.sequencer.addEmptyRow();
+        let newRowIndex = this.sequencer.rows.length - 1
+        // set new row default configuration
+        this.sequencer.rows[newRowIndex].setNumberOfReferenceLines(4);
+        this.sequencer.rows[newRowIndex].setNumberOfSubdivisions(8);
+        this.sequencer.rows[newRowIndex].setQuantization(true);
+    }
+
+    /**
+     * 'restart sequencer' logic
+     */
+
+    restartSequencer() {
+        this.sequencer.restart();
+    }
+
+    /**
+     * 'clear notes for sequencer row' logic
+     */
+
+    clearNotesForRow(rowIndex) { 
+        this.sequencer.clearRow(rowIndex)
+    }
+
+    /**
+     * 'clear all sequencer notes' logic
+     */
+
+    clearAllNotes() {
+        this.sequencer.clear();
+    }
+
+    /**
      * general helper methods
      */
 

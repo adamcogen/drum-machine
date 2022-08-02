@@ -539,23 +539,23 @@ window.onload = () => {
 
     function initializeSimpleDefaultSequencerPattern(){
         sequencer.setNumberOfRows(0)
-        addEmptySequencerRow();
+        gui.addEmptySequencerRow();
         sequencer.rows[0].setNumberOfSubdivisions(16)
         sequencer.rows[0].setNumberOfReferenceLines(4)
         sequencer.rows[0].setQuantization(true)
-        addEmptySequencerRow();
+        gui.addEmptySequencerRow();
         sequencer.rows[1].setNumberOfSubdivisions(8)
         sequencer.rows[1].setNumberOfReferenceLines(4)
         sequencer.rows[1].setQuantization(true)
-        addEmptySequencerRow();
+        gui.addEmptySequencerRow();
         sequencer.rows[2].setNumberOfSubdivisions(8)
         sequencer.rows[2].setNumberOfReferenceLines(4)
         sequencer.rows[2].setQuantization(true)
-        addEmptySequencerRow();
+        gui.addEmptySequencerRow();
         sequencer.rows[3].setNumberOfSubdivisions(8)
         sequencer.rows[3].setNumberOfReferenceLines(4)
         sequencer.rows[3].setQuantization(false)
-        addEmptySequencerRow();
+        gui.addEmptySequencerRow();
         sequencer.rows[4].setNumberOfSubdivisions(4)
         sequencer.rows[4].setNumberOfReferenceLines(4)
         sequencer.rows[4].setQuantization(true)
@@ -901,7 +901,7 @@ window.onload = () => {
     function restartSequencerButtonClickHandler(event) {
         gui.lastButtonClickTimeTrackers.restartSequencer.lastClickTime = sequencer.currentTime
         gui.components.shapes.restartSequencerButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
-        restartSequencer()
+        this.restartSequencer()
     }
 
     function addClearAllNotesButtonActionListeners() {
@@ -916,7 +916,8 @@ window.onload = () => {
     function clearAllNotesButtonClickHandler(event) {
         gui.lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = sequencer.currentTime
         gui.components.shapes.clearAllNotesButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
-        clearAllNotes();
+        gui.clearAllNotes();
+        redrawSequencer();
     }
 
     function addClearNotesForRowButtonsActionListeners() {
@@ -937,7 +938,8 @@ window.onload = () => {
     function clearRowButtonClickHandler(event, rowIndex) {
         gui.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = sequencer.currentTime
         gui.components.shapes.clearNotesForRowButtonShapes[rowIndex].fill = gui.configurations.buttonBehavior.clickedButtonColor
-        clearNotesForRow(rowIndex);
+        gui.clearNotesForRow(rowIndex);
+        resetNotesAndLinesDisplayForRow(rowIndex);
     }
 
     function initializeAddRowButtonActionListener() {
@@ -953,18 +955,9 @@ window.onload = () => {
     function addRowClickHandler(event) {
         gui.lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
         gui.components.shapes.addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
-        addEmptySequencerRow();
+        gui.addEmptySequencerRow();
         // redraw the sequencer
         redrawSequencer()
-    }
-
-    function addEmptySequencerRow() {
-        sequencer.addEmptyRow();
-        let newRowIndex = sequencer.rows.length - 1
-        // set new row default configuration
-        sequencer.rows[newRowIndex].setNumberOfReferenceLines(4);
-        sequencer.rows[newRowIndex].setNumberOfSubdivisions(8);
-        sequencer.rows[newRowIndex].setQuantization(true);
     }
 
     function redrawSequencer() {
@@ -1066,20 +1059,6 @@ window.onload = () => {
             })
             gui.addDefaultKeypressEventListenerToTextInput(referenceLineTextInput, false)
         }
-    }
-
-    function restartSequencer() {
-        sequencer.restart();
-    }
-
-    function clearNotesForRow(rowIndex) { 
-        sequencer.clearRow(rowIndex)
-        resetNotesAndLinesDisplayForRow(rowIndex)
-    }
-
-    function clearAllNotes() {
-        sequencer.clear();
-        redrawSequencer()
     }
 
     function resetNotesAndLinesDisplayForAllRows() {
