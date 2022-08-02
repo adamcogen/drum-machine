@@ -59,6 +59,8 @@ class DrumMachineGui {
 
         // keep a list of all the circles (i.e. notes) that have been drawn on the screen
         this.allDrawnCircles = []
+
+        this.pause(); // start the sequencer paused
     }
 
     // main GUI update logic.
@@ -466,6 +468,25 @@ class DrumMachineGui {
         this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.loopLengthInMillis
         this.components.domElements.textInputs.loopLengthMillis.style.borderColor = this.configurations.sequencer.color
         this.components.domElements.textInputs.loopLengthMillis.style.color = this.configurations.defaultFont.color // set font color
+    }
+
+    updateSequencerLoopLength(newLoopLengthInMillis) {
+        if (this.sequencer.loopLengthInMillis === newLoopLengthInMillis) { // save a little effort by skipping update if it isn't needed
+            return;
+        }
+        /**
+         * note down current state before changing tempo
+         */
+        let wasPaused = this.sequencer.paused
+        /**
+         * update states
+         */
+        this.pause();
+        this.sequencer.setLoopLengthInMillis(newLoopLengthInMillis);
+        // only unpause if the sequencer wasn't paused before
+        if (!wasPaused) {
+            this.unpause();
+        }
     }
 
     /**

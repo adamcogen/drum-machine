@@ -70,8 +70,6 @@ window.onload = () => {
 
     refreshWindowMouseMoveEvent();
 
-    gui.pause(); // start the sequencer paused
-
     redrawSequencer();
 
     // start main recursive update loop, where all drum machine state updates will happen
@@ -1076,28 +1074,9 @@ window.onload = () => {
             // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
             newTextInputValue = gui.confineNumberToBounds(newTextInputValue, sequencer.lookAheadMillis, gui.configurations.tempoTextInput.maximumValue)
             gui.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
-            updateSequencerLoopLength(newTextInputValue)
+            gui.updateSequencerLoopLength(newTextInputValue)
         })
         gui.addDefaultKeypressEventListenerToTextInput(gui.components.domElements.textInputs.loopLengthMillis, true)
-    }
-
-    function updateSequencerLoopLength(newLoopLengthInMillis) {
-        if (sequencer.loopLengthInMillis === newLoopLengthInMillis) { // save a little effort by skipping update if it isn't needed
-            return
-        }
-        /**
-         * note down current state before changing tempo
-         */
-        let wasPaused = sequencer.paused
-        /**
-         * update states
-         */
-        gui.pause();
-        sequencer.setLoopLengthInMillis(newLoopLengthInMillis);
-        // only unpause if the sequencer wasn't paused before
-        if (!wasPaused) {
-            gui.unpause();
-        }
     }
 
     function initializeSubdivisionTextInputsActionListeners() {
