@@ -70,7 +70,7 @@ window.onload = () => {
 
     refreshWindowMouseMoveEvent();
 
-    pause(); // start the sequencer paused
+    gui.pause(); // start the sequencer paused
 
     redrawSequencer();
 
@@ -824,7 +824,7 @@ window.onload = () => {
     function pauseButtonClickHandler(event) {
         gui.lastButtonClickTimeTrackers.pause.lastClickTime = sequencer.currentTime
         gui.components.shapes.pauseButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
-        togglePaused()
+        gui.togglePaused()
     }
 
     function initializeRectangleShape(top, left, height, width, radius=4) {
@@ -1059,31 +1059,6 @@ window.onload = () => {
         }
     }
 
-    // toggle whether the sequencer is 'paused' or not. this method gets called when we click the pause button
-    function togglePaused() {
-        if (sequencer.paused) { // unpause 
-            unpause();
-        } else { // pause
-            pause();
-        }
-    }
-
-    function pause() {
-        if (!sequencer.paused) {
-            sequencer.pause();
-        }
-        gui.components.domElements.images.pauseIcon.style.display = 'none'
-        gui.components.domElements.images.playIcon.style.display = 'block'
-    }
-
-    function unpause() {
-        if (sequencer.paused) {
-            sequencer.unpause();
-        }
-        gui.components.domElements.images.pauseIcon.style.display = 'block'
-        gui.components.domElements.images.playIcon.style.display = 'none'
-    }
-
     function initializeTempoTextInputActionListeners() {
         /**
          * set up 'focus' and 'blur' events for the 'loop length in millis' text input.
@@ -1117,11 +1092,11 @@ window.onload = () => {
         /**
          * update states
          */
-        pause();
+        gui.pause();
         sequencer.setLoopLengthInMillis(newLoopLengthInMillis);
         // only unpause if the sequencer wasn't paused before
         if (!wasPaused) {
-            unpause();
+            gui.unpause();
         }
     }
 

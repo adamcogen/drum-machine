@@ -469,6 +469,35 @@ class DrumMachineGui {
     }
 
     /**
+     * 'pause and unpause sequencer' button logic
+     */
+
+    // toggle whether the sequencer is 'paused' or not. this method gets called when we click the pause button
+    togglePaused() {
+        if (this.sequencer.paused) { // unpause 
+            this.unpause();
+        } else { // pause
+            this.pause();
+        }
+    }
+
+    pause() {
+        if (!this.sequencer.paused) {
+            this.sequencer.pause();
+        }
+        this.components.domElements.images.pauseIcon.style.display = 'none'
+        this.components.domElements.images.playIcon.style.display = 'block'
+    }
+
+    unpause() {
+        if (this.sequencer.paused) {
+            this.sequencer.unpause();
+        }
+        this.components.domElements.images.pauseIcon.style.display = 'block'
+        this.components.domElements.images.playIcon.style.display = 'none'
+    }
+
+    /**
      * 'set number of subdivisions for row' text inputs
      */
 
