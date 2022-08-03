@@ -57,7 +57,6 @@ window.onload = () => {
     let _sampleBankNodeGenerator = new SampleBankNodeGenerator(idGenerator, sampleNameList) // generates a new sequencer list node whenever we pull a note off the sound bank
     let gui = new DrumMachineGui(sequencer, sampleNameList, samples, _sampleBankNodeGenerator, hideIcons=false);
 
-    initializeTempoTextInputActionListeners();
     addPauseButtonActionListeners()
     addRestartSequencerButtonActionListeners()
     addClearAllNotesButtonActionListeners()
@@ -901,7 +900,7 @@ window.onload = () => {
     function restartSequencerButtonClickHandler(event) {
         gui.lastButtonClickTimeTrackers.restartSequencer.lastClickTime = sequencer.currentTime
         gui.components.shapes.restartSequencerButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
-        this.restartSequencer()
+        gui.restartSequencer()
     }
 
     function addClearAllNotesButtonActionListeners() {
@@ -996,28 +995,6 @@ window.onload = () => {
             // if a row is selected, set variables appropriately for moving it around
             initializeRowSelectionVariablesAndVisuals(gui.selectedRowIndex);
         }
-    }
-
-    function initializeTempoTextInputActionListeners() {
-        /**
-         * set up 'focus' and 'blur' events for the 'loop length in millis' text input.
-         * the plan is that when you update the values in the text box, they will be applied
-         * after you click away from the text box automaticaly, unless the input isn't a valid
-         * number. if something besides a valid number is entered, the value will just go back
-         * to whatever it was before, and not make any change to the sequencer.
-         */
-        gui.components.domElements.textInputs.loopLengthMillis.addEventListener('blur', (event) => {
-            let newTextInputValue = gui.components.domElements.textInputs.loopLengthMillis.value.trim() // remove whitespace from beginning and end of input then store it
-            if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
-                newTextInputValue = sequencer.loopLengthInMillis
-            }
-            newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
-            // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
-            newTextInputValue = gui.confineNumberToBounds(newTextInputValue, sequencer.lookAheadMillis, gui.configurations.tempoTextInput.maximumValue)
-            gui.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
-            gui.updateSequencerLoopLength(newTextInputValue)
-        })
-        gui.addDefaultKeypressEventListenerToTextInput(gui.components.domElements.textInputs.loopLengthMillis, true)
     }
 
     function initializeSubdivisionTextInputsActionListeners() {

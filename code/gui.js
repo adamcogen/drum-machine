@@ -32,9 +32,6 @@ class DrumMachineGui {
         this.initializeComponentEventListeners();
         this.initializeWindowEventListeners();
 
-        // run any miscellaneous unit tests needed before starting main update loop
-        this.testConfineNumberToBounds();
-
         // create variables which will be used to track info about the note that is being clicked and dragged
         this.circleBeingMoved = null
         this.circleBeingMovedStartingPositionX = null
@@ -59,6 +56,11 @@ class DrumMachineGui {
 
         // keep a list of all the circles (i.e. notes) that have been drawn on the screen
         this.allDrawnCircles = []
+
+        this.initializeTempoTextInputActionListeners();
+
+        // run any miscellaneous unit tests needed before starting main update loop
+        this.testConfineNumberToBounds();
 
         this.pause(); // start the sequencer paused
     }
@@ -468,6 +470,28 @@ class DrumMachineGui {
         this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.loopLengthInMillis
         this.components.domElements.textInputs.loopLengthMillis.style.borderColor = this.configurations.sequencer.color
         this.components.domElements.textInputs.loopLengthMillis.style.color = this.configurations.defaultFont.color // set font color
+    }
+
+    initializeTempoTextInputActionListeners() {
+        /**
+         * set up 'focus' and 'blur' events for the 'loop length in millis' text input.
+         * the plan is that when you update the values in the text box, they will be applied
+         * after you click away from the text box automaticaly, unless the input isn't a valid
+         * number. if something besides a valid number is entered, the value will just go back
+         * to whatever it was before, and not make any change to the sequencer.
+         */
+        this.components.domElements.textInputs.loopLengthMillis.addEventListener('blur', (event) => {
+            let newTextInputValue = this.components.domElements.textInputs.loopLengthMillis.value.trim() // remove whitespace from beginning and end of input then store it
+            if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
+                newTextInputValue = this.sequencer.loopLengthInMillis
+            }
+            newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
+            // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
+            newTextInputValue = this.confineNumberToBounds(newTextInputValue, this.sequencer.lookAheadMillis, this.configurations.tempoTextInput.maximumValue)
+            this.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
+            this.updateSequencerLoopLength(newTextInputValue)
+        })
+        this.addDefaultKeypressEventListenerToTextInput(this.components.domElements.textInputs.loopLengthMillis, true)
     }
 
     updateSequencerLoopLength(newLoopLengthInMillis) {
