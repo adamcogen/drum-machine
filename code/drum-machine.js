@@ -57,7 +57,6 @@ window.onload = () => {
     let _sampleBankNodeGenerator = new SampleBankNodeGenerator(idGenerator, sampleNameList) // generates a new sequencer list node whenever we pull a note off the sound bank
     let gui = new DrumMachineGui(sequencer, sampleNameList, samples, _sampleBankNodeGenerator, hideIcons=false);
 
-    addPauseButtonActionListeners()
     addRestartSequencerButtonActionListeners()
     addClearAllNotesButtonActionListeners()
 
@@ -753,23 +752,6 @@ window.onload = () => {
         for (let note of allDrawnCirclesCopy) {
             removeCircleFromDisplay(note.guiData.label)
         }
-    }
-
-    function addPauseButtonActionListeners() {
-        // remove event listeners to avoid duplicates
-        gui.components.shapes.pauseButtonShape._renderer.elem.removeEventListener('click', pauseButtonClickHandler)
-        gui.components.domElements.images.pauseIcon.removeEventListener('click', pauseButtonClickHandler)
-        gui.components.domElements.images.playIcon.removeEventListener('click', pauseButtonClickHandler)
-        // then add the event listeners
-        gui.components.shapes.pauseButtonShape._renderer.elem.addEventListener('click', pauseButtonClickHandler)
-        gui.components.domElements.images.pauseIcon.addEventListener('click', pauseButtonClickHandler)
-        gui.components.domElements.images.playIcon.addEventListener('click', pauseButtonClickHandler)
-    }
-
-    function pauseButtonClickHandler(event) {
-        gui.lastButtonClickTimeTrackers.pause.lastClickTime = sequencer.currentTime
-        gui.components.shapes.pauseButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
-        gui.togglePaused()
     }
 
     function initializeSequencerRowHandlesActionListeners() {

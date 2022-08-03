@@ -23,6 +23,7 @@ class DrumMachineGui {
         }
         this.components.shapes = this.initializeGuiShapes();
         this.components.domElements = this.initializeDomElements();
+        this.eventHandlerFunctions = {}; // make a hash to store references to event handler functions. that way we can remove them from the DOM elements they are attached to later
 
         // add more dom elements and do some additional setup of shapes and dom elements
         this.initializeTempoTextInputValuesAndStyles();
@@ -58,6 +59,7 @@ class DrumMachineGui {
         this.allDrawnCircles = []
 
         this.initializeTempoTextInputActionListeners();
+        this.addPauseButtonActionListeners();
 
         // run any miscellaneous unit tests needed before starting main update loop
         this.testConfineNumberToBounds();
@@ -540,6 +542,26 @@ class DrumMachineGui {
         }
         this.components.domElements.images.pauseIcon.style.display = 'block'
         this.components.domElements.images.playIcon.style.display = 'none'
+    }
+
+    addPauseButtonActionListeners() {
+        if (this.eventHandlerFunctions.pauseButton !== null && this.eventHandlerFunctions.pauseButton !== null) {
+            // remove event listeners if they've already been added to avoid duplicates
+            this.components.shapes.pauseButtonShape._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.pauseButton)
+            this.components.domElements.images.pauseIcon.removeEventListener('click', this.eventHandlerFunctions.pauseButton)
+            this.components.domElements.images.playIcon.removeEventListener('click', this.eventHandlerFunctions.pauseButton)
+        }
+        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+        this.eventHandlerFunctions.pauseButton = () => this.pauseButtonClickHandler(this)
+        this.components.shapes.pauseButtonShape._renderer.elem.addEventListener('click', this.eventHandlerFunctions.pauseButton)
+        this.components.domElements.images.pauseIcon.addEventListener('click', this.eventHandlerFunctions.pauseButton)
+        this.components.domElements.images.playIcon.addEventListener('click', this.eventHandlerFunctions.pauseButton)
+    }
+
+    pauseButtonClickHandler(self) {
+        self.lastButtonClickTimeTrackers.pause.lastClickTime = self.sequencer.currentTime
+        self.components.shapes.pauseButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
+        self.togglePaused()
     }
 
     /**
