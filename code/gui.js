@@ -521,6 +521,45 @@ class DrumMachineGui {
         return allCircles
     }
 
+    initializeSequencerRowHandlesActionListeners() {
+        for (let rowIndex = 0; rowIndex < this.components.shapes.sequencerRowHandles.length; rowIndex++) {
+            let circle = this.components.shapes.sequencerRowHandles[rowIndex];
+            let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+
+            // add border to circle on mouseover
+            circle._renderer.elem.addEventListener('mouseenter', () => {
+                if (this.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
+                    circle.stroke = 'black'
+                    circle.linewidth = 2
+                    circle.fill = this.configurations.sequencerRowHandles.unselectedColor
+                    rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.unselectedColor
+                }
+            });
+            // remove border from circle when mouse is no longer over it
+            circle._renderer.elem.addEventListener('mouseleave', () => {
+                circle.stroke = 'transparent'
+                circle.fill = this.configurations.sequencerRowHandles.unselectedColor
+                rowSelectionRectangle.stroke = 'transparent'
+            });
+            // when you hold your mouse down on the row handle circle, select that row.
+            // we will de-select it later whenever you lift your mouse.
+            circle._renderer.elem.addEventListener('mousedown', () => {
+                // save relevant info about whichever row is selected
+                this.initializeRowSelectionVariablesAndVisuals(rowIndex);
+            });
+            // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
+            // because if we implement snap-into-place for sequencer rows, the row handle may not actually
+            // be under our mouse when we lift our mouse to drop the row into place.
+            // just putting the most basic functionality for visual effects here for now.
+            circle._renderer.elem.addEventListener('mouseup', () => {
+                circle.stroke = 'black'
+                circle.linewidth = 2
+                circle.fill = this.configurations.sequencerRowHandles.unselectedColor
+                rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.unselectedColor
+            });
+        }
+    }
+
     /**
      * 'set tempo' text input logic
      */

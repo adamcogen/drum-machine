@@ -753,45 +753,6 @@ window.onload = () => {
         }
     }
 
-    function initializeSequencerRowHandlesActionListeners() {
-        for (let rowIndex = 0; rowIndex < gui.components.shapes.sequencerRowHandles.length; rowIndex++) {
-            let circle = gui.components.shapes.sequencerRowHandles[rowIndex];
-            let rowSelectionRectangle = gui.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-
-            // add border to circle on mouseover
-            circle._renderer.elem.addEventListener('mouseenter', (event) => {
-                if (gui.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
-                    circle.stroke = 'black'
-                    circle.linewidth = 2
-                    circle.fill = gui.configurations.sequencerRowHandles.unselectedColor
-                    rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.unselectedColor
-                }
-            });
-            // remove border from circle when mouse is no longer over it
-            circle._renderer.elem.addEventListener('mouseleave', (event) => {
-                circle.stroke = 'transparent'
-                circle.fill = gui.configurations.sequencerRowHandles.unselectedColor
-                rowSelectionRectangle.stroke = 'transparent'
-            });
-            // when you hold your mouse down on the row handle circle, select that row.
-            // we will de-select it later whenever you lift your mouse.
-            circle._renderer.elem.addEventListener('mousedown', (event) => {
-                // save relevant info about whichever row is selected
-                gui.initializeRowSelectionVariablesAndVisuals(rowIndex);
-            });
-            // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
-            // because if we implement snap-into-place for sequencer rows, the row handle may not actually
-            // be under our mouse when we lift our mouse to drop the row into place.
-            // just putting the most basic functionality for visual effects here for now.
-            circle._renderer.elem.addEventListener('mouseup', (event) => {
-                circle.stroke = 'black'
-                circle.linewidth = 2
-                circle.fill = gui.configurations.sequencerRowHandles.unselectedColor
-                rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.unselectedColor
-            });
-        }
-    }
-
     function addClearAllNotesButtonActionListeners() {
         // remove event listeners to prevent duplicates
         gui.components.shapes.clearAllNotesButtonShape._renderer.elem.removeEventListener('click', clearAllNotesButtonClickHandler)
@@ -876,7 +837,7 @@ window.onload = () => {
         addClearNotesForRowButtonsActionListeners();
         initializeQuantizationCheckboxActionListeners();
         initializeAddRowButtonActionListener();
-        initializeSequencerRowHandlesActionListeners();
+        gui.initializeSequencerRowHandlesActionListeners();
         // initialize, format, and move button icons into place
         initializeIcons(gui.configurations.hideIcons)
         if (gui.selectedRowIndex !== null) {
