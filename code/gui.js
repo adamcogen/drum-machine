@@ -215,7 +215,7 @@ class DrumMachineGui {
     }
 
     /**
-     * sequencer row selection rectangles
+     * sequencer row selection logic
      */
 
     // if a row is selected, we draw a rectangle around it.
@@ -233,6 +233,64 @@ class DrumMachineGui {
             allRectangles.push(rectangle)
         }
         return allRectangles;
+    }
+
+    initializeRowSelectionVariablesAndVisuals(rowIndex) {
+        this.setNoteTrashBinVisibility(true)
+        this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
+        // save relevant info about whichever row is selected
+        this.selectedRowIndex = rowIndex;
+        this.rowSelecionTracker.removeRow = false // start this out false until we move the row around (i.e. into the trash bin)
+        // save a list, of all the shapes that are associated with the selected row.
+        // we are saving this list so that we can move them all as we move the row around.
+        this.rowSelecionTracker.shapes = [];
+        for (let circle of this.allDrawnCircles) {
+            if (circle.guiData.row === rowIndex) {
+                this.rowSelecionTracker.shapes.push(circle)
+            }
+        }
+        this.rowSelecionTracker.shapes.push(...this.components.shapes.subdivisionLineLists[rowIndex])
+        this.rowSelecionTracker.shapes.push(...this.components.shapes.referenceLineLists[rowIndex])
+        this.rowSelecionTracker.shapes.push(this.components.shapes.sequencerRowLines[rowIndex])
+        this.rowSelecionTracker.shapes.push(this.components.shapes.sequencerRowSelectionRectangles[rowIndex])
+        this.rowSelecionTracker.shapes.push(this.components.shapes.clearNotesForRowButtonShapes[rowIndex])
+        // this part gets a little weird. save a list of all of the starting positions of each
+        // shape that is being moved. that way we can translate them proporionally to how far
+        // the row handle has moved.
+        this.rowSelecionTracker.shapesOriginalPositions = []
+        for (let shape of this.rowSelecionTracker.shapes) {
+            this.rowSelecionTracker.shapesOriginalPositions.push({
+                x: shape.translation.x,
+                y: shape.translation.y,
+            });
+        }
+        this.rowSelecionTracker.rowHandleStartingPosition.x = this.components.shapes.sequencerRowHandles[rowIndex].translation.x
+        this.rowSelecionTracker.rowHandleStartingPosition.y = this.components.shapes.sequencerRowHandles[rowIndex].translation.y
+        // do the exact same thing for dom elements (subdivision and reference line text inputs, quantization checkbox, images) next
+        this.rowSelecionTracker.domElements = [];
+        this.rowSelecionTracker.domElements.push(this.components.domElements.textInputs.subdivisionTextInputs[rowIndex])
+        this.rowSelecionTracker.domElements.push(this.components.domElements.textInputs.referenceLineTextInputs[rowIndex])
+        if (this.configurations.hideIcons) {
+            this.rowSelecionTracker.domElements.push(this.components.domElements.checkboxes.quantizationCheckboxes[rowIndex])
+        } else {
+            this.rowSelecionTracker.domElements.push(this.components.domElements.iconLists.lockedIcons[rowIndex]);
+            this.rowSelecionTracker.domElements.push(this.components.domElements.iconLists.unlockedIcons[rowIndex]);
+            this.rowSelecionTracker.domElements.push(this.components.domElements.iconLists.clearRowIcons[rowIndex]);
+        }
+        this.rowSelecionTracker.domElementsOriginalPositions = [];
+        for (let domElement of this.rowSelecionTracker.domElements) {
+            this.rowSelecionTracker.domElementsOriginalPositions.push({
+                left: parseInt(domElement.style.left.slice(0, -2)), // cut off "px" from the position and convert it to an integer
+                top: parseInt(domElement.style.top.slice(0, -2)),
+            });
+        }
+        // update visuals
+        let circle = this.components.shapes.sequencerRowHandles[rowIndex]
+        circle.stroke = 'black'
+        circle.linewidth = 2
+        circle.fill = this.configurations.sequencerRowHandles.selectedColor
+        let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
+        rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.selectedColor
     }
 
     /**

@@ -488,17 +488,17 @@ window.onload = () => {
             unlockedIcon.style.left = "" + lockIconsHorizontalPosition + "px"
             unlockedIcon.style.top = "" + lockIconsVerticalPosition + "px"
             // add event listeners
-            lockedIcon.removeEventListener('click', (event) => {
-                setQuantizationButtonClickHandler(event, rowIndex, false)
+            lockedIcon.removeEventListener('click', () => {
+                setQuantizationButtonClickHandler(rowIndex, false)
             });
-            lockedIcon.addEventListener('click', (event) => {
-                setQuantizationButtonClickHandler(event, rowIndex, false)
+            lockedIcon.addEventListener('click', () => {
+                setQuantizationButtonClickHandler(rowIndex, false)
             });
-            unlockedIcon.removeEventListener('click', (event) => {
-                setQuantizationButtonClickHandler(event, rowIndex, true)
+            unlockedIcon.removeEventListener('click', () => {
+                setQuantizationButtonClickHandler(rowIndex, true)
             });
-            unlockedIcon.addEventListener('click', (event) => {
-                setQuantizationButtonClickHandler(event, rowIndex, true)
+            unlockedIcon.addEventListener('click', () => {
+                setQuantizationButtonClickHandler(rowIndex, true)
             });
             // add the icons to the dom and to our list that tracks these icons
             gui.components.domElements.iconLists.lockedIcons.push(lockedIcon)
@@ -516,16 +516,16 @@ window.onload = () => {
         }
         for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
             let checkbox = gui.components.domElements.checkboxes.quantizationCheckboxes[rowIndex]
-            checkbox.removeEventListener('click', (event) => {
-                setQuantizationButtonClickHandler(event, rowIndex, checkbox.checked)
+            checkbox.removeEventListener('click', () => {
+                setQuantizationButtonClickHandler(rowIndex, checkbox.checked)
             });
-            checkbox.addEventListener('click', (event) => {
-                setQuantizationButtonClickHandler(event, rowIndex, checkbox.checked)
+            checkbox.addEventListener('click', () => {
+                setQuantizationButtonClickHandler(rowIndex, checkbox.checked)
             });
         }
     }
 
-    function setQuantizationButtonClickHandler(event, rowIndex, quantize) {
+    function setQuantizationButtonClickHandler(rowIndex, quantize) {
         if (sequencer.rows[rowIndex].getNumberOfSubdivisions() === 0) {
             // you can't quantize a row if it has 0 subdivisions, so automatically change the value to 1 in this case
             gui.updateNumberOfSubdivisionsForRow(1, rowIndex)
@@ -777,7 +777,7 @@ window.onload = () => {
             // we will de-select it later whenever you lift your mouse.
             circle._renderer.elem.addEventListener('mousedown', (event) => {
                 // save relevant info about whichever row is selected
-                initializeRowSelectionVariablesAndVisuals(rowIndex);
+                gui.initializeRowSelectionVariablesAndVisuals(rowIndex);
             });
             // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
             // because if we implement snap-into-place for sequencer rows, the row handle may not actually
@@ -790,64 +790,6 @@ window.onload = () => {
                 rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.unselectedColor
             });
         }
-    }
-
-    function initializeRowSelectionVariablesAndVisuals(rowIndex) {
-        gui.setNoteTrashBinVisibility(true)
-        gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
-        // save relevant info about whichever row is selected
-        gui.selectedRowIndex = rowIndex;
-        gui.rowSelecionTracker.removeRow = false // start this out false until we move the row around (i.e. into the trash bin)
-        // save a list, of all the shapes that are associated with the selected row.
-        // we are saving this list so that we can move them all as we move the row around.
-        gui.rowSelecionTracker.shapes = [];
-        for (let circle of gui.allDrawnCircles) {
-            if (circle.guiData.row === rowIndex) {
-                gui.rowSelecionTracker.shapes.push(circle)
-            }
-        }
-        gui.rowSelecionTracker.shapes.push(...gui.components.shapes.subdivisionLineLists[rowIndex])
-        gui.rowSelecionTracker.shapes.push(...gui.components.shapes.referenceLineLists[rowIndex])
-        gui.rowSelecionTracker.shapes.push(gui.components.shapes.sequencerRowLines[rowIndex])
-        gui.rowSelecionTracker.shapes.push(gui.components.shapes.sequencerRowSelectionRectangles[rowIndex])
-        gui.rowSelecionTracker.shapes.push(gui.components.shapes.clearNotesForRowButtonShapes[rowIndex])
-        // this part gets a little weird. save a list of all of the starting positions of each
-        // shape that is being moved. that way we can translate them proporionally to how far
-        // the row handle has moved.
-        gui.rowSelecionTracker.shapesOriginalPositions = []
-        for (let shape of gui.rowSelecionTracker.shapes) {
-            gui.rowSelecionTracker.shapesOriginalPositions.push({
-                x: shape.translation.x,
-                y: shape.translation.y,
-            });
-        }
-        gui.rowSelecionTracker.rowHandleStartingPosition.x = gui.components.shapes.sequencerRowHandles[rowIndex].translation.x
-        gui.rowSelecionTracker.rowHandleStartingPosition.y = gui.components.shapes.sequencerRowHandles[rowIndex].translation.y
-        // do the exact same thing for dom elements (subdivision and reference line text inputs, quantization checkbox, images) next
-        gui.rowSelecionTracker.domElements = [];
-        gui.rowSelecionTracker.domElements.push(gui.components.domElements.textInputs.subdivisionTextInputs[rowIndex])
-        gui.rowSelecionTracker.domElements.push(gui.components.domElements.textInputs.referenceLineTextInputs[rowIndex])
-        if (gui.configurations.hideIcons) {
-            gui.rowSelecionTracker.domElements.push(gui.components.domElements.checkboxes.quantizationCheckboxes[rowIndex])
-        } else {
-            gui.rowSelecionTracker.domElements.push(gui.components.domElements.iconLists.lockedIcons[rowIndex]);
-            gui.rowSelecionTracker.domElements.push(gui.components.domElements.iconLists.unlockedIcons[rowIndex]);
-            gui.rowSelecionTracker.domElements.push(gui.components.domElements.iconLists.clearRowIcons[rowIndex]);
-        }
-        gui.rowSelecionTracker.domElementsOriginalPositions = [];
-        for (let domElement of gui.rowSelecionTracker.domElements) {
-            gui.rowSelecionTracker.domElementsOriginalPositions.push({
-                left: parseInt(domElement.style.left.slice(0, -2)), // cut off "px" from the position and convert it to an integer
-                top: parseInt(domElement.style.top.slice(0, -2)),
-            });
-        }
-        // update visuals
-        let circle = gui.components.shapes.sequencerRowHandles[rowIndex]
-        circle.stroke = 'black'
-        circle.linewidth = 2
-        circle.fill = gui.configurations.sequencerRowHandles.selectedColor
-        let rowSelectionRectangle = gui.components.shapes.sequencerRowSelectionRectangles[rowIndex];
-        rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.selectedColor
     }
 
     function addClearAllNotesButtonActionListeners() {
@@ -939,14 +881,14 @@ window.onload = () => {
         initializeIcons(gui.configurations.hideIcons)
         if (gui.selectedRowIndex !== null) {
             // if a row is selected, set variables appropriately for moving it around
-            initializeRowSelectionVariablesAndVisuals(gui.selectedRowIndex);
+            gui.initializeRowSelectionVariablesAndVisuals(gui.selectedRowIndex);
         }
     }
 
     function initializeSubdivisionTextInputsActionListeners() {
         for (let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
             let subdivisionTextInput = gui.components.domElements.textInputs.subdivisionTextInputs[rowIndex]
-            subdivisionTextInput.addEventListener('blur', (event) => {
+            subdivisionTextInput.addEventListener('blur', () => {
                 let newTextInputValue = subdivisionTextInput.value.trim() // remove whitespace from beginning and end of input then store it
                 if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
                     newTextInputValue = sequencer.rows[rowIndex].getNumberOfSubdivisions()
@@ -964,7 +906,7 @@ window.onload = () => {
     function initializeReferenceLineTextInputsActionListeners() {
         for (let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
             let referenceLineTextInput = gui.components.domElements.textInputs.referenceLineTextInputs[rowIndex]
-            referenceLineTextInput.addEventListener('blur', (event) => {
+            referenceLineTextInput.addEventListener('blur', () => {
                 let newTextInputValue = referenceLineTextInput.value.trim() // remove whitespace from beginning and end of input then store it
                 if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
                     newTextInputValue = sequencer.rows[rowIndex].getNumberOfReferenceLines()
