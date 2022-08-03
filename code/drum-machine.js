@@ -648,7 +648,7 @@ window.onload = () => {
                 let row = sequencerRowIndex
                 let label = noteToDraw.label
                 let beat = noteToDraw.data.beat
-                drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat)
+                gui.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat)
                 noteToDraw = noteToDraw.next
             }
         }
@@ -674,53 +674,7 @@ window.onload = () => {
          * bank circle is taken fom the note bank and placed onto a real row.
          */
         let label = (indexOfSampleInNoteBank + 1) * -1 // see block comment above for info about '-1' here
-        drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, Sequencer.NOTE_IS_NOT_QUANTIZED)
-    }
-
-    // create a new circle (i.e. note) on the screen, with the specified x and y position. color is determined by sample name. 
-    // values given for sample name, label, and row number are stored in the circle object to help the GUI keep track of things.
-    // add the newly created circle to the list of all drawn cricles.
-    function drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat) {
-        // initialize the new circle and set its colors
-        let circle = gui.two.makeCircle(xPosition, yPosition, gui.configurations.notes.unplayedCircleRadius)
-        circle.fill = samples[sampleName].color
-        circle.stroke = 'transparent'
-
-        // add mouse events to the new circle
-        gui.two.update() // this 'update' needs to go here because it is what generates the new circle's _renderer.elem 
-        
-        // add border to circle on mouseover
-        circle._renderer.elem.addEventListener('mouseenter', (event) => {
-            circle.stroke = 'black'
-            circle.linewidth = 2
-        });
-        // remove border from circle when mouse is no longer over it
-        circle._renderer.elem.addEventListener('mouseleave', (event) => {
-            circle.stroke = 'transparent'
-        });
-        // select circle (for moving) if we click it
-        circle._renderer.elem.addEventListener('mousedown', (event) => {
-            gui.circleBeingMoved = circle
-            gui.circleBeingMovedStartingPositionX = gui.circleBeingMoved.translation.x
-            gui.circleBeingMovedStartingPositionY = gui.circleBeingMoved.translation.y
-            gui.circleBeingMovedOldRow = gui.circleBeingMoved.guiData.row
-            gui.circleBeingMovedNewRow = gui.circleBeingMovedOldRow
-            gui.circleBeingMovedOldBeatNumber = gui.circleBeingMoved.guiData.beat
-            gui.circleBeingMovedNewBeatNumber = gui.circleBeingMovedOldBeatNumber
-            gui.setNoteTrashBinVisibility(true)
-            gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
-            sequencer.playDrumSampleNow(gui.circleBeingMoved.guiData.sampleName)
-        });
-
-        // add info to the circle object that the gui uses to keep track of things
-        circle.guiData = {}
-        circle.guiData.sampleName = sampleName
-        circle.guiData.row = row
-        circle.guiData.label = label
-        circle.guiData.beat = beat
-
-        // add circle to list of all drawn circles
-        gui.allDrawnCircles.push(circle)
+        gui.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, Sequencer.NOTE_IS_NOT_QUANTIZED)
     }
 
     function addClearAllNotesButtonActionListeners() {

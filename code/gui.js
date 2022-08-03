@@ -932,6 +932,56 @@ class DrumMachineGui {
     }
 
     /**
+     * logic to draw circles (including adding event listeners to them etc.)
+     */
+
+     // create a new circle (i.e. note) on the screen, with the specified x and y position. color is determined by sample name. 
+    // values given for sample name, label, and row number are stored in the circle object to help the GUI keep track of things.
+    // add the newly created circle to the list of all drawn cricles.
+    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat) {
+        // initialize the new circle and set its colors
+        let circle = this.two.makeCircle(xPosition, yPosition, this.configurations.notes.unplayedCircleRadius)
+        circle.fill = this.samples[sampleName].color
+        circle.stroke = 'transparent'
+
+        // add mouse events to the new circle
+        this.two.update() // this 'update' needs to go here because it is what generates the new circle's _renderer.elem 
+        
+        // add border to circle on mouseover
+        circle._renderer.elem.addEventListener('mouseenter', (event) => {
+            circle.stroke = 'black'
+            circle.linewidth = 2
+        });
+        // remove border from circle when mouse is no longer over it
+        circle._renderer.elem.addEventListener('mouseleave', (event) => {
+            circle.stroke = 'transparent'
+        });
+        // select circle (for moving) if we click it
+        circle._renderer.elem.addEventListener('mousedown', (event) => {
+            this.circleBeingMoved = circle
+            this.circleBeingMovedStartingPositionX = this.circleBeingMoved.translation.x
+            this.circleBeingMovedStartingPositionY = this.circleBeingMoved.translation.y
+            this.circleBeingMovedOldRow = this.circleBeingMoved.guiData.row
+            this.circleBeingMovedNewRow = this.circleBeingMovedOldRow
+            this.circleBeingMovedOldBeatNumber = this.circleBeingMoved.guiData.beat
+            this.circleBeingMovedNewBeatNumber = this.circleBeingMovedOldBeatNumber
+            this.setNoteTrashBinVisibility(true)
+            this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
+            this.sequencer.playDrumSampleNow(this.circleBeingMoved.guiData.sampleName)
+        });
+
+        // add info to the circle object that the gui uses to keep track of things
+        circle.guiData = {}
+        circle.guiData.sampleName = sampleName
+        circle.guiData.row = row
+        circle.guiData.label = label
+        circle.guiData.beat = beat
+
+        // add circle to list of all drawn circles
+        this.allDrawnCircles.push(circle)
+    }
+
+    /**
      * general helper methods
      */
 
