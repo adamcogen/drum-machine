@@ -772,25 +772,6 @@ window.onload = () => {
         gui.togglePaused()
     }
 
-    function initializeRectangleShape(top, left, height, width, radius=4) {
-        // new button rectangle: make a rectangle with rounded corners
-        button = gui.two.makeRoundedRectangle(left + (width / 2), top + (height / 2), width, height, radius)
-        button.linewidth = gui.configurations.sequencer.lineWidth
-        button.stroke = gui.configurations.sequencer.color
-        button.fill = 'transparent'
-        return button
-    }
-
-    function initializeButtonPerSequencerRow(topPaddingPerRow, leftPaddingPerRow, height, width) {
-        shapes = []
-        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            let top = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * rowIndex) + topPaddingPerRow
-            let left = gui.configurations.sequencer.left + gui.configurations.sequencer.width + leftPaddingPerRow
-            shapes[rowIndex] = initializeRectangleShape(top, left, height, width)
-        }
-        return shapes
-    }
-
     function initializeSequencerRowHandlesActionListeners() {
         for (let rowIndex = 0; rowIndex < gui.components.shapes.sequencerRowHandles.length; rowIndex++) {
             let circle = gui.components.shapes.sequencerRowHandles[rowIndex];
@@ -976,9 +957,9 @@ window.onload = () => {
             shape.remove()
         }
         gui.components.shapes.clearNotesForRowButtonShapes = []
-        gui.components.shapes.clearNotesForRowButtonShapes = initializeButtonPerSequencerRow(gui.configurations.clearRowButtons.topPaddingPerRow, gui.configurations.clearRowButtons.leftPaddingPerRow, gui.configurations.clearRowButtons.height, gui.configurations.clearRowButtons.width); // this is a list of button rectangles, one per row, to clear the notes on that row
+        gui.components.shapes.clearNotesForRowButtonShapes = gui.initializeButtonPerSequencerRow(gui.configurations.clearRowButtons.topPaddingPerRow, gui.configurations.clearRowButtons.leftPaddingPerRow, gui.configurations.clearRowButtons.height, gui.configurations.clearRowButtons.width); // this is a list of button rectangles, one per row, to clear the notes on that row
         gui.components.shapes.addRowButtonShape.remove();
-        gui.components.shapes.addRowButtonShape = initializeRectangleShape(gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding, gui.configurations.sequencer.left + (gui.configurations.sequencer.width / 2) + gui.configurations.addRowButton.leftPadding - (gui.configurations.addRowButton.width / 2), gui.configurations.addRowButton.height, gui.configurations.addRowButton.width)
+        gui.components.shapes.addRowButtonShape = gui.initializeRectangleShape(gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding, gui.configurations.sequencer.left + (gui.configurations.sequencer.width / 2) + gui.configurations.addRowButton.leftPadding - (gui.configurations.addRowButton.width / 2), gui.configurations.addRowButton.height, gui.configurations.addRowButton.width)
         gui.components.shapes.addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         // update two.js so we can add action listeners to shapes
         gui.two.update()
