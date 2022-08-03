@@ -60,6 +60,7 @@ class DrumMachineGui {
 
         this.initializeTempoTextInputActionListeners();
         this.addPauseButtonActionListeners();
+        this.addRestartSequencerButtonActionListeners()
 
         // run any miscellaneous unit tests needed before starting main update loop
         this.testConfineNumberToBounds();
@@ -545,7 +546,7 @@ class DrumMachineGui {
     }
 
     addPauseButtonActionListeners() {
-        if (this.eventHandlerFunctions.pauseButton !== null && this.eventHandlerFunctions.pauseButton !== null) {
+        if (this.eventHandlerFunctions.pauseButton !== null && this.eventHandlerFunctions.pauseButton !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.pauseButtonShape._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.pauseButton)
             this.components.domElements.images.pauseIcon.removeEventListener('click', this.eventHandlerFunctions.pauseButton)
@@ -558,6 +559,13 @@ class DrumMachineGui {
         this.components.domElements.images.playIcon.addEventListener('click', this.eventHandlerFunctions.pauseButton)
     }
 
+    /**
+     * a general note about the 'self' paramater, which will likely be used here and elsewhere in this file:
+     * because of how scoping in javascript events works, 'this' in this event handler method will refer to 
+     * whichever object fired the event. for that reason, we pass in 'self', which will be a reference to the 
+     * 'this' variable from the main scope for this class in which this event handler was initialized, so that 
+     * we can still reference class fields, methods, etc. that would normally require the use of 'this'.
+     */
     pauseButtonClickHandler(self) {
         self.lastButtonClickTimeTrackers.pause.lastClickTime = self.sequencer.currentTime
         self.components.shapes.pauseButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
@@ -755,6 +763,25 @@ class DrumMachineGui {
 
     restartSequencer() {
         this.sequencer.restart();
+    }
+
+    addRestartSequencerButtonActionListeners() {
+        if (this.eventHandlerFunctions.restartSequencer !== null && this.eventHandlerFunctions.restartSequencer !== undefined) {
+            // remove event listeners if they've already been added to avoid duplicates
+            this.components.shapes.restartSequencerButtonShape._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.restartSequencer)
+            this.components.domElements.images.restartIcon.removeEventListener('click', this.eventHandlerFunctions.restartSequencer)
+        }
+        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+        this.eventHandlerFunctions.restartSequencer = () => this.restartSequencerButtonClickHandler(this)
+        this.components.shapes.restartSequencerButtonShape._renderer.elem.addEventListener('click', this.eventHandlerFunctions.restartSequencer)
+        this.components.domElements.images.restartIcon.addEventListener('click', this.eventHandlerFunctions.restartSequencer)
+    }
+
+    // search for comment "a general note about the 'self' paramater" within this file for into on its use here
+    restartSequencerButtonClickHandler(self) {
+        self.lastButtonClickTimeTrackers.restartSequencer.lastClickTime = self.sequencer.currentTime
+        self.components.shapes.restartSequencerButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
+        self.restartSequencer()
     }
 
     /**

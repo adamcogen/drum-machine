@@ -57,7 +57,6 @@ window.onload = () => {
     let _sampleBankNodeGenerator = new SampleBankNodeGenerator(idGenerator, sampleNameList) // generates a new sequencer list node whenever we pull a note off the sound bank
     let gui = new DrumMachineGui(sequencer, sampleNameList, samples, _sampleBankNodeGenerator, hideIcons=false);
 
-    addRestartSequencerButtonActionListeners()
     addClearAllNotesButtonActionListeners()
 
     // set up a initial example drum sequence
@@ -851,21 +850,6 @@ window.onload = () => {
         rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.selectedColor
     }
 
-    function addRestartSequencerButtonActionListeners() {
-        // remove event listeners first to avoid duplicates
-        gui.components.shapes.restartSequencerButtonShape._renderer.elem.removeEventListener('click', restartSequencerButtonClickHandler)
-        gui.components.domElements.images.restartIcon.removeEventListener('click', restartSequencerButtonClickHandler)
-        // then add the event listeners
-        gui.components.shapes.restartSequencerButtonShape._renderer.elem.addEventListener('click', restartSequencerButtonClickHandler)
-        gui.components.domElements.images.restartIcon.addEventListener('click', restartSequencerButtonClickHandler)
-    }
-
-    function restartSequencerButtonClickHandler(event) {
-        gui.lastButtonClickTimeTrackers.restartSequencer.lastClickTime = sequencer.currentTime
-        gui.components.shapes.restartSequencerButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
-        gui.restartSequencer()
-    }
-
     function addClearAllNotesButtonActionListeners() {
         // remove event listeners to prevent duplicates
         gui.components.shapes.clearAllNotesButtonShape._renderer.elem.removeEventListener('click', clearAllNotesButtonClickHandler)
@@ -918,7 +902,6 @@ window.onload = () => {
         gui.lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
         gui.components.shapes.addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         gui.addEmptySequencerRow();
-        // redraw the sequencer
         redrawSequencer()
     }
 
