@@ -310,7 +310,7 @@ window.onload = () => {
                 if (gui.circleBeingMovedOldRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK) { // if the note being thrown away came from the note bank, just put it back in the note bank.
                     gui.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK
                 } else { // only bother throwing away things that came from a row (throwing away note bank notes is pointless)
-                    removeCircleFromDisplay(gui.circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles and from the two.js canvas
+                    gui.removeCircleFromDisplay(gui.circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles and from the two.js canvas
                 }
             }
             // we are done checking for collisions with things and updating 'old row' and 'new row' values, so now move on to updating the sequencer
@@ -723,25 +723,6 @@ window.onload = () => {
         gui.allDrawnCircles.push(circle)
     }
 
-    // remove a circle from the 'allDrawnCircles' list and two.js canvas, based on its label.
-    // this is meant to be used during deletion of notes from the sequencer, with the idea being that deleting
-    // them from this list and maybe from a few other places will clear up clutter, and hopefully allow the 
-    // deleted circles to get garbage-collected.
-    // note that this method _only_ deletes circles from the _display_, not from the underlying sequencer data
-    // structure, that needs to be handled somewhere else separately.
-    function removeCircleFromDisplay(label){
-        let indexOfListItemToRemove = gui.allDrawnCircles.findIndex(elementFromList => elementFromList.guiData.label === label);
-        if (indexOfListItemToRemove === -1) { //  we don't expect to reach this case, where a circle with the given label isn't found in the list
-            throw "unexpected problem: couldn't find the circle with the given label in the list of all drawn circles, when trying to delete it. the given label was: " + label + ". full list (labels only): " + gui.allDrawnCircles.map((item) => item.guiData.label) + "."
-        }
-        let listOfOneRemovedElement = gui.allDrawnCircles.splice(indexOfListItemToRemove, 1) // this should go in and delete the element we want to delete!
-        if (listOfOneRemovedElement.length !== 1) {
-            throw "unexpected problem: we expected exactly one circle to be removed from the allDrawnCricles list, but some other number of circles were removed. number removed: " + listOfOneRemovedElement.length
-        }
-        // now we should remove the circle from the two.js canvas as well
-        listOfOneRemovedElement[0].remove()
-    }
-
     /**
      * remove all circles from the display.
      * this has _no effect_ on the underlying sequencer data structure, it only removes circles _from the GUI display_.
@@ -749,7 +730,7 @@ window.onload = () => {
     function removeAllCirclesFromDisplay() {
         let allDrawnCirclesCopy = [...gui.allDrawnCircles] // make a copy of the drawn circles list so we can iterate through its circles while also removing the items from the original list
         for (let note of allDrawnCirclesCopy) {
-            removeCircleFromDisplay(note.guiData.label)
+            gui.removeCircleFromDisplay(note.guiData.label)
         }
     }
 

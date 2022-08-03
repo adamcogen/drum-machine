@@ -898,6 +898,29 @@ class DrumMachineGui {
     }
 
     /**
+     * logic for removing circles from the GUI display
+     */
+
+    // remove a circle from the 'allDrawnCircles' list and two.js canvas, based on its label.
+    // this is meant to be used during deletion of notes from the sequencer, with the idea being that deleting
+    // them from this list and maybe from a few other places will clear up clutter, and hopefully allow the 
+    // deleted circles to get garbage-collected.
+    // note that this method _only_ deletes circles from the _display_, not from the underlying sequencer data
+    // structure, that needs to be handled somewhere else separately.
+    removeCircleFromDisplay(label){
+        let indexOfListItemToRemove = this.allDrawnCircles.findIndex(elementFromList => elementFromList.guiData.label === label);
+        if (indexOfListItemToRemove === -1) { //  we don't expect to reach this case, where a circle with the given label isn't found in the list
+            throw "unexpected problem: couldn't find the circle with the given label in the list of all drawn circles, when trying to delete it. the given label was: " + label + ". full list (labels only): " + this.allDrawnCircles.map((item) => item.guiData.label) + "."
+        }
+        let listOfOneRemovedElement = this.allDrawnCircles.splice(indexOfListItemToRemove, 1) // this should go in and delete the element we want to delete!
+        if (listOfOneRemovedElement.length !== 1) {
+            throw "unexpected problem: we expected exactly one circle to be removed from the allDrawnCricles list, but some other number of circles were removed. number removed: " + listOfOneRemovedElement.length
+        }
+        // now we should remove the circle from the two.js canvas as well
+        listOfOneRemovedElement[0].remove()
+    }
+
+    /**
      * general helper methods
      */
 
