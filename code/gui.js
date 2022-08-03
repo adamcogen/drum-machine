@@ -898,7 +898,7 @@ class DrumMachineGui {
     }
 
     /**
-     * logic for removing circles from the GUI display
+     * logic to remove circles from the GUI display
      */
 
     // remove a circle from the 'allDrawnCircles' list and two.js canvas, based on its label.
@@ -918,6 +918,17 @@ class DrumMachineGui {
         }
         // now we should remove the circle from the two.js canvas as well
         listOfOneRemovedElement[0].remove()
+    }
+
+    /**
+     * remove all circles from the display.
+     * this has _no effect_ on the underlying sequencer data structure, it only removes circles _from the GUI display_.
+     */
+    removeAllCirclesFromDisplay() {
+        let allDrawnCirclesCopy = [...this.allDrawnCircles] // make a copy of the drawn circles list so we can iterate through its circles while also removing the items from the original list
+        for (let note of allDrawnCirclesCopy) {
+            this.removeCircleFromDisplay(note.guiData.label)
+        }
     }
 
     /**

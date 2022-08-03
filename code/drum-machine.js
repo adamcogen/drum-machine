@@ -723,17 +723,6 @@ window.onload = () => {
         gui.allDrawnCircles.push(circle)
     }
 
-    /**
-     * remove all circles from the display.
-     * this has _no effect_ on the underlying sequencer data structure, it only removes circles _from the GUI display_.
-     */
-    function removeAllCirclesFromDisplay() {
-        let allDrawnCirclesCopy = [...gui.allDrawnCircles] // make a copy of the drawn circles list so we can iterate through its circles while also removing the items from the original list
-        for (let note of allDrawnCirclesCopy) {
-            gui.removeCircleFromDisplay(note.guiData.label)
-        }
-    }
-
     function addClearAllNotesButtonActionListeners() {
         // remove event listeners to prevent duplicates
         gui.components.shapes.clearAllNotesButtonShape._renderer.elem.removeEventListener('click', clearAllNotesButtonClickHandler)
@@ -869,7 +858,7 @@ window.onload = () => {
     }
 
     function resetNotesAndLinesDisplayForAllRows() {
-        removeAllCirclesFromDisplay()
+        gui.removeAllCirclesFromDisplay()
         for (list of gui.components.shapes.subdivisionLineLists) {
             for (line of list) {
                 line.remove();
@@ -927,7 +916,7 @@ window.onload = () => {
         // the same applies for the subdivion lines and the sequencer row line as well,
         // since we want those to be in front of the reference lines, which we are
         // redrawing now.
-        removeAllCirclesFromDisplay()
+        gui.removeAllCirclesFromDisplay()
         // next we will delete all lines for the changed row
         gui.removeSubdivisionLinesForRow(rowIndex)
         gui.removeReferenceLinesForRow(rowIndex)
