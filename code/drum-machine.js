@@ -63,7 +63,7 @@ window.onload = () => {
     initializeSimpleDefaultSequencerPattern()
 
     gui.drawAllNoteBankCircles()
-    drawNotesToReflectSequencerCurrentState()
+    gui.drawNotesToReflectSequencerCurrentState()
 
     refreshWindowMouseMoveEvent();
 
@@ -630,23 +630,6 @@ window.onload = () => {
         })();
     }
 
-    function drawNotesToReflectSequencerCurrentState(){
-        // draw all notes that are in the sequencer before the sequencer starts (aka the notes of the initial example drum sequence)
-        for(let sequencerRowIndex = 0; sequencerRowIndex < sequencer.numberOfRows; sequencerRowIndex++) {
-            let noteToDraw = sequencer.rows[sequencerRowIndex]._notesList.head // we are reading notes lists directly so that we can draw them, but making no changes to them
-            while (noteToDraw !== null) {
-                let xPosition = gui.configurations.sequencer.left + (gui.configurations.sequencer.width * (noteToDraw.priority / sequencer.loopLengthInMillis))
-                let yPosition = gui.configurations.sequencer.top + (sequencerRowIndex * gui.configurations.sequencer.spaceBetweenRows)
-                let sampleName = noteToDraw.data.sampleName
-                let row = sequencerRowIndex
-                let label = noteToDraw.label
-                let beat = noteToDraw.data.beat
-                gui.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat)
-                noteToDraw = noteToDraw.next
-            }
-        }
-    }
-
     function addClearAllNotesButtonActionListeners() {
         // remove event listeners to prevent duplicates
         gui.components.shapes.clearAllNotesButtonShape._renderer.elem.removeEventListener('click', clearAllNotesButtonClickHandler)
@@ -820,7 +803,7 @@ window.onload = () => {
         gui.components.shapes.sequencerRowHandles = gui.initializeSequencerRowHandles();
         gui.components.shapes.timeTrackingLines = gui.initializeTimeTrackingLines();
         gui.drawAllNoteBankCircles();
-        drawNotesToReflectSequencerCurrentState();
+        gui.drawNotesToReflectSequencerCurrentState();
     }
 
     function resetNotesAndLinesDisplayForRow(rowIndex) {
@@ -853,6 +836,6 @@ window.onload = () => {
         gui.components.shapes.timeTrackingLines[rowIndex] = gui.initializeTimeTrackingLineForRow(rowIndex)
         // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
         gui.drawAllNoteBankCircles()
-        drawNotesToReflectSequencerCurrentState()
+        gui.drawNotesToReflectSequencerCurrentState()
     }
 }

@@ -1011,6 +1011,23 @@ class DrumMachineGui {
         }
     }
 
+    drawNotesToReflectSequencerCurrentState(){
+        // draw all notes that are in the sequencer before the sequencer starts (aka the notes of the initial example drum sequence)
+        for(let sequencerRowIndex = 0; sequencerRowIndex < this.sequencer.numberOfRows; sequencerRowIndex++) {
+            let noteToDraw = this.sequencer.rows[sequencerRowIndex]._notesList.head // we are reading notes lists directly so that we can draw them, but making no changes to them
+            while (noteToDraw !== null) {
+                let xPosition = this.configurations.sequencer.left + (this.configurations.sequencer.width * (noteToDraw.priority / this.sequencer.loopLengthInMillis))
+                let yPosition = this.configurations.sequencer.top + (sequencerRowIndex * this.configurations.sequencer.spaceBetweenRows)
+                let sampleName = noteToDraw.data.sampleName
+                let row = sequencerRowIndex
+                let label = noteToDraw.label
+                let beat = noteToDraw.data.beat
+                this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat)
+                noteToDraw = noteToDraw.next
+            }
+        }
+    }
+
     /**
      * general helper methods
      */

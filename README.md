@@ -48,5 +48,5 @@ For Windows, you should be able to just run the commands that are in these .sh f
 * `code/` contains all JavaScript source code
   * `drum-machine.js` main source code file from which everything else is instantiated
   * `lib/` contains all third-party libraries used in the project
-* `assets/` contains icon set created for drum machine buttons, etc.
+* `assets/` contains icon set created for the drum machine GUI
 * `sounds/` contains sound files used by the drum machine
