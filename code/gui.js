@@ -897,7 +897,7 @@ class DrumMachineGui {
         this.components.domElements.images.restartIcon.addEventListener('click', this.eventHandlerFunctions.restartSequencer)
     }
 
-    // search for comment "a general note about the 'self' paramater" within this file for into on its use here
+    // search for comment "a general note about the 'self' paramater" within this file for info on its use here
     restartSequencerButtonClickHandler(self) {
         self.lastButtonClickTimeTrackers.restartSequencer.lastClickTime = self.sequencer.currentTime
         self.components.shapes.restartSequencerButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
@@ -907,6 +907,30 @@ class DrumMachineGui {
     /**
      * 'clear notes for sequencer row' logic
      */
+
+    addClearNotesForRowButtonsActionListeners() {
+        for(let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            this.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex] = {
+                lastClickTime: Number.MIN_SAFE_INTEGER,
+                shape: this.components.shapes.clearNotesForRowButtonShapes[rowIndex],
+            }
+            if (this.eventHandlerFunctions["clearNotesForRow" + rowIndex] !== null && this.eventHandlerFunctions["clearNotesForRow" + rowIndex] !== undefined) {
+                // remove event listeners if they've already been added to avoid duplicates
+                this.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.removeEventListener('click', this.eventHandlerFunctions["clearNotesForRow" + rowIndex] );
+            }
+            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+            this.eventHandlerFunctions["clearNotesForRow" + rowIndex] = () => this.clearRowButtonClickHandler(this, rowIndex);
+            this.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.addEventListener('click', this.eventHandlerFunctions["clearNotesForRow" + rowIndex] );
+        }
+    }
+
+    // search for comment "a general note about the 'self' paramater" within this file for info on its use here
+    clearRowButtonClickHandler(self, rowIndex) {
+        self.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = self.sequencer.currentTime
+        self.components.shapes.clearNotesForRowButtonShapes[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
+        self.clearNotesForRow(rowIndex);
+        self.resetNotesAndLinesDisplayForRow(rowIndex);
+    }
 
     clearNotesForRow(rowIndex) { 
         this.sequencer.clearRow(rowIndex)

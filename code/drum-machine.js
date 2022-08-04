@@ -441,10 +441,10 @@ window.onload = () => {
             clearRowIcon.style.top = "" + (gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows) + gui.configurations.clearRowButtons.topPaddingPerRow) + "px"
             // add event listeners to our icon
             clearRowIcon.removeEventListener('click', (event) => {
-                clearRowButtonClickHandler(event, rowIndex)
+                gui.clearRowButtonClickHandler(gui, rowIndex)
             });
             clearRowIcon.addEventListener('click', (event) => {
-                clearRowButtonClickHandler(event, rowIndex)
+                gui.clearRowButtonClickHandler(gui, rowIndex)
             });
             // add the copy to the dom and to our list that tracks these icons
             gui.components.domElements.iconLists.clearRowIcons.push(clearRowIcon)
@@ -646,28 +646,6 @@ window.onload = () => {
         redrawSequencer();
     }
 
-    function addClearNotesForRowButtonsActionListeners() {
-        for(let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
-            gui.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex] = {
-                lastClickTime: Number.MIN_SAFE_INTEGER,
-                shape: gui.components.shapes.clearNotesForRowButtonShapes[rowIndex],
-            }
-            gui.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.removeEventListener('click', (event) => {
-                clearRowButtonClickHandler(event, rowIndex)
-            });
-            gui.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.addEventListener('click', (event) => {
-                clearRowButtonClickHandler(event, rowIndex)
-            });
-        }
-    }
-
-    function clearRowButtonClickHandler(event, rowIndex) {
-        gui.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = sequencer.currentTime
-        gui.components.shapes.clearNotesForRowButtonShapes[rowIndex].fill = gui.configurations.buttonBehavior.clickedButtonColor
-        gui.clearNotesForRow(rowIndex);
-        gui.resetNotesAndLinesDisplayForRow(rowIndex);
-    }
-
     function initializeAddRowButtonActionListener() {
         gui.lastButtonClickTimeTrackers.addRow.shape = gui.components.shapes.addRowButtonShape;
         // remove any existing click listeners to prevent duplicates
@@ -711,7 +689,7 @@ window.onload = () => {
         // initialize action listeners
         initializeSubdivisionTextInputsActionListeners();
         gui.initializeReferenceLineTextInputsActionListeners();
-        addClearNotesForRowButtonsActionListeners();
+        gui.addClearNotesForRowButtonsActionListeners();
         initializeQuantizationCheckboxActionListeners();
         initializeAddRowButtonActionListener();
         gui.initializeSequencerRowHandlesActionListeners();
