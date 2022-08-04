@@ -665,7 +665,7 @@ window.onload = () => {
         gui.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = sequencer.currentTime
         gui.components.shapes.clearNotesForRowButtonShapes[rowIndex].fill = gui.configurations.buttonBehavior.clickedButtonColor
         gui.clearNotesForRow(rowIndex);
-        resetNotesAndLinesDisplayForRow(rowIndex);
+        gui.resetNotesAndLinesDisplayForRow(rowIndex);
     }
 
     function initializeAddRowButtonActionListener() {
@@ -758,7 +758,7 @@ window.onload = () => {
                 }
                 referenceLineTextInput.value = newTextInputValue
                 gui.updateNumberOfReferenceLinesForRow(newTextInputValue, rowIndex)
-                resetNotesAndLinesDisplayForRow(rowIndex)
+                gui.resetNotesAndLinesDisplayForRow(rowIndex)
             })
             gui.addDefaultKeypressEventListenerToTextInput(referenceLineTextInput, false)
         }
@@ -804,38 +804,5 @@ window.onload = () => {
         gui.components.shapes.timeTrackingLines = gui.initializeTimeTrackingLines();
         gui.drawAllNoteBankCircles();
         gui.drawNotesToReflectSequencerCurrentState();
-    }
-
-    function resetNotesAndLinesDisplayForRow(rowIndex) {
-        /**
-         * found a problem with deleting only a single row. shapes are layered on-screen in the order they are 
-         * drawn (newer on top), so re-drawing only one row including its subdivision lines means if we move a 
-         * circle from another line onto the row with newly drawn subdivision lines, the note will show up 
-         * behind the subdivision lines. it isn't simple to change layer ordering in two.js, so instead of
-         * re-drawing single rows, we will redraw the entire sequencer's notes whenever a big change 
-         * happens, since it is simpler. also since notes are scheduled ahead of time, the extra computation
-         * shouldn't affect the timing of the drums at all.
-         */
-        // first delete all existing notes from the display for the changed row,
-        // because now they may be out of date or some of them may have been deleted,
-        // and the simplest thing to do may just be to delete them all then redraw
-        // the current state of the sequencer for the changed row.
-        // the same applies for the subdivion lines and the sequencer row line as well,
-        // since we want those to be in front of the reference lines, which we are
-        // redrawing now.
-        gui.removeAllCirclesFromDisplay()
-        // next we will delete all lines for the changed row
-        gui.removeSubdivisionLinesForRow(rowIndex)
-        gui.removeReferenceLinesForRow(rowIndex)
-        gui.removeSequencerRowLine(rowIndex)
-        gui.removeTimeTrackingLine(rowIndex)
-        // then we will draw all the lines for the changed row, starting with reference lines since they need to be the bottom layer
-        gui.components.shapes.referenceLineLists[rowIndex] = gui.initializeReferenceLinesForRow(rowIndex)
-        gui.components.shapes.subdivisionLineLists[rowIndex] = gui.initializeSubdivisionLinesForRow(rowIndex)
-        gui.components.shapes.sequencerRowLines[rowIndex] = gui.initializeSequencerRowLine(rowIndex)
-        gui.components.shapes.timeTrackingLines[rowIndex] = gui.initializeTimeTrackingLineForRow(rowIndex)
-        // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
-        gui.drawAllNoteBankCircles()
-        gui.drawNotesToReflectSequencerCurrentState()
     }
 }

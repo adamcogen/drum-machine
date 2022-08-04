@@ -1029,6 +1029,43 @@ class DrumMachineGui {
     }
 
     /**
+     * 'redraw sequencer' logic
+     */
+
+    resetNotesAndLinesDisplayForRow(rowIndex) {
+        /**
+         * found a problem with deleting only a single row. shapes are layered on-screen in the order they are 
+         * drawn (newer on top), so re-drawing only one row including its subdivision lines means if we move a 
+         * circle from another line onto the row with newly drawn subdivision lines, the note will show up 
+         * behind the subdivision lines. it isn't simple to change layer ordering in two.js, so instead of
+         * re-drawing single rows, we will redraw the entire sequencer's notes whenever a big change 
+         * happens, since it is simpler. also since notes are scheduled ahead of time, the extra computation
+         * shouldn't affect the timing of the drums at all.
+         */
+        // first delete all existing notes from the display for the changed row,
+        // because now they may be out of date or some of them may have been deleted,
+        // and the simplest thing to do may just be to delete them all then redraw
+        // the current state of the sequencer for the changed row.
+        // the same applies for the subdivion lines and the sequencer row line as well,
+        // since we want those to be in front of the reference lines, which we are
+        // redrawing now.
+        this.removeAllCirclesFromDisplay()
+        // next we will delete all lines for the changed row
+        this.removeSubdivisionLinesForRow(rowIndex)
+        this.removeReferenceLinesForRow(rowIndex)
+        this.removeSequencerRowLine(rowIndex)
+        this.removeTimeTrackingLine(rowIndex)
+        // then we will draw all the lines for the changed row, starting with reference lines since they need to be the bottom layer
+        this.components.shapes.referenceLineLists[rowIndex] = this.initializeReferenceLinesForRow(rowIndex)
+        this.components.shapes.subdivisionLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex)
+        this.components.shapes.sequencerRowLines[rowIndex] = this.initializeSequencerRowLine(rowIndex)
+        this.components.shapes.timeTrackingLines[rowIndex] = this.initializeTimeTrackingLineForRow(rowIndex)
+        // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
+        this.drawAllNoteBankCircles()
+        this.drawNotesToReflectSequencerCurrentState()
+    }
+
+    /**
      * general helper methods
      */
 
