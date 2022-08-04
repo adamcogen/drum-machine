@@ -494,13 +494,15 @@ window.onload = () => {
             unlockedIcon.style.height = "" + gui.configurations.quantizationButtons.icon.height + "px"
             unlockedIcon.style.left = "" + lockIconsHorizontalPosition + "px"
             unlockedIcon.style.top = "" + lockIconsVerticalPosition + "px"
-            // add event listeners
-            lockedIcon.removeEventListener('click', () => {
-                setQuantizationButtonClickHandler(rowIndex, false)
-            });
-            lockedIcon.addEventListener('click', () => {
-                setQuantizationButtonClickHandler(rowIndex, false)
-            });
+            // add event listeners for 'locked icon'
+            if (gui.eventHandlerFunctions["lockedIcon" + rowIndex] !== null && gui.eventHandlerFunctions["lockedIcon" + rowIndex] !== undefined) {
+                // remove event listeners if they've already been added to avoid duplicates
+                lockedIcon.removeEventListener('click', gui.eventHandlerFunctions["lockedIcon" + rowIndex])
+            }
+            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+            gui.eventHandlerFunctions["lockedIcon" + rowIndex] = () => setQuantizationButtonClickHandler(rowIndex, false);
+            lockedIcon.addEventListener('click', gui.eventHandlerFunctions["lockedIcon" + rowIndex])
+            // add event listeners for 'unlocked icon'
             unlockedIcon.removeEventListener('click', () => {
                 setQuantizationButtonClickHandler(rowIndex, true)
             });
