@@ -981,6 +981,36 @@ class DrumMachineGui {
         this.allDrawnCircles.push(circle)
     }
 
+    // draw a new circle in the note bank based on its sampleName.
+    // this is called when initializing the starting set of cirlces (i.e. notes) in the 
+    // notes bank, and also called when a note from the note bank is placed on a row and 
+    // we need to refill the note bank for the note that was just placed.
+    drawNoteBankCircleForSample(sampleName) {
+        // figure out which index in the 'sampleNameList' the given sample name is. this will be used to determine physical positioning of the circle within the sample bank
+        let indexOfSampleInNoteBank = this.sampleNameList.findIndex(elementFromList => elementFromList === sampleName);
+        if (indexOfSampleInNoteBank === -1) { // we don't expect to reach this case, where the given sample isn't found in the sample names list
+            throw "unexpected problem: couldn't find the given sample in the sample list when trying to add it to the note bank. was looking for sample name: " + sampleName + ". expected sample name to be one of: " + this.sampleNameList + "."
+        }
+        let xPosition = this.configurations.sampleBank.left + this.configurations.sampleBank.borderPadding + (this.configurations.notes.unplayedCircleRadius / 2)
+        let yPosition = this.configurations.sampleBank.top + this.configurations.sampleBank.borderPadding + (indexOfSampleInNoteBank * this.configurations.notes.unplayedCircleRadius) + (indexOfSampleInNoteBank * this.configurations.sampleBank.spaceBetweenNotes)
+        let row = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK // for cirlces on the note bank, the circle is not in a real row yet, so use -2 as a placeholder row number
+        /**
+         * the top note in the note bank will have label '-1', next one down will be '-2', etc.
+         * these negative number labels will still be unique to a particular circle in the note bank,
+         * and these IDs will be replaced with a real, normal label (a generated ID) once each note
+         * bank circle is taken fom the note bank and placed onto a real row.
+         */
+        let label = (indexOfSampleInNoteBank + 1) * -1 // see block comment above for info about '-1' here
+        this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, Sequencer.NOTE_IS_NOT_QUANTIZED)
+    }
+
+    drawAllNoteBankCircles(){
+        // draw the circles (i.e. notes) that are in the note bank
+        for (let noteBankSampleName of this.sampleNameList) {
+            this.drawNoteBankCircleForSample(noteBankSampleName)
+        }
+    }
+
     /**
      * general helper methods
      */
