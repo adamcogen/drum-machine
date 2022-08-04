@@ -914,13 +914,13 @@ class DrumMachineGui {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
                 shape: this.components.shapes.clearNotesForRowButtonShapes[rowIndex],
             }
-            if (this.eventHandlerFunctions["clearNotesForRow" + rowIndex] !== null && this.eventHandlerFunctions["clearNotesForRow" + rowIndex] !== undefined) {
+            if (this.eventHandlerFunctions["clearNotesForRowShape" + rowIndex] !== null && this.eventHandlerFunctions["clearNotesForRowShape" + rowIndex] !== undefined) {
                 // remove event listeners if they've already been added to avoid duplicates
-                this.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.removeEventListener('click', this.eventHandlerFunctions["clearNotesForRow" + rowIndex] );
+                this.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.removeEventListener('click', this.eventHandlerFunctions["clearNotesForRowShape" + rowIndex] );
             }
             // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-            this.eventHandlerFunctions["clearNotesForRow" + rowIndex] = () => this.clearRowButtonClickHandler(this, rowIndex);
-            this.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.addEventListener('click', this.eventHandlerFunctions["clearNotesForRow" + rowIndex] );
+            this.eventHandlerFunctions["clearNotesForRowShape" + rowIndex] = () => this.clearRowButtonClickHandler(this, rowIndex);
+            this.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.addEventListener('click', this.eventHandlerFunctions["clearNotesForRowShape" + rowIndex] );
         }
     }
 

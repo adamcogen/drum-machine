@@ -446,12 +446,13 @@ window.onload = () => {
             clearRowIcon.style.left = "" + (gui.configurations.sequencer.left + gui.configurations.sequencer.width + gui.configurations.clearRowButtons.leftPaddingPerRow) + "px"
             clearRowIcon.style.top = "" + (gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows) + gui.configurations.clearRowButtons.topPaddingPerRow) + "px"
             // add event listeners to our icon
-            clearRowIcon.removeEventListener('click', (event) => {
-                gui.clearRowButtonClickHandler(gui, rowIndex)
-            });
-            clearRowIcon.addEventListener('click', (event) => {
-                gui.clearRowButtonClickHandler(gui, rowIndex)
-            });
+            if (gui.eventHandlerFunctions["clearNotesForRowIcon" + rowIndex] !== null && gui.eventHandlerFunctions["clearNotesForRowIcon" + rowIndex] !== undefined) {
+                // remove event listeners if they've already been added to avoid duplicates
+                clearRowIcon.removeEventListener('click', gui.eventHandlerFunctions["clearNotesForRowIcon" + rowIndex] );
+            }
+            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+            gui.eventHandlerFunctions["clearNotesForRowIcon" + rowIndex] = () => gui.clearRowButtonClickHandler(gui, rowIndex);
+            clearRowIcon.addEventListener('click', gui.eventHandlerFunctions["clearNotesForRowIcon" + rowIndex]);
             // add the copy to the dom and to our list that tracks these icons
             gui.components.domElements.iconLists.clearRowIcons.push(clearRowIcon)
             document.body.appendChild(clearRowIcon)
