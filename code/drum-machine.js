@@ -503,12 +503,13 @@ window.onload = () => {
             gui.eventHandlerFunctions["lockedIcon" + rowIndex] = () => setQuantizationButtonClickHandler(rowIndex, false);
             lockedIcon.addEventListener('click', gui.eventHandlerFunctions["lockedIcon" + rowIndex])
             // add event listeners for 'unlocked icon'
-            unlockedIcon.removeEventListener('click', () => {
-                setQuantizationButtonClickHandler(rowIndex, true)
-            });
-            unlockedIcon.addEventListener('click', () => {
-                setQuantizationButtonClickHandler(rowIndex, true)
-            });
+            if (gui.eventHandlerFunctions["unlockedIcon" + rowIndex] !== null && gui.eventHandlerFunctions["unlockedIcon" + rowIndex] !== undefined) {
+                // remove event listeners if they've already been added to avoid duplicates
+                unlockedIcon.removeEventListener('click', gui.eventHandlerFunctions["unlockedIcon" + rowIndex])
+            }
+            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+            gui.eventHandlerFunctions["unlockedIcon" + rowIndex] = () => setQuantizationButtonClickHandler(rowIndex, true);
+            unlockedIcon.addEventListener('click', gui.eventHandlerFunctions["unlockedIcon" + rowIndex])
             // add the icons to the dom and to our list that tracks these icons
             gui.components.domElements.iconLists.lockedIcons.push(lockedIcon)
             gui.components.domElements.iconLists.unlockedIcons.push(unlockedIcon)
