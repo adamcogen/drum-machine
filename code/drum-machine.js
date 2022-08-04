@@ -266,13 +266,14 @@ window.onload = () => {
             window.removeEventListener('mouseup', gui.eventHandlerFunctions.windowMouseUp);
         }
         // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        gui.eventHandlerFunctions.windowMouseUp = (event) => windowMouseUpEventHandler(event);
+        gui.eventHandlerFunctions.windowMouseUp = (event) => windowMouseUpEventHandler(gui, event);
         window.addEventListener('mouseup', gui.eventHandlerFunctions.windowMouseUp);
     }
 
-    function windowMouseUpEventHandler(event) {
+    // search for comment "a general note about the 'self' paramater" within gui.js file for info on its use here
+    function windowMouseUpEventHandler(self, event) {
         // handle letting go of notes. lifting your mouse anywhere means you're no longer click-dragging
-        if (gui.circleBeingMoved !== null) {
+        if (self.circleBeingMoved !== null) {
             /**
              * this is the workflow for determining where to put a circle that we were click-dragging once we release the mouse.
              * how this workflow works (todo: double check that this is all correct):
@@ -304,73 +305,73 @@ window.onload = () => {
              *         (since there's no real reason to actually remove anything when "removing" a note from the note bank. instead we just 
              *         create a new node for the sequencer's note list, and place that onto the row it's being added to).
              */
-            gui.circleBeingMoved.stroke = "transparent"
+            self.circleBeingMoved.stroke = "transparent"
             // note down starting state, current state.
-            let circleNewXPosition = gui.circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle.
-            let circleNewYPosition = gui.circleBeingMovedStartingPositionY // if the circle is not colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
-            let circleNewBeatNumber = gui.circleBeingMovedOldBeatNumber
-            gui.adjustEventCoordinates(event)
+            let circleNewXPosition = self.circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle.
+            let circleNewYPosition = self.circleBeingMovedStartingPositionY // if the circle is not colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
+            let circleNewBeatNumber = self.circleBeingMovedOldBeatNumber
+            self.adjustEventCoordinates(event)
             let mouseX = event.pageX
             let mouseY = event.pageY
             // check for collisions with things (sequencer rows, the trash bin, etc.)and make adjustments accordingly, so that everything will be handled as explained in the block comment above
-            if (gui.circleBeingMovedNewRow >= 0) { // this means the note is being put onto a new sequencer row
-                circleNewXPosition = gui.circleBeingMoved.translation.x // the note should have already been 'snapped' to its new row in the 'mousemove' event, so just commit to that new location
-                circleNewYPosition = gui.circleBeingMoved.translation.y
-                circleNewBeatNumber = gui.circleBeingMovedNewBeatNumber
-            } else if (gui.circleBeingMovedNewRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW) { // if the note isn't being put onto any row, just put it back wherever it came from
-                circleNewXPosition = gui.circleBeingMovedStartingPositionX
-                circleNewYPosition = gui.circleBeingMovedStartingPositionY
-                gui.circleBeingMovedNewRow = gui.circleBeingMovedOldRow // replace the 'has no row' constant value with the old row number that this was taken from (i.e. just put it back where it came from!)
-                circleNewBeatNumber = gui.circleBeingMovedOldBeatNumber
-            } else if (gui.circleBeingMovedNewRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN) { // check if the note is being placed in the trash bin. if so, delete the circle and its associated node if there is one
-                if (gui.circleBeingMovedOldRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK) { // if the note being thrown away came from the note bank, just put it back in the note bank.
-                    gui.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK
+            if (self.circleBeingMovedNewRow >= 0) { // this means the note is being put onto a new sequencer row
+                circleNewXPosition = self.circleBeingMoved.translation.x // the note should have already been 'snapped' to its new row in the 'mousemove' event, so just commit to that new location
+                circleNewYPosition = self.circleBeingMoved.translation.y
+                circleNewBeatNumber = self.circleBeingMovedNewBeatNumber
+            } else if (self.circleBeingMovedNewRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW) { // if the note isn't being put onto any row, just put it back wherever it came from
+                circleNewXPosition = self.circleBeingMovedStartingPositionX
+                circleNewYPosition = self.circleBeingMovedStartingPositionY
+                self.circleBeingMovedNewRow = self.circleBeingMovedOldRow // replace the 'has no row' constant value with the old row number that this was taken from (i.e. just put it back where it came from!)
+                circleNewBeatNumber = self.circleBeingMovedOldBeatNumber
+            } else if (self.circleBeingMovedNewRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN) { // check if the note is being placed in the trash bin. if so, delete the circle and its associated node if there is one
+                if (self.circleBeingMovedOldRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK) { // if the note being thrown away came from the note bank, just put it back in the note bank.
+                    self.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK
                 } else { // only bother throwing away things that came from a row (throwing away note bank notes is pointless)
-                    gui.removeCircleFromDisplay(gui.circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles and from the two.js canvas
+                    self.removeCircleFromDisplay(self.circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles and from the two.js canvas
                 }
             }
             // we are done checking for collisions with things and updating 'old row' and 'new row' values, so now move on to updating the sequencer
-            gui.circleBeingMoved.translation.x = circleNewXPosition
-            gui.circleBeingMoved.translation.y = circleNewYPosition
-            gui.circleBeingMoved.guiData.row = gui.circleBeingMovedNewRow
+            self.circleBeingMoved.translation.x = circleNewXPosition
+            self.circleBeingMoved.translation.y = circleNewYPosition
+            self.circleBeingMoved.guiData.row = self.circleBeingMovedNewRow
             let node = null
             // remove the moved note from its old sequencer row. todo: consider changing this logic to just update node's priority if it isn't switching rows.)
-            if (gui.circleBeingMovedOldRow >= 0) { // -2 is the 'row' given to notes that are in the note bank. if old row is < 0, we don't need to remove it from any sequencer row.
-                node = gui.sequencer.rows[gui.circleBeingMovedOldRow].removeNode(gui.circleBeingMoved.guiData.label)
+            if (self.circleBeingMovedOldRow >= 0) { // -2 is the 'row' given to notes that are in the note bank. if old row is < 0, we don't need to remove it from any sequencer row.
+                node = self.sequencer.rows[self.circleBeingMovedOldRow].removeNode(self.circleBeingMoved.guiData.label)
             }
             // add the moved note to its new sequencer row.
-            if (gui.circleBeingMovedNewRow >= 0) {
+            if (self.circleBeingMovedNewRow >= 0) {
                 if (node === null) { // this should just mean the circle was pulled from the note bank, so we need to create a node for it
-                    if (gui.circleBeingMovedOldRow >= 0) { // should be an unreachable case, just checking for safety
-                        throw "unexpected case: node was null but 'circleBeingMovedOldRow' was not < 0. circleBeingMovedOldRow: " + gui.circleBeingMovedOldRow + ". node: " + node + "."
+                    if (self.circleBeingMovedOldRow >= 0) { // should be an unreachable case, just checking for safety
+                        throw "unexpected case: node was null but 'circleBeingMovedOldRow' was not < 0. circleBeingMovedOldRow: " + self.circleBeingMovedOldRow + ". node: " + node + "."
                     }
                     // create a new node for the sample that this note bank circle was for. note bank circles have a sample in their GUI data, 
                     // but no real node that can be added to the drum sequencer's data structure, so we need to create one.
-                    node = gui.sampleBankNodeGenerator.createNewNodeForSample(gui.circleBeingMoved.guiData.sampleName)
-                    gui.circleBeingMoved.guiData.label = node.label // the newly generated node will also have a real generated ID (label), use that
-                    gui.drawNoteBankCircleForSample(gui.circleBeingMoved.guiData.sampleName) // if the note was taken from the sound bank, refill the sound bank
+                    node = self.sampleBankNodeGenerator.createNewNodeForSample(self.circleBeingMoved.guiData.sampleName)
+                    self.circleBeingMoved.guiData.label = node.label // the newly generated node will also have a real generated ID (label), use that
+                    self.drawNoteBankCircleForSample(self.circleBeingMoved.guiData.sampleName) // if the note was taken from the sound bank, refill the sound bank
                 }
                 // convert the note's new y position into a sequencer timestamp, and set the node's 'priority' to its new timestamp
-                let newNodeTimestampMillis = sequencer.loopLengthInMillis * ((circleNewXPosition - gui.configurations.sequencer.left) / gui.configurations.sequencer.width)
+                let newNodeTimestampMillis = sequencer.loopLengthInMillis * ((circleNewXPosition - self.configurations.sequencer.left) / self.configurations.sequencer.width)
                 node.priority = newNodeTimestampMillis
                 // add the moved note to its new sequencer row
-                gui.sequencer.rows[gui.circleBeingMovedNewRow].insertNode(node, gui.circleBeingMoved.guiData.label)
+                self.sequencer.rows[self.circleBeingMovedNewRow].insertNode(node, self.circleBeingMoved.guiData.label)
                 node.data.lastScheduledOnIteration = Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED // mark note as 'not played yet on current iteration'
                 node.data.beat = circleNewBeatNumber
-                gui.circleBeingMoved.guiData.beat = circleNewBeatNumber
+                self.circleBeingMoved.guiData.beat = circleNewBeatNumber
             }
         }
-        if (gui.selectedRowIndex !== null) {
+        if (self.selectedRowIndex !== null) {
             // un-selecting the row will be handled in 'redraw', as long as we set selected row index to null here
-            if (gui.rowSelecionTracker.removeRow) {
-                gui.sequencer.removeRowAtIndex(gui.selectedRowIndex);
+            if (self.rowSelecionTracker.removeRow) {
+                self.sequencer.removeRowAtIndex(self.selectedRowIndex);
             }
-            gui.selectedRowIndex = null
+            self.selectedRowIndex = null
             redrawSequencer();
         }
-        gui.circleBeingMoved = null
-        gui.setNoteTrashBinVisibility(false)
-        gui.selectedRowIndex = null
+        self.circleBeingMoved = null
+        self.setNoteTrashBinVisibility(false)
+        self.selectedRowIndex = null
     }
 
     // making a cleaner (less redundant) way to call 'loadSample()', which matches what we need for the drum sequencer.
