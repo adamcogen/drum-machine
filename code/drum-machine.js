@@ -30,7 +30,7 @@ window.onload = () => {
     samples[TOM] = new SequencerNoteType(null, '#1b617a')
     samples[BASS_DRUM] = new SequencerNoteType(null, '#5b3787')
     // load all of the drum samples
-    for (sampleName of sampleNameList) {
+    for (let sampleName of sampleNameList) {
         loadDrumSample(SOUND_FILES_PATH, sampleName, WAV_EXTENSION)
     }
 
@@ -84,8 +84,8 @@ window.onload = () => {
         // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
         if (self.circleBeingMoved !== null) { // handle mousemove events when a note is selected
             self.adjustEventCoordinates(event)
-            mouseX = event.pageX
-            mouseY = event.pageY
+            let mouseX = event.pageX
+            let mouseY = event.pageY
             // start with default note movement behavior, for when the note doesn't fall within range of the trash bin, a sequencer line, etc.
             self.circleBeingMoved.translation.x = mouseX
             self.circleBeingMoved.translation.y = mouseY
@@ -127,13 +127,13 @@ window.onload = () => {
                 // if we get here, we know the circle is within the vertical and horizontal boundaries of the sequencer.
                 // next we want to do a more fine-grained calculation, for whether it is in range to be placed onto one of the sequencer lines.
                 for(let rowIndex = 0; rowIndex < self.sequencer.numberOfRows; rowIndex++) {
-                    rowActualVerticalLocation = self.configurations.sequencer.top + (rowIndex * self.configurations.sequencer.spaceBetweenRows)
-                    rowActualLeftBound = self.configurations.sequencer.left
-                    rowActualRightBound = self.configurations.sequencer.left + self.configurations.sequencer.width
-                    rowTopLimit = rowActualVerticalLocation - self.configurations.mouseEvents.notePlacementPadding
-                    rowBottomLimit = rowActualVerticalLocation + self.configurations.mouseEvents.notePlacementPadding
-                    rowLeftLimit = rowActualLeftBound - self.configurations.mouseEvents.notePlacementPadding
-                    rowRightLimit = rowActualRightBound + self.configurations.mouseEvents.notePlacementPadding
+                    let rowActualVerticalLocation = self.configurations.sequencer.top + (rowIndex * self.configurations.sequencer.spaceBetweenRows)
+                    let rowActualLeftBound = self.configurations.sequencer.left
+                    let rowActualRightBound = self.configurations.sequencer.left + self.configurations.sequencer.width
+                    let rowTopLimit = rowActualVerticalLocation - self.configurations.mouseEvents.notePlacementPadding
+                    let rowBottomLimit = rowActualVerticalLocation + self.configurations.mouseEvents.notePlacementPadding
+                    let rowLeftLimit = rowActualLeftBound - self.configurations.mouseEvents.notePlacementPadding
+                    let rowRightLimit = rowActualRightBound + self.configurations.mouseEvents.notePlacementPadding
                     if (mouseX >= rowLeftLimit && mouseX <= rowRightLimit && mouseY >= rowTopLimit && mouseY <= rowBottomLimit) {
                         // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
                         if (self.sequencer.rows[rowIndex].quantized === true) {
@@ -165,8 +165,8 @@ window.onload = () => {
         }
         if (self.selectedRowIndex !== null) { // handle mousemove events when a row is selected
             self.adjustEventCoordinates(event)
-            mouseX = event.pageX
-            mouseY = event.pageY
+            let mouseX = event.pageX
+            let mouseY = event.pageY
 
             let circle = self.components.shapes.sequencerRowHandles[self.selectedRowIndex]
             circle.stroke = 'black'
@@ -296,12 +296,12 @@ window.onload = () => {
              */
             gui.circleBeingMoved.stroke = "transparent"
             // note down starting state, current state.
-            circleNewXPosition = gui.circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle.
-            circleNewYPosition = gui.circleBeingMovedStartingPositionY // if the circle is not colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
-            circleNewBeatNumber = gui.circleBeingMovedOldBeatNumber
+            let circleNewXPosition = gui.circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle.
+            let circleNewYPosition = gui.circleBeingMovedStartingPositionY // if the circle is not colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
+            let circleNewBeatNumber = gui.circleBeingMovedOldBeatNumber
             gui.adjustEventCoordinates(event)
-            mouseX = event.pageX
-            mouseY = event.pageY
+            let mouseX = event.pageX
+            let mouseY = event.pageY
             // check for collisions with things (sequencer rows, the trash bin, etc.)and make adjustments accordingly, so that everything will be handled as explained in the block comment above
             if (gui.circleBeingMovedNewRow >= 0) { // this means the note is being put onto a new sequencer row
                 circleNewXPosition = gui.circleBeingMoved.translation.x // the note should have already been 'snapped' to its new row in the 'mousemove' event, so just commit to that new location
@@ -388,7 +388,7 @@ window.onload = () => {
 
     function initializeIcons(hideIcons=false) {
         if (hideIcons) { // gives us a mechanism to leave the icons off the sequencer display if we want to
-            for (key of Object.keys(gui.components.domElements.images)) {
+            for (let key of Object.keys(gui.components.domElements.images)) {
                 gui.components.domElements.images[key].remove()
             }
             return;
@@ -431,7 +431,7 @@ window.onload = () => {
         gui.components.domElements.images.playIcon.style.left = "" + gui.configurations.pauseButton.left + "px"
         gui.components.domElements.images.playIcon.style.top = "" + gui.configurations.pauseButton.top + "px"
         // clear row buttons -- one per row
-        for (icon of gui.components.domElements.iconLists.clearRowIcons) {
+        for (let icon of gui.components.domElements.iconLists.clearRowIcons) {
             icon.remove();
         }
         gui.components.domElements.iconLists.clearRowIcons = [];
@@ -458,11 +458,11 @@ window.onload = () => {
         }
         gui.components.domElements.images.clearRowIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         // lock / unlock (quantize / unquantize) row buttons -- need one per row
-        for (icon of gui.components.domElements.iconLists.lockedIcons) {
+        for (let icon of gui.components.domElements.iconLists.lockedIcons) {
             icon.remove();
         }
         gui.components.domElements.iconLists.lockedIcons = [];
-        for (icon of gui.components.domElements.iconLists.unlockedIcons) {
+        for (let icon of gui.components.domElements.iconLists.unlockedIcons) {
             icon.remove();
         }
         gui.components.domElements.iconLists.unlockedIcons = [];
@@ -682,7 +682,7 @@ window.onload = () => {
         // todo: make methods for these so we don't have to pass in the GUI configurations twice when initializing.
         // todo: clean up first GUI initialization so that we can just call a 'redraw' method the first time as well, 
         //       to avoid duplicated code
-        for (shape of gui.components.shapes.clearNotesForRowButtonShapes) {
+        for (let shape of gui.components.shapes.clearNotesForRowButtonShapes) {
             shape.remove()
         }
         gui.components.shapes.clearNotesForRowButtonShapes = []
