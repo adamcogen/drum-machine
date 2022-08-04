@@ -649,15 +649,16 @@ window.onload = () => {
             gui.components.domElements.images.clearAllIcon.removeEventListener('click', gui.eventHandlerFunctions.clearAllNotesButton)
         }
         // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        gui.eventHandlerFunctions.clearAllNotesButton = () => clearAllNotesButtonClickHandler();
+        gui.eventHandlerFunctions.clearAllNotesButton = () => clearAllNotesButtonClickHandler(gui);
         gui.components.shapes.clearAllNotesButtonShape._renderer.elem.addEventListener('click', gui.eventHandlerFunctions.clearAllNotesButton)
         gui.components.domElements.images.clearAllIcon.addEventListener('click', gui.eventHandlerFunctions.clearAllNotesButton)
     }
 
-    function clearAllNotesButtonClickHandler() {
-        gui.lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = gui.sequencer.currentTime
-        gui.components.shapes.clearAllNotesButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
-        gui.clearAllNotes();
+    // search for comment "a general note about the 'self' paramater" within gui.js file for info on its use here
+    function clearAllNotesButtonClickHandler(self) {
+        self.lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = self.sequencer.currentTime
+        self.components.shapes.clearAllNotesButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
+        self.clearAllNotes();
         redrawSequencer();
     }
 
