@@ -66,6 +66,7 @@ window.onload = () => {
     gui.drawNotesToReflectSequencerCurrentState()
 
     refreshWindowMouseMoveEvent();
+    refreshWindowMouseUpEvent();
 
     redrawSequencer();
 
@@ -259,9 +260,18 @@ window.onload = () => {
         window.addEventListener('mousemove', gui.eventHandlerFunctions.windowMouseMove);
     }
 
-    // lifting your mouse anywhere means you're no longer click-dragging
-    window.addEventListener('mouseup', (event) => {
-        // handle letting go of notes
+    function refreshWindowMouseUpEvent() {
+        if (gui.eventHandlerFunctions.windowMouseUp !== null && gui.eventHandlerFunctions.windowMouseUp !== undefined) {
+            // remove event listeners if they've already been added to avoid duplicates
+            window.removeEventListener('mouseup', gui.eventHandlerFunctions.windowMouseUp);
+        }
+        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+        gui.eventHandlerFunctions.windowMouseUp = (event) => windowMouseUpEventHandler(event);
+        window.addEventListener('mouseup', gui.eventHandlerFunctions.windowMouseUp);
+    }
+
+    function windowMouseUpEventHandler(event) {
+        // handle letting go of notes. lifting your mouse anywhere means you're no longer click-dragging
         if (gui.circleBeingMoved !== null) {
             /**
              * this is the workflow for determining where to put a circle that we were click-dragging once we release the mouse.
@@ -361,7 +371,7 @@ window.onload = () => {
         gui.circleBeingMoved = null
         gui.setNoteTrashBinVisibility(false)
         gui.selectedRowIndex = null
-    });
+    }
 
     // making a cleaner (less redundant) way to call 'loadSample()', which matches what we need for the drum sequencer.
     // the simplifying assumption here is that "sampleName" will always match the name of the file (without its file extension).
