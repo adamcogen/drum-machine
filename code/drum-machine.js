@@ -249,8 +249,13 @@ window.onload = () => {
     }
 
     function refreshWindowMouseMoveEvent() {
-        window.removeEventListener('mousemove', windowMouseMoveEventHandler);
-        window.addEventListener('mousemove', windowMouseMoveEventHandler);
+        if (gui.eventHandlerFunctions.windowMouseMove !== null && gui.eventHandlerFunctions.windowMouseMove !== undefined) {
+            // remove event listeners if they've already been added to avoid duplicates
+            window.removeEventListener('mousemove', gui.eventHandlerFunctions.windowMouseMove);
+        }
+        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+        gui.eventHandlerFunctions.windowMouseMove = (event) => windowMouseMoveEventHandler(event);
+        window.addEventListener('mousemove', gui.eventHandlerFunctions.windowMouseMove);
     }
 
     // lifting your mouse anywhere means you're no longer click-dragging
