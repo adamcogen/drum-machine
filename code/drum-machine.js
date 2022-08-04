@@ -79,19 +79,20 @@ window.onload = () => {
         requestAnimationFrameShim(loop); // call animation frame update with this 'loop' method again
     }
 
-    function windowMouseMoveEventHandler(event) {
+    // search for comment "a general note about the 'self' paramater" within gui.js file for info on its use here
+    function windowMouseMoveEventHandler(self, event) {
         // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
-        if (gui.circleBeingMoved !== null) { // handle mousemove events when a note is selected
-            gui.adjustEventCoordinates(event)
+        if (self.circleBeingMoved !== null) { // handle mousemove events when a note is selected
+            self.adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
             // start with default note movement behavior, for when the note doesn't fall within range of the trash bin, a sequencer line, etc.
-            gui.circleBeingMoved.translation.x = mouseX
-            gui.circleBeingMoved.translation.y = mouseY
-            gui.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW // start with "it's not colliding with anything", and update the value from there if we find a collision
-            gui.circleBeingMoved.stroke = "black"
-            gui.components.domElements.images.trashClosedIcon.style.display = 'block'
-            gui.components.domElements.images.trashOpenIcon.style.display = 'none'
+            self.circleBeingMoved.translation.x = mouseX
+            self.circleBeingMoved.translation.y = mouseY
+            self.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW // start with "it's not colliding with anything", and update the value from there if we find a collision
+            self.circleBeingMoved.stroke = "black"
+            self.components.domElements.images.trashClosedIcon.style.display = 'block'
+            self.components.domElements.images.trashOpenIcon.style.display = 'none'
             /**
              * adding stuff here for new 'snap to grid on move' behavior.
              * this will be the first part of making it so that notes being moved 'snap' into place when they are close to the trash bin or a sequencer line.
@@ -100,147 +101,147 @@ window.onload = () => {
              * (i.e. the sequence will update in real time even before the note being moved is released).
              */
             // check if the note is within range to be placed in the trash bin. if so, move the circle to the center of the trash bin.
-            centerOfTrashBinX = gui.configurations.noteTrashBin.left + (gui.configurations.noteTrashBin.width / 2)
-            centerOfTrashBinY = gui.configurations.noteTrashBin.top + (gui.configurations.noteTrashBin.height / 2)
-            let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= gui.configurations.noteTrashBin.left - gui.configurations.mouseEvents.notePlacementPadding) && (mouseX <= gui.configurations.noteTrashBin.left + gui.configurations.noteTrashBin.width + gui.configurations.mouseEvents.notePlacementPadding)
-            let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= gui.configurations.noteTrashBin.top - gui.configurations.mouseEvents.notePlacementPadding) && (mouseY <= gui.configurations.noteTrashBin.top + gui.configurations.noteTrashBin.height + gui.configurations.mouseEvents.notePlacementPadding)
+            let centerOfTrashBinX = self.configurations.noteTrashBin.left + (self.configurations.noteTrashBin.width / 2)
+            let centerOfTrashBinY = self.configurations.noteTrashBin.top + (self.configurations.noteTrashBin.height / 2)
+            let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= self.configurations.noteTrashBin.left - self.configurations.mouseEvents.notePlacementPadding) && (mouseX <= self.configurations.noteTrashBin.left + self.configurations.noteTrashBin.width + self.configurations.mouseEvents.notePlacementPadding)
+            let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= self.configurations.noteTrashBin.top - self.configurations.mouseEvents.notePlacementPadding) && (mouseY <= self.configurations.noteTrashBin.top + self.configurations.noteTrashBin.height + self.configurations.mouseEvents.notePlacementPadding)
             if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
-                gui.circleBeingMoved.translation.x = centerOfTrashBinX
-                gui.circleBeingMoved.translation.y = centerOfTrashBinY
-                gui.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
-                gui.circleBeingMoved.stroke = "red"
-                gui.components.domElements.images.trashClosedIcon.style.display = 'none'
-                gui.components.domElements.images.trashOpenIcon.style.display = 'block'
-                gui.components.shapes.noteTrashBinContainer.stroke = 'red'
+                self.circleBeingMoved.translation.x = centerOfTrashBinX
+                self.circleBeingMoved.translation.y = centerOfTrashBinY
+                self.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
+                self.circleBeingMoved.stroke = "red"
+                self.components.domElements.images.trashClosedIcon.style.display = 'none'
+                self.components.domElements.images.trashOpenIcon.style.display = 'block'
+                self.components.shapes.noteTrashBinContainer.stroke = 'red'
             } else {
-                gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
+                self.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             }
             // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
-            let sequencerLeftBoundary = gui.configurations.sequencer.left - gui.configurations.mouseEvents.notePlacementPadding
-            let sequencerRightBoundary = (gui.configurations.sequencer.left + gui.configurations.sequencer.width) + gui.configurations.mouseEvents.notePlacementPadding
-            let sequencerTopBoundary = gui.configurations.sequencer.top - gui.configurations.mouseEvents.notePlacementPadding
-            let sequencerBottomBoundary = gui.configurations.sequencer.top + ((sequencer.numberOfRows - 1) * gui.configurations.sequencer.spaceBetweenRows) + gui.configurations.mouseEvents.notePlacementPadding
+            let sequencerLeftBoundary = self.configurations.sequencer.left - self.configurations.mouseEvents.notePlacementPadding
+            let sequencerRightBoundary = (self.configurations.sequencer.left + self.configurations.sequencer.width) + self.configurations.mouseEvents.notePlacementPadding
+            let sequencerTopBoundary = self.configurations.sequencer.top - self.configurations.mouseEvents.notePlacementPadding
+            let sequencerBottomBoundary = self.configurations.sequencer.top + ((self.sequencer.numberOfRows - 1) * self.configurations.sequencer.spaceBetweenRows) + self.configurations.mouseEvents.notePlacementPadding
             let withinHorizonalBoundaryOfSequencer = (mouseX >= sequencerLeftBoundary) && (mouseX <= sequencerRightBoundary)
             let withinVerticalBoundaryOfSequencer = (mouseY >= sequencerTopBoundary) && (mouseY <= sequencerBottomBoundary)
             if (withinHorizonalBoundaryOfSequencer && withinVerticalBoundaryOfSequencer) {
                 // if we get here, we know the circle is within the vertical and horizontal boundaries of the sequencer.
                 // next we want to do a more fine-grained calculation, for whether it is in range to be placed onto one of the sequencer lines.
-                for(let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
-                    rowActualVerticalLocation = gui.configurations.sequencer.top + (rowIndex * gui.configurations.sequencer.spaceBetweenRows)
-                    rowActualLeftBound = gui.configurations.sequencer.left
-                    rowActualRightBound = gui.configurations.sequencer.left + gui.configurations.sequencer.width
-                    rowTopLimit = rowActualVerticalLocation - gui.configurations.mouseEvents.notePlacementPadding
-                    rowBottomLimit = rowActualVerticalLocation + gui.configurations.mouseEvents.notePlacementPadding
-                    rowLeftLimit = rowActualLeftBound - gui.configurations.mouseEvents.notePlacementPadding
-                    rowRightLimit = rowActualRightBound + gui.configurations.mouseEvents.notePlacementPadding
+                for(let rowIndex = 0; rowIndex < self.sequencer.numberOfRows; rowIndex++) {
+                    rowActualVerticalLocation = self.configurations.sequencer.top + (rowIndex * self.configurations.sequencer.spaceBetweenRows)
+                    rowActualLeftBound = self.configurations.sequencer.left
+                    rowActualRightBound = self.configurations.sequencer.left + self.configurations.sequencer.width
+                    rowTopLimit = rowActualVerticalLocation - self.configurations.mouseEvents.notePlacementPadding
+                    rowBottomLimit = rowActualVerticalLocation + self.configurations.mouseEvents.notePlacementPadding
+                    rowLeftLimit = rowActualLeftBound - self.configurations.mouseEvents.notePlacementPadding
+                    rowRightLimit = rowActualRightBound + self.configurations.mouseEvents.notePlacementPadding
                     if (mouseX >= rowLeftLimit && mouseX <= rowRightLimit && mouseY >= rowTopLimit && mouseY <= rowBottomLimit) {
                         // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
-                        if (sequencer.rows[rowIndex].quantized === true) {
+                        if (self.sequencer.rows[rowIndex].quantized === true) {
                             // determine which subdivision we are closest to
-                            gui.circleBeingMovedNewBeatNumber = gui.getIndexOfClosestSubdivisionLine(mouseX, sequencer.rows[rowIndex].getNumberOfSubdivisions())
-                            gui.circleBeingMoved.translation.x = gui.getXPositionOfSubdivisionLine(gui.circleBeingMovedNewBeatNumber, sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                            self.circleBeingMovedNewBeatNumber = self.getIndexOfClosestSubdivisionLine(mouseX, sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                            self.circleBeingMoved.translation.x = self.getXPositionOfSubdivisionLine(self.circleBeingMovedNewBeatNumber, sequencer.rows[rowIndex].getNumberOfSubdivisions())
                         } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
-                            gui.circleBeingMoved.translation.x = gui.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
-                            gui.circleBeingMovedNewBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED
+                            self.circleBeingMoved.translation.x = self.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
+                            self.circleBeingMovedNewBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED
                         }
                         // quantization has a more complicated effect on x position than y. y position will always just be on line, so always just put it there.
-                        gui.circleBeingMoved.translation.y = rowActualVerticalLocation;
-                        gui.circleBeingMovedNewRow = rowIndex // set 'new row' to whichever row we collided with / 'snapped' to
+                        self.circleBeingMoved.translation.y = rowActualVerticalLocation;
+                        self.circleBeingMovedNewRow = rowIndex // set 'new row' to whichever row we collided with / 'snapped' to
                         break; // we found the row that the note will be placed on, so stop iterating thru rows early
                     }
                 }
             } else {
                 // new secondary trash bin logic: if the note is far enough away from the sequencer, we will throw it out
-                let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - gui.configurations.mouseEvents.throwNoteAwaySidesPadding) || (mouseX >= sequencerRightBoundary + gui.configurations.mouseEvents.throwNoteAwaySidesPadding)
-                let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - gui.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + gui.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding)
+                let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - self.configurations.mouseEvents.throwNoteAwaySidesPadding) || (mouseX >= sequencerRightBoundary + self.configurations.mouseEvents.throwNoteAwaySidesPadding)
+                let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - self.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + self.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding)
                 if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
-                    gui.circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
-                    gui.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
-                    gui.components.domElements.images.trashClosedIcon.style.display = 'none'
-                    gui.components.domElements.images.trashOpenIcon.style.display = 'block'
-                    gui.components.shapes.noteTrashBinContainer.stroke = 'red'
+                    self.circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
+                    self.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
+                    self.components.domElements.images.trashClosedIcon.style.display = 'none'
+                    self.components.domElements.images.trashOpenIcon.style.display = 'block'
+                    self.components.shapes.noteTrashBinContainer.stroke = 'red'
                 }
             }
         }
-        if (gui.selectedRowIndex !== null) { // handle mousemove events when a row is selected
-            gui.adjustEventCoordinates(event)
+        if (self.selectedRowIndex !== null) { // handle mousemove events when a row is selected
+            self.adjustEventCoordinates(event)
             mouseX = event.pageX
             mouseY = event.pageY
 
-            let circle = gui.components.shapes.sequencerRowHandles[gui.selectedRowIndex]
+            let circle = self.components.shapes.sequencerRowHandles[self.selectedRowIndex]
             circle.stroke = 'black'
             circle.linewidth = 2
-            circle.fill = gui.configurations.sequencerRowHandles.selectedColor
-            let rowSelectionRectangle = gui.components.shapes.sequencerRowSelectionRectangles[gui.selectedRowIndex]
-            rowSelectionRectangle.stroke = gui.configurations.sequencerRowHandles.selectedColor
-            gui.components.domElements.images.trashClosedIcon.style.display = 'block'
-            gui.components.domElements.images.trashOpenIcon.style.display = 'none'
+            circle.fill = self.configurations.sequencerRowHandles.selectedColor
+            let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.selectedRowIndex]
+            rowSelectionRectangle.stroke = self.configurations.sequencerRowHandles.selectedColor
+            self.components.domElements.images.trashClosedIcon.style.display = 'block'
+            self.components.domElements.images.trashOpenIcon.style.display = 'none'
 
-            gui.components.shapes.sequencerRowHandles[gui.selectedRowIndex].translation.x = mouseX
-            gui.components.shapes.sequencerRowHandles[gui.selectedRowIndex].translation.y = mouseY
+            self.components.shapes.sequencerRowHandles[self.selectedRowIndex].translation.x = mouseX
+            self.components.shapes.sequencerRowHandles[self.selectedRowIndex].translation.y = mouseY
 
             // check if the row handle is within range to be placed in the trash bin. if so, move the handle to the center of the trash bin.
-            centerOfTrashBinX = gui.configurations.noteTrashBin.left + (gui.configurations.noteTrashBin.width / 2)
-            centerOfTrashBinY = gui.configurations.noteTrashBin.top + (gui.configurations.noteTrashBin.height / 2)
-            let withinHorizontalBoundaryOfTrashBin = (mouseX >= gui.configurations.noteTrashBin.left - gui.configurations.mouseEvents.notePlacementPadding) && (mouseX <= gui.configurations.noteTrashBin.left + gui.configurations.noteTrashBin.width + gui.configurations.mouseEvents.notePlacementPadding)
-            let withinVerticalBoundaryOfTrashBin = (mouseY >= gui.configurations.noteTrashBin.top - gui.configurations.mouseEvents.notePlacementPadding) && (mouseY <= gui.configurations.noteTrashBin.top + gui.configurations.noteTrashBin.height + gui.configurations.mouseEvents.notePlacementPadding)
+            let centerOfTrashBinX = self.configurations.noteTrashBin.left + (self.configurations.noteTrashBin.width / 2)
+            let centerOfTrashBinY = self.configurations.noteTrashBin.top + (self.configurations.noteTrashBin.height / 2)
+            let withinHorizontalBoundaryOfTrashBin = (mouseX >= self.configurations.noteTrashBin.left - self.configurations.mouseEvents.notePlacementPadding) && (mouseX <= self.configurations.noteTrashBin.left + self.configurations.noteTrashBin.width + self.configurations.mouseEvents.notePlacementPadding)
+            let withinVerticalBoundaryOfTrashBin = (mouseY >= self.configurations.noteTrashBin.top - self.configurations.mouseEvents.notePlacementPadding) && (mouseY <= self.configurations.noteTrashBin.top + self.configurations.noteTrashBin.height + self.configurations.mouseEvents.notePlacementPadding)
             if (withinHorizontalBoundaryOfTrashBin && withinVerticalBoundaryOfTrashBin) {
                 circle.translation.x = centerOfTrashBinX
                 circle.translation.y = centerOfTrashBinY
                 rowSelectionRectangle.stroke = "red"
-                gui.rowSelecionTracker.removeRow = true;
+                self.rowSelecionTracker.removeRow = true;
                 circle.stroke = "red"
-                gui.components.domElements.images.trashClosedIcon.style.display = 'none'
-                gui.components.domElements.images.trashOpenIcon.style.display = 'block'
-                gui.components.shapes.noteTrashBinContainer.stroke = 'red'
+                self.components.domElements.images.trashClosedIcon.style.display = 'none'
+                self.components.domElements.images.trashOpenIcon.style.display = 'block'
+                self.components.shapes.noteTrashBinContainer.stroke = 'red'
             } else {
-                gui.rowSelecionTracker.removeRow = false;
-                gui.components.shapes.noteTrashBinContainer.stroke = 'transparent'
+                self.rowSelecionTracker.removeRow = false;
+                self.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             }
 
-            let xChangeFromStart = gui.components.shapes.sequencerRowHandles[gui.selectedRowIndex].translation.x - gui.rowSelecionTracker.rowHandleStartingPosition.x
-            let yChangeFromStart = gui.components.shapes.sequencerRowHandles[gui.selectedRowIndex].translation.y - gui.rowSelecionTracker.rowHandleStartingPosition.y
+            let xChangeFromStart = self.components.shapes.sequencerRowHandles[self.selectedRowIndex].translation.x - self.rowSelecionTracker.rowHandleStartingPosition.x
+            let yChangeFromStart = self.components.shapes.sequencerRowHandles[self.selectedRowIndex].translation.y - self.rowSelecionTracker.rowHandleStartingPosition.y
 
-            for (let shapeIndex = 0; shapeIndex < gui.rowSelecionTracker.shapes.length; shapeIndex++) {
-                gui.rowSelecionTracker.shapes[shapeIndex].translation.x = gui.rowSelecionTracker.shapesOriginalPositions[shapeIndex].x + xChangeFromStart;
-                gui.rowSelecionTracker.shapes[shapeIndex].translation.y = gui.rowSelecionTracker.shapesOriginalPositions[shapeIndex].y + yChangeFromStart;
+            for (let shapeIndex = 0; shapeIndex < self.rowSelecionTracker.shapes.length; shapeIndex++) {
+                self.rowSelecionTracker.shapes[shapeIndex].translation.x = self.rowSelecionTracker.shapesOriginalPositions[shapeIndex].x + xChangeFromStart;
+                self.rowSelecionTracker.shapes[shapeIndex].translation.y = self.rowSelecionTracker.shapesOriginalPositions[shapeIndex].y + yChangeFromStart;
             }
 
-            for (let domElementIndex = 0; domElementIndex < gui.rowSelecionTracker.domElements.length; domElementIndex++) {
-                gui.rowSelecionTracker.domElements[domElementIndex].style.left = "" + (gui.rowSelecionTracker.domElementsOriginalPositions[domElementIndex].left + xChangeFromStart) + "px"
-                gui.rowSelecionTracker.domElements[domElementIndex].style.top = "" + (gui.rowSelecionTracker.domElementsOriginalPositions[domElementIndex].top + yChangeFromStart) + "px";
+            for (let domElementIndex = 0; domElementIndex < self.rowSelecionTracker.domElements.length; domElementIndex++) {
+                self.rowSelecionTracker.domElements[domElementIndex].style.left = "" + (self.rowSelecionTracker.domElementsOriginalPositions[domElementIndex].left + xChangeFromStart) + "px"
+                self.rowSelecionTracker.domElements[domElementIndex].style.top = "" + (self.rowSelecionTracker.domElementsOriginalPositions[domElementIndex].top + yChangeFromStart) + "px";
             }
 
             // if the row is far enough away from the sequencer, we will throw it out
-            let sequencerLeftBoundary = gui.configurations.sequencer.left - gui.configurations.mouseEvents.notePlacementPadding
-            let sequencerRightBoundary = (gui.configurations.sequencer.left + gui.configurations.sequencer.width) + gui.configurations.mouseEvents.notePlacementPadding
-            let sequencerTopBoundary = gui.configurations.sequencer.top - gui.configurations.mouseEvents.notePlacementPadding
-            let sequencerBottomBoundary = gui.configurations.sequencer.top + ((sequencer.numberOfRows - 1) * gui.configurations.sequencer.spaceBetweenRows) + gui.configurations.mouseEvents.notePlacementPadding
-            let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - gui.configurations.mouseEvents.throwRowAwaySidesPadding) || (mouseX >= sequencerRightBoundary + gui.configurations.mouseEvents.throwRowAwaySidesPadding)
-            let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - gui.configurations.mouseEvents.throwRowAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + gui.configurations.mouseEvents.throwRowAwayTopAndBottomPadding)
+            let sequencerLeftBoundary = self.configurations.sequencer.left - self.configurations.mouseEvents.notePlacementPadding
+            let sequencerRightBoundary = (self.configurations.sequencer.left + self.configurations.sequencer.width) + self.configurations.mouseEvents.notePlacementPadding
+            let sequencerTopBoundary = self.configurations.sequencer.top - self.configurations.mouseEvents.notePlacementPadding
+            let sequencerBottomBoundary = self.configurations.sequencer.top + ((self.sequencer.numberOfRows - 1) * self.configurations.sequencer.spaceBetweenRows) + self.configurations.mouseEvents.notePlacementPadding
+            let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - self.configurations.mouseEvents.throwRowAwaySidesPadding) || (mouseX >= sequencerRightBoundary + self.configurations.mouseEvents.throwRowAwaySidesPadding)
+            let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - self.configurations.mouseEvents.throwRowAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + self.configurations.mouseEvents.throwRowAwayTopAndBottomPadding)
             if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
                 circle.stroke = "red"
                 rowSelectionRectangle.stroke = "red"
-                gui.rowSelecionTracker.removeRow = true;
-                gui.components.domElements.images.trashClosedIcon.style.display = 'none'
-                gui.components.domElements.images.trashOpenIcon.style.display = 'block'
-                gui.components.shapes.noteTrashBinContainer.stroke = 'red'
+                self.rowSelecionTracker.removeRow = true;
+                self.components.domElements.images.trashClosedIcon.style.display = 'none'
+                self.components.domElements.images.trashOpenIcon.style.display = 'block'
+                self.components.shapes.noteTrashBinContainer.stroke = 'red'
             }
 
-            for(let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
-                if (rowIndex === gui.selectedRowIndex) {
+            for(let rowIndex = 0; rowIndex < self.sequencer.numberOfRows; rowIndex++) {
+                if (rowIndex === self.selectedRowIndex) {
                     continue;
                 }
-                let rowHandleActualVerticalLocation = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * rowIndex) + gui.configurations.sequencerRowHandles.topPadding;
-                let rowHandleActualHorizontalLocation = gui.configurations.sequencer.left + gui.configurations.sequencerRowHandles.leftPadding;
-                let topLimit = rowHandleActualVerticalLocation - gui.configurations.mouseEvents.notePlacementPadding
-                let bottomLimit = rowHandleActualVerticalLocation + gui.configurations.mouseEvents.notePlacementPadding
-                let leftLimit = rowHandleActualHorizontalLocation - gui.configurations.mouseEvents.notePlacementPadding
-                let rightLimit = rowHandleActualHorizontalLocation + gui.configurations.mouseEvents.notePlacementPadding + gui.configurations.sequencer.width
+                let rowHandleActualVerticalLocation = self.configurations.sequencer.top + (self.configurations.sequencer.spaceBetweenRows * rowIndex) + self.configurations.sequencerRowHandles.topPadding;
+                let rowHandleActualHorizontalLocation = self.configurations.sequencer.left + self.configurations.sequencerRowHandles.leftPadding;
+                let topLimit = rowHandleActualVerticalLocation - self.configurations.mouseEvents.notePlacementPadding
+                let bottomLimit = rowHandleActualVerticalLocation + self.configurations.mouseEvents.notePlacementPadding
+                let leftLimit = rowHandleActualHorizontalLocation - self.configurations.mouseEvents.notePlacementPadding
+                let rightLimit = rowHandleActualHorizontalLocation + self.configurations.mouseEvents.notePlacementPadding + self.configurations.sequencer.width
 
                 if (mouseX >= leftLimit && mouseX <= rightLimit && mouseY >= topLimit && mouseY <= bottomLimit) {
-                    sequencer.moveRowToNewIndex(gui.selectedRowIndex, rowIndex);
-                    gui.selectedRowIndex = rowIndex
+                    self.sequencer.moveRowToNewIndex(self.selectedRowIndex, rowIndex);
+                    self.selectedRowIndex = rowIndex
                     redrawSequencer();
                     break; // we found the row that the note will be placed on, so stop iterating thru rows early
                 }
@@ -254,7 +255,7 @@ window.onload = () => {
             window.removeEventListener('mousemove', gui.eventHandlerFunctions.windowMouseMove);
         }
         // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        gui.eventHandlerFunctions.windowMouseMove = (event) => windowMouseMoveEventHandler(event);
+        gui.eventHandlerFunctions.windowMouseMove = (event) => windowMouseMoveEventHandler(gui, event);
         window.addEventListener('mousemove', gui.eventHandlerFunctions.windowMouseMove);
     }
 
