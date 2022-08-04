@@ -643,15 +643,18 @@ window.onload = () => {
     }
 
     function addClearAllNotesButtonActionListeners() {
-        // remove event listeners to prevent duplicates
-        gui.components.shapes.clearAllNotesButtonShape._renderer.elem.removeEventListener('click', clearAllNotesButtonClickHandler)
-        gui.components.domElements.images.clearAllIcon.removeEventListener('click', clearAllNotesButtonClickHandler)
-        // add event listners
-        gui.components.shapes.clearAllNotesButtonShape._renderer.elem.addEventListener('click', clearAllNotesButtonClickHandler)
-        gui.components.domElements.images.clearAllIcon.addEventListener('click', clearAllNotesButtonClickHandler)
+        if (gui.eventHandlerFunctions.clearAllNotesButton !== null && gui.eventHandlerFunctions.clearAllNotesButton !== undefined) {
+            // remove event listeners if they've already been added to avoid duplicates
+            gui.components.shapes.clearAllNotesButtonShape._renderer.elem.removeEventListener('click', gui.eventHandlerFunctions.clearAllNotesButton)
+            gui.components.domElements.images.clearAllIcon.removeEventListener('click', gui.eventHandlerFunctions.clearAllNotesButton)
+        }
+        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+        gui.eventHandlerFunctions.clearAllNotesButton = () => clearAllNotesButtonClickHandler();
+        gui.components.shapes.clearAllNotesButtonShape._renderer.elem.addEventListener('click', gui.eventHandlerFunctions.clearAllNotesButton)
+        gui.components.domElements.images.clearAllIcon.addEventListener('click', gui.eventHandlerFunctions.clearAllNotesButton)
     }
 
-    function clearAllNotesButtonClickHandler(event) {
+    function clearAllNotesButtonClickHandler() {
         gui.lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = gui.sequencer.currentTime
         gui.components.shapes.clearAllNotesButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         gui.clearAllNotes();
