@@ -523,12 +523,13 @@ window.onload = () => {
         }
         for (let rowIndex = 0; rowIndex < gui.sequencer.rows.length; rowIndex++) {
             let checkbox = gui.components.domElements.checkboxes.quantizationCheckboxes[rowIndex]
-            checkbox.removeEventListener('click', () => {
-                setQuantizationButtonClickHandler(rowIndex, checkbox.checked)
-            });
-            checkbox.addEventListener('click', () => {
-                setQuantizationButtonClickHandler(rowIndex, checkbox.checked)
-            });
+            if (gui.eventHandlerFunctions["quantizationCheckbox" + rowIndex] !== null && gui.eventHandlerFunctions["quantizationCheckbox" + rowIndex] !== undefined) {
+                // remove event listeners if they've already been added to avoid duplicates
+                checkbox.removeEventListener('click', gui.eventHandlerFunctions["quantizationCheckbox" + rowIndex])
+            }
+            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+            gui.eventHandlerFunctions["quantizationCheckbox" + rowIndex] = () => setQuantizationButtonClickHandler(rowIndex, checkbox.checked);
+            checkbox.addEventListener('click', gui.eventHandlerFunctions["quantizationCheckbox" + rowIndex])
         }
     }
 
