@@ -710,7 +710,7 @@ window.onload = () => {
         gui.two.update()
         // initialize action listeners
         initializeSubdivisionTextInputsActionListeners();
-        initializeReferenceLineTextInputsActionListeners();
+        gui.initializeReferenceLineTextInputsActionListeners();
         addClearNotesForRowButtonsActionListeners();
         initializeQuantizationCheckboxActionListeners();
         initializeAddRowButtonActionListener();
@@ -738,29 +738,6 @@ window.onload = () => {
                 redrawSequencer();
             })
             gui.addDefaultKeypressEventListenerToTextInput(subdivisionTextInput, false)
-        }
-    }
-
-    function initializeReferenceLineTextInputsActionListeners() {
-        for (let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
-            let referenceLineTextInput = gui.components.domElements.textInputs.referenceLineTextInputs[rowIndex]
-            referenceLineTextInput.addEventListener('blur', () => {
-                let newTextInputValue = referenceLineTextInput.value.trim() // remove whitespace from beginning and end of input then store it
-                if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
-                    newTextInputValue = sequencer.rows[rowIndex].getNumberOfReferenceLines()
-                }
-                newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
-                newTextInputValue = gui.confineNumberToBounds(newTextInputValue, 0, gui.configurations.referenceLineTextInputs.maximumValue)
-                if (newTextInputValue === 0) {
-                    referenceLineTextInput.style.color = gui.configurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
-                } else {
-                    referenceLineTextInput.style.color = gui.configurations.defaultFont.color // set font color
-                }
-                referenceLineTextInput.value = newTextInputValue
-                gui.updateNumberOfReferenceLinesForRow(newTextInputValue, rowIndex)
-                gui.resetNotesAndLinesDisplayForRow(rowIndex)
-            })
-            gui.addDefaultKeypressEventListenerToTextInput(referenceLineTextInput, false)
         }
     }
 }

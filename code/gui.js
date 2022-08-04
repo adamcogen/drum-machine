@@ -337,6 +337,29 @@ class DrumMachineGui {
         return referenceLinesForRow
     }
 
+    initializeReferenceLineTextInputsActionListeners() {
+        for (let rowIndex = 0; rowIndex < this.sequencer.numberOfRows; rowIndex++) {
+            let referenceLineTextInput = this.components.domElements.textInputs.referenceLineTextInputs[rowIndex]
+            referenceLineTextInput.addEventListener('blur', () => {
+                let newTextInputValue = referenceLineTextInput.value.trim() // remove whitespace from beginning and end of input then store it
+                if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
+                    newTextInputValue = this.sequencer.rows[rowIndex].getNumberOfReferenceLines()
+                }
+                newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
+                newTextInputValue = this.confineNumberToBounds(newTextInputValue, 0, this.configurations.referenceLineTextInputs.maximumValue)
+                if (newTextInputValue === 0) {
+                    referenceLineTextInput.style.color = this.configurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
+                } else {
+                    referenceLineTextInput.style.color = this.configurations.defaultFont.color // set font color
+                }
+                referenceLineTextInput.value = newTextInputValue
+                this.updateNumberOfReferenceLinesForRow(newTextInputValue, rowIndex)
+                this.resetNotesAndLinesDisplayForRow(rowIndex)
+            })
+            this.addDefaultKeypressEventListenerToTextInput(referenceLineTextInput, false)
+        }
+    }
+
     /**
      * sequencer row lines
      */
