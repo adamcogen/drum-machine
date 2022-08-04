@@ -500,7 +500,7 @@ window.onload = () => {
                 lockedIcon.removeEventListener('click', gui.eventHandlerFunctions["lockedIcon" + rowIndex])
             }
             // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-            gui.eventHandlerFunctions["lockedIcon" + rowIndex] = () => setQuantizationButtonClickHandler(rowIndex, false);
+            gui.eventHandlerFunctions["lockedIcon" + rowIndex] = () => setQuantizationButtonClickHandler(gui, rowIndex, false);
             lockedIcon.addEventListener('click', gui.eventHandlerFunctions["lockedIcon" + rowIndex])
             // add event listeners for 'unlocked icon'
             if (gui.eventHandlerFunctions["unlockedIcon" + rowIndex] !== null && gui.eventHandlerFunctions["unlockedIcon" + rowIndex] !== undefined) {
@@ -508,7 +508,7 @@ window.onload = () => {
                 unlockedIcon.removeEventListener('click', gui.eventHandlerFunctions["unlockedIcon" + rowIndex])
             }
             // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-            gui.eventHandlerFunctions["unlockedIcon" + rowIndex] = () => setQuantizationButtonClickHandler(rowIndex, true);
+            gui.eventHandlerFunctions["unlockedIcon" + rowIndex] = () => setQuantizationButtonClickHandler(gui, rowIndex, true);
             unlockedIcon.addEventListener('click', gui.eventHandlerFunctions["unlockedIcon" + rowIndex])
             // add the icons to the dom and to our list that tracks these icons
             gui.components.domElements.iconLists.lockedIcons.push(lockedIcon)
@@ -531,17 +531,18 @@ window.onload = () => {
                 checkbox.removeEventListener('click', gui.eventHandlerFunctions["quantizationCheckbox" + rowIndex])
             }
             // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-            gui.eventHandlerFunctions["quantizationCheckbox" + rowIndex] = () => setQuantizationButtonClickHandler(rowIndex, checkbox.checked);
+            gui.eventHandlerFunctions["quantizationCheckbox" + rowIndex] = () => setQuantizationButtonClickHandler(gui, rowIndex, checkbox.checked);
             checkbox.addEventListener('click', gui.eventHandlerFunctions["quantizationCheckbox" + rowIndex])
         }
     }
 
-    function setQuantizationButtonClickHandler(rowIndex, quantize) {
-        if (gui.sequencer.rows[rowIndex].getNumberOfSubdivisions() === 0) {
+    // search for comment "a general note about the 'self' paramater" within gui.js file for info on its use here
+    function setQuantizationButtonClickHandler(self, rowIndex, quantize) {
+        if (self.sequencer.rows[rowIndex].getNumberOfSubdivisions() === 0) {
             // you can't quantize a row if it has 0 subdivisions, so automatically change the value to 1 in this case
-            gui.updateNumberOfSubdivisionsForRow(1, rowIndex)
+            self.updateNumberOfSubdivisionsForRow(1, rowIndex)
         }
-        gui.sequencer.rows[rowIndex].setQuantization(quantize)
+        self.sequencer.rows[rowIndex].setQuantization(quantize)
         redrawSequencer();
     }
 
