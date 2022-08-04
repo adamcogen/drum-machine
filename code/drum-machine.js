@@ -660,18 +660,22 @@ window.onload = () => {
 
     function initializeAddRowButtonActionListener() {
         gui.lastButtonClickTimeTrackers.addRow.shape = gui.components.shapes.addRowButtonShape;
-        // remove any existing click listeners to prevent duplicates
-        gui.components.shapes.addRowButtonShape._renderer.elem.removeEventListener('click', addRowClickHandler)
-        gui.components.shapes.addRowButtonShape._renderer.elem.addEventListener('click', addRowClickHandler)
-        // add new click listeners
-        gui.components.domElements.images.addIcon.removeEventListener('click', addRowClickHandler)
-        gui.components.domElements.images.addIcon.addEventListener('click', addRowClickHandler)
+        if (gui.eventHandlerFunctions.addRowButton !== null && gui.eventHandlerFunctions.addRowButton !== undefined) {
+            // remove event listeners if they've already been added to avoid duplicates
+            gui.components.shapes.addRowButtonShape._renderer.elem.removeEventListener('click', gui.eventHandlerFunctions.addRowButton)
+            gui.components.domElements.images.addIcon.removeEventListener('click', gui.eventHandlerFunctions.addRowButton)
+        }
+        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+        gui.eventHandlerFunctions.addRowButton = () => addRowClickHandler(gui)
+        gui.components.shapes.addRowButtonShape._renderer.elem.addEventListener('click', gui.eventHandlerFunctions.addRowButton)
+        gui.components.domElements.images.addIcon.addEventListener('click', gui.eventHandlerFunctions.addRowButton)
     }
 
-    function addRowClickHandler(event) {
-        gui.lastButtonClickTimeTrackers.addRow.lastClickTime = gui.sequencer.currentTime
-        gui.components.shapes.addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
-        gui.addEmptySequencerRow();
+    // search for comment "a general note about the 'self' paramater" within gui.js file for info on its use here
+    function addRowClickHandler(self) {
+        self.lastButtonClickTimeTrackers.addRow.lastClickTime = self.sequencer.currentTime
+        self.components.shapes.addRowButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
+        self.addEmptySequencerRow();
         redrawSequencer()
     }
 
