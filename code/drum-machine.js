@@ -138,8 +138,8 @@ window.onload = () => {
                         // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
                         if (self.sequencer.rows[rowIndex].quantized === true) {
                             // determine which subdivision we are closest to
-                            self.circleBeingMovedNewBeatNumber = self.getIndexOfClosestSubdivisionLine(mouseX, sequencer.rows[rowIndex].getNumberOfSubdivisions())
-                            self.circleBeingMoved.translation.x = self.getXPositionOfSubdivisionLine(self.circleBeingMovedNewBeatNumber, sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                            self.circleBeingMovedNewBeatNumber = self.getIndexOfClosestSubdivisionLine(mouseX, self.sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                            self.circleBeingMoved.translation.x = self.getXPositionOfSubdivisionLine(self.circleBeingMovedNewBeatNumber, self.sequencer.rows[rowIndex].getNumberOfSubdivisions())
                         } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
                             self.circleBeingMoved.translation.x = self.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
                             self.circleBeingMovedNewBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED
@@ -326,7 +326,7 @@ window.onload = () => {
             let node = null
             // remove the moved note from its old sequencer row. todo: consider changing this logic to just update node's priority if it isn't switching rows.)
             if (gui.circleBeingMovedOldRow >= 0) { // -2 is the 'row' given to notes that are in the note bank. if old row is < 0, we don't need to remove it from any sequencer row.
-                node = sequencer.rows[gui.circleBeingMovedOldRow].removeNode(gui.circleBeingMoved.guiData.label)
+                node = gui.sequencer.rows[gui.circleBeingMovedOldRow].removeNode(gui.circleBeingMoved.guiData.label)
             }
             // add the moved note to its new sequencer row.
             if (gui.circleBeingMovedNewRow >= 0) {
@@ -344,7 +344,7 @@ window.onload = () => {
                 let newNodeTimestampMillis = sequencer.loopLengthInMillis * ((circleNewXPosition - gui.configurations.sequencer.left) / gui.configurations.sequencer.width)
                 node.priority = newNodeTimestampMillis
                 // add the moved note to its new sequencer row
-                sequencer.rows[gui.circleBeingMovedNewRow].insertNode(node, gui.circleBeingMoved.guiData.label)
+                gui.sequencer.rows[gui.circleBeingMovedNewRow].insertNode(node, gui.circleBeingMoved.guiData.label)
                 node.data.lastScheduledOnIteration = Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED // mark note as 'not played yet on current iteration'
                 node.data.beat = circleNewBeatNumber
                 gui.circleBeingMoved.guiData.beat = circleNewBeatNumber
@@ -353,7 +353,7 @@ window.onload = () => {
         if (gui.selectedRowIndex !== null) {
             // un-selecting the row will be handled in 'redraw', as long as we set selected row index to null here
             if (gui.rowSelecionTracker.removeRow) {
-                sequencer.removeRowAtIndex(gui.selectedRowIndex);
+                gui.sequencer.removeRowAtIndex(gui.selectedRowIndex);
             }
             gui.selectedRowIndex = null
             redrawSequencer();
@@ -396,7 +396,7 @@ window.onload = () => {
         // "add row" button icon
         gui.components.domElements.images.addIcon.style.width = "" + gui.configurations.addRowButton.icon.width + "px"
         gui.components.domElements.images.addIcon.style.height = "" + gui.configurations.addRowButton.icon.height + "px"
-        let addRowButtonTop = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding
+        let addRowButtonTop = gui.configurations.sequencer.top + (gui.configurations.sequencer.spaceBetweenRows * (gui.sequencer.rows.length - 1)) + gui.configurations.addRowButton.topPadding
         let addRowButtonLeft = gui.configurations.sequencer.left + (gui.configurations.sequencer.width / 2) + gui.configurations.addRowButton.leftPadding - (gui.configurations.addRowButton.width / 2)
         gui.components.domElements.images.addIcon.style.top = "" + (addRowButtonTop) + "px"
         gui.components.domElements.images.addIcon.style.left = "" + (addRowButtonLeft) + "px"
@@ -435,7 +435,7 @@ window.onload = () => {
             icon.remove();
         }
         gui.components.domElements.iconLists.clearRowIcons = [];
-        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+        for (let rowIndex = 0; rowIndex < gui.sequencer.rows.length; rowIndex++) {
             // create a new copy of the original clear row icon
             let clearRowIcon = gui.components.domElements.images.clearRowIcon.cloneNode()
             // make the copy visible
@@ -467,7 +467,7 @@ window.onload = () => {
             icon.remove();
         }
         gui.components.domElements.iconLists.unlockedIcons = [];
-        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+        for (let rowIndex = 0; rowIndex < gui.sequencer.rows.length; rowIndex++) {
             // make copies of the original image so that we can freely throw them away or add more
             let lockedIcon = gui.components.domElements.images.lockedIcon.cloneNode()
             let unlockedIcon = gui.components.domElements.images.unlockedIcon.cloneNode()
@@ -476,7 +476,7 @@ window.onload = () => {
             // one, but making an invisible copy leaves the door open for optimizing the 'quantize' button a bit later.
             // there is a bit of unnecessary code duplication right now because of this.
             // may clean this up later, for now it's fine.
-            if (sequencer.rows[rowIndex].quantized) {
+            if (gui.sequencer.rows[rowIndex].quantized) {
                 lockedIcon.style.display = 'block'
                 unlockedIcon.style.display = 'none'
             } else {
@@ -521,7 +521,7 @@ window.onload = () => {
         if (!gui.configurations.hideIcons) {
             return 
         }
-        for (let rowIndex = 0; rowIndex < sequencer.rows.length; rowIndex++) {
+        for (let rowIndex = 0; rowIndex < gui.sequencer.rows.length; rowIndex++) {
             let checkbox = gui.components.domElements.checkboxes.quantizationCheckboxes[rowIndex]
             checkbox.removeEventListener('click', () => {
                 setQuantizationButtonClickHandler(rowIndex, checkbox.checked)
@@ -533,11 +533,11 @@ window.onload = () => {
     }
 
     function setQuantizationButtonClickHandler(rowIndex, quantize) {
-        if (sequencer.rows[rowIndex].getNumberOfSubdivisions() === 0) {
+        if (gui.sequencer.rows[rowIndex].getNumberOfSubdivisions() === 0) {
             // you can't quantize a row if it has 0 subdivisions, so automatically change the value to 1 in this case
             gui.updateNumberOfSubdivisionsForRow(1, rowIndex)
         }
-        sequencer.rows[rowIndex].setQuantization(quantize)
+        gui.sequencer.rows[rowIndex].setQuantization(quantize)
         redrawSequencer();
     }
 
@@ -647,7 +647,7 @@ window.onload = () => {
     }
 
     function clearAllNotesButtonClickHandler(event) {
-        gui.lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = sequencer.currentTime
+        gui.lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = gui.sequencer.currentTime
         gui.components.shapes.clearAllNotesButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         gui.clearAllNotes();
         redrawSequencer();
@@ -664,7 +664,7 @@ window.onload = () => {
     }
 
     function addRowClickHandler(event) {
-        gui.lastButtonClickTimeTrackers.addRow.lastClickTime = sequencer.currentTime
+        gui.lastButtonClickTimeTrackers.addRow.lastClickTime = gui.sequencer.currentTime
         gui.components.shapes.addRowButtonShape.fill = gui.configurations.buttonBehavior.clickedButtonColor
         gui.addEmptySequencerRow();
         redrawSequencer()
@@ -709,12 +709,12 @@ window.onload = () => {
     }
 
     function initializeSubdivisionTextInputsActionListeners() {
-        for (let rowIndex = 0; rowIndex < sequencer.numberOfRows; rowIndex++) {
+        for (let rowIndex = 0; rowIndex < gui.sequencer.numberOfRows; rowIndex++) {
             let subdivisionTextInput = gui.components.domElements.textInputs.subdivisionTextInputs[rowIndex]
             subdivisionTextInput.addEventListener('blur', () => {
                 let newTextInputValue = subdivisionTextInput.value.trim() // remove whitespace from beginning and end of input then store it
                 if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
-                    newTextInputValue = sequencer.rows[rowIndex].getNumberOfSubdivisions()
+                    newTextInputValue = gui.sequencer.rows[rowIndex].getNumberOfSubdivisions()
                 }
                 newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
                 newTextInputValue = gui.confineNumberToBounds(newTextInputValue, 0, gui.configurations.subdivionLineTextInputs.maximumValue)
