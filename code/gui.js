@@ -1065,6 +1065,48 @@ class DrumMachineGui {
         this.drawNotesToReflectSequencerCurrentState()
     }
 
+    resetNotesAndLinesDisplayForAllRows() {
+        this.removeAllCirclesFromDisplay()
+        for (let list of this.components.shapes.subdivisionLineLists) {
+            for (let line of list) {
+                line.remove();
+            }
+            list = [];
+        }
+        this.components.shapes.subdivisionLineLists = []
+        for (let list of this.components.shapes.referenceLineLists) {
+            for (let line of list) {
+                line.remove();
+            }
+            list = [];
+        }
+        this.components.shapes.referenceLineLists = []
+        for (let line of this.components.shapes.sequencerRowLines) {
+            line.remove();
+        }
+        this.components.shapes.sequencerRowLines = [];
+        for (let line of this.components.shapes.timeTrackingLines) {
+            line.remove();
+        }
+        this.components.shapes.timeTrackingLines = [];
+        for (let circle of this.components.shapes.sequencerRowHandles) {
+            circle.remove();
+        }
+        this.components.shapes.sequencerRowHandles = []
+        for (let rectangle of this.components.shapes.sequencerRowSelectionRectangles) {
+            rectangle.remove();
+        }
+        this.components.shapes.sequencerRowSelectionRectangles = []
+        this.components.shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
+        this.components.shapes.referenceLineLists = this.initializeAllReferenceLines();
+        this.components.shapes.subdivisionLineLists = this.initializeAllSubdivisionLines();
+        this.components.shapes.sequencerRowLines = this.initializeAllSequencerRowLines();
+        this.components.shapes.sequencerRowHandles = this.initializeSequencerRowHandles();
+        this.components.shapes.timeTrackingLines = this.initializeTimeTrackingLines();
+        this.drawAllNoteBankCircles();
+        this.drawNotesToReflectSequencerCurrentState();
+    }
+
     /**
      * general helper methods
      */

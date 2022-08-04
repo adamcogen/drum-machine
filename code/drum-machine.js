@@ -689,7 +689,7 @@ window.onload = () => {
         // update mouse event listeners to reflect current state of sequencer (number of rows, etc.)
         refreshWindowMouseMoveEvent();
         // redraw notes so and lines
-        resetNotesAndLinesDisplayForAllRows();
+        gui.resetNotesAndLinesDisplayForAllRows();
         // redraw html inputs, such as subdivision and reference line text areas, quantization checkboxes
         gui.initializeSubdivisionTextInputsValuesAndStyles();
         gui.initializeReferenceLineTextInputsValuesAndStyles();
@@ -762,47 +762,5 @@ window.onload = () => {
             })
             gui.addDefaultKeypressEventListenerToTextInput(referenceLineTextInput, false)
         }
-    }
-
-    function resetNotesAndLinesDisplayForAllRows() {
-        gui.removeAllCirclesFromDisplay()
-        for (list of gui.components.shapes.subdivisionLineLists) {
-            for (line of list) {
-                line.remove();
-            }
-            list = [];
-        }
-        gui.components.shapes.subdivisionLineLists = []
-        for (list of gui.components.shapes.referenceLineLists) {
-            for (line of list) {
-                line.remove();
-            }
-            list = [];
-        }
-        gui.components.shapes.referenceLineLists = []
-        for (line of gui.components.shapes.sequencerRowLines) {
-            line.remove();
-        }
-        gui.components.shapes.sequencerRowLines = [];
-        for (line of gui.components.shapes.timeTrackingLines) {
-            line.remove();
-        }
-        gui.components.shapes.timeTrackingLines = [];
-        for (circle of gui.components.shapes.sequencerRowHandles) {
-            circle.remove();
-        }
-        gui.components.shapes.sequencerRowHandles = []
-        for (rectangle of gui.components.shapes.sequencerRowSelectionRectangles) {
-            rectangle.remove();
-        }
-        gui.components.shapes.sequencerRowSelectionRectangles = []
-        gui.components.shapes.sequencerRowSelectionRectangles = gui.initializeSequencerRowSelectionRectangles();
-        gui.components.shapes.referenceLineLists = gui.initializeAllReferenceLines();
-        gui.components.shapes.subdivisionLineLists = gui.initializeAllSubdivisionLines();
-        gui.components.shapes.sequencerRowLines = gui.initializeAllSequencerRowLines();
-        gui.components.shapes.sequencerRowHandles = gui.initializeSequencerRowHandles();
-        gui.components.shapes.timeTrackingLines = gui.initializeTimeTrackingLines();
-        gui.drawAllNoteBankCircles();
-        gui.drawNotesToReflectSequencerCurrentState();
     }
 }
