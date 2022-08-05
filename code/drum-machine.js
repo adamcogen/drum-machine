@@ -35,7 +35,7 @@ window.onload = () => {
     }
 
     // initialize web audio context
-    setUpAudioAndAnimationForWebAudioApi()
+    _setUpAudioContextCompatabilityShim();
     let _audioContext = new AudioContext();
     let webAudioDriver = new WebAudioDriver(_audioContext);
 
@@ -60,16 +60,21 @@ window.onload = () => {
     // set up a initial example drum sequence
     initializeSimpleDefaultSequencerPattern()
 
+    // run some basic sequencer serialize / deserialize tests
+    // console.log(sequencer.toJson());
+    // console.log(sequencer.fromJson(sequencer.toJson()));
+
     gui.redrawSequencer();
 
     // start main recursive update loop, where all drum machine state updates will happen
+    _setUpAnimationCompatabilityShim();
     loop()
 
     // this method is the 'recursive update loop` that will keep updating the page. after first invocation, this method basically calls itself recursively forever.
     function loop() {
         sequencer.update() // update timekeeping variables and schedule any upcoming notes, using the sequencer
         gui.update() // update the GUI display
-        requestAnimationFrameShim(loop); // call animation frame update with this 'loop' method again
+        requestCompatibleAnimationFrame(loop); // call animation frame update with this 'loop' method again
     }
 
     function initializeSimpleDefaultSequencerPattern(){
@@ -171,15 +176,23 @@ window.onload = () => {
         request.send();
     }
 
-    // set up AudioContext and requestAnimationFrame, so that they will work nicely
-    // with the 'AudioContextMonkeyPatch.js' library. contents of this method were 
-    // taken and adjusted from the 'Web Audio Metronome' repo by cwilso on GitHub: 
-    // https://github.com/cwilso/metronome
-    function setUpAudioAndAnimationForWebAudioApi() {
-        window.AudioContext = window.AudioContext || window.webkitAudioContext;
-        
+    /**
+     * Set up shim for AudioContext, for better compatability across different browsers. The contents of 
+     * this method is slightly adjusted from one in the 'Web Audio Metronome' repo by cwilso on GitHub:
+     * https://github.com/cwilso/metronome/blob/master/js/metronome.js#L23-L33
+     */
+    function _setUpAudioContextCompatabilityShim() {
+        window.AudioContext = window.AudioContext || window.webkitAudioContext // shim the audio context
+    }
+
+    /**
+     * Set up shim for requestAnimationFrame(), for better compatability across different browsers. The contents 
+     * of this method are slightly adjusted from one in the 'Web Audio Metronome' repo by cwilso on GitHub:
+     * https://github.com/cwilso/metronome/blob/master/js/metronome.js#L23-L33
+     */
+    function _setUpAnimationCompatabilityShim() {
         // Shim the requestAnimationFrame API, with a setTimeout fallback
-        window.requestAnimationFrameShim = (function(){
+        window.requestCompatibleAnimationFrame = (function(){
             return window.requestAnimationFrame ||
             window.webkitRequestAnimationFrame ||
             window.mozRequestAnimationFrame ||

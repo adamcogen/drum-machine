@@ -326,7 +326,17 @@ class Sequencer {
     clearRow(rowIndex) {
         this.rows[rowIndex].clear()
     }
+
+    // toJson() {
+    //     return JSON.stringify({
+    //         "key": "value",
+    //     });
+    // }
 }
+
+// Sequencer.prototype.fromJson = function(string) {
+//     return JSON.parse(string);
+// }
 
 // a drum sequencer row. each drum sequencer can have any number of rows, which can have notes placed onto them.
 class SequencerRow {
