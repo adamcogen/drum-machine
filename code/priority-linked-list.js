@@ -290,7 +290,7 @@ function assertEquals(expected, actual, message) {
     }
 }
 
-// test 'insertNodeAtIndex' and 'getIndexOfPriority' methods (for now just verify results manually in console..)
+// test 'insertNodeAtIndex' and 'getIndexOfPriority' methods
 function _testInsertNodeAtIndex() {
     let list = new PriorityLinkedList()
     assertEquals(0, list.getSize(), "assert empty list size is 0")
