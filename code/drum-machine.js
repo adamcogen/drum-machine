@@ -55,7 +55,6 @@ window.onload = () => {
     // initialize ID generator for node / note labels, and node generator for notes taken from the sample bank.
     let idGenerator = new IdGenerator() // we will use this same ID generator everywhere we need IDs, to make sure we track which IDs have already been generated
     let _sampleBankNodeGenerator = new SampleBankNodeGenerator(idGenerator, sampleNameList) // generates a new sequencer list node whenever we pull a note off the sound bank
-    let gui = new DrumMachineGui(sequencer, sampleNameList, samples, _sampleBankNodeGenerator, hideIcons=false);
 
     // set up a initial example drum sequence
     initializeSimpleDefaultSequencerPattern();
@@ -63,11 +62,11 @@ window.onload = () => {
     // if there is a sequencer state included in the URL, load it. 
     if (window.location.hash !== "") { // window.location.hash is text in a URL after the actual address, which starts with a "#" character and can contain whatever text we want.
         // btoa(plaintext) converts a plaintext string to a base64 string, so that it is URL-safe. we can decode the base64 string back to plaintext later using atob(base64).
-        json = atob(window.location.hash.substring(1)) // the url hash will start with a '#' character, so remove that before decoding it
+        let json = atob(window.location.hash.substring(1)) // the url hash will start with a '#' character, so remove that before decoding it
         sequencer.deserialize(json, _sampleBankNodeGenerator)
     }
 
-    gui.redrawSequencer();
+    let gui = new DrumMachineGui(sequencer, sampleNameList, samples, _sampleBankNodeGenerator, hideIcons=false);
 
     // start main recursive update loop, where all drum machine state updates will happen
     _setUpAnimationCompatabilityShim();
@@ -82,23 +81,23 @@ window.onload = () => {
 
     function initializeSimpleDefaultSequencerPattern(){
         sequencer.setNumberOfRows(0)
-        gui.addEmptySequencerRow();
+        sequencer.addEmptyRow();
         sequencer.rows[0].setNumberOfSubdivisions(16)
         sequencer.rows[0].setNumberOfReferenceLines(4)
         sequencer.rows[0].setQuantization(true)
-        gui.addEmptySequencerRow();
+        sequencer.addEmptyRow();
         sequencer.rows[1].setNumberOfSubdivisions(8)
         sequencer.rows[1].setNumberOfReferenceLines(4)
         sequencer.rows[1].setQuantization(true)
-        gui.addEmptySequencerRow();
+        sequencer.addEmptyRow();
         sequencer.rows[2].setNumberOfSubdivisions(8)
         sequencer.rows[2].setNumberOfReferenceLines(4)
         sequencer.rows[2].setQuantization(true)
-        gui.addEmptySequencerRow();
+        sequencer.addEmptyRow();
         sequencer.rows[3].setNumberOfSubdivisions(8)
         sequencer.rows[3].setNumberOfReferenceLines(4)
         sequencer.rows[3].setQuantization(false)
-        gui.addEmptySequencerRow();
+        sequencer.addEmptyRow();
         sequencer.rows[4].setNumberOfSubdivisions(4)
         sequencer.rows[4].setNumberOfReferenceLines(4)
         sequencer.rows[4].setQuantization(true)

@@ -67,6 +67,7 @@ class DrumMachineGui {
         this.testConfineNumberToBounds();
 
         this.pause(); // start the sequencer paused
+        this.redrawSequencer(); // redraw the display
     }
 
     // main GUI update logic.
@@ -356,6 +357,7 @@ class DrumMachineGui {
                 referenceLineTextInput.value = newTextInputValue
                 this.updateNumberOfReferenceLinesForRow(newTextInputValue, rowIndex)
                 this.resetNotesAndLinesDisplayForRow(rowIndex)
+                this.saveCurrentSequencerStateToUrlHash();
             })
             this.addDefaultKeypressEventListenerToTextInput(referenceLineTextInput, false)
         }
@@ -461,6 +463,7 @@ class DrumMachineGui {
                 subdivisionTextInput.value = newTextInputValue
                 this.updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
                 this.redrawSequencer();
+                this.saveCurrentSequencerStateToUrlHash();
             })
             this.addDefaultKeypressEventListenerToTextInput(subdivisionTextInput, false)
         }
@@ -622,7 +625,7 @@ class DrumMachineGui {
          * number. if something besides a valid number is entered, the value will just go back
          * to whatever it was before, and not make any change to the sequencer.
          */
-        this.components.domElements.textInputs.loopLengthMillis.addEventListener('blur', (event) => {
+        this.components.domElements.textInputs.loopLengthMillis.addEventListener('blur', () => {
             let newTextInputValue = this.components.domElements.textInputs.loopLengthMillis.value.trim() // remove whitespace from beginning and end of input then store it
             if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
                 newTextInputValue = this.sequencer.loopLengthInMillis
@@ -632,6 +635,7 @@ class DrumMachineGui {
             newTextInputValue = this.confineNumberToBounds(newTextInputValue, this.sequencer.lookAheadMillis, this.configurations.tempoTextInput.maximumValue)
             this.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
             this.updateSequencerLoopLength(newTextInputValue)
+            this.saveCurrentSequencerStateToUrlHash();
         })
         this.addDefaultKeypressEventListenerToTextInput(this.components.domElements.textInputs.loopLengthMillis, true)
     }
@@ -835,6 +839,7 @@ class DrumMachineGui {
         }
         self.sequencer.rows[rowIndex].setQuantization(quantize)
         self.redrawSequencer();
+        self.saveCurrentSequencerStateToUrlHash();
     }
 
     /**
@@ -932,6 +937,7 @@ class DrumMachineGui {
         self.components.shapes.addRowButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
         self.addEmptySequencerRow();
         self.redrawSequencer();
+        self.saveCurrentSequencerStateToUrlHash();
     }
 
     addEmptySequencerRow() {
@@ -968,6 +974,7 @@ class DrumMachineGui {
         self.lastButtonClickTimeTrackers.restartSequencer.lastClickTime = self.sequencer.currentTime
         self.components.shapes.restartSequencerButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
         self.restartSequencer()
+        self.saveCurrentSequencerStateToUrlHash();
     }
 
     /**
@@ -996,6 +1003,7 @@ class DrumMachineGui {
         self.components.shapes.clearNotesForRowButtonShapes[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
         self.clearNotesForRow(rowIndex);
         self.resetNotesAndLinesDisplayForRow(rowIndex);
+        self.saveCurrentSequencerStateToUrlHash();
     }
 
     clearNotesForRow(rowIndex) { 
@@ -1024,6 +1032,7 @@ class DrumMachineGui {
         self.components.shapes.clearAllNotesButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
         self.clearAllNotes();
         self.redrawSequencer();
+        self.saveCurrentSequencerStateToUrlHash();
     }
 
     clearAllNotes() {
@@ -1194,8 +1203,8 @@ class DrumMachineGui {
         this.components.shapes.sequencerRowLines[rowIndex] = this.initializeSequencerRowLine(rowIndex)
         this.components.shapes.timeTrackingLines[rowIndex] = this.initializeTimeTrackingLineForRow(rowIndex)
         // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
-        this.drawAllNoteBankCircles()
-        this.drawNotesToReflectSequencerCurrentState()
+        this.drawAllNoteBankCircles();
+        this.drawNotesToReflectSequencerCurrentState();
     }
 
     resetNotesAndLinesDisplayForAllRows() {
@@ -1282,7 +1291,7 @@ class DrumMachineGui {
      * window 'mouse move' event listener logic
      */
 
-     refreshWindowMouseMoveEvent() {
+    refreshWindowMouseMoveEvent() {
         if (this.eventHandlerFunctions.windowMouseMove !== null && this.eventHandlerFunctions.windowMouseMove !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             window.removeEventListener('mousemove', this.eventHandlerFunctions.windowMouseMove);
@@ -1566,6 +1575,7 @@ class DrumMachineGui {
                 node.data.beat = circleNewBeatNumber
                 self.circleBeingMoved.guiData.beat = circleNewBeatNumber
             }
+            self.saveCurrentSequencerStateToUrlHash();
         }
         if (self.selectedRowIndex !== null) {
             // un-selecting the row will be handled in 'redraw', as long as we set selected row index to null here
@@ -1574,6 +1584,7 @@ class DrumMachineGui {
             }
             self.selectedRowIndex = null
             self.redrawSequencer();
+            self.saveCurrentSequencerStateToUrlHash();
         }
         self.circleBeingMoved = null
         self.setNoteTrashBinVisibility(false)
@@ -1831,5 +1842,4 @@ class DrumMachineGui {
         // 'btoa(plaintext)' converts a plaintext string to a base64 string, so that it is URL-safe. we can decode the base64 string back to plaintext later using 'atob(base64)'.
         window.location.hash = btoa(this.sequencer.serialize());
     }
-
 }

@@ -348,7 +348,7 @@ class Sequencer {
     // as whatever was used to construct the sequencer instance that 'deserialize' is being called on.
     deserialize(json, sampleBankNodeGenerator) {
         let deserializedObject = JSON.parse(json);
-        let loopLengthInMilliseconds = deserializedObject.loopLength;
+        this.setLoopLengthInMillis(deserializedObject.loopLength)
         this.setNumberOfRows(deserializedObject.rows.length)
         for (let rowIndex = 0; rowIndex < this.numberOfRows; rowIndex++) {
             let deserializedRowObject = JSON.parse(deserializedObject.rows[rowIndex])
@@ -360,9 +360,10 @@ class Sequencer {
             for (let deserializedNote of deserializedRowObject.notes) {
                 let sequencerNode = sampleBankNodeGenerator.createNewNodeForSample(deserializedNote.sample)
                 if (quantizeRow) {
-                    sequencerNode.beat = deserializedNote.beat;
-                    sequencerNode.priority = (loopLengthInMilliseconds / numberOfSubdivisionsForRow) * sequencerNode.beat // calculate the time that the note should play at, given its beat number
+                    sequencerNode.data.beat = deserializedNote.beat;
+                    sequencerNode.priority = (this.loopLengthInMillis / numberOfSubdivisionsForRow) * sequencerNode.data.beat // calculate the time that the note should play at, given its beat number
                 } else {
+                    sequencerNode.beat = Sequencer.NOTE_IS_NOT_QUANTIZED
                     sequencerNode.priority = deserializedNote.priority;
                 }
                 this.rows[rowIndex].insertNode(sequencerNode, sequencerNode.label)
