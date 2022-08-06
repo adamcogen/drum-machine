@@ -1822,4 +1822,14 @@ class DrumMachineGui {
         assertEquals(10, this.confineNumberToBounds(11, 5, 10), "number above upper bound")
     }
 
+    /**
+     * Write sequencer pattern to URL hash
+     */
+
+    saveCurrentSequencerStateToUrlHash(){
+        // encode sequencer pattern to json and add it to url. 
+        // 'btoa(plaintext)' converts a plaintext string to a base64 string, so that it is URL-safe. we can decode the base64 string back to plaintext later using 'atob(base64)'.
+        window.location.hash = btoa(this.sequencer.serialize());
+    }
+
 }

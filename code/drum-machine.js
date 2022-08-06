@@ -58,11 +58,14 @@ window.onload = () => {
     let gui = new DrumMachineGui(sequencer, sampleNameList, samples, _sampleBankNodeGenerator, hideIcons=false);
 
     // set up a initial example drum sequence
-    initializeSimpleDefaultSequencerPattern()
+    initializeSimpleDefaultSequencerPattern();
 
-    // run some basic sequencer serialize / deserialize tests
-    // console.log(sequencer.toJson());
-    // console.log(sequencer.fromJson(sequencer.toJson()));
+    // if there is a sequencer state included in the URL, load it. 
+    if (window.location.hash !== "") { // window.location.hash is text in a URL after the actual address, which starts with a "#" character and can contain whatever text we want.
+        // btoa(plaintext) converts a plaintext string to a base64 string, so that it is URL-safe. we can decode the base64 string back to plaintext later using atob(base64).
+        json = atob(window.location.hash.substring(1)) // the url hash will start with a '#' character, so remove that before decoding it
+        sequencer.deserialize(json, _sampleBankNodeGenerator)
+    }
 
     gui.redrawSequencer();
 

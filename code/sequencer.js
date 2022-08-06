@@ -193,6 +193,10 @@ class Sequencer {
         this.rows[rowIndex].setNumberOfReferenceLines(newNumberOfReferenceLines)
     }
 
+    setQuantizationForRow(quantize, rowIndex) {
+        this.rows[rowIndex].setQuantization(quantize);
+    }
+
     // update loop length in millis. the bulk of the logic for this is handled at the row level, so just iterate through all rows
     // updating their loop length, then update the value of the 'loop length' variable we have stored in the main sequencer.
     setLoopLengthInMillis(newLoopLengthInMillis) {
@@ -327,16 +331,45 @@ class Sequencer {
         this.rows[rowIndex].clear()
     }
 
-    // toJson() {
-    //     return JSON.stringify({
-    //         "key": "value",
-    //     });
-    // }
-}
+    // serialize this sequencer object's pattern to a JSON string, from which it can later be recreated.
+    // only the data that is needed to reconstruct the sequencer pattern will be serialized. everything 
+    // else (such as audio drivers, look-ahead configuration, or anything else like that) will be kept
+    // as whatever was used to construct the sequencer instance that 'deserialize' is being called on.
+    serialize() {
+        return JSON.stringify({
+            "loopLength": this.loopLengthInMillis,
+            "rows": this.rows.map( (row) => row._serialize() ),
+        })
+    }
 
-// Sequencer.prototype.fromJson = function(string) {
-//     return JSON.parse(string);
-// }
+    // deserialize a sequencer object from a JSON string. 
+    // only the data that is needed to reconstruct the sequencer pattern will be deserialized. everything 
+    // else (such as audio drivers, look-ahead configuration, or anything else like that) will be kept
+    // as whatever was used to construct the sequencer instance that 'deserialize' is being called on.
+    deserialize(json, sampleBankNodeGenerator) {
+        let deserializedObject = JSON.parse(json);
+        let loopLengthInMilliseconds = deserializedObject.loopLength;
+        this.setNumberOfRows(deserializedObject.rows.length)
+        for (let rowIndex = 0; rowIndex < this.numberOfRows; rowIndex++) {
+            let deserializedRowObject = JSON.parse(deserializedObject.rows[rowIndex])
+            let numberOfSubdivisionsForRow = deserializedRowObject.subdivisions;
+            let quantizeRow = deserializedRowObject.quantized;
+            this.setNumberOfSubdivisionsForRow(numberOfSubdivisionsForRow, rowIndex);
+            this.setQuantizationForRow(quantizeRow, rowIndex);
+            this.setNumberOfReferenceLinesForRow(deserializedRowObject.referenceLines, rowIndex);
+            for (let deserializedNote of deserializedRowObject.notes) {
+                let sequencerNode = sampleBankNodeGenerator.createNewNodeForSample(deserializedNote.sample)
+                if (quantizeRow) {
+                    sequencerNode.beat = deserializedNote.beat;
+                    sequencerNode.priority = (loopLengthInMilliseconds / numberOfSubdivisionsForRow) * sequencerNode.beat // calculate the time that the note should play at, given its beat number
+                } else {
+                    sequencerNode.priority = deserializedNote.priority;
+                }
+                this.rows[rowIndex].insertNode(sequencerNode, sequencerNode.label)
+            }
+        }
+    }
+}
 
 // a drum sequencer row. each drum sequencer can have any number of rows, which can have notes placed onto them.
 class SequencerRow {
@@ -347,6 +380,32 @@ class SequencerRow {
         this.subdivisions = 0
         this.quantized = false
         this.referenceLines = 0
+    }
+
+    // serialize the sequencer row so that it can be recreated later. this method is 'private' (starts with _) and there is no corresponding deserialize
+    // method because this method is only meant to be called from within the Sequencer.serialize() method. this method alone is not sufficient to recreate
+    // a sequencer row from scratch, it just stores relevant info that is distinct to each row within a particular sequencer pattern.
+    _serialize() {
+        let notes = [];
+        let currentNode = this._notesList.head;
+        while (currentNode !== null) {
+            let note = { // store basic info that is always required to define every note
+                "sample": currentNode.data.sampleName,
+            }
+            if (this.quantized) { // for quantized rows, store note time as a beat number
+                note["beat"] = currentNode.data.beat
+            } else { // for unquantized rows, store note time as raw time in milliseconds (the 'priorty' property of a node)
+                note["priority"] = currentNode.priority
+            }
+            notes.push(note)
+            currentNode = currentNode.next
+        }
+        return JSON.stringify({
+            "quantized": this.quantized,
+            "subdivisions": this.subdivisions,
+            "referenceLines": this.referenceLines,
+            "notes": notes,
+        })
     }
 
     // reset the 'next note to schedule' to notesList.head
