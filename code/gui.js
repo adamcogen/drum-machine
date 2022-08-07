@@ -7,6 +7,9 @@ class DrumMachineGui {
     static get NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW() { return -1 }
     static get NOTE_ROW_NUMBER_FOR_NOTE_BANK() { return -2 }
     static get NOTE_ROW_NUMBER_FOR_TRASH_BIN() { return -3 }
+    // create constants that will be used to denote sequencer modes
+    static get MOVE_NOTES_MODE() { return "MOVE_NOTES_MODE" }
+    static get CHANGE_NOTE_VOLUMES_MODE() { return "CHANGE_NOTE_VOLUMES_MODE" }
 
     constructor(sequencer, sampleNameList, samples, sampleBankNodeGenerator, hideIcons) {
         this.sequencer = sequencer
@@ -22,6 +25,8 @@ class DrumMachineGui {
         this.components.shapes = this.initializeGuiShapes();
         this.components.domElements = this.initializeDomElements();
         this.eventHandlerFunctions = {}; // make a hash to store references to event handler functions. that way we can remove them from the DOM elements they are attached to later
+
+        this.currentGuiMode = DrumMachineGui.MOVE_NOTES_MODE // start the GUI in 'move notes' mode
 
         // add more dom elements and do some additional setup of shapes and dom elements
         this.initializeTempoTextInputValuesAndStyles();
@@ -132,6 +137,8 @@ class DrumMachineGui {
         shapes.addRowButtonShape = this.initializeRectangleShape(this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * (this.sequencer.rows.length - 1)) + this.configurations.addRowButton.topPadding, this.configurations.sequencer.left + (this.configurations.sequencer.width / 2) + this.configurations.addRowButton.leftPadding - (this.configurations.addRowButton.width / 2), this.configurations.addRowButton.height, this.configurations.addRowButton.width) // clicking this button will add a new empty row to the sequencer
         shapes.clearNotesForRowButtonShapes = this.initializeButtonPerSequencerRow(this.configurations.clearRowButtons.topPaddingPerRow, this.configurations.clearRowButtons.leftPaddingPerRow, this.configurations.clearRowButtons.height, this.configurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
         shapes.sequencerRowHandles = this.initializeSequencerRowHandles()
+        shapes.showModeMenuButton = this.initializeRectangleShape(this.configurations.showModeMenuButton.top, this.configurations.showModeMenuButton.left, this.configurations.showModeMenuButton.height, this.configurations.showModeMenuButton.width) // a rectangle that will eventually be used to select between different modes of the sequencer (move notes, edit note volumes, select notes, etc.)
+        shapes.showModeMenuButton.stroke = 'transparent' // hide this button for now since it isn't used yet
         this.two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
         return shapes;
     }
@@ -1303,6 +1310,18 @@ class DrumMachineGui {
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
     windowMouseMoveEventHandler(self, event) {
+        if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
+            self.moveNotesModeMouseMoveEventHandler(self, event);
+        } else if (this.currentGuiMode === DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE) {
+            self.changeNoteVolumesModeMouseMoveEventHandler(self, event);
+        }
+    }
+
+    changeNoteVolumesModeMouseMoveEventHandler(self, event) {
+        console.log("change volume mode; mouse move");
+    }
+
+    moveNotesModeMouseMoveEventHandler(self, event) {
         // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
         if (self.circleBeingMoved !== null) { // handle mousemove events when a note is selected
             self.adjustEventCoordinates(event)
@@ -1487,6 +1506,18 @@ class DrumMachineGui {
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
     windowMouseUpEventHandler(self, event) {
+        if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
+            self.moveNotesModeMouseUpEventHandler(self, event);
+        } else if (this.currentGuiMode === DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE) {
+            self.changeNoteVolumesModeMouseUpEventHandler(self, event);
+        }
+    }
+
+    changeNoteVolumesModeMouseUpEventHandler(self, event) {
+        console.log("change note volumes mode; mouse up");
+    }
+
+    moveNotesModeMouseUpEventHandler(self, event) {
         // handle letting go of notes. lifting your mouse anywhere means you're no longer click-dragging
         if (self.circleBeingMoved !== null) {
             /**
