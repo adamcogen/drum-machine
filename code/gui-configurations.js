@@ -11,7 +11,7 @@ function getGuiConfigurations(hideIcons) {
         sequencer: {
             top: 110,
             left: 160,
-            width: 400,
+            width: 700,
             spaceBetweenRows: 80,
             color: defaultSequencerLineColor,
             lineWidth: 3,
