@@ -36,14 +36,16 @@ class DrumMachineGui {
         this.initializeComponentEventListeners();
         this.initializeWindowEventListeners();
 
-        // create variables which will be used to track info about the note that is being clicked and dragged
-        this.circleBeingMoved = null
-        this.circleBeingMovedStartingPositionX = null
-        this.circleBeingMovedStartingPositionY = null
-        this.circleBeingMovedOldRow = null
-        this.circleBeingMovedNewRow = null
-        this.circleBeingMovedOldBeatNumber = null
-        this.circleBeingMovedNewBeatNumber = null
+        // create object which will be used to track info about the note that is being clicked and dragged
+        this.circleSelectionTracker = {
+            circleBeingMoved: null,
+            circleBeingMovedStartingPositionX: null,
+            circleBeingMovedStartingPositionY: null,
+            circleBeingMovedOldRow: null,
+            circleBeingMovedNewRow: null,
+            circleBeingMovedOldBeatNumber: null,
+            circleBeingMovedNewBeatNumber: null,
+        }
 
         this.rowSelectionTracker = {
             selectedRowIndex: null,
@@ -89,7 +91,7 @@ class DrumMachineGui {
         // make circles get bigger when they play.
         for (let circle of this.allDrawnCircles) {
             let radiusToSetUnplayedCircleTo = this.configurations.notes.unplayedCircleRadius
-            if (this.circleBeingMoved !== null && this.circleBeingMoved.guiData.label === circle.guiData.label) {
+            if (this.circleSelectionTracker.circleBeingMoved !== null && this.circleSelectionTracker.circleBeingMoved.guiData.label === circle.guiData.label) {
                 // if we are moving this circle, make its unplayed radius slightly bigger than normal
                 radiusToSetUnplayedCircleTo = this.configurations.notes.movingCircleRadius;
             }
@@ -1107,16 +1109,16 @@ class DrumMachineGui {
         });
         // select circle (for moving) if we click it
         circle._renderer.elem.addEventListener('mousedown', (event) => {
-            this.circleBeingMoved = circle
-            this.circleBeingMovedStartingPositionX = this.circleBeingMoved.translation.x
-            this.circleBeingMovedStartingPositionY = this.circleBeingMoved.translation.y
-            this.circleBeingMovedOldRow = this.circleBeingMoved.guiData.row
-            this.circleBeingMovedNewRow = this.circleBeingMovedOldRow
-            this.circleBeingMovedOldBeatNumber = this.circleBeingMoved.guiData.beat
-            this.circleBeingMovedNewBeatNumber = this.circleBeingMovedOldBeatNumber
+            this.circleSelectionTracker.circleBeingMoved = circle
+            this.circleSelectionTracker.circleBeingMovedStartingPositionX = this.circleSelectionTracker.circleBeingMoved.translation.x
+            this.circleSelectionTracker.circleBeingMovedStartingPositionY = this.circleSelectionTracker.circleBeingMoved.translation.y
+            this.circleSelectionTracker.circleBeingMovedOldRow = this.circleSelectionTracker.circleBeingMoved.guiData.row
+            this.circleSelectionTracker.circleBeingMovedNewRow = this.circleSelectionTracker.circleBeingMovedOldRow
+            this.circleSelectionTracker.circleBeingMovedOldBeatNumber = this.circleSelectionTracker.circleBeingMoved.guiData.beat
+            this.circleSelectionTracker.circleBeingMovedNewBeatNumber = this.circleSelectionTracker.circleBeingMovedOldBeatNumber
             this.setNoteTrashBinVisibility(true)
             this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
-            this.sequencer.playDrumSampleNow(this.circleBeingMoved.guiData.sampleName)
+            this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName)
         });
 
         // add info to the circle object that the gui uses to keep track of things
@@ -1323,15 +1325,15 @@ class DrumMachineGui {
 
     moveNotesModeMouseMoveEventHandler(self, event) {
         // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
-        if (self.circleBeingMoved !== null) { // handle mousemove events when a note is selected
+        if (self.circleSelectionTracker.circleBeingMoved !== null) { // handle mousemove events when a note is selected
             self.adjustEventCoordinates(event)
             let mouseX = event.pageX
             let mouseY = event.pageY
             // start with default note movement behavior, for when the note doesn't fall within range of the trash bin, a sequencer line, etc.
-            self.circleBeingMoved.translation.x = mouseX
-            self.circleBeingMoved.translation.y = mouseY
-            self.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW // start with "it's not colliding with anything", and update the value from there if we find a collision
-            self.circleBeingMoved.stroke = "black"
+            self.circleSelectionTracker.circleBeingMoved.translation.x = mouseX
+            self.circleSelectionTracker.circleBeingMoved.translation.y = mouseY
+            self.circleSelectionTracker.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW // start with "it's not colliding with anything", and update the value from there if we find a collision
+            self.circleSelectionTracker.circleBeingMoved.stroke = "black"
             self.components.domElements.images.trashClosedIcon.style.display = 'block'
             self.components.domElements.images.trashOpenIcon.style.display = 'none'
             /**
@@ -1347,10 +1349,10 @@ class DrumMachineGui {
             let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= self.configurations.noteTrashBin.left - self.configurations.mouseEvents.notePlacementPadding) && (mouseX <= self.configurations.noteTrashBin.left + self.configurations.noteTrashBin.width + self.configurations.mouseEvents.notePlacementPadding)
             let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= self.configurations.noteTrashBin.top - self.configurations.mouseEvents.notePlacementPadding) && (mouseY <= self.configurations.noteTrashBin.top + self.configurations.noteTrashBin.height + self.configurations.mouseEvents.notePlacementPadding)
             if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
-                self.circleBeingMoved.translation.x = centerOfTrashBinX
-                self.circleBeingMoved.translation.y = centerOfTrashBinY
-                self.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
-                self.circleBeingMoved.stroke = "red"
+                self.circleSelectionTracker.circleBeingMoved.translation.x = centerOfTrashBinX
+                self.circleSelectionTracker.circleBeingMoved.translation.y = centerOfTrashBinY
+                self.circleSelectionTracker.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
+                self.circleSelectionTracker.circleBeingMoved.stroke = "red"
                 self.components.domElements.images.trashClosedIcon.style.display = 'none'
                 self.components.domElements.images.trashOpenIcon.style.display = 'block'
                 self.components.shapes.noteTrashBinContainer.stroke = 'red'
@@ -1379,15 +1381,15 @@ class DrumMachineGui {
                         // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
                         if (self.sequencer.rows[rowIndex].quantized === true) {
                             // determine which subdivision we are closest to
-                            self.circleBeingMovedNewBeatNumber = self.getIndexOfClosestSubdivisionLine(mouseX, self.sequencer.rows[rowIndex].getNumberOfSubdivisions())
-                            self.circleBeingMoved.translation.x = self.getXPositionOfSubdivisionLine(self.circleBeingMovedNewBeatNumber, self.sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                            self.circleSelectionTracker.circleBeingMovedNewBeatNumber = self.getIndexOfClosestSubdivisionLine(mouseX, self.sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                            self.circleSelectionTracker.circleBeingMoved.translation.x = self.getXPositionOfSubdivisionLine(self.circleSelectionTracker.circleBeingMovedNewBeatNumber, self.sequencer.rows[rowIndex].getNumberOfSubdivisions())
                         } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
-                            self.circleBeingMoved.translation.x = self.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
-                            self.circleBeingMovedNewBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED
+                            self.circleSelectionTracker.circleBeingMoved.translation.x = self.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
+                            self.circleSelectionTracker.circleBeingMovedNewBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED
                         }
                         // quantization has a more complicated effect on x position than y. y position will always just be on line, so always just put it there.
-                        self.circleBeingMoved.translation.y = rowActualVerticalLocation;
-                        self.circleBeingMovedNewRow = rowIndex // set 'new row' to whichever row we collided with / 'snapped' to
+                        self.circleSelectionTracker.circleBeingMoved.translation.y = rowActualVerticalLocation;
+                        self.circleSelectionTracker.circleBeingMovedNewRow = rowIndex // set 'new row' to whichever row we collided with / 'snapped' to
                         break; // we found the row that the note will be placed on, so stop iterating thru rows early
                     }
                 }
@@ -1396,8 +1398,8 @@ class DrumMachineGui {
                 let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - self.configurations.mouseEvents.throwNoteAwaySidesPadding) || (mouseX >= sequencerRightBoundary + self.configurations.mouseEvents.throwNoteAwaySidesPadding)
                 let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - self.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + self.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding)
                 if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
-                    self.circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
-                    self.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
+                    self.circleSelectionTracker.circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
+                    self.circleSelectionTracker.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
                     self.components.domElements.images.trashClosedIcon.style.display = 'none'
                     self.components.domElements.images.trashOpenIcon.style.display = 'block'
                     self.components.shapes.noteTrashBinContainer.stroke = 'red'
@@ -1519,7 +1521,7 @@ class DrumMachineGui {
 
     moveNotesModeMouseUpEventHandler(self, event) {
         // handle letting go of notes. lifting your mouse anywhere means you're no longer click-dragging
-        if (self.circleBeingMoved !== null) {
+        if (self.circleSelectionTracker.circleBeingMoved !== null) {
             /**
              * this is the workflow for determining where to put a circle that we were click-dragging once we release the mouse.
              * how this workflow works (todo: double check that this is all correct):
@@ -1551,60 +1553,60 @@ class DrumMachineGui {
              *         (since there's no real reason to actually remove anything when "removing" a note from the note bank. instead we just 
              *         create a new node for the sequencer's note list, and place that onto the row it's being added to).
              */
-            self.circleBeingMoved.stroke = "transparent"
+            self.circleSelectionTracker.circleBeingMoved.stroke = "transparent"
             // note down starting state, current state.
-            let circleNewXPosition = self.circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle.
-            let circleNewYPosition = self.circleBeingMovedStartingPositionY // if the circle is not colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
-            let circleNewBeatNumber = self.circleBeingMovedOldBeatNumber
+            let circleNewXPosition = self.circleSelectionTracker.circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle.
+            let circleNewYPosition = self.circleSelectionTracker.circleBeingMovedStartingPositionY // if the circle is not colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
+            let circleNewBeatNumber = self.circleSelectionTracker.circleBeingMovedOldBeatNumber
             self.adjustEventCoordinates(event)
             let mouseX = event.pageX
             let mouseY = event.pageY
             // check for collisions with things (sequencer rows, the trash bin, etc.)and make adjustments accordingly, so that everything will be handled as explained in the block comment above
-            if (self.circleBeingMovedNewRow >= 0) { // this means the note is being put onto a new sequencer row
-                circleNewXPosition = self.circleBeingMoved.translation.x // the note should have already been 'snapped' to its new row in the 'mousemove' event, so just commit to that new location
-                circleNewYPosition = self.circleBeingMoved.translation.y
-                circleNewBeatNumber = self.circleBeingMovedNewBeatNumber
-            } else if (self.circleBeingMovedNewRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW) { // if the note isn't being put onto any row, just put it back wherever it came from
-                circleNewXPosition = self.circleBeingMovedStartingPositionX
-                circleNewYPosition = self.circleBeingMovedStartingPositionY
-                self.circleBeingMovedNewRow = self.circleBeingMovedOldRow // replace the 'has no row' constant value with the old row number that this was taken from (i.e. just put it back where it came from!)
-                circleNewBeatNumber = self.circleBeingMovedOldBeatNumber
-            } else if (self.circleBeingMovedNewRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN) { // check if the note is being placed in the trash bin. if so, delete the circle and its associated node if there is one
-                if (self.circleBeingMovedOldRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK) { // if the note being thrown away came from the note bank, just put it back in the note bank.
-                    self.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK
+            if (self.circleSelectionTracker.circleBeingMovedNewRow >= 0) { // this means the note is being put onto a new sequencer row
+                circleNewXPosition = self.circleSelectionTracker.circleBeingMoved.translation.x // the note should have already been 'snapped' to its new row in the 'mousemove' event, so just commit to that new location
+                circleNewYPosition = self.circleSelectionTracker.circleBeingMoved.translation.y
+                circleNewBeatNumber = self.circleSelectionTracker.circleBeingMovedNewBeatNumber
+            } else if (self.circleSelectionTracker.circleBeingMovedNewRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW) { // if the note isn't being put onto any row, just put it back wherever it came from
+                circleNewXPosition = self.circleSelectionTracker.circleBeingMovedStartingPositionX
+                circleNewYPosition = self.circleSelectionTracker.circleBeingMovedStartingPositionY
+                self.circleSelectionTracker.circleBeingMovedNewRow = self.circleSelectionTracker.circleBeingMovedOldRow // replace the 'has no row' constant value with the old row number that this was taken from (i.e. just put it back where it came from!)
+                circleNewBeatNumber = self.circleSelectionTracker.circleBeingMovedOldBeatNumber
+            } else if (self.circleSelectionTracker.circleBeingMovedNewRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN) { // check if the note is being placed in the trash bin. if so, delete the circle and its associated node if there is one
+                if (self.circleSelectionTracker.circleBeingMovedOldRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK) { // if the note being thrown away came from the note bank, just put it back in the note bank.
+                    self.circleSelectionTracker.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK
                 } else { // only bother throwing away things that came from a row (throwing away note bank notes is pointless)
-                    self.removeCircleFromDisplay(self.circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles and from the two.js canvas
+                    self.removeCircleFromDisplay(self.circleSelectionTracker.circleBeingMoved.guiData.label) // remove the circle from the list of all drawn circles and from the two.js canvas
                 }
             }
             // we are done checking for collisions with things and updating 'old row' and 'new row' values, so now move on to updating the sequencer
-            self.circleBeingMoved.translation.x = circleNewXPosition
-            self.circleBeingMoved.translation.y = circleNewYPosition
-            self.circleBeingMoved.guiData.row = self.circleBeingMovedNewRow
+            self.circleSelectionTracker.circleBeingMoved.translation.x = circleNewXPosition
+            self.circleSelectionTracker.circleBeingMoved.translation.y = circleNewYPosition
+            self.circleSelectionTracker.circleBeingMoved.guiData.row = self.circleSelectionTracker.circleBeingMovedNewRow
             let node = null
             // remove the moved note from its old sequencer row. todo: consider changing this logic to just update node's priority if it isn't switching rows.)
-            if (self.circleBeingMovedOldRow >= 0) { // -2 is the 'row' given to notes that are in the note bank. if old row is < 0, we don't need to remove it from any sequencer row.
-                node = self.sequencer.rows[self.circleBeingMovedOldRow].removeNode(self.circleBeingMoved.guiData.label)
+            if (self.circleSelectionTracker.circleBeingMovedOldRow >= 0) { // -2 is the 'row' given to notes that are in the note bank. if old row is < 0, we don't need to remove it from any sequencer row.
+                node = self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
             }
             // add the moved note to its new sequencer row.
-            if (self.circleBeingMovedNewRow >= 0) {
+            if (self.circleSelectionTracker.circleBeingMovedNewRow >= 0) {
                 if (node === null) { // this should just mean the circle was pulled from the note bank, so we need to create a node for it
-                    if (self.circleBeingMovedOldRow >= 0) { // should be an unreachable case, just checking for safety
-                        throw "unexpected case: node was null but 'circleBeingMovedOldRow' was not < 0. circleBeingMovedOldRow: " + self.circleBeingMovedOldRow + ". node: " + node + "."
+                    if (self.circleSelectionTracker.circleBeingMovedOldRow >= 0) { // should be an unreachable case, just checking for safety
+                        throw "unexpected case: node was null but 'circleBeingMovedOldRow' was not < 0. circleBeingMovedOldRow: " + self.circleSelectionTracker.circleBeingMovedOldRow + ". node: " + node + "."
                     }
                     // create a new node for the sample that this note bank circle was for. note bank circles have a sample in their GUI data, 
                     // but no real node that can be added to the drum sequencer's data structure, so we need to create one.
-                    node = self.sampleBankNodeGenerator.createNewNodeForSample(self.circleBeingMoved.guiData.sampleName)
-                    self.circleBeingMoved.guiData.label = node.label // the newly generated node will also have a real generated ID (label), use that
-                    self.drawNoteBankCircleForSample(self.circleBeingMoved.guiData.sampleName) // if the note was taken from the sound bank, refill the sound bank
+                    node = self.sampleBankNodeGenerator.createNewNodeForSample(self.circleSelectionTracker.circleBeingMoved.guiData.sampleName)
+                    self.circleSelectionTracker.circleBeingMoved.guiData.label = node.label // the newly generated node will also have a real generated ID (label), use that
+                    self.drawNoteBankCircleForSample(self.circleSelectionTracker.circleBeingMoved.guiData.sampleName) // if the note was taken from the sound bank, refill the sound bank
                 }
                 // convert the note's new y position into a sequencer timestamp, and set the node's 'priority' to its new timestamp
                 let newNodeTimestampMillis = self.sequencer.loopLengthInMillis * ((circleNewXPosition - self.configurations.sequencer.left) / self.configurations.sequencer.width)
                 node.priority = newNodeTimestampMillis
                 // add the moved note to its new sequencer row
-                self.sequencer.rows[self.circleBeingMovedNewRow].insertNode(node, self.circleBeingMoved.guiData.label)
+                self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedNewRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
                 node.data.lastScheduledOnIteration = Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED // mark note as 'not played yet on current iteration'
                 node.data.beat = circleNewBeatNumber
-                self.circleBeingMoved.guiData.beat = circleNewBeatNumber
+                self.circleSelectionTracker.circleBeingMoved.guiData.beat = circleNewBeatNumber
             }
             self.saveCurrentSequencerStateToUrlHash();
         }
@@ -1617,7 +1619,7 @@ class DrumMachineGui {
             self.redrawSequencer();
             self.saveCurrentSequencerStateToUrlHash();
         }
-        self.circleBeingMoved = null
+        self.circleSelectionTracker.circleBeingMoved = null
         self.setNoteTrashBinVisibility(false)
         self.rowSelectionTracker.selectedRowIndex = null
     }
