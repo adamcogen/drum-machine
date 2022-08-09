@@ -54,8 +54,8 @@ class DrumMachineGui {
             shapes: [],
             shapesOriginalPositions: [], // this is going to be such a weird way of doing this..
             rowHandleStartingPosition: {
-                x: 0,
-                y: 0,
+                x: null,
+                y: null,
             },
             domElements: [],
             domElementsOriginalPositions: [],
@@ -1518,7 +1518,36 @@ class DrumMachineGui {
     }
 
     changeNoteVolumesModeMouseUpEventHandler(self, event) {
-        console.log("change note volumes mode; mouse up");
+        // start putting together basic logic for clicking notes in 'edit-volumes' mode. this will evenetually iterate
+        // through a list of a few predetermined voluesm, such as 25%, 50%, 75%, and 100%, or something like that.
+        // eventually this logic will probably be moved into a 'click' handler rather than mouseup,
+        // because click-dragging in edit-volumes mode will have its own different behavior: fine-tuning volume of the selected note.
+        // this logic also doesn't visually change anything currently, since note radius is currently reset during each sequencer update
+        // based on the position of the time tracking lines. that logic will eventually need to be changed as well.
+        if (self.circleSelectionTracker.circleBeingMoved !== null) {
+            let list = [4, 6, 8, 10, 12]; // list of possible numbers, in ascending order
+            let originalNumber = self.circleSelectionTracker.circleBeingMoved.radius;
+            let newNumber = null;
+            if (originalNumber < list[0]) { // if current value is less than the smallest option, set new number to the smallest option
+                newNumber = list[0];
+            } else if (originalNumber >= list[list.length - 1]) { // if current value is greater than or equal to the largest option, set new number to the smallest option
+                newNumber = list[0];
+            } else {
+                for (let i = 0; i < list.length; i++) { // else determine which option is the next biggest.
+                    if (originalNumber >= list[i]) { // if the original number is larger than the current list item, we can skip this item and check the next
+                        continue;
+                    } else {
+                        // if the original number is smaller than the current item, we should set the new number to this item. 
+                        // since the list is sorted, we know this is the first number in the list larger than the original number.
+                        newNumber = list[i];
+                        break;
+                    }
+                }
+            }
+            self.circleSelectionTracker.circleBeingMoved.radius = newNumber;
+            self.circleSelectionTracker.circleBeingMoved = null
+            self.setNoteTrashBinVisibility(false)
+        }
     }
 
     moveNotesModeMouseUpEventHandler(self, event) {
