@@ -45,8 +45,8 @@ class DrumMachineGui {
         this.circleBeingMovedOldBeatNumber = null
         this.circleBeingMovedNewBeatNumber = null
 
-        this.selectedRowIndex = null;
         this.rowSelecionTracker = {
+            selectedRowIndex: null,
             shapes: [],
             shapesOriginalPositions: [], // this is going to be such a weird way of doing this..
             rowHandleStartingPosition: {
@@ -248,7 +248,7 @@ class DrumMachineGui {
         this.setNoteTrashBinVisibility(true)
         this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
         // save relevant info about whichever row is selected
-        this.selectedRowIndex = rowIndex;
+        this.rowSelecionTracker.selectedRowIndex = rowIndex;
         this.rowSelecionTracker.removeRow = false // start this out false until we move the row around (i.e. into the trash bin)
         // save a list, of all the shapes that are associated with the selected row.
         // we are saving this list so that we can move them all as we move the row around.
@@ -580,7 +580,7 @@ class DrumMachineGui {
 
             // add border to circle on mouseover
             circle._renderer.elem.addEventListener('mouseenter', () => {
-                if (this.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
+                if (this.rowSelecionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
                     circle.stroke = 'black'
                     circle.linewidth = 2
                     circle.fill = this.configurations.sequencerRowHandles.unselectedColor
@@ -1288,9 +1288,9 @@ class DrumMachineGui {
         this.initializeSequencerRowHandlesActionListeners();
         // initialize, format, and move button icons into place
         this.initializeIcons(this.configurations.hideIcons)
-        if (this.selectedRowIndex !== null) {
+        if (this.rowSelecionTracker.selectedRowIndex !== null) {
             // if a row is selected, set variables appropriately for moving it around
-            this.initializeRowSelectionVariablesAndVisuals(this.selectedRowIndex);
+            this.initializeRowSelectionVariablesAndVisuals(this.rowSelecionTracker.selectedRowIndex);
         }
     }
 
@@ -1404,22 +1404,22 @@ class DrumMachineGui {
                 }
             }
         }
-        if (self.selectedRowIndex !== null) { // handle mousemove events when a row is selected
+        if (self.rowSelecionTracker.selectedRowIndex !== null) { // handle mousemove events when a row is selected
             self.adjustEventCoordinates(event)
             let mouseX = event.pageX
             let mouseY = event.pageY
 
-            let circle = self.components.shapes.sequencerRowHandles[self.selectedRowIndex]
+            let circle = self.components.shapes.sequencerRowHandles[self.rowSelecionTracker.selectedRowIndex]
             circle.stroke = 'black'
             circle.linewidth = 2
             circle.fill = self.configurations.sequencerRowHandles.selectedColor
-            let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.selectedRowIndex]
+            let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.rowSelecionTracker.selectedRowIndex]
             rowSelectionRectangle.stroke = self.configurations.sequencerRowHandles.selectedColor
             self.components.domElements.images.trashClosedIcon.style.display = 'block'
             self.components.domElements.images.trashOpenIcon.style.display = 'none'
 
-            self.components.shapes.sequencerRowHandles[self.selectedRowIndex].translation.x = mouseX
-            self.components.shapes.sequencerRowHandles[self.selectedRowIndex].translation.y = mouseY
+            self.components.shapes.sequencerRowHandles[self.rowSelecionTracker.selectedRowIndex].translation.x = mouseX
+            self.components.shapes.sequencerRowHandles[self.rowSelecionTracker.selectedRowIndex].translation.y = mouseY
 
             // check if the row handle is within range to be placed in the trash bin. if so, move the handle to the center of the trash bin.
             let centerOfTrashBinX = self.configurations.noteTrashBin.left + (self.configurations.noteTrashBin.width / 2)
@@ -1440,8 +1440,8 @@ class DrumMachineGui {
                 self.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             }
 
-            let xChangeFromStart = self.components.shapes.sequencerRowHandles[self.selectedRowIndex].translation.x - self.rowSelecionTracker.rowHandleStartingPosition.x
-            let yChangeFromStart = self.components.shapes.sequencerRowHandles[self.selectedRowIndex].translation.y - self.rowSelecionTracker.rowHandleStartingPosition.y
+            let xChangeFromStart = self.components.shapes.sequencerRowHandles[self.rowSelecionTracker.selectedRowIndex].translation.x - self.rowSelecionTracker.rowHandleStartingPosition.x
+            let yChangeFromStart = self.components.shapes.sequencerRowHandles[self.rowSelecionTracker.selectedRowIndex].translation.y - self.rowSelecionTracker.rowHandleStartingPosition.y
 
             for (let shapeIndex = 0; shapeIndex < self.rowSelecionTracker.shapes.length; shapeIndex++) {
                 self.rowSelecionTracker.shapes[shapeIndex].translation.x = self.rowSelecionTracker.shapesOriginalPositions[shapeIndex].x + xChangeFromStart;
@@ -1470,7 +1470,7 @@ class DrumMachineGui {
             }
 
             for(let rowIndex = 0; rowIndex < self.sequencer.numberOfRows; rowIndex++) {
-                if (rowIndex === self.selectedRowIndex) {
+                if (rowIndex === self.rowSelecionTracker.selectedRowIndex) {
                     continue;
                 }
                 let rowHandleActualVerticalLocation = self.configurations.sequencer.top + (self.configurations.sequencer.spaceBetweenRows * rowIndex) + self.configurations.sequencerRowHandles.topPadding;
@@ -1481,8 +1481,8 @@ class DrumMachineGui {
                 let rightLimit = rowHandleActualHorizontalLocation + self.configurations.mouseEvents.notePlacementPadding + self.configurations.sequencer.width
 
                 if (mouseX >= leftLimit && mouseX <= rightLimit && mouseY >= topLimit && mouseY <= bottomLimit) {
-                    self.sequencer.moveRowToNewIndex(self.selectedRowIndex, rowIndex);
-                    self.selectedRowIndex = rowIndex
+                    self.sequencer.moveRowToNewIndex(self.rowSelecionTracker.selectedRowIndex, rowIndex);
+                    self.rowSelecionTracker.selectedRowIndex = rowIndex
                     self.redrawSequencer();
                     break; // we found the row that the note will be placed on, so stop iterating thru rows early
                 }
@@ -1608,18 +1608,18 @@ class DrumMachineGui {
             }
             self.saveCurrentSequencerStateToUrlHash();
         }
-        if (self.selectedRowIndex !== null) {
+        if (self.rowSelecionTracker.selectedRowIndex !== null) {
             // un-selecting the row will be handled in 'redraw', as long as we set selected row index to null here
             if (self.rowSelecionTracker.removeRow) {
-                self.sequencer.removeRowAtIndex(self.selectedRowIndex);
+                self.sequencer.removeRowAtIndex(self.rowSelecionTracker.selectedRowIndex);
             }
-            self.selectedRowIndex = null
+            self.rowSelecionTracker.selectedRowIndex = null
             self.redrawSequencer();
             self.saveCurrentSequencerStateToUrlHash();
         }
         self.circleBeingMoved = null
         self.setNoteTrashBinVisibility(false)
-        self.selectedRowIndex = null
+        self.rowSelecionTracker.selectedRowIndex = null
     }
 
     /**
