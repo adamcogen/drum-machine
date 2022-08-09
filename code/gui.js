@@ -39,8 +39,10 @@ class DrumMachineGui {
         // create object which will be used to track info about the note that is being clicked and dragged
         this.circleSelectionTracker = {
             circleBeingMoved: null,
-            circleBeingMovedStartingPositionX: null,
-            circleBeingMovedStartingPositionY: null,
+            circleBeingMovedStartingPosition: {
+                x: null,
+                y: null,
+            },
             circleBeingMovedOldRow: null,
             circleBeingMovedNewRow: null,
             circleBeingMovedOldBeatNumber: null,
@@ -1110,8 +1112,8 @@ class DrumMachineGui {
         // select circle (for moving) if we click it
         circle._renderer.elem.addEventListener('mousedown', (event) => {
             this.circleSelectionTracker.circleBeingMoved = circle
-            this.circleSelectionTracker.circleBeingMovedStartingPositionX = this.circleSelectionTracker.circleBeingMoved.translation.x
-            this.circleSelectionTracker.circleBeingMovedStartingPositionY = this.circleSelectionTracker.circleBeingMoved.translation.y
+            this.circleSelectionTracker.circleBeingMovedStartingPosition.x = this.circleSelectionTracker.circleBeingMoved.translation.x
+            this.circleSelectionTracker.circleBeingMovedStartingPosition.y = this.circleSelectionTracker.circleBeingMoved.translation.y
             this.circleSelectionTracker.circleBeingMovedOldRow = this.circleSelectionTracker.circleBeingMoved.guiData.row
             this.circleSelectionTracker.circleBeingMovedNewRow = this.circleSelectionTracker.circleBeingMovedOldRow
             this.circleSelectionTracker.circleBeingMovedOldBeatNumber = this.circleSelectionTracker.circleBeingMoved.guiData.beat
@@ -1555,8 +1557,8 @@ class DrumMachineGui {
              */
             self.circleSelectionTracker.circleBeingMoved.stroke = "transparent"
             // note down starting state, current state.
-            let circleNewXPosition = self.circleSelectionTracker.circleBeingMovedStartingPositionX // note, circle starting position was recorded when we frist clicked the circle.
-            let circleNewYPosition = self.circleSelectionTracker.circleBeingMovedStartingPositionY // if the circle is not colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
+            let circleNewXPosition = self.circleSelectionTracker.circleBeingMovedStartingPosition.x // note, circle starting position was recorded when we frist clicked the circle.
+            let circleNewYPosition = self.circleSelectionTracker.circleBeingMovedStartingPosition.y // if the circle is not colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
             let circleNewBeatNumber = self.circleSelectionTracker.circleBeingMovedOldBeatNumber
             self.adjustEventCoordinates(event)
             let mouseX = event.pageX
@@ -1567,8 +1569,8 @@ class DrumMachineGui {
                 circleNewYPosition = self.circleSelectionTracker.circleBeingMoved.translation.y
                 circleNewBeatNumber = self.circleSelectionTracker.circleBeingMovedNewBeatNumber
             } else if (self.circleSelectionTracker.circleBeingMovedNewRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW) { // if the note isn't being put onto any row, just put it back wherever it came from
-                circleNewXPosition = self.circleSelectionTracker.circleBeingMovedStartingPositionX
-                circleNewYPosition = self.circleSelectionTracker.circleBeingMovedStartingPositionY
+                circleNewXPosition = self.circleSelectionTracker.circleBeingMovedStartingPosition.x
+                circleNewYPosition = self.circleSelectionTracker.circleBeingMovedStartingPosition.y
                 self.circleSelectionTracker.circleBeingMovedNewRow = self.circleSelectionTracker.circleBeingMovedOldRow // replace the 'has no row' constant value with the old row number that this was taken from (i.e. just put it back where it came from!)
                 circleNewBeatNumber = self.circleSelectionTracker.circleBeingMovedOldBeatNumber
             } else if (self.circleSelectionTracker.circleBeingMovedNewRow === DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN) { // check if the note is being placed in the trash bin. if so, delete the circle and its associated node if there is one
