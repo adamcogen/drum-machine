@@ -45,7 +45,7 @@ class DrumMachineGui {
         this.circleBeingMovedOldBeatNumber = null
         this.circleBeingMovedNewBeatNumber = null
 
-        this.rowSelecionTracker = {
+        this.rowSelectionTracker = {
             selectedRowIndex: null,
             shapes: [],
             shapesOriginalPositions: [], // this is going to be such a weird way of doing this..
@@ -248,47 +248,47 @@ class DrumMachineGui {
         this.setNoteTrashBinVisibility(true)
         this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
         // save relevant info about whichever row is selected
-        this.rowSelecionTracker.selectedRowIndex = rowIndex;
-        this.rowSelecionTracker.removeRow = false // start this out false until we move the row around (i.e. into the trash bin)
+        this.rowSelectionTracker.selectedRowIndex = rowIndex;
+        this.rowSelectionTracker.removeRow = false // start this out false until we move the row around (i.e. into the trash bin)
         // save a list, of all the shapes that are associated with the selected row.
         // we are saving this list so that we can move them all as we move the row around.
-        this.rowSelecionTracker.shapes = [];
+        this.rowSelectionTracker.shapes = [];
         for (let circle of this.allDrawnCircles) {
             if (circle.guiData.row === rowIndex) {
-                this.rowSelecionTracker.shapes.push(circle)
+                this.rowSelectionTracker.shapes.push(circle)
             }
         }
-        this.rowSelecionTracker.shapes.push(...this.components.shapes.subdivisionLineLists[rowIndex])
-        this.rowSelecionTracker.shapes.push(...this.components.shapes.referenceLineLists[rowIndex])
-        this.rowSelecionTracker.shapes.push(this.components.shapes.sequencerRowLines[rowIndex])
-        this.rowSelecionTracker.shapes.push(this.components.shapes.sequencerRowSelectionRectangles[rowIndex])
-        this.rowSelecionTracker.shapes.push(this.components.shapes.clearNotesForRowButtonShapes[rowIndex])
+        this.rowSelectionTracker.shapes.push(...this.components.shapes.subdivisionLineLists[rowIndex])
+        this.rowSelectionTracker.shapes.push(...this.components.shapes.referenceLineLists[rowIndex])
+        this.rowSelectionTracker.shapes.push(this.components.shapes.sequencerRowLines[rowIndex])
+        this.rowSelectionTracker.shapes.push(this.components.shapes.sequencerRowSelectionRectangles[rowIndex])
+        this.rowSelectionTracker.shapes.push(this.components.shapes.clearNotesForRowButtonShapes[rowIndex])
         // this part gets a little weird. save a list of all of the starting positions of each
         // shape that is being moved. that way we can translate them proporionally to how far
         // the row handle has moved.
-        this.rowSelecionTracker.shapesOriginalPositions = []
-        for (let shape of this.rowSelecionTracker.shapes) {
-            this.rowSelecionTracker.shapesOriginalPositions.push({
+        this.rowSelectionTracker.shapesOriginalPositions = []
+        for (let shape of this.rowSelectionTracker.shapes) {
+            this.rowSelectionTracker.shapesOriginalPositions.push({
                 x: shape.translation.x,
                 y: shape.translation.y,
             });
         }
-        this.rowSelecionTracker.rowHandleStartingPosition.x = this.components.shapes.sequencerRowHandles[rowIndex].translation.x
-        this.rowSelecionTracker.rowHandleStartingPosition.y = this.components.shapes.sequencerRowHandles[rowIndex].translation.y
+        this.rowSelectionTracker.rowHandleStartingPosition.x = this.components.shapes.sequencerRowHandles[rowIndex].translation.x
+        this.rowSelectionTracker.rowHandleStartingPosition.y = this.components.shapes.sequencerRowHandles[rowIndex].translation.y
         // do the exact same thing for dom elements (subdivision and reference line text inputs, quantization checkbox, images) next
-        this.rowSelecionTracker.domElements = [];
-        this.rowSelecionTracker.domElements.push(this.components.domElements.textInputs.subdivisionTextInputs[rowIndex])
-        this.rowSelecionTracker.domElements.push(this.components.domElements.textInputs.referenceLineTextInputs[rowIndex])
+        this.rowSelectionTracker.domElements = [];
+        this.rowSelectionTracker.domElements.push(this.components.domElements.textInputs.subdivisionTextInputs[rowIndex])
+        this.rowSelectionTracker.domElements.push(this.components.domElements.textInputs.referenceLineTextInputs[rowIndex])
         if (this.configurations.hideIcons) {
-            this.rowSelecionTracker.domElements.push(this.components.domElements.checkboxes.quantizationCheckboxes[rowIndex])
+            this.rowSelectionTracker.domElements.push(this.components.domElements.checkboxes.quantizationCheckboxes[rowIndex])
         } else {
-            this.rowSelecionTracker.domElements.push(this.components.domElements.iconLists.lockedIcons[rowIndex]);
-            this.rowSelecionTracker.domElements.push(this.components.domElements.iconLists.unlockedIcons[rowIndex]);
-            this.rowSelecionTracker.domElements.push(this.components.domElements.iconLists.clearRowIcons[rowIndex]);
+            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.lockedIcons[rowIndex]);
+            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.unlockedIcons[rowIndex]);
+            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.clearRowIcons[rowIndex]);
         }
-        this.rowSelecionTracker.domElementsOriginalPositions = [];
-        for (let domElement of this.rowSelecionTracker.domElements) {
-            this.rowSelecionTracker.domElementsOriginalPositions.push({
+        this.rowSelectionTracker.domElementsOriginalPositions = [];
+        for (let domElement of this.rowSelectionTracker.domElements) {
+            this.rowSelectionTracker.domElementsOriginalPositions.push({
                 left: parseInt(domElement.style.left.slice(0, -2)), // cut off "px" from the position and convert it to an integer
                 top: parseInt(domElement.style.top.slice(0, -2)),
             });
@@ -580,7 +580,7 @@ class DrumMachineGui {
 
             // add border to circle on mouseover
             circle._renderer.elem.addEventListener('mouseenter', () => {
-                if (this.rowSelecionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
+                if (this.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
                     circle.stroke = 'black'
                     circle.linewidth = 2
                     circle.fill = this.configurations.sequencerRowHandles.unselectedColor
@@ -1288,9 +1288,9 @@ class DrumMachineGui {
         this.initializeSequencerRowHandlesActionListeners();
         // initialize, format, and move button icons into place
         this.initializeIcons(this.configurations.hideIcons)
-        if (this.rowSelecionTracker.selectedRowIndex !== null) {
+        if (this.rowSelectionTracker.selectedRowIndex !== null) {
             // if a row is selected, set variables appropriately for moving it around
-            this.initializeRowSelectionVariablesAndVisuals(this.rowSelecionTracker.selectedRowIndex);
+            this.initializeRowSelectionVariablesAndVisuals(this.rowSelectionTracker.selectedRowIndex);
         }
     }
 
@@ -1404,22 +1404,22 @@ class DrumMachineGui {
                 }
             }
         }
-        if (self.rowSelecionTracker.selectedRowIndex !== null) { // handle mousemove events when a row is selected
+        if (self.rowSelectionTracker.selectedRowIndex !== null) { // handle mousemove events when a row is selected
             self.adjustEventCoordinates(event)
             let mouseX = event.pageX
             let mouseY = event.pageY
 
-            let circle = self.components.shapes.sequencerRowHandles[self.rowSelecionTracker.selectedRowIndex]
+            let circle = self.components.shapes.sequencerRowHandles[self.rowSelectionTracker.selectedRowIndex]
             circle.stroke = 'black'
             circle.linewidth = 2
             circle.fill = self.configurations.sequencerRowHandles.selectedColor
-            let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.rowSelecionTracker.selectedRowIndex]
+            let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.rowSelectionTracker.selectedRowIndex]
             rowSelectionRectangle.stroke = self.configurations.sequencerRowHandles.selectedColor
             self.components.domElements.images.trashClosedIcon.style.display = 'block'
             self.components.domElements.images.trashOpenIcon.style.display = 'none'
 
-            self.components.shapes.sequencerRowHandles[self.rowSelecionTracker.selectedRowIndex].translation.x = mouseX
-            self.components.shapes.sequencerRowHandles[self.rowSelecionTracker.selectedRowIndex].translation.y = mouseY
+            self.components.shapes.sequencerRowHandles[self.rowSelectionTracker.selectedRowIndex].translation.x = mouseX
+            self.components.shapes.sequencerRowHandles[self.rowSelectionTracker.selectedRowIndex].translation.y = mouseY
 
             // check if the row handle is within range to be placed in the trash bin. if so, move the handle to the center of the trash bin.
             let centerOfTrashBinX = self.configurations.noteTrashBin.left + (self.configurations.noteTrashBin.width / 2)
@@ -1430,27 +1430,27 @@ class DrumMachineGui {
                 circle.translation.x = centerOfTrashBinX
                 circle.translation.y = centerOfTrashBinY
                 rowSelectionRectangle.stroke = "red"
-                self.rowSelecionTracker.removeRow = true;
+                self.rowSelectionTracker.removeRow = true;
                 circle.stroke = "red"
                 self.components.domElements.images.trashClosedIcon.style.display = 'none'
                 self.components.domElements.images.trashOpenIcon.style.display = 'block'
                 self.components.shapes.noteTrashBinContainer.stroke = 'red'
             } else {
-                self.rowSelecionTracker.removeRow = false;
+                self.rowSelectionTracker.removeRow = false;
                 self.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             }
 
-            let xChangeFromStart = self.components.shapes.sequencerRowHandles[self.rowSelecionTracker.selectedRowIndex].translation.x - self.rowSelecionTracker.rowHandleStartingPosition.x
-            let yChangeFromStart = self.components.shapes.sequencerRowHandles[self.rowSelecionTracker.selectedRowIndex].translation.y - self.rowSelecionTracker.rowHandleStartingPosition.y
+            let xChangeFromStart = self.components.shapes.sequencerRowHandles[self.rowSelectionTracker.selectedRowIndex].translation.x - self.rowSelectionTracker.rowHandleStartingPosition.x
+            let yChangeFromStart = self.components.shapes.sequencerRowHandles[self.rowSelectionTracker.selectedRowIndex].translation.y - self.rowSelectionTracker.rowHandleStartingPosition.y
 
-            for (let shapeIndex = 0; shapeIndex < self.rowSelecionTracker.shapes.length; shapeIndex++) {
-                self.rowSelecionTracker.shapes[shapeIndex].translation.x = self.rowSelecionTracker.shapesOriginalPositions[shapeIndex].x + xChangeFromStart;
-                self.rowSelecionTracker.shapes[shapeIndex].translation.y = self.rowSelecionTracker.shapesOriginalPositions[shapeIndex].y + yChangeFromStart;
+            for (let shapeIndex = 0; shapeIndex < self.rowSelectionTracker.shapes.length; shapeIndex++) {
+                self.rowSelectionTracker.shapes[shapeIndex].translation.x = self.rowSelectionTracker.shapesOriginalPositions[shapeIndex].x + xChangeFromStart;
+                self.rowSelectionTracker.shapes[shapeIndex].translation.y = self.rowSelectionTracker.shapesOriginalPositions[shapeIndex].y + yChangeFromStart;
             }
 
-            for (let domElementIndex = 0; domElementIndex < self.rowSelecionTracker.domElements.length; domElementIndex++) {
-                self.rowSelecionTracker.domElements[domElementIndex].style.left = "" + (self.rowSelecionTracker.domElementsOriginalPositions[domElementIndex].left + xChangeFromStart) + "px"
-                self.rowSelecionTracker.domElements[domElementIndex].style.top = "" + (self.rowSelecionTracker.domElementsOriginalPositions[domElementIndex].top + yChangeFromStart) + "px";
+            for (let domElementIndex = 0; domElementIndex < self.rowSelectionTracker.domElements.length; domElementIndex++) {
+                self.rowSelectionTracker.domElements[domElementIndex].style.left = "" + (self.rowSelectionTracker.domElementsOriginalPositions[domElementIndex].left + xChangeFromStart) + "px"
+                self.rowSelectionTracker.domElements[domElementIndex].style.top = "" + (self.rowSelectionTracker.domElementsOriginalPositions[domElementIndex].top + yChangeFromStart) + "px";
             }
 
             // if the row is far enough away from the sequencer, we will throw it out
@@ -1463,14 +1463,14 @@ class DrumMachineGui {
             if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
                 circle.stroke = "red"
                 rowSelectionRectangle.stroke = "red"
-                self.rowSelecionTracker.removeRow = true;
+                self.rowSelectionTracker.removeRow = true;
                 self.components.domElements.images.trashClosedIcon.style.display = 'none'
                 self.components.domElements.images.trashOpenIcon.style.display = 'block'
                 self.components.shapes.noteTrashBinContainer.stroke = 'red'
             }
 
             for(let rowIndex = 0; rowIndex < self.sequencer.numberOfRows; rowIndex++) {
-                if (rowIndex === self.rowSelecionTracker.selectedRowIndex) {
+                if (rowIndex === self.rowSelectionTracker.selectedRowIndex) {
                     continue;
                 }
                 let rowHandleActualVerticalLocation = self.configurations.sequencer.top + (self.configurations.sequencer.spaceBetweenRows * rowIndex) + self.configurations.sequencerRowHandles.topPadding;
@@ -1481,8 +1481,8 @@ class DrumMachineGui {
                 let rightLimit = rowHandleActualHorizontalLocation + self.configurations.mouseEvents.notePlacementPadding + self.configurations.sequencer.width
 
                 if (mouseX >= leftLimit && mouseX <= rightLimit && mouseY >= topLimit && mouseY <= bottomLimit) {
-                    self.sequencer.moveRowToNewIndex(self.rowSelecionTracker.selectedRowIndex, rowIndex);
-                    self.rowSelecionTracker.selectedRowIndex = rowIndex
+                    self.sequencer.moveRowToNewIndex(self.rowSelectionTracker.selectedRowIndex, rowIndex);
+                    self.rowSelectionTracker.selectedRowIndex = rowIndex
                     self.redrawSequencer();
                     break; // we found the row that the note will be placed on, so stop iterating thru rows early
                 }
@@ -1608,18 +1608,18 @@ class DrumMachineGui {
             }
             self.saveCurrentSequencerStateToUrlHash();
         }
-        if (self.rowSelecionTracker.selectedRowIndex !== null) {
+        if (self.rowSelectionTracker.selectedRowIndex !== null) {
             // un-selecting the row will be handled in 'redraw', as long as we set selected row index to null here
-            if (self.rowSelecionTracker.removeRow) {
-                self.sequencer.removeRowAtIndex(self.rowSelecionTracker.selectedRowIndex);
+            if (self.rowSelectionTracker.removeRow) {
+                self.sequencer.removeRowAtIndex(self.rowSelectionTracker.selectedRowIndex);
             }
-            self.rowSelecionTracker.selectedRowIndex = null
+            self.rowSelectionTracker.selectedRowIndex = null
             self.redrawSequencer();
             self.saveCurrentSequencerStateToUrlHash();
         }
         self.circleBeingMoved = null
         self.setNoteTrashBinVisibility(false)
-        self.rowSelecionTracker.selectedRowIndex = null
+        self.rowSelectionTracker.selectedRowIndex = null
     }
 
     /**
