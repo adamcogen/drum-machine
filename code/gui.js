@@ -1527,21 +1527,16 @@ class DrumMachineGui {
         if (self.circleSelectionTracker.circleBeingMoved !== null) {
             let list = [4, 6, 8, 10, 12]; // list of possible numbers, in ascending order
             let originalNumber = self.circleSelectionTracker.circleBeingMoved.radius;
-            let newNumber = null;
-            if (originalNumber < list[0]) { // if current value is less than the smallest option, set new number to the smallest option
-                newNumber = list[0];
-            } else if (originalNumber >= list[list.length - 1]) { // if current value is greater than or equal to the largest option, set new number to the smallest option
-                newNumber = list[0];
-            } else {
-                for (let i = 0; i < list.length; i++) { // else determine which option is the next biggest.
-                    if (originalNumber >= list[i]) { // if the original number is larger than the current list item, we can skip this item and check the next
-                        continue;
-                    } else {
-                        // if the original number is smaller than the current item, we should set the new number to this item. 
-                        // since the list is sorted, we know this is the first number in the list larger than the original number.
-                        newNumber = list[i];
-                        break;
-                    }
+            // if current value is greater than or equal to the largest option, we want to set new number to the smallest option.
+            let newNumber = list[0]; // so start with the smallest number in the list as a default new value, which will only be replaced if the original value isn't less than any number in the list
+            for (let i = 0; i < list.length; i++) { // determine which option is the next highest above the original value.
+                if (originalNumber >= list[i]) { // if the original number is larger than or equal to the current list item, we can move on to checking the next item
+                    continue;
+                } else {
+                    // if the original number is smaller than the current item, we should set the new number to this item. 
+                    // since the list is sorted, we know this is the first number in the list larger than the original number.
+                    newNumber = list[i];
+                    break;
                 }
             }
             self.circleSelectionTracker.circleBeingMoved.radius = newNumber;
