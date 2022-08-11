@@ -50,7 +50,8 @@ class DrumMachineGui {
             firstClickPosition: {
                 x: null,
                 y: null,
-            }
+            },
+            startingRadius: null,
         }
 
         this.rowSelectionTracker = {
@@ -1123,6 +1124,7 @@ class DrumMachineGui {
             this.circleSelectionTracker.circleBeingMovedStartingPosition.y = this.circleSelectionTracker.circleBeingMoved.translation.y
             this.circleSelectionTracker.firstClickPosition.x = mouseX;
             this.circleSelectionTracker.firstClickPosition.y = mouseY;
+            this.circleSelectionTracker.startingRadius = circle.radius;
             this.circleSelectionTracker.circleBeingMovedOldRow = this.circleSelectionTracker.circleBeingMoved.guiData.row
             this.circleSelectionTracker.circleBeingMovedNewRow = this.circleSelectionTracker.circleBeingMovedOldRow
             this.circleSelectionTracker.circleBeingMovedOldBeatNumber = this.circleSelectionTracker.circleBeingMoved.guiData.beat
@@ -1331,7 +1333,16 @@ class DrumMachineGui {
     }
 
     changeNoteVolumesModeMouseMoveEventHandler(self, event) {
-        console.log("change volume mode; mouse move");
+        if (self.circleSelectionTracker.circleBeingMoved !== null) {
+            self.adjustEventCoordinates(event);
+            let mouseX = event.pageX;
+            let mouseY = event.pageY;
+            let mouseHasMoved = (mouseX !== this.circleSelectionTracker.firstClickPosition.x || mouseY !== this.circleSelectionTracker.firstClickPosition.y)
+            if (mouseHasMoved) {
+                let mouseMoveDistance = this.circleSelectionTracker.firstClickPosition.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
+                self.circleSelectionTracker.circleBeingMoved.radius = Math.max(4, self.circleSelectionTracker.startingRadius + mouseMoveDistance);
+            }
+        }
     }
 
     moveNotesModeMouseMoveEventHandler(self, event) {
@@ -1537,7 +1548,6 @@ class DrumMachineGui {
             self.adjustEventCoordinates(event);
             let mouseX = event.pageX;
             let mouseY = event.pageY;
-            // this.circleSelectionTracker.firstClickPosition.x
             let mouseHasMoved = (mouseX !== this.circleSelectionTracker.firstClickPosition.x || mouseY !== this.circleSelectionTracker.firstClickPosition.y)
             if (!mouseHasMoved) { // if the mouse _has_ moved, volume was updated in the mouse move event, since this was a click-drag. so no need to make any other volume change.
                 // if the mouse _hasn't_ moved, this mouseup is for a click, not a click-drag. so we will flip to the next volume in our
