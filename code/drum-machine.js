@@ -68,6 +68,9 @@ window.onload = () => {
 
     let gui = new DrumMachineGui(sequencer, sampleNameList, samples, _sampleBankNodeGenerator, hideIcons=false);
 
+    // run any miscellaneous unit tests needed before starting main update loop
+    Util.testConfineNumberToBounds();
+
     // start main recursive update loop, where all drum machine state updates will happen
     _setUpAnimationCompatabilityShim();
     loop()

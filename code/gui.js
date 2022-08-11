@@ -77,9 +77,6 @@ class DrumMachineGui {
         this.refreshWindowMouseMoveEvent();
         this.refreshWindowMouseUpEvent();
 
-        // run any miscellaneous unit tests needed before starting main update loop
-        this.testConfineNumberToBounds();
-
         this.pause(); // start the sequencer paused
         this.redrawSequencer(); // redraw the display
     }
@@ -364,7 +361,7 @@ class DrumMachineGui {
                     newTextInputValue = this.sequencer.rows[rowIndex].getNumberOfReferenceLines()
                 }
                 newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
-                newTextInputValue = this.confineNumberToBounds(newTextInputValue, 0, this.configurations.referenceLineTextInputs.maximumValue)
+                newTextInputValue = Util.confineNumberToBounds(newTextInputValue, 0, this.configurations.referenceLineTextInputs.maximumValue)
                 if (newTextInputValue === 0) {
                     referenceLineTextInput.style.color = this.configurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
                 } else {
@@ -475,7 +472,7 @@ class DrumMachineGui {
                     newTextInputValue = this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
                 }
                 newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
-                newTextInputValue = this.confineNumberToBounds(newTextInputValue, 0, this.configurations.subdivionLineTextInputs.maximumValue)
+                newTextInputValue = Util.confineNumberToBounds(newTextInputValue, 0, this.configurations.subdivionLineTextInputs.maximumValue)
                 subdivisionTextInput.value = newTextInputValue
                 this.updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
                 this.redrawSequencer();
@@ -648,7 +645,7 @@ class DrumMachineGui {
             }
             newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
             // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
-            newTextInputValue = this.confineNumberToBounds(newTextInputValue, this.sequencer.lookAheadMillis, this.configurations.tempoTextInput.maximumValue)
+            newTextInputValue = Util.confineNumberToBounds(newTextInputValue, this.sequencer.lookAheadMillis, this.configurations.tempoTextInput.maximumValue)
             this.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
             this.updateSequencerLoopLength(newTextInputValue)
             this.saveCurrentSequencerStateToUrlHash();
@@ -894,7 +891,7 @@ class DrumMachineGui {
         if (mouseIsCloserToRightSubdivisionThanLeft) {
             subdivisionToSnapTo += 1
         }
-        return this.confineNumberToBounds(subdivisionToSnapTo, 0, numberOfSubdivisions - 1)
+        return Util.confineNumberToBounds(subdivisionToSnapTo, 0, numberOfSubdivisions - 1)
     }
     
     /**
@@ -1406,7 +1403,7 @@ class DrumMachineGui {
                             self.circleSelectionTracker.circleBeingMovedNewBeatNumber = self.getIndexOfClosestSubdivisionLine(mouseX, self.sequencer.rows[rowIndex].getNumberOfSubdivisions())
                             self.circleSelectionTracker.circleBeingMoved.translation.x = self.getXPositionOfSubdivisionLine(self.circleSelectionTracker.circleBeingMovedNewBeatNumber, self.sequencer.rows[rowIndex].getNumberOfSubdivisions())
                         } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
-                            self.circleSelectionTracker.circleBeingMoved.translation.x = self.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
+                            self.circleSelectionTracker.circleBeingMoved.translation.x = Util.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
                             self.circleSelectionTracker.circleBeingMovedNewBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED
                         }
                         // quantization has a more complicated effect on x position than y. y position will always just be on line, so always just put it there.
@@ -1891,33 +1888,6 @@ class DrumMachineGui {
             pageX: (event.pageX - svgOrigin.left) / svgScale,
             pageY: (event.pageY - svgOrigin.top) / svgScale
         }
-    }
-
-    /**
-     * Miscellaneous re-used GUI logic
-     */
-
-    // given a number and an upper and lower bound, confine the number to be between the bounds.
-    // if the number if below the lower bound, return the lower bound.
-    // if it is above the upper bound, return the upper bound.
-    // if it is between the bounds, return the number unchanged.
-    confineNumberToBounds(number, lowerBound, upperBound) {
-        if (number < lowerBound) {
-            return lowerBound
-        } else if (number > upperBound) {
-            return upperBound
-        } else {
-            return number
-        }
-    }
-
-    // quick happy-path unit test for confineNumberToBounds()
-    testConfineNumberToBounds() {
-        assertEquals(5, this.confineNumberToBounds(4, 5, 10), "number below lower bound")
-        assertEquals(5, this.confineNumberToBounds(5, 5, 10), "number same as lower bound")
-        assertEquals(6, this.confineNumberToBounds(6, 5, 10), "number between the bounds")
-        assertEquals(10, this.confineNumberToBounds(10, 5, 10), "number same as upper bound")
-        assertEquals(10, this.confineNumberToBounds(11, 5, 10), "number above upper bound")
     }
 
     /**
