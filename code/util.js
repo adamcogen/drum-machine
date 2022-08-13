@@ -1,5 +1,5 @@
 /**
- * This file contains shared logic that is used throughout the drum machine and may not belong to a single particular class or file.
+ * This file contains shared logic that is used throughout the drum machine and may not belong to a single particular other class or file.
  * I am implementing this as a class with static methods instead of a file with just a bunch of functions, because I think including
  * a class name when invoking these functions will make it easier to see right away where they are implemented.
  */
@@ -22,7 +22,7 @@ class Util {
         } else if (number > upperBound) {
             return upperBound
         } else {
-            return number
+            return number; // or, in fewer lines, 'return Math.max(lowerBound, Math.min(number, upperBound))' :)
         }
     }
 
@@ -33,5 +33,42 @@ class Util {
         this.assertEquals(6, this.confineNumberToBounds(6, 5, 10), "number between the bounds")
         this.assertEquals(10, this.confineNumberToBounds(10, 5, 10), "number same as upper bound")
         this.assertEquals(10, this.confineNumberToBounds(11, 5, 10), "number above upper bound")
-    } 
+    }
+
+    /**
+     * Perform linear conversion on a number.
+     * Convert a number within a range to the proportional number within a different range.
+     * Preconditions: 
+     *  - no negative numbers allowed (they're just untested)
+     *  - inputs are not validated yet, it is assumed that the original number and both ranges make sense
+     */
+    static calculateLinearConversion(originalNumber, originalMin, originalMax, newMin, newMax) {
+        // proposed procedure: 
+        // - convert the old range to 0 -> something
+        //   3 in [1 to 5] becomes 2 in [0 to 4]
+        //   (by subtracting old min from everything old)
+        let originalNumberWithZeroMin = originalNumber - originalMin;
+        let originalMaxWithZeroMin = originalMax - originalMin;
+        // - convert the new range to 0 -> something
+        //   [20 to 60] becomes [0 to 40]
+        //   (by subtracting new min from everything new)
+        let newMaxWithZeroMin = newMax - newMin;
+        // - convert the old range to have the new max
+        //   2 in [0 to 4] becomes 20 in [0 to 40]
+        //   (by multiplying everything old by (new max divided by old max))
+        let newNumberWithZeroMin = originalNumberWithZeroMin * (newMaxWithZeroMin / originalMaxWithZeroMin)
+        // - convert that to have the new min
+        //   20 in [0 to 40] becomes 40 in [0 to 60]
+        //   (by adding new min to everything old)
+        let newNumber = newNumberWithZeroMin + newMin;
+        return newNumber;
+    }
+
+    static testCalculateLinearConversion() {
+        this.assertEquals(25, this.calculateLinearConversion(5, 0, 10, 0, 50), "Calculate a linear conversion for two ranges with the same (zero) min");
+        this.assertEquals(6, this.calculateLinearConversion(5, 1, 9, 1, 11), "Calculate a linear conversion for two ranges with the same (non-zero) min");
+        this.assertEquals(4, this.calculateLinearConversion(3, 1, 5, 2, 6), "Calculate a linear conversion for two ranges with a different min, but the same size");
+        this.assertEquals(40, this.calculateLinearConversion(3, 1, 5, 20, 60), "Calculate a linear conversion for two ranges with a different min and a different size, scaling up");
+        this.assertEquals(3, this.calculateLinearConversion(40, 20, 60, 1, 5), "Calculate a linear conversion for two ranges with a different min and a different size, scaling down");
+    }
 }
