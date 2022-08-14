@@ -251,7 +251,7 @@ class Sequencer {
             // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for.
             // don't schedule a note unless it hasn't been scheduled on this loop iteration and it goes after the current time (i.e. don't schedule notes in the past, just skip over them)
             if (nextNoteToSchedule.priority >= currentTimeWithinCurrentLoop && numberOfLoopsSoFar > nextNoteToSchedule.data.lastScheduledOnIteration) {
-                this.scheduleDrumSample(actualStartTimeOfCurrentLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
+                this.scheduleDrumSample(actualStartTimeOfCurrentLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName, nextNoteToSchedule.data.volume)
                 nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFar // record the last iteration that the note was played on to avoid duplicate scheduling within the same iteration
             }
             nextNoteToSchedule = nextNoteToSchedule.next
@@ -267,7 +267,7 @@ class Sequencer {
             while (nextNoteToSchedule !== null && nextNoteToSchedule.priority <= endTimeToScheduleUpToFromBeginningOfLoop) {
                 // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for
                 if (numberOfLoopsSoFarPlusOne > nextNoteToSchedule.data.lastScheduledOnIteration) {
-                    this.scheduleDrumSample(actualStartTimeOfNextLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName)
+                    this.scheduleDrumSample(actualStartTimeOfNextLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName, nextNoteToSchedule.data.volume)
                     nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFarPlusOne
                 }
                 nextNoteToSchedule = nextNoteToSchedule.next

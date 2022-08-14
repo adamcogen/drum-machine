@@ -1667,6 +1667,7 @@ class DrumMachineGui {
                 self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedNewRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
                 node.data.lastScheduledOnIteration = Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED // mark note as 'not played yet on current iteration'
                 node.data.beat = circleNewBeatNumber
+                node.data.volume = self.noteBankNoteVolumesTracker[self.circleSelectionTracker.circleBeingMoved.guiData.sampleName].volume
                 self.circleSelectionTracker.circleBeingMoved.guiData.beat = circleNewBeatNumber
             }
             self.saveCurrentSequencerStateToUrlHash();
