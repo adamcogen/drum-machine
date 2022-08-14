@@ -1135,7 +1135,7 @@ class DrumMachineGui {
             this.circleSelectionTracker.circleBeingMovedNewBeatNumber = this.circleSelectionTracker.circleBeingMovedOldBeatNumber
             this.setNoteTrashBinVisibility(true)
             this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
-            this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName)
+            this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume)
         });
 
         // add info to the circle object that the gui uses to keep track of things
@@ -1145,7 +1145,7 @@ class DrumMachineGui {
         circle.guiData.label = label
         circle.guiData.beat = beat
         circle.guiData.volume = volume
-        circle.guiData.radiusWhenUnplayed = Util.calculateLinearConversion(volume, this.configurations.notes.volumes.minimumVolume, this.configurations.notes.volumes.maximumVolume, this.configurations.notes.volumes.minimumCircleRadius, this.configurations.notes.volumes.maximumCircleRadius)
+        circle.guiData.radiusWhenUnplayed = this.calculateCircleRadiusForVolume(volume);
 
         // add circle to list of all drawn circles
         this.allDrawnCircles.push(circle)
@@ -1197,6 +1197,10 @@ class DrumMachineGui {
                 noteToDraw = noteToDraw.next
             }
         }
+    }
+
+    calculateCircleRadiusForVolume(volume) {
+        return Util.calculateLinearConversion(volume, this.configurations.notes.volumes.minimumVolume, this.configurations.notes.volumes.maximumVolume, this.configurations.notes.volumes.minimumCircleRadius, this.configurations.notes.volumes.maximumCircleRadius);
     }
 
     /**
