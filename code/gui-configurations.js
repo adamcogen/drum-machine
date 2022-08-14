@@ -20,9 +20,9 @@ function getGuiConfigurations(hideIcons=false) {
             color: 'black' // "#575757",
         },
         notes: {
-            unplayedCircleRadius: 8,
-            playedCircleRadius: 10,
-            movingCircleRadius: 9,
+            circleRadiusUsedForNoteBankSpacing: 8,
+            circleRadiusIncreaseWhenPlayingNote: 2,
+            circleRadiusIncreaseWhenMovingNote: 1,
             volumes: {
                 defaultVolume: .5,
                 minimumVolume: .1,

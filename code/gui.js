@@ -67,6 +67,13 @@ class DrumMachineGui {
             removeRow: false,
         }
 
+        this.noteBankNoteVolumesTracker = {}
+        for (let sampleName of this.sampleNameList) {
+            this.noteBankNoteVolumesTracker[sampleName] = {
+                volume: this.configurations.notes.volumes.defaultVolume,
+            }
+        }
+
         // keep a list of all the circles (i.e. notes) that have been drawn on the screen
         this.allDrawnCircles = []
 
@@ -94,16 +101,16 @@ class DrumMachineGui {
 
         // make circles get bigger when they play.
         for (let circle of this.allDrawnCircles) {
-            let radiusToSetUnplayedCircleTo = this.configurations.notes.unplayedCircleRadius
+            let radiusToSetUnplayedCircleTo = circle.guiData.radiusWhenUnplayed
             if (this.circleSelectionTracker.circleBeingMoved !== null && this.circleSelectionTracker.circleBeingMoved.guiData.label === circle.guiData.label) {
                 // if we are moving this circle, make its unplayed radius slightly bigger than normal
-                radiusToSetUnplayedCircleTo = this.configurations.notes.movingCircleRadius;
+                radiusToSetUnplayedCircleTo = circle.guiData.radiusWhenUnplayed + this.configurations.notes.circleRadiusIncreaseWhenMovingNote;
             }
             let circleResizeRange = this.configurations.sequencer.width / 25
             if (circle.translation.x <= timeTrackingLinesXPosition - circleResizeRange || circle.translation.x >= timeTrackingLinesXPosition + circleResizeRange) {
                 circle.radius = radiusToSetUnplayedCircleTo
             } else {
-                circle.radius = this.configurations.notes.playedCircleRadius
+                circle.radius = radiusToSetUnplayedCircleTo + this.configurations.notes.circleRadiusIncreaseWhenPlayingNote;
             }
         }
 
@@ -524,8 +531,8 @@ class DrumMachineGui {
     // draw the physical note bank container on the screen. for now that's just a rectangle.
     // return the note bank shape. this will be a Two.js path object.
     initializeNoteBankContainer() {
-        let width  = this.configurations.notes.unplayedCircleRadius + (this.configurations.sampleBank.borderPadding * 2)
-        let height = (this.configurations.notes.unplayedCircleRadius * (this.sampleNameList.length - 1)) + ((this.sampleNameList.length - 1) * this.configurations.sampleBank.spaceBetweenNotes) + (this.configurations.sampleBank.borderPadding * 2)
+        let width  = this.configurations.notes.circleRadiusUsedForNoteBankSpacing + (this.configurations.sampleBank.borderPadding * 2)
+        let height = (this.configurations.notes.circleRadiusUsedForNoteBankSpacing * (this.sampleNameList.length - 1)) + ((this.sampleNameList.length - 1) * this.configurations.sampleBank.spaceBetweenNotes) + (this.configurations.sampleBank.borderPadding * 2)
         let noteBankContainer = this.initializeRectangleShape(this.configurations.sampleBank.top, this.configurations.sampleBank.left, height, width)
         noteBankContainer.linewidth = this.configurations.sequencer.lineWidth;
         noteBankContainer.stroke = this.configurations.sequencer.color
@@ -1090,12 +1097,12 @@ class DrumMachineGui {
      * logic to draw circles (including adding event listeners to them etc.)
      */
 
-     // create a new circle (i.e. note) on the screen, with the specified x and y position. color is determined by sample name. 
+    // create a new circle (i.e. note) on the screen, with the specified x and y position. color is determined by sample name. 
     // values given for sample name, label, and row number are stored in the circle object to help the GUI keep track of things.
     // add the newly created circle to the list of all drawn cricles.
-    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat) {
+    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume=this.configurations.notes.volumes.defaultVolume) {
         // initialize the new circle and set its colors
-        let circle = this.two.makeCircle(xPosition, yPosition, this.configurations.notes.unplayedCircleRadius)
+        let circle = this.two.makeCircle(xPosition, yPosition, this.configurations.notes.circleRadiusUsedForNoteBankSpacing)
         circle.fill = this.samples[sampleName].color
         circle.stroke = 'transparent'
 
@@ -1137,6 +1144,8 @@ class DrumMachineGui {
         circle.guiData.row = row
         circle.guiData.label = label
         circle.guiData.beat = beat
+        circle.guiData.volume = volume
+        circle.guiData.radiusWhenUnplayed = Util.calculateLinearConversion(volume, this.configurations.notes.volumes.minimumVolume, this.configurations.notes.volumes.maximumVolume, this.configurations.notes.volumes.minimumCircleRadius, this.configurations.notes.volumes.maximumCircleRadius)
 
         // add circle to list of all drawn circles
         this.allDrawnCircles.push(circle)
@@ -1152,9 +1161,10 @@ class DrumMachineGui {
         if (indexOfSampleInNoteBank === -1) { // we don't expect to reach this case, where the given sample isn't found in the sample names list
             throw "unexpected problem: couldn't find the given sample in the sample list when trying to add it to the note bank. was looking for sample name: " + sampleName + ". expected sample name to be one of: " + this.sampleNameList + "."
         }
-        let xPosition = this.configurations.sampleBank.left + this.configurations.sampleBank.borderPadding + (this.configurations.notes.unplayedCircleRadius / 2)
-        let yPosition = this.configurations.sampleBank.top + this.configurations.sampleBank.borderPadding + (indexOfSampleInNoteBank * this.configurations.notes.unplayedCircleRadius) + (indexOfSampleInNoteBank * this.configurations.sampleBank.spaceBetweenNotes)
+        let xPosition = this.configurations.sampleBank.left + this.configurations.sampleBank.borderPadding + (this.configurations.notes.circleRadiusUsedForNoteBankSpacing / 2)
+        let yPosition = this.configurations.sampleBank.top + this.configurations.sampleBank.borderPadding + (indexOfSampleInNoteBank * this.configurations.notes.circleRadiusUsedForNoteBankSpacing) + (indexOfSampleInNoteBank * this.configurations.sampleBank.spaceBetweenNotes)
         let row = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK // for cirlces on the note bank, the circle is not in a real row yet, so use -2 as a placeholder row number
+        let volume = this.noteBankNoteVolumesTracker[sampleName].volume
         /**
          * the top note in the note bank will have label '-1', next one down will be '-2', etc.
          * these negative number labels will still be unique to a particular circle in the note bank,
@@ -1162,7 +1172,7 @@ class DrumMachineGui {
          * bank circle is taken fom the note bank and placed onto a real row.
          */
         let label = (indexOfSampleInNoteBank + 1) * -1 // see block comment above for info about '-1' here
-        this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, Sequencer.NOTE_IS_NOT_QUANTIZED)
+        this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, Sequencer.NOTE_IS_NOT_QUANTIZED, volume)
     }
 
     drawAllNoteBankCircles(){
