@@ -43,9 +43,9 @@ class SampleBankNodeGenerator {
         let sampleIndex = this.sampleNameList.indexOf(sampleName);
         if (sampleIndex != -1) {
             return new PriorityLinkedListNode(this.idGenerator.getNextId(), -1, {
-                lastScheduledOnIteration: -1,
+                lastScheduledOnIteration: Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED,
                 sampleName: sampleName,
-                beat: -1,
+                beat: Sequencer.NOTE_IS_NOT_QUANTIZED,
             })
         } else {
             throw "requested a sample name from the sample bank that doesn't exist! requested sample name: " + sampleName + ". sample list: " + this.sampleNameList + "."

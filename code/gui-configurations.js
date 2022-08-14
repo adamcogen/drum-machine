@@ -5,7 +5,7 @@
 
 let defaultSequencerLineColor = '#707070'
 let lighterSequencerColor = "#ababab"
-function getGuiConfigurations(hideIcons) {
+function getGuiConfigurations(hideIcons=false) {
     return {
         hideIcons: hideIcons,
         sequencer: {
@@ -22,7 +22,15 @@ function getGuiConfigurations(hideIcons) {
         notes: {
             unplayedCircleRadius: 8,
             playedCircleRadius: 10,
-            movingCircleRadius: 9
+            movingCircleRadius: 9,
+            volumes: {
+                defaultVolume: .5,
+                minimumVolume: .1,
+                maximumVolume: 1,
+                minimumCircleRadius: 4,
+                maximumCircleRadius: 12,
+                volumePresets: [.25, .5, .75, 1], // when you click a note in 'edit volumes' mode, it will iterate through this preset list of volumes
+            }
         },
         sampleBank: {
             top: 135,

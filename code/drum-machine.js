@@ -47,7 +47,7 @@ window.onload = () => {
     /**
      * drum machine configurations
      */
-    const _LOOK_AHEAD_MILLIS = 50; // number of milliseconds to look ahead when scheduling notes to play. note bigger value means that there is a longer delay for sounds to stop after the 'pause' button is hit.
+    const _LOOK_AHEAD_MILLIS = 100; // number of milliseconds to look ahead when scheduling notes to play. note bigger value means that there is a longer delay for sounds to stop after the 'pause' button is hit.
     let defaultLoopLengthInMillis = 2100; // length of the whole drum sequence (loop), in millliseconds
     // initialize sequencer object
     let sequencer = new Sequencer([webAudioDriver], 0, defaultLoopLengthInMillis, _LOOK_AHEAD_MILLIS, samples)
@@ -66,7 +66,7 @@ window.onload = () => {
         sequencer.deserialize(json, _sampleBankNodeGenerator)
     }
 
-    let gui = new DrumMachineGui(sequencer, sampleNameList, samples, _sampleBankNodeGenerator, hideIcons=false);
+    let gui = new DrumMachineGui(sequencer, sampleNameList, samples, _sampleBankNodeGenerator);
 
     // run any miscellaneous unit tests needed before starting main update loop
     Util.testConfineNumberToBounds();

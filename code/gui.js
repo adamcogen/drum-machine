@@ -11,13 +11,13 @@ class DrumMachineGui {
     static get MOVE_NOTES_MODE() { return "MOVE_NOTES_MODE" }
     static get CHANGE_NOTE_VOLUMES_MODE() { return "CHANGE_NOTE_VOLUMES_MODE" }
 
-    constructor(sequencer, sampleNameList, samples, sampleBankNodeGenerator, hideIcons) {
+    constructor(sequencer, sampleNameList, samples, sampleBankNodeGenerator) {
         this.sequencer = sequencer
         this.two = this.initializeTwoJs(document.getElementById('draw-shapes')) // Initialize Two.js library
         this.sampleNameList = sampleNameList
         this.samples = samples;
         this.sampleBankNodeGenerator = sampleBankNodeGenerator;
-        this.configurations = getGuiConfigurations(hideIcons)
+        this.configurations = getGuiConfigurations()
         this.components = {
             shapes: {}, // this hash will contain all of the two.js shapes (either as shapes, lists of shapes, or lists of lists of shapes)
             domElements: {} // this hash will contain all of the HTML DOM elements (either as individual elements, lists of elements, or lists of lists of elements, etc.)
@@ -1549,7 +1549,7 @@ class DrumMachineGui {
             if (!mouseHasMoved) { // if the mouse _has_ moved, volume was updated in the mouse move event, since this was a click-drag. so no need to make any other volume change.
                 // if the mouse _hasn't_ moved, this mouseup is for a click, not a click-drag. so we will flip to the next volume in our
                 // list of volume presets (that will be either the next highest one, or the lowest one if we got to the end of the list).
-                let list = [4, 6, 8, 10, 12]; // list of possible numbers, in ascending order
+                let list = [4, 6, 8, 10, 12]; // list of possible numbers, in ascending order // self.configurations.notes.volumePresets
                 let originalNumber = self.circleSelectionTracker.circleBeingMoved.radius;
                 // if current value is greater than or equal to the largest option, we want to set new number to the smallest option.
                 let newNumber = list[0]; // so start with the smallest number in the list as a default new value, which will only be replaced if the original value isn't less than any number in the list
@@ -1563,7 +1563,7 @@ class DrumMachineGui {
                         break;
                     }
                 }
-                self.circleSelectionTracker.circleBeingMoved.radius = newNumber;   
+                self.circleSelectionTracker.circleBeingMoved.radius = newNumber;
             }
             self.circleSelectionTracker.circleBeingMoved = null
             self.setNoteTrashBinVisibility(false)
