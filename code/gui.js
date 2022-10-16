@@ -26,7 +26,7 @@ class DrumMachineGui {
         this.components.domElements = this.initializeDomElements();
         this.eventHandlerFunctions = {}; // make a hash to store references to event handler functions. that way we can remove them from the DOM elements they are attached to later
 
-        this.currentGuiMode = DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE // start the GUI in 'move notes' mode
+        this.currentGuiMode = DrumMachineGui.MOVE_NOTES_MODE // start the GUI in 'move notes' mode
 
         // add more dom elements and do some additional setup of shapes and dom elements
         this.initializeTempoTextInputValuesAndStyles();
@@ -81,6 +81,7 @@ class DrumMachineGui {
         this.addPauseButtonActionListeners();
         this.addRestartSequencerButtonActionListeners();
         this.addClearAllNotesButtonActionListeners();
+        this.addSwitchSequencerModesButtonActionListeners();
         this.refreshWindowMouseMoveEvent();
         this.refreshWindowMouseUpEvent();
 
@@ -151,7 +152,6 @@ class DrumMachineGui {
         shapes.clearNotesForRowButtonShapes = this.initializeButtonPerSequencerRow(this.configurations.clearRowButtons.topPaddingPerRow, this.configurations.clearRowButtons.leftPaddingPerRow, this.configurations.clearRowButtons.height, this.configurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
         shapes.sequencerRowHandles = this.initializeSequencerRowHandles()
         shapes.showModeMenuButton = this.initializeRectangleShape(this.configurations.showModeMenuButton.top, this.configurations.showModeMenuButton.left, this.configurations.showModeMenuButton.height, this.configurations.showModeMenuButton.width) // a rectangle that will eventually be used to select between different modes of the sequencer (move notes, edit note volumes, select notes, etc.)
-        shapes.showModeMenuButton.stroke = 'transparent' // hide this button for now since it isn't used yet
         this.two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
         return shapes;
     }
@@ -1060,6 +1060,35 @@ class DrumMachineGui {
     }
 
     /**
+     * temporary 'switch sequencer mode' button, for choosing which mode the sequencer is in -- available modes include 'change note volumes' or 'move notes' for now.
+     * eventually I think this button will open a menu instead of toggling between modes, to allow for a nice way of switching between more than 2 modes.
+     * for now I'm not going to bother with a menu, and I'm just going to use this button as a simple toggle between the 2 currently-existing modes.
+     */
+    addSwitchSequencerModesButtonActionListeners() {
+        if (this.eventHandlerFunctions.showModeMenuButton !== null && this.eventHandlerFunctions.showModeMenuButton !== undefined) {
+            // remove event listeners if they've already been added to avoid duplicates
+            this.components.shapes.showModeMenuButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.showModeMenuButton)
+        }
+        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+        this.eventHandlerFunctions.showModeMenuButton = () => this.showModeMenuButtonClickHandler(this);
+        this.components.shapes.showModeMenuButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.showModeMenuButton)
+    }
+
+    // search for comment "a general note about the 'self' paramater" within this file for info on its use here
+    showModeMenuButtonClickHandler(self) {
+        if(this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
+            this.currentGuiMode = DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE;
+            self.components.shapes.showModeMenuButton.fill = self.configurations.buttonBehavior.clickedButtonColor
+        } else if (this.currentGuiMode === DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE) {
+            this.currentGuiMode = DrumMachineGui.MOVE_NOTES_MODE;
+            self.components.shapes.showModeMenuButton.fill = 'transparent'
+        }
+        // reset circle selection variables
+        self.circleSelectionTracker.circleBeingMoved = null
+        self.setNoteTrashBinVisibility(false)
+    }
+
+    /**
      * logic to remove circles from the GUI display
      */
 
@@ -1358,12 +1387,6 @@ class DrumMachineGui {
             self.adjustEventCoordinates(event);
             let mouseX = event.pageX;
             let mouseY = event.pageY;
-            if (this.circleSelectionTracker.circleBeingMovedOldRow < 0) {
-                // the note being modified isn't in a row (it's probably on the note bank), so for now just don't do anything
-                // todo: eventually, maybe changing the volume of any note in the note bank should change the volume of all notes
-                // in the note bank, such that you can adjust the default volume of all new notes that will be pulled from the note bank.
-                return;
-            }
             let mouseHasMoved = (mouseX !== this.circleSelectionTracker.firstClickPosition.x || mouseY !== this.circleSelectionTracker.firstClickPosition.y)
             if (mouseHasMoved) {
                 let mouseMoveDistance = this.circleSelectionTracker.firstClickPosition.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
@@ -1371,13 +1394,21 @@ class DrumMachineGui {
                 self.circleSelectionTracker.circleBeingMoved.radius = Util.confineNumberToBounds(self.circleSelectionTracker.startingRadius + mouseMoveDistance, this.configurations.notes.volumes.minimumCircleRadius, this.configurations.notes.volumes.maximumCircleRadius);
                 self.circleSelectionTracker.circleBeingMoved.guiData.radiusWhenUnplayed = self.circleSelectionTracker.circleBeingMoved.radius;
                 // convert the circle radius into a proportionate note volume.
-                self.circleSelectionTracker.circleBeingMoved.guiData.volume = this.calculateVolumeForCircleRadius(self.circleSelectionTracker.circleBeingMoved.radius);
-                // replace the node in the sequencer data structure with an identical note that has the new volume we have set the note to.
-                // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
-                let node = self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
-                node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
-                self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedNewRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
-                self.saveCurrentSequencerStateToUrlHash();
+                let newVolume = this.calculateVolumeForCircleRadius(self.circleSelectionTracker.circleBeingMoved.radius);
+                if (this.circleSelectionTracker.circleBeingMovedOldRow < 0) { // the note we are changing the volume for is in the note bank.
+                    // todo: eventually, maybe changing the volume of any note in the note bank should change the volume of all notes
+                    // in the note bank, such that you can adjust the default volume of all new notes that will be pulled from the note bank.
+                    self.noteBankNoteVolumesTracker[self.circleSelectionTracker.circleBeingMoved.guiData.sampleName].volume = newVolume;
+                    self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
+                } else { // the note we are changing the volume for is on an actual sequencer row (i.e. it's not in the note bank).
+                    self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
+                    // replace the node in the sequencer data structure with an identical note that has the new volume we have set the note to.
+                    // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
+                    let node = self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
+                    node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
+                    self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedNewRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
+                    self.saveCurrentSequencerStateToUrlHash();
+                }
             }
         }
     }
@@ -1585,12 +1616,6 @@ class DrumMachineGui {
             self.adjustEventCoordinates(event);
             let mouseX = event.pageX;
             let mouseY = event.pageY;
-            if (this.circleSelectionTracker.circleBeingMovedOldRow < 0) {
-                // the note being modified isn't in a row (it's probably on the note bank), so for now just don't do anything
-                // todo: eventually, maybe changing the volume of any note in the note bank should change the volume of all notes
-                // in the note bank, such that you can adjust the default volume of all new notes that will be pulled from the note bank.
-                return;
-            }
             let mouseHasMoved = (mouseX !== this.circleSelectionTracker.firstClickPosition.x || mouseY !== this.circleSelectionTracker.firstClickPosition.y)
             if (!mouseHasMoved) { // if the mouse _has_ moved, volume was updated in the mouse move event, since this was a click-drag. so no need to make any other volume change.
                 // if the mouse _hasn't_ moved, this mouseup is for a click, not a click-drag. so we will flip to the next volume in our
@@ -1613,13 +1638,21 @@ class DrumMachineGui {
                 self.circleSelectionTracker.circleBeingMoved.radius = newNumber;
                 self.circleSelectionTracker.circleBeingMoved.guiData.radiusWhenUnplayed = self.circleSelectionTracker.circleBeingMoved.radius;
                 // convert the circle radius into a proportionate note volume.
-                self.circleSelectionTracker.circleBeingMoved.guiData.volume = this.calculateVolumeForCircleRadius(self.circleSelectionTracker.circleBeingMoved.radius);
-                // replace the node in the sequencer data structure with an identical note that has the new volume we have set the note to.
-                // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
-                let node = self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
-                node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
-                self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedNewRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
-                self.saveCurrentSequencerStateToUrlHash();
+                let newVolume = this.calculateVolumeForCircleRadius(self.circleSelectionTracker.circleBeingMoved.radius);
+                if (this.circleSelectionTracker.circleBeingMovedOldRow < 0) { // the note we are changing the volume for is in the note bank.
+                    // todo: eventually, maybe changing the volume of any note in the note bank should change the volume of all notes
+                    // in the note bank, such that you can adjust the default volume of all new notes that will be pulled from the note bank.
+                    self.noteBankNoteVolumesTracker[self.circleSelectionTracker.circleBeingMoved.guiData.sampleName].volume = newVolume;
+                    self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
+                } else { // the note we are changing the volume for is on an actual sequencer row (i.e. it's not in the note bank).
+                    self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
+                    // replace the node in the sequencer data structure with an identical note that has the new volume we have set the note to.
+                    // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
+                    let node = self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
+                    node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
+                    self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedNewRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
+                    self.saveCurrentSequencerStateToUrlHash();
+                }
             }
             // in 'change note volumes' mode, notes won't play their sound on 'mouse down' -- instead, they will play it on 'mouse up', so that we can hear the end result of our volume adjustment.
             this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume)
@@ -1716,7 +1749,7 @@ class DrumMachineGui {
                 self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedNewRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
                 node.data.lastScheduledOnIteration = Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED // mark note as 'not played yet on current iteration'
                 node.data.beat = circleNewBeatNumber
-                node.data.volume = self.noteBankNoteVolumesTracker[self.circleSelectionTracker.circleBeingMoved.guiData.sampleName].volume
+                node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
                 self.circleSelectionTracker.circleBeingMoved.guiData.beat = circleNewBeatNumber
             }
             self.saveCurrentSequencerStateToUrlHash();

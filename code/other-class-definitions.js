@@ -20,7 +20,7 @@ class IdGenerator {
     }
 }
 
-// store info about a particular type of sequencer note type (i.e. a particular drum sound), 
+// store info about a particular type of sequencer note (i.e. a particular drum sound), 
 // such as its sound file and its color in the sequencer's GUI.
 class SequencerNoteType {
     constructor(file, color) {
