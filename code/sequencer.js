@@ -366,6 +366,7 @@ class Sequencer {
                     sequencerNode.beat = Sequencer.NOTE_IS_NOT_QUANTIZED
                     sequencerNode.priority = deserializedNote.priority;
                 }
+                sequencerNode.data.volume = deserializedNote.volume;
                 this.rows[rowIndex].insertNode(sequencerNode, sequencerNode.label)
             }
         }
@@ -398,6 +399,7 @@ class SequencerRow {
             } else { // for unquantized rows, store note time as raw time in milliseconds (the 'priorty' property of a node)
                 note["priority"] = currentNode.priority
             }
+            note["volume"] = currentNode.data.volume;
             notes.push(note)
             currentNode = currentNode.next
         }

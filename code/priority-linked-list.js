@@ -277,6 +277,9 @@ class PriorityLinkedList {
         let removeAtIndex = this._getIndexOfLabel(label)
         return this._removeNodeAtIndex(removeAtIndex)
     }
+
+    // todo: consider implementing a 'replace node' method, which will replace a node with a given label with a different node.
+    // this could be used to make operations that modify a node without changing its priority, such as changing a note's volume, faster.
 }
 
 /**
