@@ -25,11 +25,12 @@ function getGuiConfigurations(hideIcons=false) {
             circleRadiusIncreaseWhenMovingNote: 1,
             volumes: {
                 defaultVolume: .5,
-                minimumVolume: .1,
-                maximumVolume: 1,
+                minimumVolume: .05,
+                maximumVolume: 2,
                 minimumCircleRadius: 4,
-                maximumCircleRadius: 12,
+                maximumCircleRadius: 24,
                 volumePresets: [.25, .5, .75, 1], // when you click a note in 'edit volumes' mode, it will iterate through this preset list of volumes
+                volumeAdjustmentSensitivityDivider: 4 // when adjusting a notes volume by clicking and dragging it, the distance your mouse moves will be divided by this value to make volume adjustments more fine-tuned.
             }
         },
         sampleBank: {

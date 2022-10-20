@@ -1162,6 +1162,7 @@ class DrumMachineGui {
             this.circleSelectionTracker.circleBeingMovedNewRow = this.circleSelectionTracker.circleBeingMovedOldRow
             this.circleSelectionTracker.circleBeingMovedOldBeatNumber = this.circleSelectionTracker.circleBeingMoved.guiData.beat
             this.circleSelectionTracker.circleBeingMovedNewBeatNumber = this.circleSelectionTracker.circleBeingMovedOldBeatNumber
+            // todo: make notes being moved a little bit transparent (just while they're being moved, so we can see what's behind them)
             this.setNoteTrashBinVisibility(true)
             this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
@@ -1390,8 +1391,9 @@ class DrumMachineGui {
             let mouseHasMoved = (mouseX !== this.circleSelectionTracker.firstClickPosition.x || mouseY !== this.circleSelectionTracker.firstClickPosition.y)
             if (mouseHasMoved) {
                 let mouseMoveDistance = this.circleSelectionTracker.firstClickPosition.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
+                let volumeAdjustmentAmount = mouseMoveDistance / this.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
                 // set the note being changed to have the right new radius on the GUI. confine the new radius to the minimum and maximum radius allowed.
-                self.circleSelectionTracker.circleBeingMoved.radius = Util.confineNumberToBounds(self.circleSelectionTracker.startingRadius + mouseMoveDistance, this.configurations.notes.volumes.minimumCircleRadius, this.configurations.notes.volumes.maximumCircleRadius);
+                self.circleSelectionTracker.circleBeingMoved.radius = Util.confineNumberToBounds(self.circleSelectionTracker.startingRadius + volumeAdjustmentAmount, this.configurations.notes.volumes.minimumCircleRadius, this.configurations.notes.volumes.maximumCircleRadius);
                 self.circleSelectionTracker.circleBeingMoved.guiData.radiusWhenUnplayed = self.circleSelectionTracker.circleBeingMoved.radius;
                 // convert the circle radius into a proportionate note volume.
                 let newVolume = this.calculateVolumeForCircleRadius(self.circleSelectionTracker.circleBeingMoved.radius);
