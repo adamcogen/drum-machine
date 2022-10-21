@@ -46,6 +46,12 @@
                 left: 130px;
                 top: 15px;
             }
+            #tempo-text-inputs-beats-per-loop { /* format another tempo-text-inputs div */
+                line-height: 2;
+                position: absolute; /* use absolute positioning so we can move the position in our javascript code if needed */
+                left: 130px;
+                top: 15px;
+            }
             #subdivision-text-inputs { /* format the subdivision-text-inputs div */
                 line-height: 2;
                 position: absolute; /* use absolute positioning so we can move the position in our javascript code if needed */
@@ -72,6 +78,9 @@
         <script src='code/drum-machine.js'></script>
         <div id="tempo-text-inputs">
             <textarea id="text-input-loop-length-millis" rows="1" cols="4"></textarea>
+        </div>
+        <div id="tempo-text-inputs-beats-per-loop">
+            <textarea id="text-input-number-of-beats-in-loop" rows="1" cols="3"></textarea>
         </div>
         <div id="subdivision-text-inputs"></div>
         <img src="./assets/pause.png" id="pause-icon" draggable="false" title="Pause sequencer"/>

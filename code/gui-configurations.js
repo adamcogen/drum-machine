@@ -118,6 +118,11 @@ function getGuiConfigurations(hideIcons=false) {
             left: 560,
             maximumValue: 99999 // fractional numbers less than this could go over the width of the text input
         },
+        tempoTextInputBeatsPerLoop: {
+            top: 26, // i don't know why this has to be one pixel more than the other tempo text input to appear even with it on screen, but i'm just rolling with it for now
+            left: 636,
+            maximumValue: 9999 // fractional numbers less than this could go over the width of the text input
+        },
         subdivionLineTextInputs: {
             topPaddingPerRow: 0, // centered on sequencer line would be: -17
             leftPaddingPerRow: 10,
