@@ -71,4 +71,39 @@ class Util {
         this.assertEquals(40, this.calculateLinearConversion(3, 1, 5, 20, 60), "Calculate a linear conversion for two ranges with a different min and a different size, scaling up");
         this.assertEquals(3, this.calculateLinearConversion(40, 20, 60, 1, 5), "Calculate a linear conversion for two ranges with a different min and a different size, scaling down");
     }
+
+    /**
+     * Logic for converting between beats-per-minute and loop length in milliseconds, and vice versa, and any other related stuff.
+     */
+
+    convertBeatsPerMinuteToLoopLengthInMillis(beatsPerMinute, numberOfBeatsPerLoop) {
+        // creating some time-related contants here just to make the conversion logic more readable
+        let secondsPerMinute = 60
+        let millisecondsPerSecond = 1000
+        // had to write out some dimensional analysis to figure out how to calculate this..
+        return (secondsPerMinute * millisecondsPerSecond * numberOfBeatsPerLoop) / beatsPerMinute
+    }
+
+    convertLoopLengthInMillisToBeatsPerMinute(loopLengthInMillis, numberOfBeatsPerLoop) {
+        let secondsPerMinute = 60
+        let millisecondsPerSecond = 1000
+        return (secondsPerMinute * millisecondsPerSecond * numberOfBeatsPerLoop) / loopLengthInMillis
+    }
+
+    
+    // and here are some more conversion methods, to be used in the 'tap tempo' button logic
+    // (to convert the time between each click into a beats-per-minute value and vice versa)
+    
+    convertBeatLengthInMillisToBeatsPerMinute(millisecondsPerBeat) {
+        let millisecondsPerSecond = 1000
+        let secondsPerMinute = 60
+        // needed to do some more dimensional analysis haha..
+        return (secondsPerMinute * millisecondsPerSecond) / millisecondsPerBeat
+    }
+
+    convertBeatsPerMinuteToBeatLengthInMillis(beatsPerMinute) {
+        let millisecondsPerSecond = 1000
+        let secondsPerMinute = 60
+        return (secondsPerMinute * millisecondsPerSecond) / beatsPerMinute
+    }
 }
