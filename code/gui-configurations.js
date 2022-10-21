@@ -156,6 +156,18 @@ function getGuiConfigurations(hideIcons=false) {
                 leftPadding: 0,
             },
         },
+        tempoInputModeSelectionBpmButton: { // button for toggling between different modes of inputting tempo. this one is to select 'beats per minute' input mode.
+            top: 20,
+            left: 412,
+            height: 48,
+            width: 48,
+        },
+        tempoInputModeSelectionMillisecondsButton: { // button for toggling between different modes of inputting tempo. this one is to select 'loop length in milliseconds' input mode.
+            top: 20,
+            left: 464,
+            height: 48,
+            width: 48,
+        },
         sequencerRowHandles: { // these will be circles, one to the left of each sequencer row, that allow you to select the row and click-drag it.
             topPadding: 0,
             leftPadding: -30,

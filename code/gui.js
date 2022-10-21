@@ -82,6 +82,7 @@ class DrumMachineGui {
         this.addRestartSequencerButtonActionListeners();
         this.addClearAllNotesButtonActionListeners();
         this.addSwitchSequencerModesButtonActionListeners();
+        this.addTempoInputModeSelectionButtonsActionListeners();
         this.refreshWindowMouseMoveEvent();
         this.refreshWindowMouseUpEvent();
 
@@ -152,6 +153,8 @@ class DrumMachineGui {
         shapes.clearNotesForRowButtonShapes = this.initializeButtonPerSequencerRow(this.configurations.clearRowButtons.topPaddingPerRow, this.configurations.clearRowButtons.leftPaddingPerRow, this.configurations.clearRowButtons.height, this.configurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
         shapes.sequencerRowHandles = this.initializeSequencerRowHandles()
         shapes.showModeMenuButton = this.initializeRectangleShape(this.configurations.showModeMenuButton.top, this.configurations.showModeMenuButton.left, this.configurations.showModeMenuButton.height, this.configurations.showModeMenuButton.width) // a rectangle that will eventually be used to select between different modes of the sequencer (move notes, edit note volumes, select notes, etc.)
+        shapes.tempoInputModeSelectionBpmButton = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top, this.configurations.tempoInputModeSelectionBpmButton.left, this.configurations.tempoInputModeSelectionBpmButton.height, this.configurations.tempoInputModeSelectionBpmButton.width) // button for toggling between different modes of inputting tempo. this one is to select 'beats per minute' input mode.
+        shapes.tempoInputModeSelectionMillisecondsButton = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionMillisecondsButton.top, this.configurations.tempoInputModeSelectionMillisecondsButton.left, this.configurations.tempoInputModeSelectionMillisecondsButton.height, this.configurations.tempoInputModeSelectionMillisecondsButton.width) // button for toggling between different modes of inputting tempo. this one is to select 'loop length in milliseconds' input mode.
         this.two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
         return shapes;
     }
@@ -1086,6 +1089,41 @@ class DrumMachineGui {
         // reset circle selection variables
         self.circleSelectionTracker.circleBeingMoved = null
         self.setNoteTrashBinVisibility(false)
+    }
+
+    addTempoInputModeSelectionButtonsActionListeners() {
+        this.addTempoInputModeSelectionBpmButtonActionListener();
+        this.addTempoInputModeSelectionMillisecondsButtonActionListener();
+    }
+
+    addTempoInputModeSelectionBpmButtonActionListener() {
+        if (this.eventHandlerFunctions.tempoInputModeSelectionBpmButton !== null && this.eventHandlerFunctions.tempoInputModeSelectionBpmButton !== undefined) {
+            // remove event listeners if they've already been added to avoid duplicates
+            this.components.shapes.tempoInputModeSelectionBpmButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
+        }
+        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+        this.eventHandlerFunctions.tempoInputModeSelectionBpmButton = () => this.tempoInputModeSelectionBpmClickHandler(this);
+        this.components.shapes.tempoInputModeSelectionBpmButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
+    }
+
+    // search for comment "a general note about the 'self' paramater" within this file for info on its use here
+    tempoInputModeSelectionBpmClickHandler(self) {
+        console.log("tempo input mode selector 'bpm mode' clicked");
+    }
+
+    addTempoInputModeSelectionMillisecondsButtonActionListener() {
+        if (this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton !== null && this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton !== undefined) {
+            // remove event listeners if they've already been added to avoid duplicates
+            this.components.shapes.tempoInputModeSelectionMillisecondsButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
+        }
+        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+        this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton = () => this.tempoInputModeSelectionMillisecondsClickHandler(this);
+        this.components.shapes.tempoInputModeSelectionMillisecondsButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
+    }
+
+    // search for comment "a general note about the 'self' paramater" within this file for info on its use here
+    tempoInputModeSelectionMillisecondsClickHandler(self) {
+        console.log("tempo input mode selector 'milliseconds mode' clicked");
     }
 
     /**
