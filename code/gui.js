@@ -10,6 +10,8 @@ class DrumMachineGui {
     // create constants that will be used to denote sequencer modes
     static get MOVE_NOTES_MODE() { return "MOVE_NOTES_MODE" }
     static get CHANGE_NOTE_VOLUMES_MODE() { return "CHANGE_NOTE_VOLUMES_MODE" }
+    static get TEMPO_INPUT_MODE_BPM() { return "TEMPO_INPUT_MODE_BPM" }
+    static get TEMPO_INPUT_MODE_MILLISECONDS() { return "TEMPO_INPUT_MODE_MILLISECONDS" }
 
     constructor(sequencer, sampleNameList, samples, sampleBankNodeGenerator) {
         this.sequencer = sequencer
@@ -22,11 +24,13 @@ class DrumMachineGui {
             shapes: {}, // this hash will contain all of the two.js shapes (either as shapes, lists of shapes, or lists of lists of shapes)
             domElements: {} // this hash will contain all of the HTML DOM elements (either as individual elements, lists of elements, or lists of lists of elements, etc.)
         }
+
+        this.currentGuiMode = DrumMachineGui.MOVE_NOTES_MODE; // start the GUI in 'move notes' mode
+        this.tempoInputMode = DrumMachineGui.TEMPO_INPUT_MODE_BPM;
+
         this.components.shapes = this.initializeGuiShapes();
         this.components.domElements = this.initializeDomElements();
         this.eventHandlerFunctions = {}; // make a hash to store references to event handler functions. that way we can remove them from the DOM elements they are attached to later
-
-        this.currentGuiMode = DrumMachineGui.MOVE_NOTES_MODE // start the GUI in 'move notes' mode
 
         // add more dom elements and do some additional setup of shapes and dom elements
         this.initializeTempoTextInputValuesAndStyles();
@@ -629,15 +633,23 @@ class DrumMachineGui {
     }
 
     /**
-     * 'set tempo' text input logic
+     * 'set tempo' text input logic.
+     * also include logic for initial tempo buttons / inputs based on which tempo input mode we're in ('set tempo as bpm' or 'set tempo as length in milliseconds')
      */
 
     initializeTempoTextInputValuesAndStyles() {
+        // set text input style and contents
         this.components.domElements.divs.tempoTextInputs.style.left = "" + this.configurations.tempoTextInput.left + "px"
         this.components.domElements.divs.tempoTextInputs.style.top = "" + this.configurations.tempoTextInput.top + "px"
         this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.loopLengthInMillis
         this.components.domElements.textInputs.loopLengthMillis.style.borderColor = this.configurations.sequencer.color
         this.components.domElements.textInputs.loopLengthMillis.style.color = this.configurations.defaultFont.color // set font color
+        // set tempo input mode selection buttons initial state
+        if (this.tempoInputMode === DrumMachineGui.TEMPO_INPUT_MODE_BPM) { // set tempo input mode selector button color based on which tempo input mode we are in
+            this.components.shapes.tempoInputModeSelectionBpmButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
+        } else if (this.tempoInputMode === DrumMachineGui.TEMPO_INPUT_MODE_MILLISECONDS) {
+            this.components.shapes.tempoInputModeSelectionMillisecondsButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
+        }
     }
 
     initializeTempoTextInputActionListeners() {
@@ -1108,7 +1120,11 @@ class DrumMachineGui {
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
     tempoInputModeSelectionBpmClickHandler(self) {
-        console.log("tempo input mode selector 'bpm mode' clicked");
+        if (self.tempoInputMode !== DrumMachineGui.TEMPO_INPUT_MODE_BPM) {
+            self.tempoInputMode = DrumMachineGui.TEMPO_INPUT_MODE_BPM;
+            self.components.shapes.tempoInputModeSelectionBpmButton.fill = self.configurations.buttonBehavior.clickedButtonColor;
+            self.components.shapes.tempoInputModeSelectionMillisecondsButton.fill = 'transparent';
+        }
     }
 
     addTempoInputModeSelectionMillisecondsButtonActionListener() {
@@ -1123,7 +1139,11 @@ class DrumMachineGui {
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
     tempoInputModeSelectionMillisecondsClickHandler(self) {
-        console.log("tempo input mode selector 'milliseconds mode' clicked");
+        if (self.tempoInputMode !== DrumMachineGui.TEMPO_INPUT_MODE_MILLISECONDS) {
+            self.tempoInputMode = DrumMachineGui.TEMPO_INPUT_MODE_MILLISECONDS;
+            self.components.shapes.tempoInputModeSelectionMillisecondsButton.fill = self.configurations.buttonBehavior.clickedButtonColor;
+            self.components.shapes.tempoInputModeSelectionBpmButton.fill = 'transparent';
+        }
     }
 
     /**

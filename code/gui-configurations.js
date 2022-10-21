@@ -108,7 +108,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         mouseEvents: {
             notePlacementPadding: 20, // give this many pixels of padding on either side of things when we're placing, so we don't have to place them _precisely_ on the line, the trash bin, etc.
-            throwNoteAwaySidesPadding: 50, // 90, // throw notes away if they are this far from the side of the sequencer
+            throwNoteAwaySidesPadding: 50, // 90, // throw notes away if they are this far from the left or right side of the sequencer
             throwNoteAwayTopAndBottomPadding: 50, // throw notes away if they are this far from the top or bottom of the sequencer
             throwRowAwaySidesPadding: 70,
             throwRowAwayTopAndBottomPadding: 70,
@@ -164,7 +164,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         tempoInputModeSelectionMillisecondsButton: { // button for toggling between different modes of inputting tempo. this one is to select 'loop length in milliseconds' input mode.
             top: 20,
-            left: 464,
+            left: 468,
             height: 48,
             width: 48,
         },
