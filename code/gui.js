@@ -644,22 +644,23 @@ class DrumMachineGui {
         // start with the main tempo text input
         this.components.domElements.divs.tempoTextInputs.style.left = "" + this.configurations.tempoTextInput.left + "px"
         this.components.domElements.divs.tempoTextInputs.style.top = "" + this.configurations.tempoTextInput.top + "px"
-        this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.loopLengthInMillis
         this.components.domElements.textInputs.loopLengthMillis.style.borderColor = this.configurations.sequencer.color
         this.components.domElements.textInputs.loopLengthMillis.style.color = this.configurations.defaultFont.color // set font color
         // now set up the 'beats per loop' tempo text input
         this.components.domElements.divs.tempoTextInputBeatsPerLoop.style.left = "" + this.configurations.tempoTextInputBeatsPerLoop.left + "px"
         this.components.domElements.divs.tempoTextInputBeatsPerLoop.style.top = "" + this.configurations.tempoTextInputBeatsPerLoop.top + "px"
-        this.components.domElements.textInputs.numberOfBeatsInLoop.value = "1"; // placeholder value for now
+        this.components.domElements.textInputs.numberOfBeatsInLoop.value = "4"; // placeholder value for now
         this.components.domElements.textInputs.numberOfBeatsInLoop.style.borderColor = this.configurations.sequencer.color
         this.components.domElements.textInputs.numberOfBeatsInLoop.style.color = this.configurations.defaultFont.color // set font color
         // initialize tempo input state based on which tempo input mode is selected (loop bpm or loop length in milliseconds)
         if (this.tempoInputMode === DrumMachineGui.TEMPO_INPUT_MODE_BPM) { // set tempo input mode selector button color based on which tempo input mode we are in
             this.components.shapes.tempoInputModeSelectionBpmButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
             this.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'block';
+            this.components.domElements.textInputs.loopLengthMillis.value = Util.convertLoopLengthInMillisToBeatsPerMinute(this.sequencer.loopLengthInMillis, this.components.domElements.textInputs.numberOfBeatsInLoop.value);
         } else if (this.tempoInputMode === DrumMachineGui.TEMPO_INPUT_MODE_MILLISECONDS) {
             this.components.shapes.tempoInputModeSelectionMillisecondsButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
             this.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'none';
+            this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.loopLengthInMillis
         }
     }
 
@@ -1136,6 +1137,7 @@ class DrumMachineGui {
             self.components.shapes.tempoInputModeSelectionBpmButton.fill = self.configurations.buttonBehavior.clickedButtonColor;
             self.components.shapes.tempoInputModeSelectionMillisecondsButton.fill = 'transparent';
             self.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'block';
+            self.components.domElements.textInputs.loopLengthMillis.value = Util.convertLoopLengthInMillisToBeatsPerMinute(self.sequencer.loopLengthInMillis, self.components.domElements.textInputs.numberOfBeatsInLoop.value);
         }
     }
 
@@ -1156,6 +1158,7 @@ class DrumMachineGui {
             self.components.shapes.tempoInputModeSelectionMillisecondsButton.fill = self.configurations.buttonBehavior.clickedButtonColor;
             self.components.shapes.tempoInputModeSelectionBpmButton.fill = 'transparent';
             self.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'none';
+            self.components.domElements.textInputs.loopLengthMillis.value = self.sequencer.loopLengthInMillis;
         }
     }
 
