@@ -17,6 +17,15 @@ class Sequencer {
         this.loopLengthInMillis = loopLengthInMillis
         this.rows = this.initializeEmptySequencerRows()
         this.lookAheadMillis = lookAheadMillis
+        let defaultNumberOfBeatsPerLoop = 4;
+        this.tempoRepresentation = { // object to track BPM-based interpretation of the loop length, so that we can serialize it to display it on the GUI.
+            // note that this doesn't actually affect any logic of the sequencer itself. it's just used for storing how the user is thinking about tempo
+            // in the sequencer. it really only affects the GUI. it might make sense to find a better place to store it in the future, but for now it seems
+            // easiest to store it here, so that it can be conveniently serialized and deserialized to a URL with the rest of the sequencer data.
+            beatsPerMinute: loopLengthInMillis / defaultNumberOfBeatsPerLoop, // include some default values, assuming they may be overwritten later.
+            numberOfBeatsPerLoop: defaultNumberOfBeatsPerLoop,
+            isInBpmMode: false, // if true, the sequencer GUI will display BPM instead of raw loop length in millliseconds.
+        }
         this.samples = samples
         /**
          * set up time-keeping / pause-related variables.

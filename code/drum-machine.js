@@ -51,6 +51,10 @@ window.onload = () => {
     let defaultLoopLengthInMillis = 2000; // length of the whole drum sequence (loop), in millliseconds
     // initialize sequencer object
     let sequencer = new Sequencer([webAudioDriver], 0, defaultLoopLengthInMillis, _LOOK_AHEAD_MILLIS, samples)
+    // set some default values to define how tempo is represented, for the sake of the sequencer's GUI
+    sequencer.tempoRepresentation.isInBpmMode = true;
+    sequencer.tempoRepresentation.numberOfBeatsPerLoop = 4;
+    sequencer.tempoRepresentation.beatsPerMinute = defaultLoopLengthInMillis / sequencer.tempoRepresentation.numberOfBeatsPerLoop;
     
     // initialize ID generator for node / note labels, and node generator for notes taken from the sample bank.
     let idGenerator = new IdGenerator() // we will use this same ID generator everywhere we need IDs, to make sure we track which IDs have already been generated
