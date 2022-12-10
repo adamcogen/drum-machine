@@ -87,6 +87,7 @@ class DrumMachineGui {
         this.allDrawnCircles = []
 
         this.initializeTempoTextInputActionListeners();
+        this.initializeNumberOfBeatsInLoopInputActionListeners();
         this.addPauseButtonActionListeners();
         this.addRestartSequencerButtonActionListeners();
         this.addClearAllNotesButtonActionListeners();
@@ -710,6 +711,36 @@ class DrumMachineGui {
             }
         })
         this.addDefaultKeypressEventListenerToTextInput(this.components.domElements.textInputs.loopLengthMillis, true)
+    }
+
+    initializeNumberOfBeatsInLoopInputActionListeners() {
+        /**
+         * set up 'focus' and 'blur' events for the 'number of beats in loop' text input.
+         * the plan is that when you update the values in the text box, they will be applied
+         * after you click away from the text box automaticaly, unless the input isn't a valid
+         * number. if something besides a valid number is entered, the value will just go back
+         * to whatever it was before, and not make any change to the sequencer.
+         */
+        this.components.domElements.textInputs.numberOfBeatsInLoop.addEventListener('blur', () => {
+            if (this.tempoInputMode === DrumMachineGui.TEMPO_INPUT_MODE_BPM) {
+                let newTextInputValue = this.components.domElements.textInputs.numberOfBeatsInLoop.value.trim() // remove whitespace from beginning and end of input then store it
+                if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
+                    newTextInputValue = this.currentBpmInfoTracker.numberOfBeatsPerLoop
+                }
+                let newNumberOfBeatsPerLoop = parseInt(newTextInputValue) // do we allow floats rather than ints?? not here, since we also don't allow fractional subdivisisions of rows
+                newNumberOfBeatsPerLoop = (newNumberOfBeatsPerLoop === 0 ? 1 : newNumberOfBeatsPerLoop);
+                // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input (when converted to milliseconds).
+                // make sure that (current BPM * number of beats) is less than maximum loop length
+                let minimumNumberOfBeatsAtCurrentBpm = this.sequencer.lookAheadMillis / this.currentBpmInfoTracker.beatsPerMinute;
+                let maximumNumberOfBeatsAtCurrentBpm = this.configurations.tempoTextInput.maximumValue / this.currentBpmInfoTracker.beatsPerMinute;
+                newNumberOfBeatsPerLoop = Util.confineNumberToBounds(newNumberOfBeatsPerLoop, minimumNumberOfBeatsAtCurrentBpm, maximumNumberOfBeatsAtCurrentBpm)
+                this.currentBpmInfoTracker.numberOfBeatsPerLoop = newNumberOfBeatsPerLoop
+                this.components.domElements.textInputs.numberOfBeatsInLoop.value = newNumberOfBeatsPerLoop;
+                this.updateSequencerLoopLength(Util.convertBeatsPerMinuteToLoopLengthInMillis(this.currentBpmInfoTracker.beatsPerMinute, newNumberOfBeatsPerLoop));
+                this.saveCurrentSequencerStateToUrlHash();
+            }
+        })
+        this.addDefaultKeypressEventListenerToTextInput(this.components.domElements.textInputs.numberOfBeatsInLoop, true)
     }
 
     updateSequencerLoopLength(newLoopLengthInMillis) {
