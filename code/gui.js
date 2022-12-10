@@ -32,6 +32,11 @@ class DrumMachineGui {
         this.components.domElements = this.initializeDomElements();
         this.eventHandlerFunctions = {}; // make a hash to store references to event handler functions. that way we can remove them from the DOM elements they are attached to later
 
+        this.currentBpmInfoTracker = {
+            beatsPerMinute: null,
+            numberOfBeatsPerLoop: null,
+        }
+
         // add more dom elements and do some additional setup of shapes and dom elements
         this.initializeTempoTextInputValuesAndStyles();
         this.setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note or a sequencer row, so make sure it starts out as not visible
@@ -650,18 +655,20 @@ class DrumMachineGui {
         this.components.domElements.divs.tempoTextInputBeatsPerLoop.style.left = "" + this.configurations.tempoTextInputBeatsPerLoop.left + "px"
         this.components.domElements.divs.tempoTextInputBeatsPerLoop.style.top = "" + this.configurations.tempoTextInputBeatsPerLoop.top + "px"
         this.components.domElements.textInputs.numberOfBeatsInLoop.value = "4"; // placeholder value for now
+        this.currentBpmInfoTracker.numberOfBeatsPerLoop = 4;
         this.components.domElements.textInputs.numberOfBeatsInLoop.style.borderColor = this.configurations.sequencer.color
         this.components.domElements.textInputs.numberOfBeatsInLoop.style.color = this.configurations.defaultFont.color // set font color
         // initialize tempo input state based on which tempo input mode is selected (loop bpm or loop length in milliseconds)
         if (this.tempoInputMode === DrumMachineGui.TEMPO_INPUT_MODE_BPM) { // set tempo input mode selector button color based on which tempo input mode we are in
             this.components.shapes.tempoInputModeSelectionBpmButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
             this.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'block';
-            this.components.domElements.textInputs.loopLengthMillis.value = Util.convertLoopLengthInMillisToBeatsPerMinute(this.sequencer.loopLengthInMillis, this.components.domElements.textInputs.numberOfBeatsInLoop.value);
+            this.components.domElements.textInputs.loopLengthMillis.value = Util.convertLoopLengthInMillisToBeatsPerMinute(this.sequencer.loopLengthInMillis, this.currentBpmInfoTracker.numberOfBeatsPerLoop);
         } else if (this.tempoInputMode === DrumMachineGui.TEMPO_INPUT_MODE_MILLISECONDS) {
             this.components.shapes.tempoInputModeSelectionMillisecondsButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
             this.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'none';
             this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.loopLengthInMillis
         }
+        this.currentBpmInfoTracker.beatsPerMinute = Util.convertLoopLengthInMillisToBeatsPerMinute(this.sequencer.loopLengthInMillis, this.currentBpmInfoTracker.numberOfBeatsPerLoop);
     }
 
     initializeTempoTextInputActionListeners() {
@@ -673,16 +680,34 @@ class DrumMachineGui {
          * to whatever it was before, and not make any change to the sequencer.
          */
         this.components.domElements.textInputs.loopLengthMillis.addEventListener('blur', () => {
-            let newTextInputValue = this.components.domElements.textInputs.loopLengthMillis.value.trim() // remove whitespace from beginning and end of input then store it
-            if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
-                newTextInputValue = this.sequencer.loopLengthInMillis
+            if (this.tempoInputMode === DrumMachineGui.TEMPO_INPUT_MODE_MILLISECONDS) {
+                let newTextInputValue = this.components.domElements.textInputs.loopLengthMillis.value.trim() // remove whitespace from beginning and end of input then store it
+                if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
+                    newTextInputValue = this.sequencer.loopLengthInMillis
+                }
+                newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
+                // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
+                newTextInputValue = Util.confineNumberToBounds(newTextInputValue, this.sequencer.lookAheadMillis, this.configurations.tempoTextInput.maximumValue)
+                this.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
+                this.updateSequencerLoopLength(newTextInputValue)
+                this.currentBpmInfoTracker.beatsPerMinute = Util.convertLoopLengthInMillisToBeatsPerMinute(newTextInputValue, this.currentBpmInfoTracker.numberOfBeatsPerLoop);
+                this.saveCurrentSequencerStateToUrlHash();
+            } else if (this.tempoInputMode === DrumMachineGui.TEMPO_INPUT_MODE_BPM) {
+                let newTextInputValue = this.components.domElements.textInputs.loopLengthMillis.value.trim() // remove whitespace from beginning and end of input then store it
+                if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
+                    newTextInputValue = this.currentBpmInfoTracker.beatsPerMinute
+                }
+                newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
+                // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input (when converted to milliseconds)
+                let numberOfBeatsPerLoop = this.currentBpmInfoTracker.numberOfBeatsPerLoop
+                let minimumBpm = Util.convertLoopLengthInMillisToBeatsPerMinute(this.configurations.tempoTextInput.maximumValue, numberOfBeatsPerLoop);
+                let maximumBpm = Util.convertLoopLengthInMillisToBeatsPerMinute(this.sequencer.lookAheadMillis, numberOfBeatsPerLoop);
+                newTextInputValue = Util.confineNumberToBounds(newTextInputValue, minimumBpm, maximumBpm)
+                this.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
+                this.currentBpmInfoTracker.beatsPerMinute = newTextInputValue
+                this.updateSequencerLoopLength(Util.convertBeatsPerMinuteToLoopLengthInMillis(newTextInputValue, numberOfBeatsPerLoop));
+                this.saveCurrentSequencerStateToUrlHash();
             }
-            newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
-            // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
-            newTextInputValue = Util.confineNumberToBounds(newTextInputValue, this.sequencer.lookAheadMillis, this.configurations.tempoTextInput.maximumValue)
-            this.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
-            this.updateSequencerLoopLength(newTextInputValue)
-            this.saveCurrentSequencerStateToUrlHash();
         })
         this.addDefaultKeypressEventListenerToTextInput(this.components.domElements.textInputs.loopLengthMillis, true)
     }
@@ -1137,7 +1162,7 @@ class DrumMachineGui {
             self.components.shapes.tempoInputModeSelectionBpmButton.fill = self.configurations.buttonBehavior.clickedButtonColor;
             self.components.shapes.tempoInputModeSelectionMillisecondsButton.fill = 'transparent';
             self.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'block';
-            self.components.domElements.textInputs.loopLengthMillis.value = Util.convertLoopLengthInMillisToBeatsPerMinute(self.sequencer.loopLengthInMillis, self.components.domElements.textInputs.numberOfBeatsInLoop.value);
+            self.components.domElements.textInputs.loopLengthMillis.value = self.currentBpmInfoTracker.beatsPerMinute;
         }
     }
 
