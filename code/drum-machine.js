@@ -54,7 +54,7 @@ window.onload = () => {
     // set some default values to define how tempo is represented, for the sake of the sequencer's GUI
     sequencer.tempoRepresentation.isInBpmMode = true;
     sequencer.tempoRepresentation.numberOfBeatsPerLoop = 4;
-    sequencer.tempoRepresentation.beatsPerMinute = defaultLoopLengthInMillis / sequencer.tempoRepresentation.numberOfBeatsPerLoop;
+    sequencer.tempoRepresentation.beatsPerMinute = Util.convertLoopLengthInMillisToBeatsPerMinute(defaultLoopLengthInMillis, sequencer.tempoRepresentation.numberOfBeatsPerLoop);
     
     // initialize ID generator for node / note labels, and node generator for notes taken from the sample bank.
     let idGenerator = new IdGenerator() // we will use this same ID generator everywhere we need IDs, to make sure we track which IDs have already been generated

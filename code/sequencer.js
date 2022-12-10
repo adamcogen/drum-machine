@@ -22,7 +22,7 @@ class Sequencer {
             // note that this doesn't actually affect any logic of the sequencer itself. it's just used for storing how the user is thinking about tempo
             // in the sequencer. it really only affects the GUI. it might make sense to find a better place to store it in the future, but for now it seems
             // easiest to store it here, so that it can be conveniently serialized and deserialized to a URL with the rest of the sequencer data.
-            beatsPerMinute: loopLengthInMillis / defaultNumberOfBeatsPerLoop, // include some default values, assuming they may be overwritten later.
+            beatsPerMinute: Util.convertLoopLengthInMillisToBeatsPerMinute(loopLengthInMillis, defaultNumberOfBeatsPerLoop), // include some default values, assuming they may be overwritten later.
             numberOfBeatsPerLoop: defaultNumberOfBeatsPerLoop,
             isInBpmMode: false, // if true, the sequencer GUI will display BPM instead of raw loop length in millliseconds.
         }
