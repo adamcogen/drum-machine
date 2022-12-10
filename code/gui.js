@@ -265,7 +265,9 @@ class DrumMachineGui {
     }
 
     initializeRowSelectionVariablesAndVisuals(rowIndex) {
-        this.setNoteTrashBinVisibility(true)
+        if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE){
+            this.setNoteTrashBinVisibility(true);
+        }
         this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
         // save relevant info about whichever row is selected
         this.rowSelectionTracker.selectedRowIndex = rowIndex;
@@ -1535,6 +1537,18 @@ class DrumMachineGui {
                 }
             }
         }
+        if (self.rowSelectionTracker.selectedRowIndex !== null) { // handle mousemove events when a row is selected
+            self.adjustEventCoordinates(event)
+            let mouseX = event.pageX
+            let mouseY = event.pageY
+
+            let circle = self.components.shapes.sequencerRowHandles[self.rowSelectionTracker.selectedRowIndex]
+            circle.stroke = 'black'
+            circle.linewidth = 2
+            circle.fill = self.configurations.sequencerRowHandles.selectedColor
+            let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.rowSelectionTracker.selectedRowIndex]
+            rowSelectionRectangle.stroke = self.configurations.sequencerRowHandles.selectedColor 
+        }
     }
 
     moveNotesModeMouseMoveEventHandler(self, event) {
@@ -1783,6 +1797,11 @@ class DrumMachineGui {
             // reset circle selection variables
             self.circleSelectionTracker.circleBeingMoved = null
             self.setNoteTrashBinVisibility(false)
+        }
+        if (self.rowSelectionTracker.selectedRowIndex !== null) {
+            self.rowSelectionTracker.selectedRowIndex = null
+            self.redrawSequencer();
+            self.saveCurrentSequencerStateToUrlHash();
         }
     }
 
