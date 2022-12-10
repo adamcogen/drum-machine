@@ -348,6 +348,9 @@ class Sequencer {
         return JSON.stringify({
             "loopLength": this.loopLengthInMillis,
             "rows": this.rows.map( (row) => row._serialize() ),
+            "bpm": this.tempoRepresentation.beatsPerMinute,
+            "numberOfBeats": this.tempoRepresentation.numberOfBeatsPerLoop,
+            "isInBpmMode": this.tempoRepresentation.isInBpmMode
         })
     }
 
@@ -359,6 +362,9 @@ class Sequencer {
         let deserializedObject = JSON.parse(json);
         this.setLoopLengthInMillis(deserializedObject.loopLength)
         this.setNumberOfRows(deserializedObject.rows.length)
+        this.tempoRepresentation.numberOfBeatsPerLoop = deserializedObject.numberOfBeats ? deserializedObject.numberOfBeats : 4 // when loading tempo representation, populate or calculate default values if the fields are missing, for backwards compatability with old URLs.
+        this.tempoRepresentation.beatsPerMinute = deserializedObject.bpm ? deserializedObject.bpm : Util.convertLoopLengthInMillisToBeatsPerMinute(this.loopLengthInMillis, this.tempoRepresentation.numberOfBeatsPerLoop)
+        this.tempoRepresentation.isInBpmMode = deserializedObject.isInBpmMode
         for (let rowIndex = 0; rowIndex < this.numberOfRows; rowIndex++) {
             let deserializedRowObject = JSON.parse(deserializedObject.rows[rowIndex])
             let numberOfSubdivisionsForRow = deserializedRowObject.subdivisions;
@@ -395,7 +401,8 @@ class SequencerRow {
 
     // serialize the sequencer row so that it can be recreated later. this method is 'private' (starts with _) and there is no corresponding deserialize
     // method because this method is only meant to be called from within the Sequencer.serialize() method. this method alone is not sufficient to recreate
-    // a sequencer row from scratch, it just stores relevant info that is distinct to each row within a particular sequencer pattern.
+    // a sequencer row from scratch, it is just a helper method that stores relevant info that is distinct to each row within a particular sequencer pattern,
+    // to be called for convenience within a method that coordinates the broader serialization process for the entire sequencer.
     _serialize() {
         let notes = [];
         let currentNode = this._notesList.head;

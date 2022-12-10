@@ -1184,6 +1184,7 @@ class DrumMachineGui {
             self.components.shapes.tempoInputModeSelectionMillisecondsButton.fill = 'transparent';
             self.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'block';
             self.components.domElements.textInputs.loopLengthMillis.value = self.sequencer.tempoRepresentation.beatsPerMinute;
+            self.saveCurrentSequencerStateToUrlHash();
         }
     }
 
@@ -1205,6 +1206,7 @@ class DrumMachineGui {
             self.components.shapes.tempoInputModeSelectionBpmButton.fill = 'transparent';
             self.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'none';
             self.components.domElements.textInputs.loopLengthMillis.value = self.sequencer.loopLengthInMillis;
+            self.saveCurrentSequencerStateToUrlHash();
         }
     }
 
