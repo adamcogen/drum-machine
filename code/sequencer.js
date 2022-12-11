@@ -292,6 +292,8 @@ class Sequencer {
             file: this.samples[sampleName].file,
             playbackRate: 1, 
             gain: sampleGain,
+            velocity: 60,
+            note: 60,
         }
 
         // for each audio driver, play the sound now
@@ -307,6 +309,8 @@ class Sequencer {
             file: this.samples[sampleName].file,
             playbackRate: 1, 
             gain: sampleGain,
+            velocity: 60,
+            note: 60,
         }
 
         // for each 'schedule sounds ahead of time' audio driver, schedule the sound at the speicifed time

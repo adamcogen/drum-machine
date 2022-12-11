@@ -31,6 +31,10 @@ class BaseAudioDriver {
     getCurrentTimeInMilliseconds(){
         throw "Method 'getCurrentTimeInMilliseconds' from BaseAudioDriver needs to be implemented before being invoked."
     }
+
+    getSchedulingTimeOffsetInMilliseconds(){
+        throw "Method 'getSchedulingTimeOffsetInMilliseconds' from BaseAudioDriver needs to be implemented before being invoked."
+    }
 }
 
 /**
@@ -91,6 +95,10 @@ class WebAudioDriver extends BaseAudioDriver {
          */ 
         return this.webAudioContext.currentTime * 1000;
     }
+
+    getSchedulingTimeOffsetInMilliseconds() {
+        return 0; // this audio driver will act as the main timer that we use as a timing reference, so no need to include an offset.
+    }
 }
 
 /**
@@ -98,30 +106,38 @@ class WebAudioDriver extends BaseAudioDriver {
  * 
  * Expected format of soundData: a JSON object. Example soundData contents:
  * {
- *    noteOn: true, [should be true or false]
  *    note: 60, [should be 0 to 127]
  *    velocity: 100, [should be 0 to 127]
  * }
  * 
  */
 class MidiAudioDriver extends BaseAudioDriver {
-    constructor(webMidiAccess, midiPortId) {
+    constructor(webMidiOutput, schedulingTimeOffsetInMilliseconds) {
         super(true)
-        this.webMidiAccess = webMidiAccess;
-        this._midiPortId = midiPortId;
-        this._output = this.webMidiAccess.outputs.get(this._midiPortId);
+        this.schedulingTimeOffsetInMilliseconds = 0;
+        this.midiOutput = webMidiOutput
+        this.defaultNoteDuration = .1; // how long each note should be, in milliseconds
     }
 
     scheduleSound(soundData, time) {
-        let noteOnOrOffData = this._formatBooleanNoteOnValue(soundData.noteOn)
-        let midiMessage = [noteOnOrOffData, soundData.note, soundData.velocity]
-        this._output.send(midiMessage, time)
+        if (this.midiOutput === null){
+            return; // MIDI access is requested then granted asynchronously. For now just do nothing if we don't have access yet.
+        }
+        let midiOnMessage = [this._formatBooleanNoteOnValue(true), soundData.note, soundData.velocity]
+        let midiOffMessage = [this._formatBooleanNoteOnValue(false), soundData.note, soundData.velocity]
+        let timeWithOffset = time + this.getSchedulingTimeOffsetInMilliseconds();
+        this.midiOutput.send(midiOnMessage, timeWithOffset)
+        this.midiOutput.send(midiOffMessage, timeWithOffset + this.defaultNoteDuration);
     }
 
     playSoundNow(soundData) {
-        let noteOnOrOffData = this._formatBooleanNoteOnValue(soundData.noteOn)
-        let midiMessage = [noteOnOrOffData, soundData.note, soundData.velocity]
-        this._output.send(midiMessage)
+        if (this.midiOutput === null){
+            return; // MIDI access is requested then granted asynchronously. For now just do nothing if we don't have access yet.
+        }
+        let midiOnMessage = [this._formatBooleanNoteOnValue(true), soundData.note, soundData.velocity]
+        let midiOffMessage = [this._formatBooleanNoteOnValue(false), soundData.note, soundData.velocity]
+        this.midiOutput.send(midiOnMessage)
+        this.midiOutput.send(midiOffMessage, this.getCurrentTimeInMilliseconds() + this.defaultNoteDuration)
     }
 
     _formatBooleanNoteOnValue(noteOn) {
@@ -129,6 +145,18 @@ class MidiAudioDriver extends BaseAudioDriver {
     }
 
     getCurrentTimeInMilliseconds() {
-        window.performance.now();
+        return window.performance.now();
+    }
+
+    setMidiOutput(webMidiOutput) {
+        this.midiOutput = webMidiOutput;
+    }
+
+    getSchedulingTimeOffsetInMilliseconds(){
+        return this.schedulingTimeOffsetInMilliseconds;
+    }
+
+    setSchedulingTimeOffsetInMilliseconds(schedulingTimeOffsetInMilliseconds){
+        this.schedulingTimeOffsetInMilliseconds = schedulingTimeOffsetInMilliseconds;
     }
 }

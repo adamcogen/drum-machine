@@ -40,10 +40,11 @@ window.onload = () => {
     let webAudioDriver = new WebAudioDriver(_audioContext);
 
     // initialize web MIDI access and audio driver
-    let webMidiDriver = null;
+    let webMidiDriver = new MidiAudioDriver(null);
     navigator.requestMIDIAccess().then((midiAccess) => {
-        let hardcoded_iac_driver_bus_1_port_id = '-136005'; // temporary hard-coded value
-        webMidiDriver = new MidiAudioDriver(midiAccess, hardcoded_iac_driver_bus_1_port_id);
+        let midiPortId = '-136005'; // temporary hard-coded value for 'IAC Driver Bus 1' midi port
+        let midiOutput = midiAccess.outputs.get(midiPortId);
+        webMidiDriver.setMidiOutput(midiOutput)
         // // quick test of MIDI playSoundNow method. i have verified that this works
         // webMidiDriver.playSoundNow({"noteOn":true, "note":60, "velocity":127})
         // setTimeout(() => { 
@@ -54,6 +55,7 @@ window.onload = () => {
     // wait until the first click before resuming the audio context (this is required by Chrome browser)
     window.onclick = () => {
         _audioContext.resume()
+        webMidiDriver.setSchedulingTimeOffsetInMilliseconds(webMidiDriver.getCurrentTimeInMilliseconds() - webAudioDriver.getCurrentTimeInMilliseconds());
     }
 
     /**
@@ -62,7 +64,7 @@ window.onload = () => {
     const _LOOK_AHEAD_MILLIS = 100; // number of milliseconds to look ahead when scheduling notes to play. note bigger value means that there is a longer delay for sounds to stop after the 'pause' button is hit.
     let defaultLoopLengthInMillis = 2000; // length of the whole drum sequence (loop), in millliseconds
     // initialize sequencer object
-    let sequencer = new Sequencer([webAudioDriver], 0, defaultLoopLengthInMillis, _LOOK_AHEAD_MILLIS, samples)
+    let sequencer = new Sequencer([webAudioDriver, webMidiDriver], 0, defaultLoopLengthInMillis, _LOOK_AHEAD_MILLIS, samples)
     // set some default values to define how tempo is represented, for the sake of the sequencer's GUI
     sequencer.tempoRepresentation.isInBpmMode = true;
     sequencer.tempoRepresentation.numberOfBeatsPerLoop = 4;
