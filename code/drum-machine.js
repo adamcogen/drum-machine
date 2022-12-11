@@ -34,10 +34,22 @@ window.onload = () => {
         loadDrumSample(SOUND_FILES_PATH, sampleName, WAV_EXTENSION)
     }
 
-    // initialize web audio context
+    // initialize web audio context and audio driver
     _setUpAudioContextCompatabilityShim();
     let _audioContext = new AudioContext();
     let webAudioDriver = new WebAudioDriver(_audioContext);
+
+    // initialize web MIDI access and audio driver
+    let webMidiDriver = null;
+    navigator.requestMIDIAccess().then((midiAccess) => {
+        let hardcoded_iac_driver_bus_1_port_id = '-136005'; // temporary hard-coded value
+        webMidiDriver = new MidiAudioDriver(midiAccess, hardcoded_iac_driver_bus_1_port_id);
+        // // quick test of MIDI playSoundNow method. i have verified that this works
+        // webMidiDriver.playSoundNow({"noteOn":true, "note":60, "velocity":127})
+        // setTimeout(() => { 
+        //     webMidiDriver.playSoundNow({"noteOn":false, "note":60, "velocity":127});
+        // }, "1000");
+    })
 
     // wait until the first click before resuming the audio context (this is required by Chrome browser)
     window.onclick = () => {

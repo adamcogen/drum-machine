@@ -174,7 +174,7 @@ class DrumMachineGui {
                 subdivisionTextInputs: document.getElementById('subdivision-text-inputs')
             },
             textInputs: {
-                loopLengthMillis: document.getElementById('text-input-loop-length-millis'),
+                loopLengthMillis: document.getElementById('text-input-loop-length-millis-or-bpm'),
                 numberOfBeatsInLoop: document.getElementById('text-input-number-of-beats-in-loop'),
                 subdivisionTextInputs: [],
                 referenceLineTextInputs: [],

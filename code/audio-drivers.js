@@ -98,9 +98,9 @@ class WebAudioDriver extends BaseAudioDriver {
  * 
  * Expected format of soundData: a JSON object. Example soundData contents:
  * {
- *    noteOn: true, [true or false]
- *    note: 60, [0 to 127]
- *    velocity: 100, [0 to 127]
+ *    noteOn: true, [should be true or false]
+ *    note: 60, [should be 0 to 127]
+ *    velocity: 100, [should be 0 to 127]
  * }
  * 
  */
@@ -113,13 +113,19 @@ class MidiAudioDriver extends BaseAudioDriver {
     }
 
     scheduleSound(soundData, time) {
-        let midiMessage = [soundData.noteOn, soundData.note, soundData.velocity]
+        let noteOnOrOffData = this._formatBooleanNoteOnValue(soundData.noteOn)
+        let midiMessage = [noteOnOrOffData, soundData.note, soundData.velocity]
         this._output.send(midiMessage, time)
     }
 
     playSoundNow(soundData) {
-        let midiMessage = [soundData.noteOn, soundData.note, soundData.velocity]
+        let noteOnOrOffData = this._formatBooleanNoteOnValue(soundData.noteOn)
+        let midiMessage = [noteOnOrOffData, soundData.note, soundData.velocity]
         this._output.send(midiMessage)
+    }
+
+    _formatBooleanNoteOnValue(noteOn) {
+        return noteOn ? 0x90 : 0x80; // these are just constants used by the WebMidi API to represent 'note on' and 'note off' respectively
     }
 
     getCurrentTimeInMilliseconds() {
