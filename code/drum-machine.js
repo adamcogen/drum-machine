@@ -40,16 +40,20 @@ window.onload = () => {
     let webAudioDriver = new WebAudioDriver(_audioContext);
 
     // initialize web MIDI access and audio driver
-    let webMidiDriver = new MidiAudioDriver(null);
-    navigator.requestMIDIAccess().then((midiAccess) => {
+    let webMidiDriver = new MidiAudioDriver(null); // start by creating a MIDI driver with no outputs. we will add an output port later
+    navigator.requestMIDIAccess().then((midiAccess) => { // asynchronously request access to the system's MIDI ports.
         let midiPortId = '-136005'; // temporary hard-coded ID for my Mac's 'IAC Driver Bus 1' MIDI port
-        let midiOutput = midiAccess.outputs.get(midiPortId);
-        webMidiDriver.setMidiOutput(midiOutput)
+        let midiOutput = midiAccess.outputs.get(midiPortId); // now that the asynchronous request for MIDI access has been completed, retrieve the particular port we want to use.
+        webMidiDriver.setMidiOutput(midiOutput) // update the MIDI driver we created earlier to use the MIDI port we just retrieved. 
     })
 
     // wait until the first click before resuming the audio context (this is required by Chrome browser)
     window.onclick = () => {
         _audioContext.resume()
+        // now that the audio context has been resumed, determine how out-of-sync the MIDI system's timer and the WebAudio system's timer are from each other.
+        // set the "scheduling timer offset" in the MIDI audio driver based on how off-set the timers are from each other. that way we can schedule MIDI audio
+        // driver and WebAudio driver events using the same timestamps, and they will play at the same time, even though each audio system relies on a different 
+        // timer under the hood. 
         webMidiDriver.setSchedulingTimeOffsetInMilliseconds(webMidiDriver.getCurrentTimeInMilliseconds() - webAudioDriver.getCurrentTimeInMilliseconds());
     }
 

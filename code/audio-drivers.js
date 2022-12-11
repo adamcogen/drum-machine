@@ -14,6 +14,25 @@
  * multiple different audio drivers, and make the same method calls to each of
  * them in order to output sound in multiple ways or to multiple sources at the
  * same time. 
+ * 
+ * A note about getSchedulingTimeOffsetInMilliseconds():
+ * It is likely that each different Audio Drivers and different audio output systems
+ * in general, such as WebAudio versus WebMIDI versus some other library or system,
+ * will have their own system timers, which may get started and paused at different
+ * times while the drum machine is running. Currently the drum machine primarily
+ * relies on one timer in particular -- the WebAudio API's timer -- when it is updating
+ * its GUI or scheduling notes. All notes that get scheduled use a timestamp based on the
+ * WebAudio API's timer. This made sense to do because the WebAudio API is the first driver
+ * that was added, and I consider it the primary audio driver for the drum machine, and likely
+ * the one that will be used most often. It also relies on the system's hardware audio timer,
+ * which is very accurate, so it is a good timer to rely on. But since we are using that one
+ * system timer and no others when scheduling audio, we need a way to make sure that timestamps
+ * from the WebAudio timer are correctly synchronized with any other audio drivers' system timers.
+ * To do this, I have added a way to configure a time offset when scheduling notes, based on how
+ * out-of-sync each audio system's timer is from the primary (in this case, the WebAudio) timer.
+ * This method should return a time offset in milliseconds, specifying how off-set the timer that 
+ * is being used to schedule all audio events is from the primary timer being used to create the 
+ * scheduling timestamps. See the MidiAudioDriver for an example usage. 
  */
 class BaseAudioDriver {
     constructor(scheduleSoundsAheadOfTime = false) {
@@ -32,6 +51,31 @@ class BaseAudioDriver {
         throw "Method 'getCurrentTimeInMilliseconds' from BaseAudioDriver needs to be implemented before being invoked."
     }
 
+    /**
+     * A note about getSchedulingTimeOffsetInMilliseconds():
+     * It is likely that each different Audio Driver, and different audio output systems
+     * in general, such as WebAudio versus WebMIDI versus some other library or system,
+     * will have their own system timers, which may get started and paused at different
+     * times while the drum machine is running. Currently the drum machine primarily
+     * relies on one timer in particular -- the WebAudio API's timer -- when it is updating
+     * its GUI or scheduling notes. All notes that get scheduled use a timestamp based on the
+     * WebAudio API's timer. This made sense to do because the WebAudio API is the first driver
+     * that was added, and I consider it the primary audio driver for the drum machine, and likely
+     * the one that will be used most often. The WebAudio API relies on the system's hardware audio 
+     * timer, which is very accurate, so it is a good timer to rely on. But since we are looking at that 
+     * one system's timer and no others when scheduling audio, we need a way to make sure that timestamps
+     * from the WebAudio timer are correctly synchronized with any other audio drivers' system timers.
+     * To do this, we will configure a time offset in each audio driver, based on how out-of-sync that 
+     * audio driver's internal timer is from the primary (in this case, the WebAudio) driver's timer.
+     * This method should return a time offset in milliseconds, specifying how off-set the timer that 
+     * is being used to schedule all audio events is from the primary timer being used to create the 
+     * scheduling timestamps. See the MidiAudioDriver for an example usage. See wherever the
+     * MidiAudioDriver is instantiated for an example of how its timer offset is calculated and set.
+     * 
+     * The primary audio driver (in this case, the WebAudioDriver) has its scheduling time ofset 
+     * hard-coded to. 0, since it is the timer we are using as a reference, and it obviously isn't
+     * possible for it to be be out-of-sync with itself.
+     */
     getSchedulingTimeOffsetInMilliseconds(){
         throw "Method 'getSchedulingTimeOffsetInMilliseconds' from BaseAudioDriver needs to be implemented before being invoked."
     }
@@ -120,7 +164,9 @@ class MidiAudioDriver extends BaseAudioDriver {
         super(true)
         this.schedulingTimeOffsetInMilliseconds = 0;
         this.midiOutput = webMidiOutput
-        this.defaultNoteDuration = .1; // How long each MIDI note should play for, in milliseconds. This is short so that we can send many MIDI notes as fast as possible.
+         // How long each MIDI note should play for, in milliseconds. This is short so that we can send many MIDI notes in a row as fast as possible
+        this.defaultNoteDuration = .1; // without overlap (since as far as I know the same note can't be played more than once at the same time).
+        
     }
 
     scheduleSound(soundData, time) {
