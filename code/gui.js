@@ -75,6 +75,13 @@ class DrumMachineGui {
             }
         }
 
+        this.noteBankMidiNoteNumbersTracker = {}
+        for (let sampleName of this.sampleNameList) {
+            this.noteBankMidiNoteNumbersTracker[sampleName] = {
+                midiNote: this.samples[sampleName].defaultMidiNote,
+            }
+        }
+
         // keep a list of all the circles (i.e. notes) that have been drawn on the screen
         this.allDrawnCircles = []
 
@@ -1253,7 +1260,7 @@ class DrumMachineGui {
     // create a new circle (i.e. note) on the screen, with the specified x and y position. color is determined by sample name. 
     // values given for sample name, label, and row number are stored in the circle object to help the GUI keep track of things.
     // add the newly created circle to the list of all drawn cricles.
-    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume=this.configurations.notes.volumes.defaultVolume) {
+    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume=this.configurations.notes.volumes.defaultVolume, midiNote=60) {
         // initialize the new circle and set its colors
         let circle = this.two.makeCircle(xPosition, yPosition, this.configurations.notes.circleRadiusUsedForNoteBankSpacing)
         circle.fill = this.samples[sampleName].color
@@ -1290,7 +1297,7 @@ class DrumMachineGui {
             this.setNoteTrashBinVisibility(true)
             this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
-                this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume)
+                this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume, this.circleSelectionTracker.circleBeingMoved.guiData.midiNote)
             } else if (this.currentGuiMode === DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE) {
                 // do nothing, as in don't play the note's sound now. when changing note volumes, the note's sound will play on mouse up instead of mouse down, so we can hear the end result of our volume adjustment.
             }
@@ -1305,6 +1312,7 @@ class DrumMachineGui {
         circle.guiData.beat = beat
         circle.guiData.volume = volume
         circle.guiData.radiusWhenUnplayed = this.calculateCircleRadiusForVolume(volume);
+        circle.guiData.midiNote = midiNote
 
         // add circle to list of all drawn circles
         this.allDrawnCircles.push(circle)
@@ -1324,6 +1332,7 @@ class DrumMachineGui {
         let yPosition = this.configurations.sampleBank.top + this.configurations.sampleBank.borderPadding + (indexOfSampleInNoteBank * this.configurations.notes.circleRadiusUsedForNoteBankSpacing) + (indexOfSampleInNoteBank * this.configurations.sampleBank.spaceBetweenNotes)
         let row = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK // for cirlces on the note bank, the circle is not in a real row yet, so use -2 as a placeholder row number
         let volume = this.noteBankNoteVolumesTracker[sampleName].volume
+        let midiNote = this.noteBankMidiNoteNumbersTracker[sampleName].midiNote
         /**
          * the top note in the note bank will have label '-1', next one down will be '-2', etc.
          * these negative number labels will still be unique to a particular circle in the note bank,
@@ -1331,7 +1340,7 @@ class DrumMachineGui {
          * bank circle is taken fom the note bank and placed onto a real row.
          */
         let label = (indexOfSampleInNoteBank + 1) * -1 // see block comment above for info about '-1' here
-        this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, Sequencer.NOTE_IS_NOT_QUANTIZED, volume)
+        this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, Sequencer.NOTE_IS_NOT_QUANTIZED, volume, midiNote)
     }
 
     drawAllNoteBankCircles(){
@@ -1793,7 +1802,7 @@ class DrumMachineGui {
                 }
             }
             // in 'change note volumes' mode, notes won't play their sound on 'mouse down' -- instead, they will play it on 'mouse up', so that we can hear the end result of our volume adjustment.
-            this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume)
+            this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume, this.circleSelectionTracker.circleBeingMoved.guiData.midiNote)
             // reset circle selection variables
             self.circleSelectionTracker.circleBeingMoved = null
             self.setNoteTrashBinVisibility(false)
@@ -1893,6 +1902,7 @@ class DrumMachineGui {
                 node.data.lastScheduledOnIteration = Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED // mark note as 'not played yet on current iteration'
                 node.data.beat = circleNewBeatNumber
                 node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
+                node.data.midiNote = self.circleSelectionTracker.circleBeingMoved.guiData.midiNote;
                 self.circleSelectionTracker.circleBeingMoved.guiData.beat = circleNewBeatNumber
             }
             self.saveCurrentSequencerStateToUrlHash();

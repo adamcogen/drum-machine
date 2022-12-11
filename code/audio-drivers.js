@@ -112,19 +112,23 @@ class WebAudioDriver extends BaseAudioDriver {
  * 
  */
 class MidiAudioDriver extends BaseAudioDriver {
-    constructor(webMidiOutput, schedulingTimeOffsetInMilliseconds) {
+    // these are just constants used by the WebMidi API to represent 'note on' and 'note off' in MIDI messages, respectively
+    static get NOTE_ON_DATA() { return 0x90 }
+    static get NOTE_OFF_DATA() { return 0x80 }
+
+    constructor(webMidiOutput) {
         super(true)
         this.schedulingTimeOffsetInMilliseconds = 0;
         this.midiOutput = webMidiOutput
-        this.defaultNoteDuration = .1; // how long each note should be, in milliseconds
+        this.defaultNoteDuration = .1; // How long each MIDI note should play for, in milliseconds. This is short so that we can send many MIDI notes as fast as possible.
     }
 
     scheduleSound(soundData, time) {
         if (this.midiOutput === null){
             return; // MIDI access is requested then granted asynchronously. For now just do nothing if we don't have access yet.
         }
-        let midiOnMessage = [this._formatBooleanNoteOnValue(true), soundData.note, soundData.velocity]
-        let midiOffMessage = [this._formatBooleanNoteOnValue(false), soundData.note, soundData.velocity]
+        let midiOnMessage = [MidiAudioDriver.NOTE_ON_DATA, soundData.note, soundData.velocity]
+        let midiOffMessage = [MidiAudioDriver.NOTE_OFF_DATA, soundData.note, soundData.velocity]
         let timeWithOffset = time + this.getSchedulingTimeOffsetInMilliseconds();
         this.midiOutput.send(midiOnMessage, timeWithOffset)
         this.midiOutput.send(midiOffMessage, timeWithOffset + this.defaultNoteDuration);
@@ -134,14 +138,10 @@ class MidiAudioDriver extends BaseAudioDriver {
         if (this.midiOutput === null){
             return; // MIDI access is requested then granted asynchronously. For now just do nothing if we don't have access yet.
         }
-        let midiOnMessage = [this._formatBooleanNoteOnValue(true), soundData.note, soundData.velocity]
-        let midiOffMessage = [this._formatBooleanNoteOnValue(false), soundData.note, soundData.velocity]
+        let midiOnMessage = [MidiAudioDriver.NOTE_ON_DATA, soundData.note, soundData.velocity]
+        let midiOffMessage = [MidiAudioDriver.NOTE_OFF_DATA, soundData.note, soundData.velocity]
         this.midiOutput.send(midiOnMessage)
         this.midiOutput.send(midiOffMessage, this.getCurrentTimeInMilliseconds() + this.defaultNoteDuration)
-    }
-
-    _formatBooleanNoteOnValue(noteOn) {
-        return noteOn ? 0x90 : 0x80; // these are just constants used by the WebMidi API to represent 'note on' and 'note off' respectively
     }
 
     getCurrentTimeInMilliseconds() {

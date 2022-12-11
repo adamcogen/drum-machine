@@ -260,7 +260,7 @@ class Sequencer {
             // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for.
             // don't schedule a note unless it hasn't been scheduled on this loop iteration and it goes after the current time (i.e. don't schedule notes in the past, just skip over them)
             if (nextNoteToSchedule.priority >= currentTimeWithinCurrentLoop && numberOfLoopsSoFar > nextNoteToSchedule.data.lastScheduledOnIteration) {
-                this.scheduleDrumSample(actualStartTimeOfCurrentLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName, nextNoteToSchedule.data.volume)
+                this.scheduleDrumSample(actualStartTimeOfCurrentLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName, nextNoteToSchedule.data.volume, nextNoteToSchedule.data.midiNote)
                 nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFar // record the last iteration that the note was played on to avoid duplicate scheduling within the same iteration
             }
             nextNoteToSchedule = nextNoteToSchedule.next
@@ -276,7 +276,7 @@ class Sequencer {
             while (nextNoteToSchedule !== null && nextNoteToSchedule.priority <= endTimeToScheduleUpToFromBeginningOfLoop) {
                 // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for
                 if (numberOfLoopsSoFarPlusOne > nextNoteToSchedule.data.lastScheduledOnIteration) {
-                    this.scheduleDrumSample(actualStartTimeOfNextLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName, nextNoteToSchedule.data.volume)
+                    this.scheduleDrumSample(actualStartTimeOfNextLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName, nextNoteToSchedule.data.volume, nextNoteToSchedule.data.midiNote)
                     nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFarPlusOne
                 }
                 nextNoteToSchedule = nextNoteToSchedule.next
@@ -286,14 +286,14 @@ class Sequencer {
     }
 
     // play the sample with the given name right away (don't worry about scheduling it for some time in the future)
-    playDrumSampleNow(sampleName, sampleGain=.5) {
+    playDrumSampleNow(sampleName, sampleGain=.5, midiNote=60) {
         // initialize sound data JSON object
         let soundData = {
             file: this.samples[sampleName].file,
             playbackRate: 1, 
             gain: sampleGain,
             velocity: 60,
-            note: 60,
+            note: midiNote,
         }
 
         // for each audio driver, play the sound now
@@ -303,14 +303,14 @@ class Sequencer {
     }
 
     // schedule the sample with the given name to play at the specified time in millis
-    scheduleDrumSample(startTime, sampleName, sampleGain=.5){
+    scheduleDrumSample(startTime, sampleName, sampleGain=.5, midiNote=60){
         // initialize sound data JSON object
         let soundData = {
             file: this.samples[sampleName].file,
             playbackRate: 1, 
             gain: sampleGain,
             velocity: 60,
-            note: 60,
+            note: midiNote,
         }
 
         // for each 'schedule sounds ahead of time' audio driver, schedule the sound at the speicifed time

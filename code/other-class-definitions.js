@@ -23,9 +23,10 @@ class IdGenerator {
 // store info about a particular type of sequencer note (i.e. a particular drum sound), 
 // such as its sound file and its color in the sequencer's GUI.
 class SequencerNoteType {
-    constructor(file, color) {
+    constructor(file, color, defaultMidiNote) {
         this.file = file
         this.color = color
+        this.defaultMidiNote = defaultMidiNote
     }
 }
 

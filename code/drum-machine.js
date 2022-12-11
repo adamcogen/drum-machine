@@ -22,13 +22,13 @@ window.onload = () => {
      * load sound files
      */
     let samples = {}
-    samples[WOODBLOCK] = new SequencerNoteType(null, '#bd3b07')
-    samples[HI_HAT_CLOSED] = new SequencerNoteType(null, '#cf6311') // or try #b58f04 , this was yellow before
-    samples[HI_HAT_OPEN] = new SequencerNoteType(null, '#b8961c') // or try #bf3d5e , this was red before
-    samples[CLAP] = new SequencerNoteType(null, '#689620')
-    samples[SNARE] = new SequencerNoteType(null, '#0e6e21')
-    samples[TOM] = new SequencerNoteType(null, '#1b617a')
-    samples[BASS_DRUM] = new SequencerNoteType(null, '#5b3787')
+    samples[WOODBLOCK] = new SequencerNoteType(null, '#bd3b07', 66)
+    samples[HI_HAT_CLOSED] = new SequencerNoteType(null, '#cf6311', 67) // or try #b58f04 , this was yellow before
+    samples[HI_HAT_OPEN] = new SequencerNoteType(null, '#b8961c', 68) // or try #bf3d5e , this was red before
+    samples[CLAP] = new SequencerNoteType(null, '#689620', 62)
+    samples[SNARE] = new SequencerNoteType(null, '#0e6e21', 61)
+    samples[TOM] = new SequencerNoteType(null, '#1b617a', 63)
+    samples[BASS_DRUM] = new SequencerNoteType(null, '#5b3787', 60)
     // load all of the drum samples
     for (let sampleName of sampleNameList) {
         loadDrumSample(SOUND_FILES_PATH, sampleName, WAV_EXTENSION)
@@ -42,14 +42,9 @@ window.onload = () => {
     // initialize web MIDI access and audio driver
     let webMidiDriver = new MidiAudioDriver(null);
     navigator.requestMIDIAccess().then((midiAccess) => {
-        let midiPortId = '-136005'; // temporary hard-coded value for 'IAC Driver Bus 1' midi port
+        let midiPortId = '-136005'; // temporary hard-coded ID for my Mac's 'IAC Driver Bus 1' MIDI port
         let midiOutput = midiAccess.outputs.get(midiPortId);
         webMidiDriver.setMidiOutput(midiOutput)
-        // // quick test of MIDI playSoundNow method. i have verified that this works
-        // webMidiDriver.playSoundNow({"noteOn":true, "note":60, "velocity":127})
-        // setTimeout(() => { 
-        //     webMidiDriver.playSoundNow({"noteOn":false, "note":60, "velocity":127});
-        // }, "1000");
     })
 
     // wait until the first click before resuming the audio context (this is required by Chrome browser)
