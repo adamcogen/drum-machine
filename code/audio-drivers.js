@@ -93,7 +93,36 @@ class WebAudioDriver extends BaseAudioDriver {
     }
 }
 
-// to do: implement MIDI audio driver. depending on how midi support matches up with the way the WebAudio API works, 
-// in the worst case this MIDI driver should be able to work decently as a 'play sounds now' audio driver, rather
-// than scheduling them ahead of time. need to look into this.
-class MidiAudioDriver extends BaseAudioDriver {}
+/**
+ * Basic audio driver for Javascript WebMidi.
+ * 
+ * Expected format of soundData: a JSON object. Example soundData contents:
+ * {
+ *    noteOn: true, [true or false]
+ *    note: 60, [0 to 127]
+ *    velocity: 100, [0 to 127]
+ * }
+ * 
+ */
+class MidiAudioDriver extends BaseAudioDriver {
+    constructor(webMidiAccess, midiPortId) {
+        super(true)
+        this.webMidiAccess = webMidiAccess;
+        this._midiPortId = midiPortId;
+        this._output = this.webMidiAccess.outputs.get(this._midiPortId);
+    }
+
+    scheduleSound(soundData, time) {
+        let midiMessage = [soundData.noteOn, soundData.note, soundData.velocity]
+        this._output.send(midiMessage, time)
+    }
+
+    playSoundNow(soundData) {
+        let midiMessage = [soundData.noteOn, soundData.note, soundData.velocity]
+        this._output.send(midiMessage)
+    }
+
+    getCurrentTimeInMilliseconds() {
+        window.performance.now();
+    }
+}
