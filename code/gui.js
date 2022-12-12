@@ -663,7 +663,7 @@ class DrumMachineGui {
         if (this.sequencer.tempoRepresentation.isInBpmMode) { // set tempo input mode selector button color based on which tempo input mode we are in
             this.components.shapes.tempoInputModeSelectionBpmButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
             this.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'block';
-            this.components.domElements.textInputs.loopLengthMillis.value = Util.convertLoopLengthInMillisToBeatsPerMinute(this.sequencer.loopLengthInMillis, this.sequencer.tempoRepresentation.numberOfBeatsPerLoop);
+            this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.tempoRepresentation.beatsPerMinute;
         } else {
             this.components.shapes.tempoInputModeSelectionMillisecondsButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
             this.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'none';
