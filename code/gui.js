@@ -1376,6 +1376,10 @@ class DrumMachineGui {
         return Util.calculateLinearConversion(radius, this.configurations.notes.volumes.minimumCircleRadius, this.configurations.notes.volumes.maximumCircleRadius, this.configurations.notes.volumes.minimumVolume, this.configurations.notes.volumes.maximumVolume);
     }
 
+    convertWebAudioVolumeIntoMidiVelocity(webAudioVolume){
+        Util.calculateLinearConversion(webAudioVolume, this.configurations.notes.volumes.minimumVolume, this.configurations.notes.volumes.maximumVolume, this.configurations.midi.velocity.minimumVelocity, this.configurations.midi.velocity.maximumVelocity);
+    }
+
     /**
      * 'redraw sequencer' logic
      */

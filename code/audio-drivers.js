@@ -72,8 +72,8 @@ class BaseAudioDriver {
      * scheduling timestamps. See the MidiAudioDriver for an example usage. See wherever the
      * MidiAudioDriver is instantiated for an example of how its timer offset is calculated and set.
      * 
-     * The primary audio driver (in this case, the WebAudioDriver) has its scheduling time ofset 
-     * hard-coded to. 0, since it is the timer we are using as a reference, and it obviously isn't
+     * The primary audio driver (in this case, the WebAudioDriver) has its scheduling time offset 
+     * hard-coded to 0, since it is the timer we are using as a reference, and it obviously isn't
      * possible for it to be be out-of-sync with itself.
      */
     getSchedulingTimeOffsetInMilliseconds(){

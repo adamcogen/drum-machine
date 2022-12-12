@@ -33,6 +33,12 @@ function getGuiConfigurations(hideIcons=false) {
                 volumeAdjustmentSensitivityDivider: 4 // when adjusting a notes volume by clicking and dragging it, the distance your mouse moves will be divided by this value to make volume adjustments more fine-tuned.
             }
         },
+        midi: {
+            velocity: {
+                minimumVelocity: 1,
+                maximumVelocity: 127,
+            },
+        },
         sampleBank: {
             top: 135,
             left: 40,

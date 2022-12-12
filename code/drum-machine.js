@@ -50,8 +50,8 @@ window.onload = () => {
     // wait until the first click before resuming the audio context (this is required by Chrome browser)
     window.onclick = () => {
         _audioContext.resume()
-        // now that the audio context has been resumed, determine how out-of-sync the MIDI system's timer and the WebAudio system's timer are from each other.
-        // set the "scheduling timer offset" in the MIDI audio driver based on how off-set the timers are from each other. that way we can schedule MIDI audio
+        // Now that the audio context has been resumed, determine how out-of-sync the MIDI system's timer and the WebAudio system's timer are from each other.
+        // Set the "scheduling timer offset" in the MIDI audio driver based on how off-set the timers are from each other. That way we can schedule MIDI audio
         // driver and WebAudio driver events using the same timestamps, and they will play at the same time, even though each audio system relies on a different 
         // timer under the hood. 
         webMidiDriver.setSchedulingTimeOffsetInMilliseconds(webMidiDriver.getCurrentTimeInMilliseconds() - webAudioDriver.getCurrentTimeInMilliseconds());

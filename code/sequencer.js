@@ -286,14 +286,15 @@ class Sequencer {
     }
 
     // play the sample with the given name right away (don't worry about scheduling it for some time in the future)
-    playDrumSampleNow(sampleName, sampleGain=.5, midiNote=60) {
+    playDrumSampleNow(sampleName, sampleGain=.5, midiNote=60, midiVelocity=100) {
         // initialize sound data JSON object
         let soundData = {
             file: this.samples[sampleName].file,
             playbackRate: 1, 
             gain: sampleGain,
             velocity: 60,
-            note: midiNote,
+            note: midiNote, // midi note number
+            velocity: midiVelocity, // midi note velocity (i.e. volume)
         }
 
         // for each audio driver, play the sound now
@@ -303,14 +304,15 @@ class Sequencer {
     }
 
     // schedule the sample with the given name to play at the specified time in millis
-    scheduleDrumSample(startTime, sampleName, sampleGain=.5, midiNote=60){
+    scheduleDrumSample(startTime, sampleName, sampleGain=.5, midiNote=60, midiVelocity=100){
         // initialize sound data JSON object
         let soundData = {
             file: this.samples[sampleName].file,
             playbackRate: 1, 
             gain: sampleGain,
             velocity: 60,
-            note: midiNote,
+            note: midiNote, // midi note number
+            velocity: midiVelocity, // midi note velocity (i.e. volume)
         }
 
         // for each 'schedule sounds ahead of time' audio driver, schedule the sound at the speicifed time
