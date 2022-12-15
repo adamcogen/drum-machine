@@ -770,10 +770,12 @@ class DrumMachineGui {
 
     initializeMidiOutputSelectorValuesAndStyles() {
         // this.components.domElements.divs.midiOutputSelector.style.display = 'none';
+        this.components.domElements.divs.midiOutputSelector.style.left = "" + this.configurations.midiOutputSelector.position.left + "px";
+        this.components.domElements.divs.midiOutputSelector.style.top = "" + this.configurations.midiOutputSelector.position.top + "px";
         // Add a default option to the selector for 'no midi output
         let noMidiOutputOption = document.createElement("option");
-        noMidiOutputOption.text = "No MIDI Output";
-        this.midiOutputsMap["No MIDI Output"] = null;
+        noMidiOutputOption.text = "No Live MIDI Output";
+        this.midiOutputsMap["No Live MIDI Output"] = null;
         this.components.domElements.selectors.midiOutput.add(noMidiOutputOption);
         navigator.requestMIDIAccess().then((midiAccess) => { // asynchronously request access to the system's MIDI ports.
             // add all available MIDI outputs to the selector
@@ -795,7 +797,6 @@ class DrumMachineGui {
                 // just use null if no MIDI output was specified. the MIDI audio driver is set up to nit play audio if its MIDI port is null.
                 let midiOutput = (selectedMidiPortId === null ? null : midiAccess.outputs.get(selectedMidiPortId));
                 midiAudioDriver.setMidiOutput(midiOutput); // update the MIDI driver we created earlier to use the MIDI port we just retrieved. 
-                console.log(midiAudioDriver)
             })
         });
     }

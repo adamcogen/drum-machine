@@ -199,6 +199,12 @@ function getGuiConfigurations(hideIcons=false) {
                 topPaddingPerRow: -1,
                 leftPaddingPerRow: 66,
             }
+        },
+        midiOutputSelector: {
+            position: {
+                top: 27,
+                left: 730,
+            }
         }
     }
 }
