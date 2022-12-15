@@ -58,6 +58,17 @@
                 line-height: 2;
                 position: absolute; /* use absolute positioning so we can move the position in our javascript code if needed */
             }
+            #midi-output-selector-div {
+                font-size: 20px;
+                border-width: 3px;
+                -webkit-border-radius: 5px;
+                -moz-border-radius: 5px;
+                border-radius: 5px;
+                font-weight: 500;
+                font-family: "Helvetica";
+                line-height: 2;
+                position: absolute;
+            }
         </style>
 
     </head>
@@ -78,6 +89,9 @@
         <script src='code/gui-configurations.js'></script>
         <script src='code/gui.js'></script>
         <script src='code/drum-machine.js'></script>
+        <div id="midi-output-selector-div">
+            <select id="midi-output-selector"></select>
+        </div>
         <div id="tempo-text-inputs">
             <textarea id="text-input-loop-length-millis-or-bpm" rows="1" cols="4"></textarea>
         </div>

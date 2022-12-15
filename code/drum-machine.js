@@ -40,12 +40,7 @@ window.onload = () => {
     let webAudioDriver = new WebAudioDriver(_audioContext);
 
     // initialize web MIDI access and audio driver
-    let webMidiDriver = new MidiAudioDriver(null); // start by creating a MIDI driver with no outputs. we will add an output port later
-    navigator.requestMIDIAccess().then((midiAccess) => { // asynchronously request access to the system's MIDI ports.
-        let midiPortId = '-136005'; // temporary hard-coded ID for my Mac's 'IAC Driver Bus 1' MIDI port
-        let midiOutput = midiAccess.outputs.get(midiPortId); // now that the asynchronous request for MIDI access has been completed, retrieve the particular port we want to use.
-        webMidiDriver.setMidiOutput(midiOutput) // update the MIDI driver we created earlier to use the MIDI port we just retrieved. 
-    })
+    let webMidiDriver = new MidiAudioDriver(null); // start by creating a MIDI driver with no outputs. we will add an output port to it later using a selector in the GUI
 
     // wait until the first click before resuming the audio context (this is required by Chrome browser)
     window.onclick = () => {

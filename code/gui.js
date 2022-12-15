@@ -28,9 +28,11 @@ class DrumMachineGui {
         this.components.shapes = this.initializeGuiShapes();
         this.components.domElements = this.initializeDomElements();
         this.eventHandlerFunctions = {}; // make a hash to store references to event handler functions. that way we can remove them from the DOM elements they are attached to later
+        this.midiOutputsMap = {} // keep a map of MIDI output names (as the appear in the MIDI outputs selector) to MIDI output ports
 
         // add more dom elements and do some additional setup of shapes and dom elements
         this.initializeTempoTextInputValuesAndStyles();
+        this.initializeMidiOutputSelectorValuesAndStyles();
         this.setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note or a sequencer row, so make sure it starts out as not visible
 
         this.lastButtonClickTimeTrackers = this.initializeLastButtonClickTimeTrackers(); // a hash used keep track of the last time each button was clicked
@@ -85,6 +87,7 @@ class DrumMachineGui {
         // keep a list of all the circles (i.e. notes) that have been drawn on the screen
         this.allDrawnCircles = []
 
+        this.initializeMidiOutputSelectorActionListeners();
         this.initializeTempoTextInputActionListeners();
         this.initializeNumberOfBeatsInLoopInputActionListeners();
         this.addPauseButtonActionListeners();
@@ -178,7 +181,8 @@ class DrumMachineGui {
                 drawShapes: document.getElementById('draw-shapes'),
                 tempoTextInputs: document.getElementById('tempo-text-inputs'),
                 tempoTextInputBeatsPerLoop: document.getElementById('tempo-text-inputs-beats-per-loop'),
-                subdivisionTextInputs: document.getElementById('subdivision-text-inputs')
+                subdivisionTextInputs: document.getElementById('subdivision-text-inputs'),
+                midiOutputSelector: document.getElementById('midi-output-selector-div')
             },
             textInputs: {
                 loopLengthMillis: document.getElementById('text-input-loop-length-millis-or-bpm'),
@@ -205,6 +209,9 @@ class DrumMachineGui {
                 clearRowIcons: [], // list of icons for "clear row" buttons, one per sequencer row
                 lockedIcons: [], // list of icons for "quantize row" buttons, one per sequencer row
                 unlockedIcons: [], // list of icons for "unquantize row" buttons, one per sequencer row
+            },
+            selectors: {
+                midiOutput: document.getElementById('midi-output-selector'),
             }
         }
         return domElements;
@@ -759,6 +766,38 @@ class DrumMachineGui {
         if (!wasPaused) {
             this.unpause();
         }
+    }
+
+    initializeMidiOutputSelectorValuesAndStyles() {
+        // this.components.domElements.divs.midiOutputSelector.style.display = 'none';
+        // Add a default option to the selector for 'no midi output
+        let noMidiOutputOption = document.createElement("option");
+        noMidiOutputOption.text = "No MIDI Output";
+        this.midiOutputsMap["No MIDI Output"] = null;
+        this.components.domElements.selectors.midiOutput.add(noMidiOutputOption);
+        navigator.requestMIDIAccess().then((midiAccess) => { // asynchronously request access to the system's MIDI ports.
+            // add all available MIDI outputs to the selector
+            for (let output of midiAccess.outputs) {
+                let option = document.createElement("option");
+                option.text = output[1].name + " [ID: " + output[0] + "]";
+                this.midiOutputsMap[option.text] = output[0];
+                this.components.domElements.selectors.midiOutput.add(option);
+            }
+        });
+    }
+
+    initializeMidiOutputSelectorActionListeners() {
+        this.components.domElements.selectors.midiOutput.addEventListener('change', () => {
+            navigator.requestMIDIAccess().then((midiAccess) => {
+                let midiAudioDriver = this.sequencer.audioDrivers[1]; // index 1 is just a hard-coded to always be the index of the MIDI audio driver. and index 0 is the WebAudio driver.
+                let selectedMidiPortId = this.midiOutputsMap[this.components.domElements.selectors.midiOutput.value];
+                // now that the asynchronous request for MIDI access has been completed, retrieve the particular port we want to use.
+                // just use null if no MIDI output was specified. the MIDI audio driver is set up to nit play audio if its MIDI port is null.
+                let midiOutput = (selectedMidiPortId === null ? null : midiAccess.outputs.get(selectedMidiPortId));
+                midiAudioDriver.setMidiOutput(midiOutput); // update the MIDI driver we created earlier to use the MIDI port we just retrieved. 
+                console.log(midiAudioDriver)
+            })
+        });
     }
 
     /**
