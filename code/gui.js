@@ -95,6 +95,7 @@ class DrumMachineGui {
         this.addClearAllNotesButtonActionListeners();
         this.addSwitchSequencerModesButtonActionListeners();
         this.addTempoInputModeSelectionButtonsActionListeners();
+        this.initializeMuteWebAudioButtonActionListeners();
         this.refreshWindowMouseMoveEvent();
         this.refreshWindowMouseUpEvent();
 
@@ -167,6 +168,7 @@ class DrumMachineGui {
         shapes.showModeMenuButton = this.initializeRectangleShape(this.configurations.showModeMenuButton.top, this.configurations.showModeMenuButton.left, this.configurations.showModeMenuButton.height, this.configurations.showModeMenuButton.width) // a rectangle that will eventually be used to select between different modes of the sequencer (move notes, edit note volumes, select notes, etc.)
         shapes.tempoInputModeSelectionBpmButton = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top, this.configurations.tempoInputModeSelectionBpmButton.left, this.configurations.tempoInputModeSelectionBpmButton.height, this.configurations.tempoInputModeSelectionBpmButton.width) // button for toggling between different modes of inputting tempo. this one is to select 'beats per minute' input mode.
         shapes.tempoInputModeSelectionMillisecondsButton = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionMillisecondsButton.top, this.configurations.tempoInputModeSelectionMillisecondsButton.left, this.configurations.tempoInputModeSelectionMillisecondsButton.height, this.configurations.tempoInputModeSelectionMillisecondsButton.width) // button for toggling between different modes of inputting tempo. this one is to select 'loop length in milliseconds' input mode.
+        shapes.muteWebAudioButton = this.initializeRectangleShape(this.configurations.muteWebAudioButton.top, this.configurations.muteWebAudioButton.left, this.configurations.muteWebAudioButton.height, this.configurations.muteWebAudioButton.width)
         this.two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
         return shapes;
     }
@@ -1256,6 +1258,25 @@ class DrumMachineGui {
             self.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'none';
             self.components.domElements.textInputs.loopLengthMillis.value = self.sequencer.loopLengthInMillis;
             self.saveCurrentSequencerStateToUrlHash();
+        }
+    }
+
+    initializeMuteWebAudioButtonActionListeners() {
+        if (this.eventHandlerFunctions.muteWebAudioButton !== null && this.eventHandlerFunctions.muteWebAudioButton !== undefined) {
+            // remove event listeners if they've already been added to avoid duplicates
+            this.components.shapes.muteWebAudioButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.muteWebAudioButton)
+        }
+        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+        this.eventHandlerFunctions.muteWebAudioButton = () => this.muteWebAudioClickHandler(this);
+        this.components.shapes.muteWebAudioButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.muteWebAudioButton)
+    }
+
+    muteWebAudioClickHandler(self){
+        self.sequencer.audioDrivers[0].muted = !self.sequencer.audioDrivers[0].muted
+        if (self.sequencer.audioDrivers[0].muted) {
+            this.components.shapes.muteWebAudioButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
+        } else {
+            this.components.shapes.muteWebAudioButton.fill = 'transparent';
         }
     }
 

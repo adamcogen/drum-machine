@@ -205,6 +205,12 @@ function getGuiConfigurations(hideIcons=false) {
                 top: 27,
                 left: 730,
             }
+        },
+        muteWebAudioButton: {
+            top: 30,
+            left: 1050,
+            width: 24,
+            height: 24,
         }
     }
 }
