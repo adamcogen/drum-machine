@@ -96,10 +96,14 @@ class WebAudioDriver extends BaseAudioDriver {
     constructor(webAudioContext){
         super(true);
         this.webAudioContext = webAudioContext;
+        this.muted = false;
     }
 
     // schedule a sound to play at the specified time in milliseconds
     scheduleSound(soundData, time) {
+        if (this.muted) {
+            return;
+        }
         let sound = this._setUpWebAudioContextSoundBufferSource(soundData)
         /**
          * we previously multipled the WebAudio context's raw time by 1,000 to convert it from seconds to milliseconds.
@@ -110,6 +114,9 @@ class WebAudioDriver extends BaseAudioDriver {
 
     // make a sound to play immediately
     playSoundNow(soundData) {
+        if (this.muted) {
+            return;
+        }
         let sound = this._setUpWebAudioContextSoundBufferSource(soundData)
         sound.start();
     }
