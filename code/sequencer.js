@@ -388,6 +388,12 @@ class Sequencer {
                     sequencerNode.priority = deserializedNote.priority;
                 }
                 sequencerNode.data.volume = deserializedNote.volume;
+                let midiNote = deserializedNote.midiNote
+                if (midiNote === null || midiNote === undefined) {
+                    // if no MIDI note value has been saved, use the default MIDI note value for whichever sample the note is for.
+                    midiNote = this.samples[deserializedNote.sample].defaultMidiNote;
+                }
+                sequencerNode.data.midiNote = midiNote;
                 this.rows[rowIndex].insertNode(sequencerNode, sequencerNode.label)
             }
         }
@@ -422,6 +428,7 @@ class SequencerRow {
                 note["priority"] = currentNode.priority
             }
             note["volume"] = currentNode.data.volume;
+            note["midiNote"] = currentNode.data.midiNote;
             notes.push(note)
             currentNode = currentNode.next
         }

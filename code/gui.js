@@ -1321,7 +1321,7 @@ class DrumMachineGui {
     // create a new circle (i.e. note) on the screen, with the specified x and y position. color is determined by sample name. 
     // values given for sample name, label, and row number are stored in the circle object to help the GUI keep track of things.
     // add the newly created circle to the list of all drawn cricles.
-    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume=this.configurations.notes.volumes.defaultVolume, midiNote=60) {
+    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume=this.configurations.notes.volumes.defaultVolume, midiNote) {
         // initialize the new circle and set its colors
         let circle = this.two.makeCircle(xPosition, yPosition, this.configurations.notes.circleRadiusUsedForNoteBankSpacing)
         circle.fill = this.samples[sampleName].color
@@ -1423,7 +1423,8 @@ class DrumMachineGui {
                 let label = noteToDraw.label
                 let beat = noteToDraw.data.beat
                 let volume = noteToDraw.data.volume
-                this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume)
+                let midiNote = noteToDraw.data.midiNote
+                this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume, midiNote)
                 noteToDraw = noteToDraw.next
             }
         }
