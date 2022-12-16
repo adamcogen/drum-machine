@@ -22,13 +22,13 @@ window.onload = () => {
      * load sound files
      */
     let samples = {}
-    samples[WOODBLOCK] = new SequencerNoteType(null, '#bd3b07', 66)
-    samples[HI_HAT_CLOSED] = new SequencerNoteType(null, '#cf6311', 67) // or try #b58f04 , this was yellow before
-    samples[HI_HAT_OPEN] = new SequencerNoteType(null, '#b8961c', 68) // or try #bf3d5e , this was red before
-    samples[CLAP] = new SequencerNoteType(null, '#689620', 62)
-    samples[SNARE] = new SequencerNoteType(null, '#0e6e21', 61)
-    samples[TOM] = new SequencerNoteType(null, '#1b617a', 63)
-    samples[BASS_DRUM] = new SequencerNoteType(null, '#5b3787', 60)
+    samples[WOODBLOCK] = new SequencerNoteType(null, '#bd3b07', 39)
+    samples[HI_HAT_CLOSED] = new SequencerNoteType(null, '#cf6311', 43) // or try #b58f04 , this was yellow before
+    samples[HI_HAT_OPEN] = new SequencerNoteType(null, '#b8961c', 44) // or try #bf3d5e , this was red before
+    samples[CLAP] = new SequencerNoteType(null, '#689620', 38)
+    samples[SNARE] = new SequencerNoteType(null, '#0e6e21', 37)
+    samples[TOM] = new SequencerNoteType(null, '#1b617a', 42)
+    samples[BASS_DRUM] = new SequencerNoteType(null, '#5b3787', 36)
     // load all of the drum samples
     for (let sampleName of sampleNameList) {
         loadDrumSample(SOUND_FILES_PATH, sampleName, WAV_EXTENSION)
