@@ -1321,7 +1321,7 @@ class DrumMachineGui {
     // create a new circle (i.e. note) on the screen, with the specified x and y position. color is determined by sample name. 
     // values given for sample name, label, and row number are stored in the circle object to help the GUI keep track of things.
     // add the newly created circle to the list of all drawn cricles.
-    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume=this.configurations.notes.volumes.defaultVolume, midiNote) {
+    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume=this.configurations.notes.volumes.defaultVolume, midiNote, midiVelocity) {
         // initialize the new circle and set its colors
         let circle = this.two.makeCircle(xPosition, yPosition, this.configurations.notes.circleRadiusUsedForNoteBankSpacing)
         circle.fill = this.samples[sampleName].color
@@ -1358,7 +1358,7 @@ class DrumMachineGui {
             this.setNoteTrashBinVisibility(true)
             this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
-                this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume, this.circleSelectionTracker.circleBeingMoved.guiData.midiNote)
+                this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume, this.circleSelectionTracker.circleBeingMoved.guiData.midiNote, this.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
             } else if (this.currentGuiMode === DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE) {
                 // do nothing, as in don't play the note's sound now. when changing note volumes, the note's sound will play on mouse up instead of mouse down, so we can hear the end result of our volume adjustment.
             }
@@ -1372,6 +1372,7 @@ class DrumMachineGui {
         circle.guiData.label = label
         circle.guiData.beat = beat
         circle.guiData.volume = volume
+        circle.guiData.midiVelocity = midiVelocity;
         circle.guiData.radiusWhenUnplayed = this.calculateCircleRadiusForVolume(volume);
         circle.guiData.midiNote = midiNote
 
@@ -1394,6 +1395,7 @@ class DrumMachineGui {
         let row = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK // for cirlces on the note bank, the circle is not in a real row yet, so use -2 as a placeholder row number
         let volume = this.noteBankNoteVolumesTracker[sampleName].volume
         let midiNote = this.noteBankMidiNoteNumbersTracker[sampleName].midiNote
+        let midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(volume)
         /**
          * the top note in the note bank will have label '-1', next one down will be '-2', etc.
          * these negative number labels will still be unique to a particular circle in the note bank,
@@ -1401,7 +1403,7 @@ class DrumMachineGui {
          * bank circle is taken fom the note bank and placed onto a real row.
          */
         let label = (indexOfSampleInNoteBank + 1) * -1 // see block comment above for info about '-1' here
-        this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, Sequencer.NOTE_IS_NOT_QUANTIZED, volume, midiNote)
+        this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, Sequencer.NOTE_IS_NOT_QUANTIZED, volume, midiNote, midiVelocity)
     }
 
     drawAllNoteBankCircles(){
@@ -1424,7 +1426,13 @@ class DrumMachineGui {
                 let beat = noteToDraw.data.beat
                 let volume = noteToDraw.data.volume
                 let midiNote = noteToDraw.data.midiNote
-                this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume, midiNote)
+                let midiVelocity = noteToDraw.data.midiVelocity;
+                if (midiVelocity === null || midiVelocity === undefined) {
+                    noteToDraw.data.midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(volume)
+                } else {
+                    noteToDraw.data.midiVelocity = midiVelocity;
+                }
+                this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume, midiNote, midiVelocity)
                 noteToDraw = noteToDraw.next
             }
         }
@@ -1439,7 +1447,7 @@ class DrumMachineGui {
     }
 
     convertWebAudioVolumeIntoMidiVelocity(webAudioVolume){
-        Util.calculateLinearConversion(webAudioVolume, this.configurations.notes.volumes.minimumVolume, this.configurations.notes.volumes.maximumVolume, this.configurations.midi.velocity.minimumVelocity, this.configurations.midi.velocity.maximumVelocity);
+        return parseInt(Util.calculateLinearConversion(webAudioVolume, this.configurations.notes.volumes.minimumVolume, this.configurations.notes.volumes.maximumVolume, this.configurations.midi.velocity.minimumVelocity, this.configurations.midi.velocity.maximumVelocity));
     }
 
     /**
@@ -1601,12 +1609,15 @@ class DrumMachineGui {
                     // in the note bank, such that you can adjust the default volume of all new notes that will be pulled from the note bank.
                     self.noteBankNoteVolumesTracker[self.circleSelectionTracker.circleBeingMoved.guiData.sampleName].volume = newVolume;
                     self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
+                    self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(newVolume);
                 } else { // the note we are changing the volume for is on an actual sequencer row (i.e. it's not in the note bank).
                     self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
+                    self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(newVolume)
                     // replace the node in the sequencer data structure with an identical note that has the new volume we have set the note to.
                     // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
                     let node = self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
                     node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
+                    node.data.midiVelocity = self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity
                     self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedNewRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
                     self.saveCurrentSequencerStateToUrlHash();
                 }
@@ -1857,18 +1868,21 @@ class DrumMachineGui {
                     // in the note bank, such that you can adjust the default volume of all new notes that will be pulled from the note bank.
                     self.noteBankNoteVolumesTracker[self.circleSelectionTracker.circleBeingMoved.guiData.sampleName].volume = newVolume;
                     self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
+                    self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(newVolume)
                 } else { // the note we are changing the volume for is on an actual sequencer row (i.e. it's not in the note bank).
                     self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
+                    self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(newVolume)
                     // replace the node in the sequencer data structure with an identical note that has the new volume we have set the note to.
                     // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
                     let node = self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
                     node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
+                    node.data.midiVelocity = self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity;
                     self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedNewRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
                     self.saveCurrentSequencerStateToUrlHash();
                 }
             }
             // in 'change note volumes' mode, notes won't play their sound on 'mouse down' -- instead, they will play it on 'mouse up', so that we can hear the end result of our volume adjustment.
-            this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume, this.circleSelectionTracker.circleBeingMoved.guiData.midiNote)
+            this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume, this.circleSelectionTracker.circleBeingMoved.guiData.midiNote, this.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
             // reset circle selection variables
             self.circleSelectionTracker.circleBeingMoved = null
             self.setNoteTrashBinVisibility(false)
@@ -1968,6 +1982,7 @@ class DrumMachineGui {
                 node.data.lastScheduledOnIteration = Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED // mark note as 'not played yet on current iteration'
                 node.data.beat = circleNewBeatNumber
                 node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
+                node.data.midiVelocity = self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity;
                 node.data.midiNote = self.circleSelectionTracker.circleBeingMoved.guiData.midiNote;
                 self.circleSelectionTracker.circleBeingMoved.guiData.beat = circleNewBeatNumber
             }

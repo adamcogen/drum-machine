@@ -1,7 +1,7 @@
 /**
  * This file contains shared logic that is used throughout the drum machine and may not belong to a single particular other class or file.
- * I am implementing this as a class with static methods instead of a file with just a bunch of functions, because I think including
- * a class name when invoking these functions will make it easier to see right away where they are implemented.
+ * I am implementing this as a class with static methods instead of a file with just a bunch of globally scoped functions, because I think 
+ * including a class name when invoking these functions will make it easier to see right away where they are implemented.
  */
 
 class Util {
