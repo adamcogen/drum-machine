@@ -1321,7 +1321,7 @@ class DrumMachineGui {
     // create a new circle (i.e. note) on the screen, with the specified x and y position. color is determined by sample name. 
     // values given for sample name, label, and row number are stored in the circle object to help the GUI keep track of things.
     // add the newly created circle to the list of all drawn cricles.
-    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume=this.configurations.notes.volumes.defaultVolume, midiNote, midiVelocity) {
+    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume, midiNote, midiVelocity) {
         // initialize the new circle and set its colors
         let circle = this.two.makeCircle(xPosition, yPosition, this.configurations.notes.circleRadiusUsedForNoteBankSpacing)
         circle.fill = this.samples[sampleName].color
@@ -1425,12 +1425,15 @@ class DrumMachineGui {
                 let label = noteToDraw.label
                 let beat = noteToDraw.data.beat
                 let volume = noteToDraw.data.volume
+                if (volume === null || volume === undefined) {
+                    volume = this.configurations.notes.volumes.defaultVolume
+                    noteToDraw.data.volume = volume
+                }
                 let midiNote = noteToDraw.data.midiNote
                 let midiVelocity = noteToDraw.data.midiVelocity;
                 if (midiVelocity === null || midiVelocity === undefined) {
-                    noteToDraw.data.midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(volume)
-                } else {
-                    noteToDraw.data.midiVelocity = midiVelocity;
+                    midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(volume)
+                    noteToDraw.data.midiVelocity = midiVelocity
                 }
                 this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume, midiNote, midiVelocity)
                 noteToDraw = noteToDraw.next
