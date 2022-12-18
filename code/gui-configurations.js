@@ -156,10 +156,10 @@ function getGuiConfigurations(hideIcons=false) {
             }
         },
         addRowButton: {
-            topPadding: 50,
+            topPadding: 60,
             leftPadding: 0,
             height: 48,
-            width: 48,
+            width: 700,
             icon: {
                 height: 48,
                 width: 48,

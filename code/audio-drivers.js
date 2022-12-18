@@ -172,7 +172,7 @@ class MidiAudioDriver extends BaseAudioDriver {
         this.schedulingTimeOffsetInMilliseconds = 0;
         this.midiOutput = webMidiOutput
          // How long each MIDI note should play for, in milliseconds. This is short so that we can send many MIDI notes in a row as fast as possible
-        this.defaultNoteDuration = .1; // without overlap (since as far as I know the same note can't be played more than once at the same time).
+        this.defaultNoteDuration = .2; // without overlap (since as far as I know the same note can't be played more than once at the same time).
         
     }
 

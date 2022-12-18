@@ -2049,7 +2049,7 @@ class DrumMachineGui {
         this.components.domElements.images.addIcon.style.width = "" + this.configurations.addRowButton.icon.width + "px"
         this.components.domElements.images.addIcon.style.height = "" + this.configurations.addRowButton.icon.height + "px"
         let addRowButtonTop = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * (this.sequencer.rows.length - 1)) + this.configurations.addRowButton.topPadding
-        let addRowButtonLeft = this.configurations.sequencer.left + (this.configurations.sequencer.width / 2) + this.configurations.addRowButton.leftPadding - (this.configurations.addRowButton.width / 2)
+        let addRowButtonLeft = this.configurations.sequencer.left + (this.configurations.sequencer.width / 2) + this.configurations.addRowButton.leftPadding - (this.configurations.addRowButton.icon.width / 2)
         this.components.domElements.images.addIcon.style.top = "" + (addRowButtonTop) + "px"
         this.components.domElements.images.addIcon.style.left = "" + (addRowButtonLeft) + "px"
         // trash bin icon: open
