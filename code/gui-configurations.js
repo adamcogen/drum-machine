@@ -10,7 +10,7 @@ function getGuiConfigurations(hideIcons=false) {
         hideIcons: hideIcons,
         sequencer: {
             top: 110,
-            left: 160,
+            left: 240,
             width: 700,
             spaceBetweenRows: 80,
             color: defaultSequencerLineColor,
@@ -40,8 +40,8 @@ function getGuiConfigurations(hideIcons=false) {
             },
         },
         sampleBank: {
-            top: 135,
-            left: 40,
+            top: 74,
+            left: 100,
             spaceBetweenNotes: 40,
             borderPadding: 20
         },
@@ -58,8 +58,8 @@ function getGuiConfigurations(hideIcons=false) {
             color: lighterSequencerColor, // meant to be slightly lighter than the subdivision line color
         },
         noteTrashBin: {
-            top: 595,
-            left: 40,
+            top: 415,
+            left: 100,
             width: 48,
             height: 48,
             color: "red",
@@ -72,7 +72,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         pauseButton: {
             top: 74,
-            left: 40,
+            left: 30,
             width: 48,
             height: 48,
             icon: {
@@ -83,8 +83,8 @@ function getGuiConfigurations(hideIcons=false) {
             }
         },
         restartSequencerButton: {
-            top: 475,
-            left: 40,
+            top: 134,
+            left: 30,
             width: 48,
             height: 48,
             icon: {
