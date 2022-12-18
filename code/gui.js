@@ -290,10 +290,17 @@ class DrumMachineGui {
         this.rowSelectionTracker.removeRow = false // start this out false until we move the row around (i.e. into the trash bin)
         // save a list, of all the shapes that are associated with the selected row.
         // we are saving this list so that we can move them all as we move the row around.
+        // at the same time, also save the note circles to a list of note circles specifically. this is so that we can perform
+        // operations on all the notes in a row if we want to (such as changing all their volumes at the same time).
+        // also track the starting radius of each circle on the row. this will also be used in adjusting note volumes for the row.
         this.rowSelectionTracker.shapes = [];
+        this.rowSelectionTracker.noteCircles = [];
+        this.rowSelectionTracker.noteCirclesStartingRadiuses = [];
         for (let circle of this.allDrawnCircles) {
             if (circle.guiData.row === rowIndex) {
                 this.rowSelectionTracker.shapes.push(circle)
+                this.rowSelectionTracker.noteCircles.push(circle)
+                this.rowSelectionTracker.noteCirclesStartingRadiuses.push(circle.radius)
             }
         }
         this.rowSelectionTracker.shapes.push(...this.components.shapes.subdivisionLineLists[rowIndex])
@@ -1634,9 +1641,23 @@ class DrumMachineGui {
             if (mouseHasMoved) {
                 let mouseMoveDistance = self.rowSelectionTracker.rowHandleStartingPosition.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
                 let volumeAdjustmentAmount = mouseMoveDistance / self.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
-                console.log("TODO: implement 'change row volume' functionality here.")
-                console.log("Volume adjustment amount: " + volumeAdjustmentAmount)
-                console.log("")
+                // iterate through every note in the row that we're adjusting volumes for. we already saved these to a list when we selected the row
+                for (let noteCircleIndex = 0; noteCircleIndex < this.rowSelectionTracker.noteCircles.length; noteCircleIndex++) {
+                    let currentNoteCircle = this.rowSelectionTracker.noteCircles[noteCircleIndex];
+                    let currentNoteCircleStartingRadius = this.rowSelectionTracker.noteCirclesStartingRadiuses[noteCircleIndex];
+                    currentNoteCircle.radius = Util.confineNumberToBounds(currentNoteCircleStartingRadius + volumeAdjustmentAmount, self.configurations.notes.volumes.minimumCircleRadius, self.configurations.notes.volumes.maximumCircleRadius);
+                    currentNoteCircle.guiData.radiusWhenUnplayed = currentNoteCircle.radius;
+                    let newVolume = self.calculateVolumeForCircleRadius(currentNoteCircle.radius);
+                    currentNoteCircle.guiData.volume = newVolume;
+                    currentNoteCircle.guiData.midiVelocity = self.convertWebAudioVolumeIntoMidiVelocity(newVolume);
+                    // replace the node in the sequencer data structure with an identical note that has the new volume we have set the note to.
+                    // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
+                    let node = self.sequencer.rows[self.rowSelectionTracker.selectedRowIndex].removeNode(currentNoteCircle.guiData.label);
+                    node.data.volume = currentNoteCircle.guiData.volume;
+                    node.data.midiVelocity = currentNoteCircle.guiData.midiVelocity;
+                    self.sequencer.rows[self.rowSelectionTracker.selectedRowIndex].insertNode(node, currentNoteCircle.guiData.label);
+                    self.saveCurrentSequencerStateToUrlHash();
+                }
             }
 
             let circle = self.components.shapes.sequencerRowHandles[self.rowSelectionTracker.selectedRowIndex]
