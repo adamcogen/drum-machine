@@ -1598,24 +1598,24 @@ class DrumMachineGui {
             self.adjustEventCoordinates(event);
             let mouseX = event.pageX;
             let mouseY = event.pageY;
-            let mouseHasMoved = (mouseX !== this.circleSelectionTracker.firstClickPosition.x || mouseY !== this.circleSelectionTracker.firstClickPosition.y)
+            let mouseHasMoved = (mouseX !== self.circleSelectionTracker.firstClickPosition.x || mouseY !== self.circleSelectionTracker.firstClickPosition.y)
             if (mouseHasMoved) {
-                let mouseMoveDistance = this.circleSelectionTracker.firstClickPosition.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
-                let volumeAdjustmentAmount = mouseMoveDistance / this.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
+                let mouseMoveDistance = self.circleSelectionTracker.firstClickPosition.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
+                let volumeAdjustmentAmount = mouseMoveDistance / self.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
                 // set the note being changed to have the right new radius on the GUI. confine the new radius to the minimum and maximum radius allowed.
-                self.circleSelectionTracker.circleBeingMoved.radius = Util.confineNumberToBounds(self.circleSelectionTracker.startingRadius + volumeAdjustmentAmount, this.configurations.notes.volumes.minimumCircleRadius, this.configurations.notes.volumes.maximumCircleRadius);
+                self.circleSelectionTracker.circleBeingMoved.radius = Util.confineNumberToBounds(self.circleSelectionTracker.startingRadius + volumeAdjustmentAmount, self.configurations.notes.volumes.minimumCircleRadius, self.configurations.notes.volumes.maximumCircleRadius);
                 self.circleSelectionTracker.circleBeingMoved.guiData.radiusWhenUnplayed = self.circleSelectionTracker.circleBeingMoved.radius;
                 // convert the circle radius into a proportionate note volume.
-                let newVolume = this.calculateVolumeForCircleRadius(self.circleSelectionTracker.circleBeingMoved.radius);
-                if (this.circleSelectionTracker.circleBeingMovedOldRow < 0) { // the note we are changing the volume for is in the note bank.
+                let newVolume = self.calculateVolumeForCircleRadius(self.circleSelectionTracker.circleBeingMoved.radius);
+                if (self.circleSelectionTracker.circleBeingMovedOldRow < 0) { // the note we are changing the volume for is in the note bank.
                     // todo: eventually, maybe changing the volume of any note in the note bank should change the volume of all notes
                     // in the note bank, such that you can adjust the default volume of all new notes that will be pulled from the note bank.
                     self.noteBankNoteVolumesTracker[self.circleSelectionTracker.circleBeingMoved.guiData.sampleName].volume = newVolume;
                     self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
-                    self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(newVolume);
+                    self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = self.convertWebAudioVolumeIntoMidiVelocity(newVolume);
                 } else { // the note we are changing the volume for is on an actual sequencer row (i.e. it's not in the note bank).
                     self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
-                    self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(newVolume)
+                    self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = self.convertWebAudioVolumeIntoMidiVelocity(newVolume)
                     // replace the node in the sequencer data structure with an identical note that has the new volume we have set the note to.
                     // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
                     let node = self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
@@ -1630,6 +1630,14 @@ class DrumMachineGui {
             self.adjustEventCoordinates(event)
             let mouseX = event.pageX
             let mouseY = event.pageY
+            let mouseHasMoved = (mouseX !== self.rowSelectionTracker.rowHandleStartingPosition.x || mouseY !== self.rowSelectionTracker.rowHandleStartingPosition.y)
+            if (mouseHasMoved) {
+                let mouseMoveDistance = self.rowSelectionTracker.rowHandleStartingPosition.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
+                let volumeAdjustmentAmount = mouseMoveDistance / self.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
+                console.log("TODO: implement 'change row volume' functionality here.")
+                console.log("Volume adjustment amount: " + volumeAdjustmentAmount)
+                console.log("")
+            }
 
             let circle = self.components.shapes.sequencerRowHandles[self.rowSelectionTracker.selectedRowIndex]
             circle.stroke = 'black'
