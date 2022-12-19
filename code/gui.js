@@ -716,10 +716,12 @@ class DrumMachineGui {
             // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
             newTextInputValue = Util.confineNumberToBounds(newTextInputValue, this.sequencer.lookAheadMillis, this.configurations.tempoTextInputMilliseconds.maximumValue)
             this.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
-            this.updateSequencerLoopLength(newTextInputValue)
-            this.sequencer.tempoRepresentation.beatsPerMinute = Util.convertLoopLengthInMillisToBeatsPerMinute(newTextInputValue, this.sequencer.tempoRepresentation.numberOfBeatsPerLoop);
-            this.components.domElements.textInputs.loopLengthBpm.value = this.sequencer.tempoRepresentation.beatsPerMinute;
-            this.saveCurrentSequencerStateToUrlHash();
+            if (newTextInputValue !== this.sequencer.loopLengthInMillis) { // only update things if the value in the text box has changed
+                this.updateSequencerLoopLength(newTextInputValue)
+                this.sequencer.tempoRepresentation.beatsPerMinute = Util.convertLoopLengthInMillisToBeatsPerMinute(newTextInputValue, this.sequencer.tempoRepresentation.numberOfBeatsPerLoop);
+                this.components.domElements.textInputs.loopLengthBpm.value = this.sequencer.tempoRepresentation.beatsPerMinute;
+                this.saveCurrentSequencerStateToUrlHash();
+            }
         })
         this.addDefaultKeypressEventListenerToTextInput(this.components.domElements.textInputs.loopLengthMillis, true)
     }
@@ -744,10 +746,12 @@ class DrumMachineGui {
             let maximumBpm = Util.convertLoopLengthInMillisToBeatsPerMinute(this.sequencer.lookAheadMillis, numberOfBeatsPerLoop);
             newTextInputValue = Util.confineNumberToBounds(newTextInputValue, minimumBpm, maximumBpm)
             this.components.domElements.textInputs.loopLengthBpm.value = newTextInputValue
-            this.sequencer.tempoRepresentation.beatsPerMinute = newTextInputValue
-            this.updateSequencerLoopLength(Util.convertBeatsPerMinuteToLoopLengthInMillis(newTextInputValue, numberOfBeatsPerLoop));
-            this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.loopLengthInMillis;
-            this.saveCurrentSequencerStateToUrlHash();
+            if (newTextInputValue !== this.sequencer.tempoRepresentation.beatsPerMinute) { // only update things if the value in the text box has changed
+                this.sequencer.tempoRepresentation.beatsPerMinute = newTextInputValue
+                this.updateSequencerLoopLength(Util.convertBeatsPerMinuteToLoopLengthInMillis(newTextInputValue, numberOfBeatsPerLoop));
+                this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.loopLengthInMillis;
+                this.saveCurrentSequencerStateToUrlHash();
+            }
         })
         this.addDefaultKeypressEventListenerToTextInput(this.components.domElements.textInputs.loopLengthBpm, true)
     }
@@ -773,10 +777,13 @@ class DrumMachineGui {
                 let minimumNumberOfBeatsAtCurrentBpm = this.sequencer.lookAheadMillis / this.sequencer.tempoRepresentation.beatsPerMinute;
                 let maximumNumberOfBeatsAtCurrentBpm = this.configurations.tempoTextInputBeatsPerLoop.maximumValue / this.sequencer.tempoRepresentation.beatsPerMinute;
                 newNumberOfBeatsPerLoop = Util.confineNumberToBounds(newNumberOfBeatsPerLoop, minimumNumberOfBeatsAtCurrentBpm, maximumNumberOfBeatsAtCurrentBpm)
-                this.sequencer.tempoRepresentation.numberOfBeatsPerLoop = newNumberOfBeatsPerLoop
                 this.components.domElements.textInputs.numberOfBeatsInLoop.value = newNumberOfBeatsPerLoop;
-                this.updateSequencerLoopLength(Util.convertBeatsPerMinuteToLoopLengthInMillis(this.sequencer.tempoRepresentation.beatsPerMinute, newNumberOfBeatsPerLoop));
-                this.saveCurrentSequencerStateToUrlHash();
+                if (newNumberOfBeatsPerLoop !== this.sequencer.tempoRepresentation.numberOfBeatsPerLoop) { // only update things if the value in the text box has changed
+                    this.sequencer.tempoRepresentation.numberOfBeatsPerLoop = newNumberOfBeatsPerLoop
+                    this.updateSequencerLoopLength(Util.convertBeatsPerMinuteToLoopLengthInMillis(this.sequencer.tempoRepresentation.beatsPerMinute, newNumberOfBeatsPerLoop));
+                    this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.loopLengthInMillis;
+                    this.saveCurrentSequencerStateToUrlHash();
+                }
             }
         })
         this.addDefaultKeypressEventListenerToTextInput(this.components.domElements.textInputs.numberOfBeatsInLoop, true)
