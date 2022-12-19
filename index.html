@@ -42,7 +42,13 @@
                 white-space: nowrap;
             }
 
-            #tempo-text-inputs { /* format the tempo-text-inputs div */
+            #tempo-text-inputs-bpm { /* format the tempo-text-inputs div */
+                line-height: 2;
+                position: absolute; /* use absolute positioning so we can move the position in our javascript code if needed */
+                left: 130px;
+                top: 15px;
+            }
+            #tempo-text-inputs-milliseconds { /* format the tempo-text-inputs div */
                 line-height: 2;
                 position: absolute; /* use absolute positioning so we can move the position in our javascript code if needed */
                 left: 130px;
@@ -95,8 +101,11 @@
         <div id="midi-output-selector-div">
             <select id="midi-output-selector"></select>
         </div>
-        <div id="tempo-text-inputs">
-            <textarea id="text-input-loop-length-millis-or-bpm" rows="1" cols="4"></textarea>
+        <div id="tempo-text-inputs-bpm">
+            <textarea id="text-input-loop-length-bpm" rows="1" cols="4"></textarea>
+        </div>
+        <div id="tempo-text-inputs-milliseconds">
+            <textarea id="text-input-loop-length-millis" rows="1" cols="4"></textarea>
         </div>
         <div id="tempo-text-inputs-beats-per-loop">
             <textarea id="text-input-number-of-beats-in-loop" rows="1" cols="3"></textarea>

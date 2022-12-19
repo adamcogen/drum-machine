@@ -119,9 +119,14 @@ function getGuiConfigurations(hideIcons=false) {
             throwRowAwaySidesPadding: 70,
             throwRowAwayTopAndBottomPadding: 70,
         },
-        tempoTextInput: {
+        tempoTextInputBpm: {
             top: 25,
             left: 560,
+            maximumValue: 99999 // fractional numbers less than this could go over the width of the text input
+        },
+        tempoTextInputMilliseconds: {
+            top: 25,
+            left: 550,
             maximumValue: 99999 // fractional numbers less than this could go over the width of the text input
         },
         tempoTextInputBeatsPerLoop: {
