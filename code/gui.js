@@ -1662,7 +1662,7 @@ class DrumMachineGui {
                     node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
                     node.data.midiVelocity = self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity
                     self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedNewRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
-                    self.saveCurrentSequencerStateToUrlHash();
+                    // we will save the sequencer state to the URL in the 'mouse up' event instead of here, for performance reasons
                 }
             }
         }
@@ -1689,8 +1689,8 @@ class DrumMachineGui {
                     node.data.volume = currentNoteCircle.guiData.volume;
                     node.data.midiVelocity = currentNoteCircle.guiData.midiVelocity;
                     self.sequencer.rows[self.rowSelectionTracker.selectedRowIndex].insertNode(node, currentNoteCircle.guiData.label);
-                    self.saveCurrentSequencerStateToUrlHash();
                 }
+                // we will save the sequencer state to the URL in the 'mouse up' event instead of here, for performance reasons
             }
 
             let circle = self.components.shapes.sequencerRowHandles[self.rowSelectionTracker.selectedRowIndex]
@@ -1945,6 +1945,8 @@ class DrumMachineGui {
                     self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedNewRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
                     self.saveCurrentSequencerStateToUrlHash();
                 }
+            } else {
+                self.saveCurrentSequencerStateToUrlHash();
             }
             // in 'change note volumes' mode, notes won't play their sound on 'mouse down' -- instead, they will play it on 'mouse up', so that we can hear the end result of our volume adjustment.
             this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume, this.circleSelectionTracker.circleBeingMoved.guiData.midiNote, this.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
