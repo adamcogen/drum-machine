@@ -95,8 +95,8 @@ function getGuiConfigurations(hideIcons=false) {
             }
         },
         clearAllNotesButton: {
-            top: 535,
-            left: 40,
+            top: 194,
+            left: 30,
             width: 48,
             height: 48,
             icon: {
@@ -144,8 +144,8 @@ function getGuiConfigurations(hideIcons=false) {
             clickedButtonColor: "#c4c4c4",
         },
         clearRowButtons: {
-            topPaddingPerRow: -30,
-            leftPaddingPerRow: 102,
+            topPaddingPerRow: -10,
+            leftPaddingPerRow: 114,
             height: 20,
             width: 20,
             icon: {
@@ -189,7 +189,7 @@ function getGuiConfigurations(hideIcons=false) {
         sequencerRowSelections: {
             leftPadding: -60,
             topPadding: -40,
-            width: 200,
+            width: 215,
             height: 80,
         },
         quantizationButtons: {
