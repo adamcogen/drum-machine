@@ -84,6 +84,11 @@ class DrumMachineGui {
             }
         }
 
+        this.tapTempoTracker = {
+            maximumAmountOfTimeToWaitForNextTapTempoButtonClick: Util.convertBeatsPerMinuteToBeatLengthInMillis(this.getMinimumAllowedSequencerBeatsPerMinute()),
+            absoluteTimeOfMostRecentTapTempoButtonClick: Number.MIN_SAFE_INTEGER,
+        }
+
         // keep a list of all the circles (i.e. notes) that have been drawn on the screen
         this.allDrawnCircles = []
 
@@ -96,6 +101,7 @@ class DrumMachineGui {
         this.addClearAllNotesButtonActionListeners();
         this.addSwitchSequencerModesButtonActionListeners();
         this.addTempoInputModeSelectionButtonsActionListeners();
+        this.addTapTempoButtonActionListeners();
         this.initializeMuteWebAudioButtonActionListeners();
         this.refreshWindowMouseMoveEvent();
         this.refreshWindowMouseUpEvent();
@@ -145,6 +151,13 @@ class DrumMachineGui {
             }
         }
 
+        // this logic handles "resetting" the tap tempo button. if that button hasn't been clicked in a while, we will reset its 
+        // state and "forget" the timestamp that it was clicked last. the amount of time to wait before resetting is determined
+        // by what the minimum allowed beats-per-minute value is. there's no need to wait for longer than it's possible for a beat to last.
+        if (this.sequencer.currentTime - this.tapTempoTracker.absoluteTimeOfMostRecentTapTempoButtonClick > this.tapTempoTracker.maximumAmountOfTimeToWaitForNextTapTempoButtonClick) {
+            this.resetTapTempoButtonState();
+        }
+
         this.two.update() // apply the visual update the GUI display by refreshing the two.js canvas
     }
     
@@ -170,6 +183,7 @@ class DrumMachineGui {
         shapes.tempoInputModeSelectionBpmButton = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top, this.configurations.tempoInputModeSelectionBpmButton.left, this.configurations.tempoInputModeSelectionBpmButton.height, this.configurations.tempoInputModeSelectionBpmButton.width) // button for toggling between different modes of inputting tempo. this one is to select 'beats per minute' input mode.
         shapes.tempoInputModeSelectionMillisecondsButton = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionMillisecondsButton.top, this.configurations.tempoInputModeSelectionMillisecondsButton.left, this.configurations.tempoInputModeSelectionMillisecondsButton.height, this.configurations.tempoInputModeSelectionMillisecondsButton.width) // button for toggling between different modes of inputting tempo. this one is to select 'loop length in milliseconds' input mode.
         shapes.muteWebAudioButton = this.initializeRectangleShape(this.configurations.muteWebAudioButton.top, this.configurations.muteWebAudioButton.left, this.configurations.muteWebAudioButton.height, this.configurations.muteWebAudioButton.width)
+        shapes.tapTempoButton = this.initializeRectangleShape(this.configurations.tapTempoButton.top, this.configurations.tapTempoButton.left, this.configurations.tapTempoButton.height, this.configurations.tapTempoButton.width)
         this.two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
         return shapes;
     }
@@ -247,6 +261,10 @@ class DrumMachineGui {
             addRow: {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
                 shape: this.components.shapes.addRowButtonShape,
+            },
+            tapTempo: {
+                lastClickTime: Number.MIN_SAFE_INTEGER,
+                shape: this.components.shapes.tapTempoButton,
             }
         }
         return lastButtonClickTimeTrackers;
@@ -726,6 +744,16 @@ class DrumMachineGui {
         this.addDefaultKeypressEventListenerToTextInput(this.components.domElements.textInputs.loopLengthMillis, true)
     }
 
+    // return the minimum beats per minute value the user can currently set the sequencer to, based on a couple other values.
+    getMinimumAllowedSequencerBeatsPerMinute() {
+        return Util.convertLoopLengthInMillisToBeatsPerMinute(this.configurations.tempoTextInputBpm.maximumValue, this.sequencer.tempoRepresentation.numberOfBeatsPerLoop);
+    }
+
+    // return the maximum beats per minute value the user can currently set the sequencer to, based on a couple other values.
+    getMaximumAllowedSequencerBeatsPerMinute() {
+        return Util.convertLoopLengthInMillisToBeatsPerMinute(this.sequencer.lookAheadMillis, this.sequencer.tempoRepresentation.numberOfBeatsPerLoop);
+    }
+
     initializeBeatsPerMinuteTextInputActionListeners() {
         /**
          * set up 'focus' and 'blur' events for the 'beats per minute' text input.
@@ -742,9 +770,7 @@ class DrumMachineGui {
             newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
             // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input (when converted to milliseconds)
             let numberOfBeatsPerLoop = this.sequencer.tempoRepresentation.numberOfBeatsPerLoop
-            let minimumBpm = Util.convertLoopLengthInMillisToBeatsPerMinute(this.configurations.tempoTextInputBpm.maximumValue, numberOfBeatsPerLoop);
-            let maximumBpm = Util.convertLoopLengthInMillisToBeatsPerMinute(this.sequencer.lookAheadMillis, numberOfBeatsPerLoop);
-            newTextInputValue = Util.confineNumberToBounds(newTextInputValue, minimumBpm, maximumBpm)
+            newTextInputValue = Util.confineNumberToBounds(newTextInputValue, this.getMinimumAllowedSequencerBeatsPerMinute(), this.getMaximumAllowedSequencerBeatsPerMinute())
             this.components.domElements.textInputs.loopLengthBpm.value = newTextInputValue
             if (newTextInputValue !== this.sequencer.tempoRepresentation.beatsPerMinute) { // only update things if the value in the text box has changed
                 this.sequencer.tempoRepresentation.beatsPerMinute = newTextInputValue
@@ -1299,6 +1325,52 @@ class DrumMachineGui {
             self.components.domElements.textInputs.loopLengthMillis.style.display = 'block';
             self.saveCurrentSequencerStateToUrlHash();
         }
+    }
+
+    addTapTempoButtonActionListeners() {
+        if (this.eventHandlerFunctions.tapTempoButton !== null && this.eventHandlerFunctions.tapTempoButton !== undefined) {
+            // remove event listeners if they've already been added to avoid duplicates
+            this.components.shapes.tapTempoButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tapTempoButton)
+        }
+        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+        this.eventHandlerFunctions.tapTempoButton = () => this.tapTempoClickHandler(this);
+        this.components.shapes.tapTempoButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tapTempoButton)
+    }
+    
+    /**
+     * How the tap tempo button works:
+     * The first time you click it, it notes the time it was clicked. Then, when you click it again, it notes the time of the 
+     * second click, and it calculates a tempo based off the two clicks -- if they were two beats, what would be the bpm?
+     * If you click the tap tempo button some more, it keeps calculating new BPMs based on the new click and the one before it. 
+     * Another important piece is that in the main update loop, there is a check that resets the state of this button --
+     * as in, if you wait long enough, your most recent click will be forgotten and you will need to click the button twice again 
+     * if you want to set a new tempo with it. The tap tempo button only ever calculates a tempo based off of two clicks. It would 
+     * be possible to find the average tempo of a group of many clicks, but that would be more complicated logic to implement.
+     */
+    tapTempoClickHandler(self) {
+        if (self.tapTempoTracker.absoluteTimeOfMostRecentTapTempoButtonClick !== Number.MIN_SAFE_INTEGER) {
+            // the tap tempo button has been clicked recently before this click, so calculate a new 
+            // tempo based on the time of the recent click and the click that caused this mouse event.
+            let newBeatsPerMinute = parseInt(Util.convertBeatLengthInMillisToBeatsPerMinute(self.sequencer.currentTime - self.tapTempoTracker.absoluteTimeOfMostRecentTapTempoButtonClick));
+            if (newBeatsPerMinute !== self.sequencer.tempoRepresentation.beatsPerMinute) { // only update things if the value in the text box has changed
+                self.components.domElements.textInputs.loopLengthBpm.value = newBeatsPerMinute
+                self.sequencer.tempoRepresentation.beatsPerMinute = newBeatsPerMinute
+                self.updateSequencerLoopLength(Util.convertBeatsPerMinuteToLoopLengthInMillis(newBeatsPerMinute, self.sequencer.tempoRepresentation.numberOfBeatsPerLoop));
+                self.components.domElements.textInputs.loopLengthMillis.value = self.sequencer.loopLengthInMillis;
+                self.saveCurrentSequencerStateToUrlHash();
+            }
+        }
+        self.tapTempoTracker.absoluteTimeOfMostRecentTapTempoButtonClick = self.sequencer.currentTime;
+        // change the button color so that it looks 'clicked'
+        self.lastButtonClickTimeTrackers.tapTempo.lastClickTime = self.sequencer.currentTime;
+        self.components.shapes.tapTempoButton.fill = self.configurations.buttonBehavior.clickedButtonColor
+    }
+
+    /**
+     * reset the state of the tap tempo button. forget about any previous clicks.
+     */
+    resetTapTempoButtonState() {
+        this.tapTempoTracker.absoluteTimeOfMostRecentTapTempoButtonClick = Number.MIN_SAFE_INTEGER
     }
 
     initializeMuteWebAudioButtonActionListeners() {

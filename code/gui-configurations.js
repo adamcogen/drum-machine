@@ -184,6 +184,12 @@ function getGuiConfigurations(hideIcons=false) {
             height: 48,
             width: 48,
         },
+        tapTempoButton: {
+            top: 20,
+            left: 310,
+            height: 48,
+            width: 48
+        },
         sequencerRowHandles: { // these will be circles, one to the left of each sequencer row, that allow you to select the row and click-drag it.
             topPadding: 0,
             leftPadding: -30,
