@@ -627,7 +627,12 @@ class SequencerRow {
      * remember that 'priority' here refers to the time in milliseconds that the note should play wihtin each loop.
      */
     _getClosestBeatNumberForPriority(priority) {
-        let lengthOfEachBeatInMilliseconds = this.loopLengthInMillis / this.getNumberOfSubdivisions();
+        // I rounded loop length to an integer here as a quick fix / workaround for the fact that using very long double values
+        // seemed to be causing issues when switching rows between quantized / unquantized, probably due to floating point
+        // precision issues. this workaround seems to have made the bug more rare. I would guess that things get particularly
+        // messy with floating point precision issues when the modulo operator is used, but that's just a guess.
+        let integerLoopLengthInMillis = Math.round(this.loopLengthInMillis);
+        let lengthOfEachBeatInMilliseconds = integerLoopLengthInMillis / this.getNumberOfSubdivisions();
         let numberOfBeatsBeforeNote = Math.floor(priority / lengthOfEachBeatInMilliseconds);
         let noteIsCloserToRightBeatThanLeft = (priority % lengthOfEachBeatInMilliseconds) > (lengthOfEachBeatInMilliseconds / 2);
         let closestBeat = numberOfBeatsBeforeNote;
