@@ -125,20 +125,38 @@ function getGuiConfigurations(hideIcons=false) {
             throwRowAwaySidesPadding: 70,
             throwRowAwayTopAndBottomPadding: 70,
         },
+        tempoTextInputBeatsPerLoop: {
+            top: 50,
+            left: 540,
+            maximumValue: 9999 // fractional numbers less than this could go over the width of the text input
+        },
         tempoTextInputBpm: {
-            top: 25,
-            left: 560,
+            top: 12,
+            left: 540,
             maximumValue: 99999 // fractional numbers less than this could go over the width of the text input
         },
         tempoTextInputMilliseconds: {
-            top: 25,
-            left: 550,
+            top: 28,
+            left: 540,
             maximumValue: 99999 // fractional numbers less than this could go over the width of the text input
         },
-        tempoTextInputBeatsPerLoop: {
-            top: 26, // i don't know why this has to be one pixel more than the other tempo text input to appear even with it on screen, but i'm just rolling with it for now
-            left: 636,
-            maximumValue: 9999 // fractional numbers less than this could go over the width of the text input
+        tempoTextLabelBeats: {
+            text: "beats long",
+            color: "black",
+            top: 69,
+            left: 604,
+        },
+        tempoTextLabelBeatsPerMinute: {
+            text: "beats per minute",
+            color: "black",
+            top: 33,
+            left: 615,
+        },
+        tempoTextLabelMilliseconds: {
+            text: "milliseconds",
+            color: "black",
+            top: 48,
+            left: 615,
         },
         subdivionLineTextInputs: {
             topPaddingPerRow: 0, // centered on sequencer line would be: -17
@@ -192,7 +210,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         tapTempoButton: {
             top: 20,
-            left: 310,
+            left: 780,
             height: 48,
             width: 48
         },
@@ -219,12 +237,12 @@ function getGuiConfigurations(hideIcons=false) {
         },
         midiOutputSelector: {
             position: {
-                top: 27,
-                left: 730,
+                top: 10,
+                left: 900,
             }
         },
         muteWebAudioButton: {
-            top: 30,
+            top: 50,
             left: 1050,
             width: 24,
             height: 24,

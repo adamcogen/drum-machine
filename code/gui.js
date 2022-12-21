@@ -34,6 +34,8 @@ class DrumMachineGui {
         this.initializeTempoTextInputValuesAndStyles();
         this.initializeMidiOutputSelectorValuesAndStyles();
         this.initializeModeSelectionButtonStyles();
+        this.initializeTempoBpmTextLabelsStyles();
+        this.initializeTempoMillisecondsTextLabelsStyles();
         this.setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note or a sequencer row, so make sure it starts out as not visible
 
         this.lastButtonClickTimeTrackers = this.initializeLastButtonClickTimeTrackers(); // a hash used keep track of the last time each button was clicked
@@ -187,6 +189,9 @@ class DrumMachineGui {
         shapes.tempoInputModeSelectionMillisecondsButton = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionMillisecondsButton.top, this.configurations.tempoInputModeSelectionMillisecondsButton.left, this.configurations.tempoInputModeSelectionMillisecondsButton.height, this.configurations.tempoInputModeSelectionMillisecondsButton.width) // button for toggling between different modes of inputting tempo. this one is to select 'loop length in milliseconds' input mode.
         shapes.muteWebAudioButton = this.initializeRectangleShape(this.configurations.muteWebAudioButton.top, this.configurations.muteWebAudioButton.left, this.configurations.muteWebAudioButton.height, this.configurations.muteWebAudioButton.width)
         shapes.tapTempoButton = this.initializeRectangleShape(this.configurations.tapTempoButton.top, this.configurations.tapTempoButton.left, this.configurations.tapTempoButton.height, this.configurations.tapTempoButton.width)
+        shapes.tempoLabelBeats = this.initializeLabelText(this.configurations.tempoTextLabelBeats.text, this.configurations.tempoTextLabelBeats.left, this.configurations.tempoTextLabelBeats.top, "left");
+        shapes.tempoLabelBeatsPerMinute = this.initializeLabelText(this.configurations.tempoTextLabelBeatsPerMinute.text, this.configurations.tempoTextLabelBeatsPerMinute.left, this.configurations.tempoTextLabelBeatsPerMinute.top, "left");
+        shapes.tempoLabelMilliseconds = this.initializeLabelText(this.configurations.tempoTextLabelMilliseconds.text, this.configurations.tempoTextLabelMilliseconds.left, this.configurations.tempoTextLabelMilliseconds.top, "left");
         this.two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
         return shapes;
     }
@@ -712,12 +717,14 @@ class DrumMachineGui {
             this.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'block';
             this.components.domElements.textInputs.loopLengthBpm.style.display = 'block';
             this.components.domElements.textInputs.loopLengthMillis.style.display = 'none';
+            this.hideTempoMillisecondsTextLabels(); // tempo text labels are shown by default, so just hide them if we need to
         } else {
             this.components.shapes.tempoInputModeSelectionMillisecondsButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
             this.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'none';
             this.components.domElements.textInputs.loopLengthBpm.style.display = 'none';
             this.components.domElements.textInputs.loopLengthMillis.style.display = 'block';
             this.hideTapTempoButton(); // tap tempo button is shown by default, so just hide it if we need to
+            this.hideTempoBpmTextLabels(); // tempo text labels are shown by default, so just hide them if we need to
 
         }
     }
@@ -1323,6 +1330,35 @@ class DrumMachineGui {
         this.components.shapes.tempoInputModeSelectionBpmButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
     }
 
+    hideTempoBpmTextLabels() {
+        this.components.shapes.tempoLabelBeats.remove();
+        this.components.shapes.tempoLabelBeatsPerMinute.remove();
+    }
+
+    showTempoBpmTextLabels() {
+        this.components.shapes.tempoLabelBeats = this.initializeLabelText(this.configurations.tempoTextLabelBeats.text, this.configurations.tempoTextLabelBeats.left, this.configurations.tempoTextLabelBeats.top, "left");
+        this.components.shapes.tempoLabelBeatsPerMinute = this.initializeLabelText(this.configurations.tempoTextLabelBeatsPerMinute.text, this.configurations.tempoTextLabelBeatsPerMinute.left, this.configurations.tempoTextLabelBeatsPerMinute.top, "left");
+        this.initializeTempoBpmTextLabelsStyles();
+    }
+
+    initializeTempoBpmTextLabelsStyles() {
+        this.components.shapes.tempoLabelBeats.fill = this.configurations.tempoTextLabelBeats.color;
+        this.components.shapes.tempoLabelBeatsPerMinute.fill = this.configurations.tempoTextLabelBeatsPerMinute.color;
+    }
+
+    hideTempoMillisecondsTextLabels() {
+        this.components.shapes.tempoLabelMilliseconds.remove();
+    }
+
+    showTempoMillisecondsTextLabels() {
+        this.components.shapes.tempoLabelMilliseconds = this.initializeLabelText(this.configurations.tempoTextLabelMilliseconds.text, this.configurations.tempoTextLabelMilliseconds.left, this.configurations.tempoTextLabelMilliseconds.top, "left");
+        this.initializeTempoMillisecondsTextLabelsStyles();
+    }
+
+    initializeTempoMillisecondsTextLabelsStyles() {
+        this.components.shapes.tempoLabelMilliseconds.fill = this.configurations.tempoTextLabelMilliseconds.color;
+    }
+
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
     tempoInputModeSelectionBpmClickHandler(self) {
         if (!self.sequencer.tempoRepresentation.isInBpmMode) {
@@ -1334,6 +1370,8 @@ class DrumMachineGui {
             self.components.domElements.textInputs.loopLengthMillis.style.display = 'none';
             self.saveCurrentSequencerStateToUrlHash();
             self.showTapTempoButton();
+            self.showTempoBpmTextLabels();
+            self.hideTempoMillisecondsTextLabels();
         }
     }
 
@@ -1358,6 +1396,8 @@ class DrumMachineGui {
             self.components.domElements.textInputs.loopLengthMillis.style.display = 'block';
             self.saveCurrentSequencerStateToUrlHash();
             self.hideTapTempoButton();
+            self.hideTempoBpmTextLabels();
+            self.showTempoMillisecondsTextLabels();
         }
     }
 
@@ -2349,6 +2389,25 @@ class DrumMachineGui {
         shape.stroke = this.configurations.sequencer.color
         shape.fill = 'transparent'
         return shape
+    }
+
+    initializeLabelText(text, left, top, alignment="left") {
+        let label = new Two.Text(text, left, top);
+        label.fill = "black";
+        // label.stroke = "white";
+        label.size = 20;
+        label.alignment = alignment
+        label.family = "Arial, sans-serif"
+        // label.family = "Courier New, monospace"
+        this.two.add(label);
+        this.two.update();
+        // prevent text selection
+        label._renderer.elem.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+        })
+        label._renderer.elem.style.userSelect = "none";
+        label._renderer.elem.style.cursor = "default";
+        return label
     }
 
     initializeButtonPerSequencerRow(topPaddingPerRow, leftPaddingPerRow, height, width) {
