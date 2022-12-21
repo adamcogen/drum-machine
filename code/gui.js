@@ -1511,7 +1511,9 @@ class DrumMachineGui {
             this.circleSelectionTracker.circleBeingMovedOldBeatNumber = this.circleSelectionTracker.circleBeingMoved.guiData.beat
             this.circleSelectionTracker.circleBeingMovedNewBeatNumber = this.circleSelectionTracker.circleBeingMovedOldBeatNumber
             // todo: make notes being moved a little bit transparent (just while they're being moved, so we can see what's behind them)
-            this.setNoteTrashBinVisibility(true)
+            if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE){
+                this.setNoteTrashBinVisibility(true);
+            }
             this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
                 this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume, this.circleSelectionTracker.circleBeingMoved.guiData.midiNote, this.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
