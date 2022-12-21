@@ -714,6 +714,8 @@ class DrumMachineGui {
             this.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'none';
             this.components.domElements.textInputs.loopLengthBpm.style.display = 'none';
             this.components.domElements.textInputs.loopLengthMillis.style.display = 'block';
+            this.hideTapTempoButton(); // tap tempo button is shown by default, so just hide it if we need to
+
         }
     }
 
@@ -1301,6 +1303,7 @@ class DrumMachineGui {
             self.components.domElements.textInputs.loopLengthBpm.style.display = 'block';
             self.components.domElements.textInputs.loopLengthMillis.style.display = 'none';
             self.saveCurrentSequencerStateToUrlHash();
+            self.showTapTempoButton();
         }
     }
 
@@ -1324,7 +1327,18 @@ class DrumMachineGui {
             self.components.domElements.textInputs.loopLengthBpm.style.display = 'none';
             self.components.domElements.textInputs.loopLengthMillis.style.display = 'block';
             self.saveCurrentSequencerStateToUrlHash();
+            self.hideTapTempoButton();
         }
+    }
+
+    hideTapTempoButton() {
+        this.components.shapes.tapTempoButton.remove();
+    }
+
+    showTapTempoButton() {
+        this.components.shapes.tapTempoButton = this.initializeRectangleShape(this.configurations.tapTempoButton.top, this.configurations.tapTempoButton.left, this.configurations.tapTempoButton.height, this.configurations.tapTempoButton.width);
+        this.two.update();
+        this.addTapTempoButtonActionListeners();
     }
 
     addTapTempoButtonActionListeners() {
