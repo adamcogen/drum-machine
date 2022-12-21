@@ -308,7 +308,7 @@ class Sequencer {
         // initialize sound data JSON object
         let soundData = {
             file: this.samples[sampleName].file,
-            playbackRate: 1, 
+            playbackRate: 1,
             gain: sampleGain,
             velocity: 60,
             note: midiNote, // midi note number
@@ -398,6 +398,13 @@ class Sequencer {
                 this.rows[rowIndex].insertNode(sequencerNode, sequencerNode.label)
             }
         }
+    }
+
+    // replace the 'samples' array of sound sample files with a new set of samples. this 
+    // will be used to allow for us to switch between differernt drum kits (different sets 
+    // of drum sounds) while the sequencer is running, e.g. using a 'select drum kit' dropdown.
+    setSamples(samples) {
+        this.samples = samples;
     }
 }
 
