@@ -106,8 +106,14 @@ function getGuiConfigurations(hideIcons=false) {
                 leftPadding: 0,
             }
         },
-        showModeMenuButton: {
+        moveNotesModeButton: {
             top: 655,
+            left: 40,
+            width: 48,
+            height: 48,
+        },
+        editVolumesModeButton: {
+            top: 715,
             left: 40,
             width: 48,
             height: 48,

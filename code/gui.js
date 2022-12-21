@@ -33,6 +33,7 @@ class DrumMachineGui {
         // add more dom elements and do some additional setup of shapes and dom elements
         this.initializeTempoTextInputValuesAndStyles();
         this.initializeMidiOutputSelectorValuesAndStyles();
+        this.initializeModeSelectionButtonStyles();
         this.setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note or a sequencer row, so make sure it starts out as not visible
 
         this.lastButtonClickTimeTrackers = this.initializeLastButtonClickTimeTrackers(); // a hash used keep track of the last time each button was clicked
@@ -99,7 +100,8 @@ class DrumMachineGui {
         this.addPauseButtonActionListeners();
         this.addRestartSequencerButtonActionListeners();
         this.addClearAllNotesButtonActionListeners();
-        this.addSwitchSequencerModesButtonActionListeners();
+        this.addMoveNotesModeButtonActionListeners();
+        this.addEditVolumesModeButtonActionListeners();
         this.addTempoInputModeSelectionButtonsActionListeners();
         this.addTapTempoButtonActionListeners();
         this.initializeMuteWebAudioButtonActionListeners();
@@ -179,7 +181,8 @@ class DrumMachineGui {
         shapes.addRowButtonShape = this.initializeRectangleShape(this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * (this.sequencer.rows.length - 1)) + this.configurations.addRowButton.topPadding, this.configurations.sequencer.left + (this.configurations.sequencer.width / 2) + this.configurations.addRowButton.leftPadding - (this.configurations.addRowButton.width / 2), this.configurations.addRowButton.height, this.configurations.addRowButton.width) // clicking this button will add a new empty row to the sequencer
         shapes.clearNotesForRowButtonShapes = this.initializeButtonPerSequencerRow(this.configurations.clearRowButtons.topPaddingPerRow, this.configurations.clearRowButtons.leftPaddingPerRow, this.configurations.clearRowButtons.height, this.configurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
         shapes.sequencerRowHandles = this.initializeSequencerRowHandles()
-        shapes.showModeMenuButton = this.initializeRectangleShape(this.configurations.showModeMenuButton.top, this.configurations.showModeMenuButton.left, this.configurations.showModeMenuButton.height, this.configurations.showModeMenuButton.width) // a rectangle that will eventually be used to select between different modes of the sequencer (move notes, edit note volumes, select notes, etc.)
+        shapes.moveNotesModeButton = this.initializeRectangleShape(this.configurations.moveNotesModeButton.top, this.configurations.moveNotesModeButton.left, this.configurations.moveNotesModeButton.height, this.configurations.moveNotesModeButton.width) // a rectangle that will eventually be used to select between different modes of the sequencer (move notes, edit note volumes, select notes, etc.)
+        shapes.editVolumesModeButton = this.initializeRectangleShape(this.configurations.editVolumesModeButton.top, this.configurations.editVolumesModeButton.left, this.configurations.editVolumesModeButton.height, this.configurations.editVolumesModeButton.width);
         shapes.tempoInputModeSelectionBpmButton = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top, this.configurations.tempoInputModeSelectionBpmButton.left, this.configurations.tempoInputModeSelectionBpmButton.height, this.configurations.tempoInputModeSelectionBpmButton.width) // button for toggling between different modes of inputting tempo. this one is to select 'beats per minute' input mode.
         shapes.tempoInputModeSelectionMillisecondsButton = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionMillisecondsButton.top, this.configurations.tempoInputModeSelectionMillisecondsButton.left, this.configurations.tempoInputModeSelectionMillisecondsButton.height, this.configurations.tempoInputModeSelectionMillisecondsButton.width) // button for toggling between different modes of inputting tempo. this one is to select 'loop length in milliseconds' input mode.
         shapes.muteWebAudioButton = this.initializeRectangleShape(this.configurations.muteWebAudioButton.top, this.configurations.muteWebAudioButton.left, this.configurations.muteWebAudioButton.height, this.configurations.muteWebAudioButton.width)
@@ -1249,30 +1252,57 @@ class DrumMachineGui {
         this.sequencer.clear();
     }
 
-    /**
-     * temporary 'switch sequencer mode' button, for choosing which mode the sequencer is in -- available modes include 'change note volumes' or 'move notes' for now.
-     * eventually I think this button will open a menu instead of toggling between modes, to allow for a nice way of switching between more than 2 modes.
-     * for now I'm not going to bother with a menu, and I'm just going to use this button as a simple toggle between the 2 currently-existing modes.
-     */
-    addSwitchSequencerModesButtonActionListeners() {
-        if (this.eventHandlerFunctions.showModeMenuButton !== null && this.eventHandlerFunctions.showModeMenuButton !== undefined) {
+    initializeModeSelectionButtonStyles() {
+        if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
+            this.components.shapes.moveNotesModeButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
+            this.components.shapes.editVolumesModeButton.fill = 'transparent';
+        } else if (this.currentGuiMode === DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE) {
+            this.components.shapes.moveNotesModeButton.fill = 'transparent';
+            this.components.shapes.editVolumesModeButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
+        }
+    }
+
+    addMoveNotesModeButtonActionListeners() {
+        if (this.eventHandlerFunctions.moveNotesModeButton !== null && this.eventHandlerFunctions.moveNotesModeButton !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
-            this.components.shapes.showModeMenuButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.showModeMenuButton)
+            this.components.shapes.moveNotesModeButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.moveNotesModeButton)
         }
         // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        this.eventHandlerFunctions.showModeMenuButton = () => this.showModeMenuButtonClickHandler(this);
-        this.components.shapes.showModeMenuButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.showModeMenuButton)
+        this.eventHandlerFunctions.moveNotesModeButton = () => this.moveNotesModeButtonClickHandler(this);
+        this.components.shapes.moveNotesModeButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.moveNotesModeButton)
+    }
+
+    addEditVolumesModeButtonActionListeners() {
+        if (this.eventHandlerFunctions.editVolumesModeButton !== null && this.eventHandlerFunctions.editVolumesModeButton !== undefined) {
+            // remove event listeners if they've already been added to avoid duplicates
+            this.components.shapes.editVolumesModeButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.editVolumesModeButton)
+        }
+        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+        this.eventHandlerFunctions.editVolumesModeButton = () => this.editVolumesModeButtonClickHandler(this);
+        this.components.shapes.editVolumesModeButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.editVolumesModeButton)
     }
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
-    showModeMenuButtonClickHandler(self) {
-        if(this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
-            this.currentGuiMode = DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE;
-            self.components.shapes.showModeMenuButton.fill = self.configurations.buttonBehavior.clickedButtonColor
-        } else if (this.currentGuiMode === DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE) {
-            this.currentGuiMode = DrumMachineGui.MOVE_NOTES_MODE;
-            self.components.shapes.showModeMenuButton.fill = 'transparent'
+    moveNotesModeButtonClickHandler(self) {
+        if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
+            return;
         }
+        this.currentGuiMode = DrumMachineGui.MOVE_NOTES_MODE;
+        self.components.shapes.moveNotesModeButton.fill = self.configurations.buttonBehavior.clickedButtonColor
+        self.components.shapes.editVolumesModeButton.fill = 'transparent'
+        // reset circle selection variables
+        self.circleSelectionTracker.circleBeingMoved = null
+        self.setNoteTrashBinVisibility(false)
+    }
+
+    // search for comment "a general note about the 'self' paramater" within this file for info on its use here
+    editVolumesModeButtonClickHandler(self) {
+        if(this.currentGuiMode === DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE) {
+            return;
+        }
+        this.currentGuiMode = DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE;
+        self.components.shapes.moveNotesModeButton.fill = 'transparent'
+        self.components.shapes.editVolumesModeButton.fill = self.configurations.buttonBehavior.clickedButtonColor
         // reset circle selection variables
         self.circleSelectionTracker.circleBeingMoved = null
         self.setNoteTrashBinVisibility(false)
