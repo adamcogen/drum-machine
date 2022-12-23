@@ -33,6 +33,7 @@ class DrumMachineGui {
         // add more dom elements and do some additional setup of shapes and dom elements
         this.initializeTempoTextInputValuesAndStyles();
         this.initializeMidiOutputSelectorValuesAndStyles();
+        this.initializeDrumKitSelectorValuesAndStyles();
         this.initializeModeSelectionButtonStyles();
         this.initializeTempoBpmTextLabelsStyles();
         this.initializeTempoMillisecondsTextLabelsStyles();
@@ -96,6 +97,7 @@ class DrumMachineGui {
         this.allDrawnCircles = []
 
         this.initializeMidiOutputSelectorActionListeners();
+        this.initializeDrumKitSelectorActionListeners();
         this.initializeLoopLengthInMillisecondsTextInputActionListeners();
         this.initializeBeatsPerMinuteTextInputActionListeners();
         this.initializeNumberOfBeatsInLoopInputActionListeners();
@@ -208,7 +210,8 @@ class DrumMachineGui {
                 tempoTextInputMillis: document.getElementById('tempo-text-inputs-milliseconds'),
                 tempoTextInputBeatsPerLoop: document.getElementById('tempo-text-inputs-beats-per-loop'),
                 subdivisionTextInputs: document.getElementById('subdivision-text-inputs'),
-                midiOutputSelector: document.getElementById('midi-output-selector-div')
+                midiOutputSelector: document.getElementById('midi-output-selector-div'),
+                drumkitSelector: document.getElementById('drum-kit-selector-div'),
             },
             textInputs: {
                 loopLengthMillis: document.getElementById('text-input-loop-length-millis'),
@@ -239,6 +242,7 @@ class DrumMachineGui {
             },
             selectors: {
                 midiOutput: document.getElementById('midi-output-selector'),
+                drumkit: document.getElementById('drum-kit-selector'),
             }
         }
         return domElements;
@@ -876,6 +880,21 @@ class DrumMachineGui {
                 let midiOutput = (selectedMidiPortId === null ? null : midiAccess.outputs.get(selectedMidiPortId));
                 midiAudioDriver.setMidiOutput(midiOutput); // update the MIDI driver we created earlier to use the MIDI port we just retrieved. 
             })
+        });
+    }
+
+    initializeDrumKitSelectorValuesAndStyles() {
+        this.components.domElements.divs.drumkitSelector.style.left = "" + this.configurations.drumkitSelector.position.left + "px";
+        this.components.domElements.divs.drumkitSelector.style.top = "" + this.configurations.drumkitSelector.position.top + "px";
+        // Add a default option to the selector for 'no midi output
+        let noWebAudioOutputOption = document.createElement("option");
+        noWebAudioOutputOption.text = "No Live Audio Output";
+        this.components.domElements.selectors.drumkit.add(noWebAudioOutputOption);
+    }
+
+    initializeDrumKitSelectorActionListeners() {
+        this.components.domElements.selectors.drumkit.addEventListener('change', () => {
+            console.log("Drum kit option selected: " + this.components.domElements.selectors.drumkit.value)
         });
     }
 

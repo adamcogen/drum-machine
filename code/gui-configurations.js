@@ -237,13 +237,19 @@ function getGuiConfigurations(hideIcons=false) {
         },
         midiOutputSelector: {
             position: {
-                top: 10,
+                top: 5,
+                left: 900,
+            }
+        },
+        drumkitSelector: {
+            position: {
+                top: 40,
                 left: 900,
             }
         },
         muteWebAudioButton: {
-            top: 50,
-            left: 1050,
+            top: 350,
+            left: 1150,
             width: 24,
             height: 24,
         }
