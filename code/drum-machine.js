@@ -10,15 +10,16 @@ window.onload = () => {
     const HI_HAT_CLOSED = 'hi-hat-closed';
     const HI_HAT_OPEN = 'hi-hat-open';
     const SNARE = 'snare';
+    const GHOST_NOTE_SNARE = 'ghost-note-snare';
     const WOODBLOCK = 'woodblock';
     const TOM = 'tom'
     const CLAP = 'clap'
     const WAV_EXTENSION = '.wav';
 
     // initialize the list of sample names we will use. the order of this list determines the order of sounds on the sound bank
-    let sampleNameList = [WOODBLOCK, HI_HAT_CLOSED, HI_HAT_OPEN, CLAP, SNARE, TOM, BASS_DRUM]
+    let sampleNameList = [WOODBLOCK, HI_HAT_CLOSED, HI_HAT_OPEN, CLAP, SNARE, GHOST_NOTE_SNARE, TOM, BASS_DRUM]
 
-    let drumkitNameList = ['Basic Drum Kit']
+    let drumkitNameList = ['Basic Drum Kit', 'Basic Drum Kit 2']
 
     /**
      * load sound files.
@@ -37,6 +38,7 @@ window.onload = () => {
         drumkits[drumkitName][HI_HAT_OPEN] = new SequencerNoteType(null, '#b8961c', 44) // or try #bf3d5e , this was red before
         drumkits[drumkitName][CLAP] = new SequencerNoteType(null, '#689620', 38)
         drumkits[drumkitName][SNARE] = new SequencerNoteType(null, '#0e6e21', 37)
+        drumkits[drumkitName][GHOST_NOTE_SNARE] = new SequencerNoteType(null, '#27967c', 40) // solidify this color choice, using a placeholder color for now
         drumkits[drumkitName][TOM] = new SequencerNoteType(null, '#1b617a', 42)
         drumkits[drumkitName][BASS_DRUM] = new SequencerNoteType(null, '#5b3787', 36)
         // load all of the drum samples
@@ -45,7 +47,7 @@ window.onload = () => {
         }
     }
 
-    let samples = drumkits[drumkitNameList[0]]; // adding this line temporarily so that I can add support for multiple drum sets incrementally, while keeping things backwards-compatible
+    let samples = drumkits[drumkitNameList[1]]; // adding this line temporarily so that I can add support for multiple drum sets incrementally, while keeping things backwards-compatible
 
     // initialize web audio context and audio driver
     _setUpAudioContextCompatabilityShim();
