@@ -30,6 +30,16 @@ class SequencerNoteType {
     }
 }
 
+// class to store info about different drum kits. a drum kit in this context is a set
+// of sound files (samples) that can be played by the drum machine sequencer. you will
+// be able to choose between different drum kits while the sequencer is running, etc.
+class DrumKit {
+    constructor(name, samples) {
+        this.name = name
+        this.samples = samples
+    }
+}
+
 // class to generate new nodes for notes that have been pulled off the sample bank
 // to be placed onto the sequencer. this class also accepts an ID generator so we
 // can keep track of which IDs have already been used as node labels in the drum

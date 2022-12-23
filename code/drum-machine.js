@@ -21,18 +21,23 @@ window.onload = () => {
     /**
      * load sound files
      */
-    let samples = {}
-    samples[WOODBLOCK] = new SequencerNoteType(null, '#bd3b07', 39)
-    samples[HI_HAT_CLOSED] = new SequencerNoteType(null, '#cf6311', 43) // or try #b58f04 , this was yellow before
-    samples[HI_HAT_OPEN] = new SequencerNoteType(null, '#b8961c', 44) // or try #bf3d5e , this was red before
-    samples[CLAP] = new SequencerNoteType(null, '#689620', 38)
-    samples[SNARE] = new SequencerNoteType(null, '#0e6e21', 37)
-    samples[TOM] = new SequencerNoteType(null, '#1b617a', 42)
-    samples[BASS_DRUM] = new SequencerNoteType(null, '#5b3787', 36)
-    // load all of the drum samples
-    for (let sampleName of sampleNameList) {
-        loadDrumSample(SOUND_FILES_PATH, sampleName, WAV_EXTENSION)
+    let drumkits = {};
+    drumkits['Basic Drum Kit'] = {};
+    for(let [drumkitName, samplesHash] of Object.entries(drumkits)) {
+        samplesHash[WOODBLOCK] = new SequencerNoteType(null, '#bd3b07', 39)
+        samplesHash[HI_HAT_CLOSED] = new SequencerNoteType(null, '#cf6311', 43) // or try #b58f04 , this was yellow before
+        samplesHash[HI_HAT_OPEN] = new SequencerNoteType(null, '#b8961c', 44) // or try #bf3d5e , this was red before
+        samplesHash[CLAP] = new SequencerNoteType(null, '#689620', 38)
+        samplesHash[SNARE] = new SequencerNoteType(null, '#0e6e21', 37)
+        samplesHash[TOM] = new SequencerNoteType(null, '#1b617a', 42)
+        samplesHash[BASS_DRUM] = new SequencerNoteType(null, '#5b3787', 36)
+        // load all of the drum samples
+        for (let sampleName of sampleNameList) {
+            loadDrumSample(SOUND_FILES_PATH, sampleName, WAV_EXTENSION, drumkitName)
+        }
     }
+
+    samples = drumkits['Basic Drum Kit']; // adding this line temporarily so that I can add support for multiple drum sets incrementally, while keeping things backwards-compatible
 
     // initialize web audio context and audio driver
     _setUpAudioContextCompatabilityShim();
@@ -173,12 +178,12 @@ window.onload = () => {
 
     // making a cleaner (less redundant) way to call 'loadSample()', which matches what we need for the drum sequencer.
     // the simplifying assumption here is that "sampleName" will always match the name of the file (without its file extension).
-    function loadDrumSample(directoryPath, sampleName, fileExtension) {
-        loadAudioSample(sampleName, directoryPath + sampleName + fileExtension)
+    function loadDrumSample(directoryPath, sampleName, fileExtension, drumkitName) {
+        loadAudioSample(sampleName, directoryPath + sampleName + fileExtension, drumkitName)
     }
 
     // load an audio sample from a file. to load from a local file, this script needs to be running on a server.
-    function loadAudioSample(sampleName, url) {
+    function loadAudioSample(sampleName, url, drumkitName) {
         let request = new XMLHttpRequest();
         request.open('GET', url, true);
         request.responseType = 'arraybuffer';
@@ -186,7 +191,7 @@ window.onload = () => {
         // Decode asynchronously
         request.onload = function() {
             _audioContext.decodeAudioData(request.response, function(buffer) {
-            samples[sampleName].file = buffer; // once we get a response, write the returned data to the corresponding attribute in our 'samples' object
+            drumkits[drumkitName][sampleName].file = buffer; // once we get a response, write the returned data to the corresponding attribute in our 'samples' object
           }, (error) => {
               console.log("Error caught when attempting to load file with URL: '" + url + "'. Error: '" + error + "'.")
           });
