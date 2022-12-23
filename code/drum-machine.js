@@ -18,26 +18,28 @@ window.onload = () => {
     // initialize the list of sample names we will use. the order of this list determines the order of sounds on the sound bank
     let sampleNameList = [WOODBLOCK, HI_HAT_CLOSED, HI_HAT_OPEN, CLAP, SNARE, TOM, BASS_DRUM]
 
+    let drumkitNameList = ['Basic Drum Kit']
+
     /**
      * load sound files
      */
     let drumkits = {};
-    drumkits['Basic Drum Kit'] = {};
-    for(let [drumkitName, samplesHash] of Object.entries(drumkits)) {
-        samplesHash[WOODBLOCK] = new SequencerNoteType(null, '#bd3b07', 39)
-        samplesHash[HI_HAT_CLOSED] = new SequencerNoteType(null, '#cf6311', 43) // or try #b58f04 , this was yellow before
-        samplesHash[HI_HAT_OPEN] = new SequencerNoteType(null, '#b8961c', 44) // or try #bf3d5e , this was red before
-        samplesHash[CLAP] = new SequencerNoteType(null, '#689620', 38)
-        samplesHash[SNARE] = new SequencerNoteType(null, '#0e6e21', 37)
-        samplesHash[TOM] = new SequencerNoteType(null, '#1b617a', 42)
-        samplesHash[BASS_DRUM] = new SequencerNoteType(null, '#5b3787', 36)
+    for(let drumkitName of drumkitNameList) {
+        drumkits[drumkitName] = {};
+        drumkits[drumkitName][WOODBLOCK] = new SequencerNoteType(null, '#bd3b07', 39)
+        drumkits[drumkitName][HI_HAT_CLOSED] = new SequencerNoteType(null, '#cf6311', 43) // or try #b58f04 , this was yellow before
+        drumkits[drumkitName][HI_HAT_OPEN] = new SequencerNoteType(null, '#b8961c', 44) // or try #bf3d5e , this was red before
+        drumkits[drumkitName][CLAP] = new SequencerNoteType(null, '#689620', 38)
+        drumkits[drumkitName][SNARE] = new SequencerNoteType(null, '#0e6e21', 37)
+        drumkits[drumkitName][TOM] = new SequencerNoteType(null, '#1b617a', 42)
+        drumkits[drumkitName][BASS_DRUM] = new SequencerNoteType(null, '#5b3787', 36)
         // load all of the drum samples
         for (let sampleName of sampleNameList) {
             loadDrumSample(SOUND_FILES_PATH, sampleName, WAV_EXTENSION, drumkitName)
         }
     }
 
-    samples = drumkits['Basic Drum Kit']; // adding this line temporarily so that I can add support for multiple drum sets incrementally, while keeping things backwards-compatible
+    let samples = drumkits[drumkitNameList[0]]; // adding this line temporarily so that I can add support for multiple drum sets incrementally, while keeping things backwards-compatible
 
     // initialize web audio context and audio driver
     _setUpAudioContextCompatabilityShim();
