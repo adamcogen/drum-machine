@@ -21,7 +21,13 @@ window.onload = () => {
     let drumkitNameList = ['Basic Drum Kit']
 
     /**
-     * load sound files
+     * load sound files.
+     * we will support loading multiple drum kits to choose from, but for now we will only support each drum kit having the
+     * same number of samples (and with the same names). that could be pretty easily changed later, but we would need to 
+     * do some restt9jg of the GUI on drum kit changes in order to make it work. for now there's no need to bother. also, 
+     * to better support multiple drum kits, it might make sense to eventually switch from using drum names to just using 
+     * sample indexes, both in the sequencer logic and when serializing sequencer patterns to URLs. that will also 
+     * future-proof things / make backwards compatibility easier if we want to change the drum kits around later.
      */
     let drumkits = {};
     for(let drumkitName of drumkitNameList) {
@@ -35,7 +41,7 @@ window.onload = () => {
         drumkits[drumkitName][BASS_DRUM] = new SequencerNoteType(null, '#5b3787', 36)
         // load all of the drum samples
         for (let sampleName of sampleNameList) {
-            loadDrumSample(SOUND_FILES_PATH, sampleName, WAV_EXTENSION, drumkitName)
+            loadDrumSample(SOUND_FILES_PATH + "/" + drumkitName + "/", sampleName, WAV_EXTENSION, drumkitName)
         }
     }
 
