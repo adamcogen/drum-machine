@@ -1426,6 +1426,7 @@ class DrumMachineGui {
 
     showTapTempoButton() {
         this.components.shapes.tapTempoButton = this.initializeRectangleShape(this.configurations.tapTempoButton.top, this.configurations.tapTempoButton.left, this.configurations.tapTempoButton.height, this.configurations.tapTempoButton.width);
+        this.lastButtonClickTimeTrackers.tapTempo.shape = this.components.shapes.tapTempoButton;
         this.two.update();
         this.addTapTempoButtonActionListeners();
     }
@@ -1474,6 +1475,7 @@ class DrumMachineGui {
      */
     resetTapTempoButtonState() {
         this.tapTempoTracker.absoluteTimeOfMostRecentTapTempoButtonClick = Number.MIN_SAFE_INTEGER
+        this.components.shapes.tapTempoButton.fill = 'transparent'
     }
 
     initializeMuteWebAudioButtonActionListeners() {
