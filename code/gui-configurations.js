@@ -247,11 +247,5 @@ function getGuiConfigurations(hideIcons=false) {
                 left: 900,
             }
         },
-        muteWebAudioButton: {
-            top: 350,
-            left: 1150,
-            width: 24,
-            height: 24,
-        }
     }
 }

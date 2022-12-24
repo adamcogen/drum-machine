@@ -110,7 +110,6 @@ class DrumMachineGui {
         this.addEditVolumesModeButtonActionListeners();
         this.addTempoInputModeSelectionButtonsActionListeners();
         this.addTapTempoButtonActionListeners();
-        this.initializeMuteWebAudioButtonActionListeners();
         this.refreshWindowMouseMoveEvent();
         this.refreshWindowMouseUpEvent();
 
@@ -191,7 +190,6 @@ class DrumMachineGui {
         shapes.editVolumesModeButton = this.initializeRectangleShape(this.configurations.editVolumesModeButton.top, this.configurations.editVolumesModeButton.left, this.configurations.editVolumesModeButton.height, this.configurations.editVolumesModeButton.width);
         shapes.tempoInputModeSelectionBpmButton = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top, this.configurations.tempoInputModeSelectionBpmButton.left, this.configurations.tempoInputModeSelectionBpmButton.height, this.configurations.tempoInputModeSelectionBpmButton.width) // button for toggling between different modes of inputting tempo. this one is to select 'beats per minute' input mode.
         shapes.tempoInputModeSelectionMillisecondsButton = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionMillisecondsButton.top, this.configurations.tempoInputModeSelectionMillisecondsButton.left, this.configurations.tempoInputModeSelectionMillisecondsButton.height, this.configurations.tempoInputModeSelectionMillisecondsButton.width) // button for toggling between different modes of inputting tempo. this one is to select 'loop length in milliseconds' input mode.
-        shapes.muteWebAudioButton = this.initializeRectangleShape(this.configurations.muteWebAudioButton.top, this.configurations.muteWebAudioButton.left, this.configurations.muteWebAudioButton.height, this.configurations.muteWebAudioButton.width)
         shapes.tapTempoButton = this.initializeRectangleShape(this.configurations.tapTempoButton.top, this.configurations.tapTempoButton.left, this.configurations.tapTempoButton.height, this.configurations.tapTempoButton.width)
         shapes.tempoLabelBeats = this.initializeLabelText(this.configurations.tempoTextLabelBeats.text, this.configurations.tempoTextLabelBeats.left, this.configurations.tempoTextLabelBeats.top, "left");
         shapes.tempoLabelBeatsPerMinute = this.initializeLabelText(this.configurations.tempoTextLabelBeatsPerMinute.text, this.configurations.tempoTextLabelBeatsPerMinute.left, this.configurations.tempoTextLabelBeatsPerMinute.top, "left");
@@ -906,6 +904,11 @@ class DrumMachineGui {
     initializeDrumKitSelectorActionListeners() {
         this.components.domElements.selectors.drumkit.addEventListener('change', () => {
             console.log("Drum kit option selected: " + this.components.domElements.selectors.drumkit.value)
+            if (this.components.domElements.selectors.drumkit.value === "No Live Audio Output") {
+                this.sequencer.audioDrivers[0].muted = true;
+            } else {
+                this.sequencer.audioDrivers[0].muted = false;
+            }
         });
     }
 
@@ -1487,25 +1490,6 @@ class DrumMachineGui {
     resetTapTempoButtonState() {
         this.tapTempoTracker.absoluteTimeOfMostRecentTapTempoButtonClick = Number.MIN_SAFE_INTEGER
         this.components.shapes.tapTempoButton.fill = 'transparent'
-    }
-
-    initializeMuteWebAudioButtonActionListeners() {
-        if (this.eventHandlerFunctions.muteWebAudioButton !== null && this.eventHandlerFunctions.muteWebAudioButton !== undefined) {
-            // remove event listeners if they've already been added to avoid duplicates
-            this.components.shapes.muteWebAudioButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.muteWebAudioButton)
-        }
-        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        this.eventHandlerFunctions.muteWebAudioButton = () => this.muteWebAudioClickHandler(this);
-        this.components.shapes.muteWebAudioButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.muteWebAudioButton)
-    }
-
-    muteWebAudioClickHandler(self){
-        self.sequencer.audioDrivers[0].muted = !self.sequencer.audioDrivers[0].muted
-        if (self.sequencer.audioDrivers[0].muted) {
-            this.components.shapes.muteWebAudioButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
-        } else {
-            this.components.shapes.muteWebAudioButton.fill = 'transparent';
-        }
     }
 
     /**
