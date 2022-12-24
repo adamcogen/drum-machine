@@ -11,11 +11,11 @@ class DrumMachineGui {
     static get MOVE_NOTES_MODE() { return "MOVE_NOTES_MODE" }
     static get CHANGE_NOTE_VOLUMES_MODE() { return "CHANGE_NOTE_VOLUMES_MODE" }
 
-    constructor(sequencer, sampleNameList, samples, sampleBankNodeGenerator) {
+    constructor(sequencer, sampleNameList, sampleBankNodeGenerator, allDrumKitsHash, selectedDrumKitName) {
         this.sequencer = sequencer
         this.two = this.initializeTwoJs(document.getElementById('draw-shapes')) // Initialize Two.js library
         this.sampleNameList = sampleNameList
-        this.samples = samples;
+        this.samples = allDrumKitsHash[selectedDrumKitName];
         this.sampleBankNodeGenerator = sampleBankNodeGenerator;
         this.configurations = getGuiConfigurations()
         this.components = {
