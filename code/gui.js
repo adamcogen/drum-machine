@@ -16,6 +16,8 @@ class DrumMachineGui {
         this.two = this.initializeTwoJs(document.getElementById('draw-shapes')) // Initialize Two.js library
         this.sampleNameList = sampleNameList
         this.samples = allDrumKitsHash[selectedDrumKitName];
+        this.selectedDrumKitName = selectedDrumKitName;
+        this.allDrumKitsHash = allDrumKitsHash;
         this.sampleBankNodeGenerator = sampleBankNodeGenerator;
         this.configurations = getGuiConfigurations()
         this.components = {
@@ -890,6 +892,15 @@ class DrumMachineGui {
         let noWebAudioOutputOption = document.createElement("option");
         noWebAudioOutputOption.text = "No Live Audio Output";
         this.components.domElements.selectors.drumkit.add(noWebAudioOutputOption);
+        // add an option for each different drum kit
+        for(let [drumkitName, samples] of Object.entries(this.allDrumKitsHash)) {
+            let option = document.createElement("option");
+            option.text = drumkitName;
+            this.components.domElements.selectors.drumkit.add(option);
+            if (drumkitName === this.selectedDrumKitName) {
+                option.selected = true;
+            }
+        }
     }
 
     initializeDrumKitSelectorActionListeners() {

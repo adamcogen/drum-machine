@@ -47,7 +47,7 @@ window.onload = () => {
         }
     }
 
-    let selectedDrumKit = drumkitNameList[1];
+    let selectedDrumKit = drumkitNameList[1]; // initialize the drum machine with this particular drum kit (set of drum sounds) selected
 
     // initialize web audio context and audio driver
     _setUpAudioContextCompatabilityShim();
