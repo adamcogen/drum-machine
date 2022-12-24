@@ -333,7 +333,7 @@ class DrumMachineGui {
             if (circle.guiData.row === rowIndex) {
                 this.rowSelectionTracker.shapes.push(circle)
                 this.rowSelectionTracker.noteCircles.push(circle)
-                this.rowSelectionTracker.noteCirclesStartingRadiuses.push(circle.radius)
+                this.rowSelectionTracker.noteCirclesStartingRadiuses.push(circle.guiData.radiusWhenUnplayed)
             }
         }
         this.rowSelectionTracker.shapes.push(...this.components.shapes.subdivisionLineLists[rowIndex])
