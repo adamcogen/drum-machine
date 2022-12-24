@@ -245,7 +245,8 @@ function getGuiConfigurations(hideIcons=false) {
             position: {
                 top: 40,
                 left: 900,
-            }
+            },
+            noWebAudioOutputOptionText: "No Live Audio Output",
         },
     }
 }

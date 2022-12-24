@@ -888,7 +888,7 @@ class DrumMachineGui {
         this.components.domElements.divs.drumkitSelector.style.top = "" + this.configurations.drumkitSelector.position.top + "px";
         // Add a default option to the selector for 'no midi output
         let noWebAudioOutputOption = document.createElement("option");
-        noWebAudioOutputOption.text = "No Live Audio Output";
+        noWebAudioOutputOption.text = this.configurations.drumkitSelector.noWebAudioOutputOptionText; // this contains the 'no live audio' option text
         this.components.domElements.selectors.drumkit.add(noWebAudioOutputOption);
         // add an option for each different drum kit
         for(let [drumkitName, samples] of Object.entries(this.allDrumKitsHash)) {
@@ -903,11 +903,11 @@ class DrumMachineGui {
 
     initializeDrumKitSelectorActionListeners() {
         this.components.domElements.selectors.drumkit.addEventListener('change', () => {
-            console.log("Drum kit option selected: " + this.components.domElements.selectors.drumkit.value)
-            if (this.components.domElements.selectors.drumkit.value === "No Live Audio Output") {
+            if (this.components.domElements.selectors.drumkit.value === this.configurations.drumkitSelector.noWebAudioOutputOptionText) { // if the 'no live audio' option is seleted
                 this.sequencer.audioDrivers[0].muted = true;
             } else {
                 this.sequencer.audioDrivers[0].muted = false;
+                this.sequencer.samples = this.allDrumKitsHash[this.components.domElements.selectors.drumkit.value];
             }
         });
     }
