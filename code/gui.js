@@ -328,7 +328,7 @@ class DrumMachineGui {
         return allRectangles;
     }
 
-    initializeRowSelectionVariablesAndVisuals(rowIndex) {
+    initializeRowMovementVariablesAndVisuals(rowIndex) {
         if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE){
             this.setNoteTrashBinVisibility(true);
         }
@@ -356,6 +356,8 @@ class DrumMachineGui {
         this.rowSelectionTracker.shapes.push(this.components.shapes.sequencerRowLines[rowIndex])
         this.rowSelectionTracker.shapes.push(this.components.shapes.sequencerRowSelectionRectangles[rowIndex])
         this.rowSelectionTracker.shapes.push(this.components.shapes.clearNotesForRowButtonShapes[rowIndex])
+        this.rowSelectionTracker.shapes.push(this.components.shapes.volumeAdjusterRowHandles[rowIndex])
+        this.rowSelectionTracker.shapes.push(this.components.shapes.shiftToolRowHandles[rowIndex])
         // this part gets a little weird. save a list of all of the starting positions of each
         // shape that is being moved. that way we can translate them proporionally to how far
         // the row handle has moved.
@@ -689,7 +691,7 @@ class DrumMachineGui {
             // we will de-select it later whenever you lift your mouse.
             circle._renderer.elem.addEventListener('mousedown', () => {
                 // save relevant info about whichever row is selected
-                this.initializeRowSelectionVariablesAndVisuals(rowIndex);
+                this.initializeRowMovementVariablesAndVisuals(rowIndex);
             });
             // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
             // because if we implement snap-into-place for sequencer rows, the row handle may not actually
@@ -700,6 +702,84 @@ class DrumMachineGui {
                 circle.linewidth = 2
                 circle.fill = this.configurations.sequencerRowHandles.unselectedColor
                 rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.unselectedColor
+            });
+        }
+    }
+
+    initializeVolumeAdjusterRowHandlesActionListeners() {
+        for (let rowIndex = 0; rowIndex < this.components.shapes.volumeAdjusterRowHandles.length; rowIndex++) {
+            let circle = this.components.shapes.volumeAdjusterRowHandles[rowIndex];
+            let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+
+            // add border to circle on mouseover
+            circle._renderer.elem.addEventListener('mouseenter', () => {
+                if (this.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
+                    circle.stroke = 'black'
+                    circle.linewidth = 2
+                    circle.fill = this.configurations.volumeAdjusterRowHandles.unselectedColor
+                    rowSelectionRectangle.stroke = this.configurations.volumeAdjusterRowHandles.unselectedColor
+                }
+            });
+            // remove border from circle when mouse is no longer over it
+            circle._renderer.elem.addEventListener('mouseleave', () => {
+                circle.stroke = 'transparent'
+                circle.fill = this.configurations.volumeAdjusterRowHandles.unselectedColor
+                rowSelectionRectangle.stroke = 'transparent'
+            });
+            // when you hold your mouse down on the row handle circle, select that row.
+            // we will de-select it later whenever you lift your mouse.
+            circle._renderer.elem.addEventListener('mousedown', () => {
+                // save relevant info about whichever row is selected
+                this.initializeRowMovementVariablesAndVisuals(rowIndex);
+            });
+            // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
+            // because if we implement snap-into-place for sequencer rows, the row handle may not actually
+            // be under our mouse when we lift our mouse to drop the row into place.
+            // just putting the most basic functionality for visual effects here for now.
+            circle._renderer.elem.addEventListener('mouseup', () => {
+                circle.stroke = 'black'
+                circle.linewidth = 2
+                circle.fill = this.configurations.volumeAdjusterRowHandles.unselectedColor
+                rowSelectionRectangle.stroke = this.configurations.volumeAdjusterRowHandles.unselectedColor
+            });
+        }
+    }
+
+    initializeShiftToolRowHandlesActionListeners() {
+        for (let rowIndex = 0; rowIndex < this.components.shapes.shiftToolRowHandles.length; rowIndex++) {
+            let circle = this.components.shapes.shiftToolRowHandles[rowIndex];
+            let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+
+            // add border to circle on mouseover
+            circle._renderer.elem.addEventListener('mouseenter', () => {
+                if (this.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
+                    circle.stroke = 'black'
+                    circle.linewidth = 2
+                    circle.fill = this.configurations.shiftToolRowHandles.unselectedColor
+                    rowSelectionRectangle.stroke = this.configurations.shiftToolRowHandles.unselectedColor
+                }
+            });
+            // remove border from circle when mouse is no longer over it
+            circle._renderer.elem.addEventListener('mouseleave', () => {
+                circle.stroke = 'transparent'
+                circle.fill = this.configurations.shiftToolRowHandles.unselectedColor
+                rowSelectionRectangle.stroke = 'transparent'
+            });
+            // when you hold your mouse down on the row handle circle, select that row.
+            // we will de-select it later whenever you lift your mouse.
+            circle._renderer.elem.addEventListener('mousedown', () => {
+                // save relevant info about whichever row is selected
+                this.initializeRowMovementVariablesAndVisuals(rowIndex);
+            });
+            // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
+            // because if we implement snap-into-place for sequencer rows, the row handle may not actually
+            // be under our mouse when we lift our mouse to drop the row into place.
+            // just putting the most basic functionality for visual effects here for now.
+            circle._renderer.elem.addEventListener('mouseup', () => {
+                circle.stroke = 'black'
+                circle.linewidth = 2
+                circle.fill = this.configurations.shiftToolRowHandles.unselectedColor
+                rowSelectionRectangle.stroke = this.configurations.shiftToolRowHandles.unselectedColor
             });
         }
     }
@@ -1785,10 +1865,21 @@ class DrumMachineGui {
             rectangle.remove();
         }
         this.components.shapes.sequencerRowSelectionRectangles = []
+        for (let circle of this.components.shapes.volumeAdjusterRowHandles) {
+            circle.remove();
+        }
+        this.components.shapes.volumeAdjusterRowHandles = []
+        for (let circle of this.components.shapes.shiftToolRowHandles) {
+            circle.remove();
+        }
+        this.components.shapes.shiftToolRowHandles = []
+        
         this.components.shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
         this.components.shapes.referenceLineLists = this.initializeAllReferenceLines();
         this.components.shapes.subdivisionLineLists = this.initializeAllSubdivisionLines();
         this.components.shapes.sequencerRowLines = this.initializeAllSequencerRowLines();
+        this.components.shapes.volumeAdjusterRowHandles = this.initializeCirclesPerSequencerRow(this.configurations.volumeAdjusterRowHandles.leftPadding, this.configurations.volumeAdjusterRowHandles.topPadding, this.configurations.volumeAdjusterRowHandles.radius, this.configurations.volumeAdjusterRowHandles.unselectedColor)
+        this.components.shapes.shiftToolRowHandles = this.initializeCirclesPerSequencerRow(this.configurations.shiftToolRowHandles.leftPadding, this.configurations.shiftToolRowHandles.topPadding, this.configurations.shiftToolRowHandles.radius, this.configurations.shiftToolRowHandles.unselectedColor)
         this.components.shapes.sequencerRowHandles = this.initializeCirclesPerSequencerRow(this.configurations.sequencerRowHandles.leftPadding, this.configurations.sequencerRowHandles.topPadding, this.configurations.sequencerRowHandles.radius, this.configurations.sequencerRowHandles.unselectedColor);
         this.components.shapes.timeTrackingLines = this.initializeTimeTrackingLines();
         this.drawAllNoteBankCircles();
@@ -1825,11 +1916,13 @@ class DrumMachineGui {
         this.initializeQuantizationCheckboxActionListeners();
         this.initializeAddRowButtonActionListener();
         this.initializeSequencerRowHandlesActionListeners();
+        this.initializeVolumeAdjusterRowHandlesActionListeners();
+        this.initializeShiftToolRowHandlesActionListeners();
         // initialize, format, and move button icons into place
         this.initializeIcons(this.configurations.hideIcons)
         if (this.rowSelectionTracker.selectedRowIndex !== null) {
             // if a row is selected, set variables appropriately for moving it around
-            this.initializeRowSelectionVariablesAndVisuals(this.rowSelectionTracker.selectedRowIndex);
+            this.initializeRowMovementVariablesAndVisuals(this.rowSelectionTracker.selectedRowIndex);
         }
     }
 

@@ -236,9 +236,9 @@ function getGuiConfigurations(hideIcons=false) {
             selectedColor: defaultSequencerLineColor,
         },
         sequencerRowSelections: {
-            leftPadding: -60,
+            leftPadding: -100,
             topPadding: -40,
-            width: 215,
+            width: 285,
             height: 80,
         },
         quantizationButtons: {
