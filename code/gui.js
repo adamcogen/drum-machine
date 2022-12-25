@@ -98,6 +98,14 @@ class DrumMachineGui {
         // keep a list of all the circles (i.e. notes) that have been drawn on the screen
         this.allDrawnCircles = []
 
+        // this object will keep track of which resources (out of notes, reference lines, and subdivision lines) should currently be moved by the shift tool.
+        this.shiftModeTracker = {
+            notes: false,
+            subdivisionLines: false,
+            referenceLines: false,
+        }
+
+        this.initializeShiftToolToggleButtonActionListeners();
         this.initializeMidiOutputSelectorActionListeners();
         this.initializeDrumKitSelectorActionListeners();
         this.initializeLoopLengthInMillisecondsTextInputActionListeners();
@@ -914,6 +922,41 @@ class DrumMachineGui {
             } else {
                 this.sequencer.audioDrivers[0].muted = false;
                 this.sequencer.samples = this.allDrumKitsHash[this.components.domElements.selectors.drumkit.value];
+            }
+        });
+    }
+
+    // add action listeners to the buttons that let you select which resources will be moved by the shift tool.
+    // there is one button each for: notes, subdivision lines, and refernce lines.
+    initializeShiftToolToggleButtonActionListeners() {
+        this.components.shapes.shiftModeMoveNotesButton._renderer.elem.addEventListener('click', () => {
+            this.shiftModeTracker.notes = !this.shiftModeTracker.notes
+            if (this.shiftModeTracker.notes) {
+                // move notes
+                this.components.shapes.shiftModeMoveNotesButton.fill = this.configurations.buttonBehavior.clickedButtonColor
+            } else {
+                // don't move notes
+                this.components.shapes.shiftModeMoveNotesButton.fill = 'transparent'
+            }
+        });
+        this.components.shapes.shiftModeMoveSubdivisionLinesButton._renderer.elem.addEventListener('click', () => {
+            this.shiftModeTracker.subdivisionLines = !this.shiftModeTracker.subdivisionLines
+            if (this.shiftModeTracker.subdivisionLines) {
+                // move subdivision lines
+                this.components.shapes.shiftModeMoveSubdivisionLinesButton.fill = this.configurations.buttonBehavior.clickedButtonColor
+            } else {
+                // don't move subdivision lines
+                this.components.shapes.shiftModeMoveSubdivisionLinesButton.fill = 'transparent'
+            }
+        });
+        this.components.shapes.shiftModeMoveReferenceLinesButton._renderer.elem.addEventListener('click', () => {
+            this.shiftModeTracker.referenceLines = !this.shiftModeTracker.referenceLines
+            if (this.shiftModeTracker.referenceLines) {
+                // move reference lines
+                this.components.shapes.shiftModeMoveReferenceLinesButton.fill = this.configurations.buttonBehavior.clickedButtonColor
+            } else {
+                // don't move reference lines
+                this.components.shapes.shiftModeMoveReferenceLinesButton.fill = 'transparent'
             }
         });
     }
