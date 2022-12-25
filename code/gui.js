@@ -194,6 +194,11 @@ class DrumMachineGui {
         shapes.tempoLabelBeats = this.initializeLabelText(this.configurations.tempoTextLabelBeats.text, this.configurations.tempoTextLabelBeats.left, this.configurations.tempoTextLabelBeats.top, "left");
         shapes.tempoLabelBeatsPerMinute = this.initializeLabelText(this.configurations.tempoTextLabelBeatsPerMinute.text, this.configurations.tempoTextLabelBeatsPerMinute.left, this.configurations.tempoTextLabelBeatsPerMinute.top, "left");
         shapes.tempoLabelMilliseconds = this.initializeLabelText(this.configurations.tempoTextLabelMilliseconds.text, this.configurations.tempoTextLabelMilliseconds.left, this.configurations.tempoTextLabelMilliseconds.top, "left");
+        shapes.shiftModeMoveNotesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveNotesButton.top, this.configurations.shiftModeMoveNotesButton.left, this.configurations.shiftModeMoveNotesButton.height, this.configurations.shiftModeMoveNotesButton.width)
+        shapes.shiftModeMoveSubdivisionLinesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveSubdivisionLinesButton.top, this.configurations.shiftModeMoveSubdivisionLinesButton.left, this.configurations.shiftModeMoveSubdivisionLinesButton.height, this.configurations.shiftModeMoveSubdivisionLinesButton.width)
+        shapes.shiftModeMoveReferenceLinesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveReferenceLinesButton.top, this.configurations.shiftModeMoveReferenceLinesButton.left, this.configurations.shiftModeMoveReferenceLinesButton.height, this.configurations.shiftModeMoveReferenceLinesButton.width)
+        shapes.shiftModeResetSubdivisionLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetSubdivisionLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.height, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of subdivision lines for each row
+        shapes.shiftModeResetReferenceLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetReferenceLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.height, this.configurations.shiftModeResetReferenceLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of reference lines for each row
         this.two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
         return shapes;
     }
@@ -544,7 +549,7 @@ class DrumMachineGui {
                     newTextInputValue = this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
                 }
                 newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
-                newTextInputValue = Util.confineNumberToBounds(newTextInputValue, 0, this.configurations.subdivionLineTextInputs.maximumValue)
+                newTextInputValue = Util.confineNumberToBounds(newTextInputValue, 0, this.configurations.subdivisionLineTextInputs.maximumValue)
                 subdivisionTextInput.value = newTextInputValue
                 this.updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
                 this.redrawSequencer();
@@ -982,8 +987,8 @@ class DrumMachineGui {
             textArea.cols = "3"
             textArea.rows = "1"
             textArea.style.position = "absolute"
-            textArea.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.subdivionLineTextInputs.topPaddingPerRow) + "px"
-            textArea.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.subdivionLineTextInputs.leftPaddingPerRow) + "px"
+            textArea.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.subdivisionLineTextInputs.topPaddingPerRow) + "px"
+            textArea.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.subdivisionLineTextInputs.leftPaddingPerRow) + "px"
             textArea.style.borderColor = this.configurations.sequencer.color
             textArea.value = this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
             textArea.style.color = this.configurations.defaultFont.color // set font color
@@ -1058,7 +1063,7 @@ class DrumMachineGui {
         }
         this.components.domElements.checkboxes.quantizationCheckboxes = []
         for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
-            let verticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + this.configurations.subdivionLineTextInputs.topPaddingPerRow + 4
+            let verticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + this.configurations.subdivisionLineTextInputs.topPaddingPerRow + 4
             let horizontalPosition = this.configurations.sequencer.left + this.configurations.sequencer.width + 73
             let checkbox = this.initializeCheckbox(verticalPosition, horizontalPosition)
             if (this.sequencer.rows[rowIndex].quantized) {
@@ -1685,7 +1690,7 @@ class DrumMachineGui {
         // because now they may be out of date or some of them may have been deleted,
         // and the simplest thing to do may just be to delete them all then redraw
         // the current state of the sequencer for the changed row.
-        // the same applies for the subdivion lines and the sequencer row line as well,
+        // the same applies for the subdivision lines and the sequencer row line as well,
         // since we want those to be in front of the reference lines, which we are
         // redrawing now.
         this.removeAllCirclesFromDisplay()
@@ -2345,7 +2350,7 @@ class DrumMachineGui {
                 unlockedIcon.style.display = 'block'
             }
             // put each lock icon into the right place, resize it, etc.
-            let lockIconsVerticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + this.configurations.subdivionLineTextInputs.topPaddingPerRow + this.configurations.quantizationButtons.icon.topPaddingPerRow
+            let lockIconsVerticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + this.configurations.subdivisionLineTextInputs.topPaddingPerRow + this.configurations.quantizationButtons.icon.topPaddingPerRow
             let lockIconsHorizontalPosition = this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.quantizationButtons.icon.leftPaddingPerRow
             lockedIcon.style.width = "" + this.configurations.quantizationButtons.icon.width + "px"
             lockedIcon.style.height = "" + this.configurations.quantizationButtons.icon.height + "px"

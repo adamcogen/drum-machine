@@ -9,8 +9,8 @@ function getGuiConfigurations(hideIcons=false) {
     return {
         hideIcons: hideIcons,
         sequencer: {
-            top: 110,
-            left: 240,
+            top: 130,
+            left: 260,
             width: 700,
             spaceBetweenRows: 80,
             color: defaultSequencerLineColor,
@@ -40,7 +40,7 @@ function getGuiConfigurations(hideIcons=false) {
             },
         },
         sampleBank: {
-            top: 74,
+            top: 94,
             left: 100,
             spaceBetweenNotes: 40,
             borderPadding: 20
@@ -58,7 +58,7 @@ function getGuiConfigurations(hideIcons=false) {
             color: lighterSequencerColor, // meant to be slightly lighter than the subdivision line color
         },
         noteTrashBin: {
-            top: 460,
+            top: 480,
             left: 100,
             width: 48,
             height: 48,
@@ -71,7 +71,7 @@ function getGuiConfigurations(hideIcons=false) {
             }
         },
         pauseButton: {
-            top: 74,
+            top: 94,
             left: 30,
             width: 48,
             height: 48,
@@ -83,7 +83,7 @@ function getGuiConfigurations(hideIcons=false) {
             }
         },
         restartSequencerButton: {
-            top: 134,
+            top: 154,
             left: 30,
             width: 48,
             height: 48,
@@ -95,7 +95,7 @@ function getGuiConfigurations(hideIcons=false) {
             }
         },
         clearAllNotesButton: {
-            top: 194,
+            top: 214,
             left: 30,
             width: 48,
             height: 48,
@@ -127,38 +127,38 @@ function getGuiConfigurations(hideIcons=false) {
         },
         tempoTextInputBeatsPerLoop: {
             top: 50,
-            left: 540,
+            left: 140,
             maximumValue: 9999 // fractional numbers less than this could go over the width of the text input
         },
         tempoTextInputBpm: {
             top: 12,
-            left: 540,
+            left: 140,
             maximumValue: 99999 // fractional numbers less than this could go over the width of the text input
         },
         tempoTextInputMilliseconds: {
             top: 28,
-            left: 540,
+            left: 140,
             maximumValue: 99999 // fractional numbers less than this could go over the width of the text input
         },
         tempoTextLabelBeats: {
             text: "beats long",
             color: "black",
             top: 69,
-            left: 604,
+            left: 204,
         },
         tempoTextLabelBeatsPerMinute: {
             text: "beats per minute",
             color: "black",
             top: 33,
-            left: 615,
+            left: 215,
         },
         tempoTextLabelMilliseconds: {
             text: "milliseconds",
             color: "black",
             top: 48,
-            left: 615,
+            left: 215,
         },
-        subdivionLineTextInputs: {
+        subdivisionLineTextInputs: {
             topPaddingPerRow: 0, // centered on sequencer line would be: -17
             leftPaddingPerRow: 10,
             maximumValue: 1000,
@@ -198,19 +198,19 @@ function getGuiConfigurations(hideIcons=false) {
         },
         tempoInputModeSelectionBpmButton: { // button for toggling between different modes of inputting tempo. this one is to select 'beats per minute' input mode.
             top: 20,
-            left: 412,
+            left: 12,
             height: 48,
             width: 48,
         },
         tempoInputModeSelectionMillisecondsButton: { // button for toggling between different modes of inputting tempo. this one is to select 'loop length in milliseconds' input mode.
             top: 20,
-            left: 468,
+            left: 68,
             height: 48,
             width: 48,
         },
         tapTempoButton: {
             top: 20,
-            left: 780,
+            left: 380,
             height: 48,
             width: 48
         },
@@ -247,6 +247,36 @@ function getGuiConfigurations(hideIcons=false) {
                 left: 900,
             },
             noWebAudioOutputOptionText: "No Live Audio Output",
+        },
+        shiftModeMoveNotesButton: {
+            top: 20,
+            left: 550,
+            width: 48,
+            height: 48,
+        },
+        shiftModeMoveSubdivisionLinesButton: {
+            top: 20,
+            left: 610,
+            width: 48,
+            height: 48,
+        },
+        shiftModeMoveReferenceLinesButton: {
+            top: 20,
+            left: 670,
+            width: 48,
+            height: 48,
+        },
+        shiftModeResetReferenceLinesForRowButtons: {
+            topPaddingPerRow: -23,
+            leftPaddingPerRow: 155,
+            height: 20,
+            width: 20,
+        },
+        shiftModeResetSubdivisionLinesForRowButtons: {
+            topPaddingPerRow: 2,
+            leftPaddingPerRow: 155,
+            height: 20,
+            width: 20,
         },
     }
 }
