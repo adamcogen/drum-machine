@@ -63,7 +63,7 @@ class DrumMachineGui {
             startingRadius: null,
         }
 
-        this.rowSelectionTracker = {
+        this.rowSelectionTracker = { // todo: rename this to make it more clear that this variable is only for row movement, not all types of selection. not refactoring yet to keep diff clean.
             selectedRowIndex: null,
             shapes: [],
             shapesOriginalPositions: [], // this is going to be such a weird way of doing this..
@@ -71,9 +71,21 @@ class DrumMachineGui {
                 x: null,
                 y: null,
             },
+            noteCircles: [],
+            noteCirclesStartingRadiuses: [],
             domElements: [],
             domElementsOriginalPositions: [],
             removeRow: false,
+        }
+
+        this.rowVolumeAdjustmentTracker = {
+            selectedRowIndex: null,
+            noteCircles: [],
+            noteCirclesStartingRadiuses: [],
+            rowHandleStartingPosition: {
+                x: null,
+                y: null,
+            }
         }
 
         this.noteBankNoteVolumesTracker = {}
@@ -207,8 +219,9 @@ class DrumMachineGui {
         shapes.shiftModeMoveNotesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveNotesButton.top, this.configurations.shiftModeMoveNotesButton.left, this.configurations.shiftModeMoveNotesButton.height, this.configurations.shiftModeMoveNotesButton.width)
         shapes.shiftModeMoveSubdivisionLinesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveSubdivisionLinesButton.top, this.configurations.shiftModeMoveSubdivisionLinesButton.left, this.configurations.shiftModeMoveSubdivisionLinesButton.height, this.configurations.shiftModeMoveSubdivisionLinesButton.width)
         shapes.shiftModeMoveReferenceLinesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveReferenceLinesButton.top, this.configurations.shiftModeMoveReferenceLinesButton.left, this.configurations.shiftModeMoveReferenceLinesButton.height, this.configurations.shiftModeMoveReferenceLinesButton.width)
-        shapes.shiftModeResetSubdivisionLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetSubdivisionLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.height, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of subdivision lines for each row
-        shapes.shiftModeResetReferenceLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetReferenceLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.height, this.configurations.shiftModeResetReferenceLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of reference lines for each row
+        // comment out these 'shift tool' buttons until we are ready to start adding logic to them
+        // shapes.shiftModeResetSubdivisionLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetSubdivisionLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.height, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of subdivision lines for each row
+        // shapes.shiftModeResetReferenceLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetReferenceLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.height, this.configurations.shiftModeResetReferenceLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of reference lines for each row
         this.two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
         return shapes;
     }
@@ -328,10 +341,9 @@ class DrumMachineGui {
         return allRectangles;
     }
 
+    // todo: clean this up a bit once we're sure we want to keep separate row handles for 'move rows' and 'change row volumes'
     initializeRowMovementVariablesAndVisuals(rowIndex) {
-        if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE){
-            this.setNoteTrashBinVisibility(true);
-        }
+        this.setNoteTrashBinVisibility(true);
         this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
         // save relevant info about whichever row is selected
         this.rowSelectionTracker.selectedRowIndex = rowIndex;
@@ -395,6 +407,31 @@ class DrumMachineGui {
         circle.stroke = 'black'
         circle.linewidth = 2
         circle.fill = this.configurations.sequencerRowHandles.selectedColor
+        let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
+        rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.selectedColor
+    }
+
+    initializeRowVolumeAdjustmentVariablesAndVisuals(rowIndex) {
+        // save relevant info about whichever row is selected
+        this.rowVolumeAdjustmentTracker.selectedRowIndex = rowIndex;
+        // save a list of all the note circles that are associated with the selected row. we are saving this list so that we can 
+        // perform operations on all the notes in a row if we want to (such as changing all of their volumes at the same time).
+        // also track the starting radius of each circle on the row. this will also be used in adjusting note volumes for the row.
+        this.rowVolumeAdjustmentTracker.noteCircles = [];
+        this.rowVolumeAdjustmentTracker.noteCirclesStartingRadiuses = [];
+        for (let circle of this.allDrawnCircles) {
+            if (circle.guiData.row === rowIndex) {
+                this.rowVolumeAdjustmentTracker.noteCircles.push(circle)
+                this.rowVolumeAdjustmentTracker.noteCirclesStartingRadiuses.push(circle.guiData.radiusWhenUnplayed)
+            }
+        }
+        this.rowVolumeAdjustmentTracker.rowHandleStartingPosition.x = this.components.shapes.volumeAdjusterRowHandles[rowIndex].translation.x
+        this.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y = this.components.shapes.volumeAdjusterRowHandles[rowIndex].translation.y
+        // update visuals
+        let circle = this.components.shapes.volumeAdjusterRowHandles[rowIndex]
+        circle.stroke = 'black'
+        circle.linewidth = 2
+        circle.fill = this.configurations.volumeAdjusterRowHandles.selectedColor
         let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
         rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.selectedColor
     }
@@ -732,7 +769,7 @@ class DrumMachineGui {
             // we will de-select it later whenever you lift your mouse.
             circle._renderer.elem.addEventListener('mousedown', () => {
                 // save relevant info about whichever row is selected
-                this.initializeRowMovementVariablesAndVisuals(rowIndex);
+                this.initializeRowVolumeAdjustmentVariablesAndVisuals(rowIndex);
             });
             // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
             // because if we implement snap-into-place for sequencer rows, the row handle may not actually
