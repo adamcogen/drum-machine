@@ -185,7 +185,9 @@ class DrumMachineGui {
         shapes.clearAllNotesButtonShape = this.initializeRectangleShape(this.configurations.clearAllNotesButton.top, this.configurations.clearAllNotesButton.left, this.configurations.clearAllNotesButton.height, this.configurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
         shapes.addRowButtonShape = this.initializeRectangleShape(this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * (this.sequencer.rows.length - 1)) + this.configurations.addRowButton.topPadding, this.configurations.sequencer.left + (this.configurations.sequencer.width / 2) + this.configurations.addRowButton.leftPadding - (this.configurations.addRowButton.width / 2), this.configurations.addRowButton.height, this.configurations.addRowButton.width) // clicking this button will add a new empty row to the sequencer
         shapes.clearNotesForRowButtonShapes = this.initializeButtonPerSequencerRow(this.configurations.clearRowButtons.topPaddingPerRow, this.configurations.clearRowButtons.leftPaddingPerRow, this.configurations.clearRowButtons.height, this.configurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
-        shapes.sequencerRowHandles = this.initializeSequencerRowHandles()
+        shapes.sequencerRowHandles = this.initializeCirclesPerSequencerRow(this.configurations.sequencerRowHandles.leftPadding, this.configurations.sequencerRowHandles.topPadding, this.configurations.sequencerRowHandles.radius, this.configurations.sequencerRowHandles.unselectedColor)
+        shapes.volumeAdjusterRowHandles = this.initializeCirclesPerSequencerRow(this.configurations.volumeAdjusterRowHandles.leftPadding, this.configurations.volumeAdjusterRowHandles.topPadding, this.configurations.volumeAdjusterRowHandles.radius, this.configurations.volumeAdjusterRowHandles.unselectedColor)
+        shapes.shiftToolRowHandles = this.initializeCirclesPerSequencerRow(this.configurations.shiftToolRowHandles.leftPadding, this.configurations.shiftToolRowHandles.topPadding, this.configurations.shiftToolRowHandles.radius, this.configurations.shiftToolRowHandles.unselectedColor)
         shapes.moveNotesModeButton = this.initializeRectangleShape(this.configurations.moveNotesModeButton.top, this.configurations.moveNotesModeButton.left, this.configurations.moveNotesModeButton.height, this.configurations.moveNotesModeButton.width) // a rectangle that will eventually be used to select between different modes of the sequencer (move notes, edit note volumes, select notes, etc.)
         shapes.editVolumesModeButton = this.initializeRectangleShape(this.configurations.editVolumesModeButton.top, this.configurations.editVolumesModeButton.left, this.configurations.editVolumesModeButton.height, this.configurations.editVolumesModeButton.width);
         shapes.tempoInputModeSelectionBpmButton = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top, this.configurations.tempoInputModeSelectionBpmButton.left, this.configurations.tempoInputModeSelectionBpmButton.height, this.configurations.tempoInputModeSelectionBpmButton.width) // button for toggling between different modes of inputting tempo. this one is to select 'beats per minute' input mode.
@@ -642,14 +644,13 @@ class DrumMachineGui {
     // these are circles that are to the left of the sequencer, which we can click on to select sequencer rows,
     // so that we can move those rows by clicking and dragging, to rearrange the sequencer row order, throw 
     // rows away, etc.
-    initializeSequencerRowHandles() {
+    initializeCirclesPerSequencerRow(leftPaddingPerRow, topPaddingPerRow, radius, unselectedColor) {
         let allCircles = []
         for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
-            let horizontalPosition = this.configurations.sequencer.left + this.configurations.sequencerRowHandles.leftPadding
-            let verticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + this.configurations.sequencerRowHandles.topPadding
-            let radius = this.configurations.sequencerRowHandles.radius
+            let horizontalPosition = this.configurations.sequencer.left + leftPaddingPerRow
+            let verticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + topPaddingPerRow
             let circle = this.two.makeCircle(horizontalPosition, verticalPosition, radius);
-            circle.fill = this.configurations.sequencerRowHandles.unselectedColor
+            circle.fill = unselectedColor
             circle.stroke = "transparent"
             allCircles.push(circle)
         }
@@ -1745,7 +1746,7 @@ class DrumMachineGui {
         this.components.shapes.referenceLineLists = this.initializeAllReferenceLines();
         this.components.shapes.subdivisionLineLists = this.initializeAllSubdivisionLines();
         this.components.shapes.sequencerRowLines = this.initializeAllSequencerRowLines();
-        this.components.shapes.sequencerRowHandles = this.initializeSequencerRowHandles();
+        this.components.shapes.sequencerRowHandles = this.initializeCirclesPerSequencerRow(this.configurations.sequencerRowHandles.leftPadding, this.configurations.sequencerRowHandles.topPadding, this.configurations.sequencerRowHandles.radius, this.configurations.sequencerRowHandles.unselectedColor);
         this.components.shapes.timeTrackingLines = this.initializeTimeTrackingLines();
         this.drawAllNoteBankCircles();
         this.drawNotesToReflectSequencerCurrentState();
