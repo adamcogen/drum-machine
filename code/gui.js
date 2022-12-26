@@ -2053,6 +2053,9 @@ class DrumMachineGui {
         if (self.rowSelectionTracker.selectedRowIndex !== null) {
             self.rowMovementWindowMouseMoveHandler(self, event);
         }
+        if (self.shiftToolTracker.selectedRowIndex !== null) {
+            self.shiftToolMouseMoveEventHandler(self, event);
+        }
     }
 
     rowVolumeAdjustmentWindowMouseMoveHandler(self, event) {
@@ -2087,6 +2090,20 @@ class DrumMachineGui {
         circle.fill = self.configurations.volumeAdjusterRowHandles.selectedColor
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.rowVolumeAdjustmentTracker.selectedRowIndex]
         rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.selectedColor
+    }
+
+    shiftToolMouseMoveEventHandler(self, event){
+        console.log("shift tool mousemove. row index: " + self.shiftToolTracker.selectedRowIndex)
+        self.adjustEventCoordinates(event)
+        let mouseX = event.pageX
+        let mouseY = event.pageY
+        // do nothing yet
+        let circle = self.components.shapes.shiftToolRowHandles[self.shiftToolTracker.selectedRowIndex]
+        circle.stroke = 'black'
+        circle.linewidth = 2
+        circle.fill = self.configurations.shiftToolRowHandles.selectedColor
+        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.shiftToolTracker.selectedRowIndex]
+        rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.selectedColor
     }
 
     moveNotesModeMouseMoveEventHandler(self, event) {
@@ -2177,6 +2194,9 @@ class DrumMachineGui {
         }
         if (self.rowSelectionTracker.selectedRowIndex !== null) { // handle mousemove events when a row is being moved
             self.rowMovementWindowMouseMoveHandler(self, event);
+        }
+        if (self.shiftToolTracker.selectedRowIndex !== null) {
+            self.shiftToolMouseMoveEventHandler(self, event);
         }
     }
 
@@ -2354,10 +2374,14 @@ class DrumMachineGui {
         if (self.rowVolumeAdjustmentTracker.selectedRowIndex !== null) {
             self.rowVolumeAdjustmentWindowMouseUpHandler(self, event);
         }
+        if (self.shiftToolTracker.selectedRowIndex !== null) {
+            self.shiftToolMouseUpEventHandler(self, event);
+        }
         self.circleSelectionTracker.circleBeingMoved = null
         self.setNoteTrashBinVisibility(false)
         self.rowSelectionTracker.selectedRowIndex = null
         self.rowVolumeAdjustmentTracker.selectedRowIndex = null
+        self.shiftToolTracker.selectedRowIndex = null
     }
 
     rowVolumeAdjustmentWindowMouseUpHandler(self, event) {
@@ -2466,10 +2490,14 @@ class DrumMachineGui {
         if (self.rowVolumeAdjustmentTracker.selectedRowIndex !== null) {
             self.rowVolumeAdjustmentWindowMouseUpHandler(self, event);
         }
+        if (self.shiftToolTracker.selectedRowIndex !== null) {
+            self.shiftToolMouseUpEventHandler(self, event);
+        }
         self.circleSelectionTracker.circleBeingMoved = null
         self.setNoteTrashBinVisibility(false)
         self.rowSelectionTracker.selectedRowIndex = null
         self.rowVolumeAdjustmentTracker.selectedRowIndex = null
+        self.shiftToolTracker.selectedRowIndex = null
     }
 
     rowMovementWindowMouseUpHandler(self, event) {
@@ -2481,6 +2509,14 @@ class DrumMachineGui {
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
     }
+
+    shiftToolMouseUpEventHandler(self, event) {
+        console.log("shift tool mouseup. row index: " + self.shiftToolTracker.selectedRowIndex)
+        self.shiftToolTracker.selectedRowIndex = null
+        self.redrawSequencer();
+        self.saveCurrentSequencerStateToUrlHash();
+    }
+
 
     /**
      * GUI button icons
