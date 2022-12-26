@@ -2027,8 +2027,11 @@ class DrumMachineGui {
                 }
             }
         }
-        if (self.rowSelectionTracker.selectedRowIndex !== null) { // handle mousemove events when adjusting note volumes for a row
+        if (self.rowVolumeAdjustmentTracker.selectedRowIndex !== null) { // handle mousemove events when adjusting note volumes for a row
             self.rowVolumeAdjustmentWindowMouseMoveHandler(self, event)
+        }
+        if (self.rowSelectionTracker.selectedRowIndex !== null) {
+            self.rowMovementWindowMouseMoveHandler(self, event);
         }
     }
 
@@ -2036,14 +2039,14 @@ class DrumMachineGui {
         self.adjustEventCoordinates(event)
         let mouseX = event.pageX
         let mouseY = event.pageY
-        let mouseHasMoved = (mouseX !== self.rowSelectionTracker.rowHandleStartingPosition.x || mouseY !== self.rowSelectionTracker.rowHandleStartingPosition.y)
+        let mouseHasMoved = (mouseX !== self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.x || mouseY !== self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y)
         if (mouseHasMoved) {
-            let mouseMoveDistance = self.rowSelectionTracker.rowHandleStartingPosition.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
+            let mouseMoveDistance = self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
             let volumeAdjustmentAmount = mouseMoveDistance / self.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
             // iterate through every note in the row that we're adjusting volumes for. we already saved these to a list when we selected the row
-            for (let noteCircleIndex = 0; noteCircleIndex < this.rowSelectionTracker.noteCircles.length; noteCircleIndex++) {
-                let currentNoteCircle = this.rowSelectionTracker.noteCircles[noteCircleIndex];
-                let currentNoteCircleStartingRadius = this.rowSelectionTracker.noteCirclesStartingRadiuses[noteCircleIndex];
+            for (let noteCircleIndex = 0; noteCircleIndex < this.rowVolumeAdjustmentTracker.noteCircles.length; noteCircleIndex++) {
+                let currentNoteCircle = this.rowVolumeAdjustmentTracker.noteCircles[noteCircleIndex];
+                let currentNoteCircleStartingRadius = this.rowVolumeAdjustmentTracker.noteCirclesStartingRadiuses[noteCircleIndex];
                 currentNoteCircle.radius = Util.confineNumberToBounds(currentNoteCircleStartingRadius + volumeAdjustmentAmount, self.configurations.notes.volumes.minimumCircleRadius, self.configurations.notes.volumes.maximumCircleRadius);
                 currentNoteCircle.guiData.radiusWhenUnplayed = currentNoteCircle.radius;
                 let newVolume = self.calculateVolumeForCircleRadius(currentNoteCircle.radius);
@@ -2051,19 +2054,19 @@ class DrumMachineGui {
                 currentNoteCircle.guiData.midiVelocity = self.convertWebAudioVolumeIntoMidiVelocity(newVolume);
                 // replace the node in the sequencer data structure with an identical note that has the new volume we have set the note to.
                 // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
-                let node = self.sequencer.rows[self.rowSelectionTracker.selectedRowIndex].removeNode(currentNoteCircle.guiData.label);
+                let node = self.sequencer.rows[self.rowVolumeAdjustmentTracker.selectedRowIndex].removeNode(currentNoteCircle.guiData.label);
                 node.data.volume = currentNoteCircle.guiData.volume;
                 node.data.midiVelocity = currentNoteCircle.guiData.midiVelocity;
-                self.sequencer.rows[self.rowSelectionTracker.selectedRowIndex].insertNode(node, currentNoteCircle.guiData.label);
+                self.sequencer.rows[self.rowVolumeAdjustmentTracker.selectedRowIndex].insertNode(node, currentNoteCircle.guiData.label);
             }
             // we will save the sequencer state to the URL in the 'mouse up' event instead of here, for performance reasons
         }
-        let circle = self.components.shapes.sequencerRowHandles[self.rowSelectionTracker.selectedRowIndex]
+        let circle = self.components.shapes.volumeAdjusterRowHandles[self.rowVolumeAdjustmentTracker.selectedRowIndex]
         circle.stroke = 'black'
         circle.linewidth = 2
-        circle.fill = self.configurations.sequencerRowHandles.selectedColor
-        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.rowSelectionTracker.selectedRowIndex]
-        rowSelectionRectangle.stroke = self.configurations.sequencerRowHandles.selectedColor
+        circle.fill = self.configurations.volumeAdjusterRowHandles.selectedColor
+        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.rowVolumeAdjustmentTracker.selectedRowIndex]
+        rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.selectedColor
     }
 
     moveNotesModeMouseMoveEventHandler(self, event) {
@@ -2148,6 +2151,9 @@ class DrumMachineGui {
                     self.components.shapes.noteTrashBinContainer.stroke = 'red'
                 }
             }
+        }
+        if (self.rowVolumeAdjustmentTracker.selectedRowIndex !== null) { // handle mousemove events when adjusting note volumes for a row
+            self.rowVolumeAdjustmentWindowMouseMoveHandler(self, event)
         }
         if (self.rowSelectionTracker.selectedRowIndex !== null) { // handle mousemove events when a row is being moved
             self.rowMovementWindowMouseMoveHandler(self, event);
@@ -2323,12 +2329,19 @@ class DrumMachineGui {
             self.setNoteTrashBinVisibility(false)
         }
         if (self.rowSelectionTracker.selectedRowIndex !== null) {
+            self.rowMovementWindowMouseUpHandler(self, event);
+        }
+        if (self.rowVolumeAdjustmentTracker.selectedRowIndex !== null) {
             self.rowVolumeAdjustmentWindowMouseUpHandler(self, event);
         }
+        self.circleSelectionTracker.circleBeingMoved = null
+        self.setNoteTrashBinVisibility(false)
+        self.rowSelectionTracker.selectedRowIndex = null
+        self.rowVolumeAdjustmentTracker.selectedRowIndex = null
     }
 
     rowVolumeAdjustmentWindowMouseUpHandler(self, event) {
-        self.rowSelectionTracker.selectedRowIndex = null
+        self.rowVolumeAdjustmentTracker.selectedRowIndex = null
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
     }
@@ -2430,9 +2443,13 @@ class DrumMachineGui {
         if (self.rowSelectionTracker.selectedRowIndex !== null) {
             self.rowMovementWindowMouseUpHandler(self, event);
         }
+        if (self.rowVolumeAdjustmentTracker.selectedRowIndex !== null) {
+            self.rowVolumeAdjustmentWindowMouseUpHandler(self, event);
+        }
         self.circleSelectionTracker.circleBeingMoved = null
         self.setNoteTrashBinVisibility(false)
         self.rowSelectionTracker.selectedRowIndex = null
+        self.rowVolumeAdjustmentTracker.selectedRowIndex = null
     }
 
     rowMovementWindowMouseUpHandler(self, event) {
