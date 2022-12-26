@@ -7,6 +7,8 @@ class DrumMachineGui {
     static get NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW() { return -1 }
     static get NOTE_ROW_NUMBER_FOR_NOTE_BANK() { return -2 }
     static get NOTE_ROW_NUMBER_FOR_TRASH_BIN() { return -3 }
+    // create constants that will denote special sequencer 'priority' values
+    static get NOTE_PRIORITY_FOR_NOTE_BANK() { return -4 } // the 'priority' a note will be given as a placeholder if it is still in the note bank.
     // create constants that will be used to denote sequencer modes
     static get MOVE_NOTES_MODE() { return "MOVE_NOTES_MODE" }
     static get CHANGE_NOTE_VOLUMES_MODE() { return "CHANGE_NOTE_VOLUMES_MODE" }
@@ -96,6 +98,8 @@ class DrumMachineGui {
             },
             selectedRowIndex: null,
             noteCircles: [],
+            noteCirclesStartingPriorities: [],
+            noteCirclesStartingBeats: [],
             rowHandleStartingPosition: {
                 x: null,
                 y: null,
@@ -440,11 +444,17 @@ class DrumMachineGui {
         // do nothing for now
         this.shiftToolTracker.selectedRowIndex = rowIndex;
         this.shiftToolTracker.noteCircles = [];
+        this.shiftToolTracker.noteCirclesStartingPriorities = [];
+        this.shiftToolTracker.noteCirclesStartingBeats = [];
         for (let circle of this.allDrawnCircles) {
             if (circle.guiData.row === rowIndex) {
                 this.shiftToolTracker.noteCircles.push(circle)
+                this.shiftToolTracker.noteCirclesStartingPriorities.push(circle.guiData.priority);
+                this.shiftToolTracker.noteCirclesStartingBeats.push(circle.guiData.beat);
             }
         }
+        console.log(this.shiftToolTracker.noteCirclesStartingPriorities);
+        console.log(this.shiftToolTracker.noteCirclesStartingBeats);
         this.shiftToolTracker.rowHandleStartingPosition.x = this.components.shapes.shiftToolRowHandles[rowIndex].translation.x
         this.shiftToolTracker.rowHandleStartingPosition.y = this.components.shapes.shiftToolRowHandles[rowIndex].translation.y
         // update visuals
@@ -1724,7 +1734,7 @@ class DrumMachineGui {
     // create a new circle (i.e. note) on the screen, with the specified x and y position. color is determined by sample name. 
     // values given for sample name, label, and row number are stored in the circle object to help the GUI keep track of things.
     // add the newly created circle to the list of all drawn cricles.
-    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume, midiNote, midiVelocity) {
+    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, priority, beat, volume, midiNote, midiVelocity) {
         // initialize the new circle and set its colors
         let circle = this.two.makeCircle(xPosition, yPosition, this.configurations.notes.circleRadiusUsedForNoteBankSpacing)
         circle.fill = this.samples[sampleName].color
@@ -1775,6 +1785,7 @@ class DrumMachineGui {
         circle.guiData.sampleName = sampleName
         circle.guiData.row = row
         circle.guiData.label = label
+        circle.guiData.priority = priority
         circle.guiData.beat = beat
         circle.guiData.volume = volume
         circle.guiData.midiVelocity = midiVelocity;
@@ -1798,6 +1809,7 @@ class DrumMachineGui {
         let xPosition = this.configurations.sampleBank.left + this.configurations.sampleBank.borderPadding + (this.configurations.notes.circleRadiusUsedForNoteBankSpacing / 2)
         let yPosition = this.configurations.sampleBank.top + this.configurations.sampleBank.borderPadding + (indexOfSampleInNoteBank * this.configurations.notes.circleRadiusUsedForNoteBankSpacing) + (indexOfSampleInNoteBank * this.configurations.sampleBank.spaceBetweenNotes)
         let row = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOTE_BANK // for cirlces on the note bank, the circle is not in a real row yet, so use -2 as a placeholder row number
+        let priority = DrumMachineGui.NOTE_PRIORITY_FOR_NOTE_BANK // for cirlces on the note bank, the circle is not in a real row yet, so is not scheduled. so use this constant as a placeholder priorty.
         let volume = this.noteBankNoteVolumesTracker[sampleName].volume
         let midiNote = this.noteBankMidiNoteNumbersTracker[sampleName].midiNote
         let midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(volume)
@@ -1808,7 +1820,7 @@ class DrumMachineGui {
          * bank circle is taken fom the note bank and placed onto a real row.
          */
         let label = (indexOfSampleInNoteBank + 1) * -1 // see block comment above for info about '-1' here
-        this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, Sequencer.NOTE_IS_NOT_QUANTIZED, volume, midiNote, midiVelocity)
+        this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, priority, Sequencer.NOTE_IS_NOT_QUANTIZED, volume, midiNote, midiVelocity)
     }
 
     drawAllNoteBankCircles(){
@@ -1828,6 +1840,7 @@ class DrumMachineGui {
                 let sampleName = noteToDraw.data.sampleName
                 let row = sequencerRowIndex
                 let label = noteToDraw.label
+                let priority = noteToDraw.priority
                 let beat = noteToDraw.data.beat
                 let volume = noteToDraw.data.volume
                 if (volume === null || volume === undefined) {
@@ -1840,7 +1853,7 @@ class DrumMachineGui {
                     midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(volume)
                     noteToDraw.data.midiVelocity = midiVelocity
                 }
-                this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume, midiNote, midiVelocity)
+                this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, priority, beat, volume, midiNote, midiVelocity)
                 noteToDraw = noteToDraw.next
             }
         }
@@ -2067,9 +2080,9 @@ class DrumMachineGui {
             let mouseMoveDistance = self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
             let volumeAdjustmentAmount = mouseMoveDistance / self.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
             // iterate through every note in the row that we're adjusting volumes for. we already saved these to a list when we selected the row
-            for (let noteCircleIndex = 0; noteCircleIndex < this.rowVolumeAdjustmentTracker.noteCircles.length; noteCircleIndex++) {
-                let currentNoteCircle = this.rowVolumeAdjustmentTracker.noteCircles[noteCircleIndex];
-                let currentNoteCircleStartingRadius = this.rowVolumeAdjustmentTracker.noteCirclesStartingRadiuses[noteCircleIndex];
+            for (let noteCircleIndex = 0; noteCircleIndex < self.rowVolumeAdjustmentTracker.noteCircles.length; noteCircleIndex++) {
+                let currentNoteCircle = self.rowVolumeAdjustmentTracker.noteCircles[noteCircleIndex];
+                let currentNoteCircleStartingRadius = self.rowVolumeAdjustmentTracker.noteCirclesStartingRadiuses[noteCircleIndex];
                 currentNoteCircle.radius = Util.confineNumberToBounds(currentNoteCircleStartingRadius + volumeAdjustmentAmount, self.configurations.notes.volumes.minimumCircleRadius, self.configurations.notes.volumes.maximumCircleRadius);
                 currentNoteCircle.guiData.radiusWhenUnplayed = currentNoteCircle.radius;
                 let newVolume = self.calculateVolumeForCircleRadius(currentNoteCircle.radius);
@@ -2097,7 +2110,26 @@ class DrumMachineGui {
         self.adjustEventCoordinates(event)
         let mouseX = event.pageX
         let mouseY = event.pageY
-        // do nothing yet
+        let mouseHasMoved = (mouseX !== self.shiftToolTracker.rowHandleStartingPosition.x || mouseY !== self.shiftToolTracker.rowHandleStartingPosition.y)
+        if (mouseHasMoved) {
+            let mouseMoveDistance = self.shiftToolTracker.rowHandleStartingPosition.x - mouseX; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
+            if (self.shiftToolTracker.resourcesToShift.notes) { // start with adjusting note positions
+                if (self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized) { // handle note shifting for when the row is quantized
+                    // for now don't do anything, we will implement this later.
+                    console.log("row shift tool -- shift quantized notes logic placeholder. do nothing")
+                } else { // handle note shifting for when the row is not quantized
+                    for (let noteCircleIndex = 0; noteCircleIndex < self.shiftToolTracker.noteCircles.length; noteCircleIndex++) {
+                        let currentNoteCircle = self.shiftToolTracker.noteCircles[noteCircleIndex];
+                        // todo: update the priority of the node
+                        // ...
+                        // replace the node in the sequencer data structure with an identical note that has the new priority (time) we have set the note to.
+                        // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
+                        let node = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].removeNode(currentNoteCircle.guiData.label);
+                        self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].insertNode(node, currentNoteCircle.guiData.label);
+                    }
+                }
+            }
+        }
         let circle = self.components.shapes.shiftToolRowHandles[self.shiftToolTracker.selectedRowIndex]
         circle.stroke = 'black'
         circle.linewidth = 2
@@ -2481,6 +2513,7 @@ class DrumMachineGui {
                 node.data.midiVelocity = self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity;
                 node.data.midiNote = self.circleSelectionTracker.circleBeingMoved.guiData.midiNote;
                 self.circleSelectionTracker.circleBeingMoved.guiData.beat = circleNewBeatNumber
+                self.circleSelectionTracker.circleBeingMoved.guiData.priority = newNodeTimestampMillis
             }
             self.saveCurrentSequencerStateToUrlHash();
         }
