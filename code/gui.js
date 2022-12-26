@@ -96,7 +96,7 @@ class DrumMachineGui {
             },
             selectedRowIndex: null,
             noteCircles: [],
-            noteCirclesStartingBeats: [],
+            noteCirclesStartingPositions: [],
             rowHandleStartingPosition: {
                 x: null,
                 y: null,
@@ -441,11 +441,10 @@ class DrumMachineGui {
         // do nothing for now
         this.shiftToolTracker.selectedRowIndex = rowIndex;
         this.shiftToolTracker.noteCircles = [];
-        this.shiftToolTracker.noteCirclesStartingBeats = [];
         for (let circle of this.allDrawnCircles) {
             if (circle.guiData.row === rowIndex) {
                 this.shiftToolTracker.noteCircles.push(circle)
-                this.shiftToolTracker.noteCirclesStartingBeats.push(circle.guiData.beat);
+                this.shiftToolTracker.noteCirclesStartingPositions.push(circle.translation.x)
             }
         }
         this.shiftToolTracker.rowHandleStartingPosition.x = this.components.shapes.shiftToolRowHandles[rowIndex].translation.x
@@ -2110,12 +2109,15 @@ class DrumMachineGui {
                 } else { // handle note shifting for when the row is not quantized
                     for (let noteCircleIndex = 0; noteCircleIndex < self.shiftToolTracker.noteCircles.length; noteCircleIndex++) {
                         let currentNoteCircle = self.shiftToolTracker.noteCircles[noteCircleIndex];
+                        let newNoteXPosition = self.configurations.sequencer.left + (self.shiftToolTracker.noteCirclesStartingPositions[noteCircleIndex] + mouseMoveDistance) % self.configurations.sequencer.width;
+                        currentNoteCircle.translation.x = newNoteXPosition; 
+                        console.log("new circle position: " + newNoteXPosition)
+                        // todo: calculate actual priority based on position, and update it in the node
+                        // ...
                         // replace the node in the sequencer data structure with an identical note that has the new priority (time) we have set the note to.
                         // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
                         let node = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].removeNode(currentNoteCircle.guiData.label);
                         self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].insertNode(node, currentNoteCircle.guiData.label);
-                        // calculate the note's new position based on its priority
-                        let xPosition = self.sequencer.loopLengthInMillis * ((circleNewXPosition - self.configurations.sequencer.left) / self.configurations.sequencer.width)
                     }
                 }
             }
