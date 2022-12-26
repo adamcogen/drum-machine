@@ -1070,7 +1070,7 @@ class DrumMachineGui {
     initializeShiftToolToggleButtonActionListeners() {
         this.components.shapes.shiftModeMoveNotesButton._renderer.elem.addEventListener('click', () => {
             this.shiftToolTracker.resourcesToShift.notes = !this.shiftToolTracker.resourcesToShift.notes
-            if (this.shiftToolTracker.notes) {
+            if (this.shiftToolTracker.resourcesToShift.notes) {
                 // move notes
                 this.components.shapes.shiftModeMoveNotesButton.fill = this.configurations.buttonBehavior.clickedButtonColor
             } else {
