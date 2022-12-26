@@ -2323,10 +2323,14 @@ class DrumMachineGui {
             self.setNoteTrashBinVisibility(false)
         }
         if (self.rowSelectionTracker.selectedRowIndex !== null) {
-            self.rowSelectionTracker.selectedRowIndex = null
-            self.redrawSequencer();
-            self.saveCurrentSequencerStateToUrlHash();
+            self.rowVolumeAdjustmentWindowMouseUpHandler(self, event);
         }
+    }
+
+    rowVolumeAdjustmentWindowMouseUpHandler(self, event) {
+        self.rowSelectionTracker.selectedRowIndex = null
+        self.redrawSequencer();
+        self.saveCurrentSequencerStateToUrlHash();
     }
 
     moveNotesModeMouseUpEventHandler(self, event) {
@@ -2424,17 +2428,21 @@ class DrumMachineGui {
             self.saveCurrentSequencerStateToUrlHash();
         }
         if (self.rowSelectionTracker.selectedRowIndex !== null) {
-            // un-selecting the row will be handled in 'redraw', as long as we set selected row index to null here
-            if (self.rowSelectionTracker.removeRow) {
-                self.sequencer.removeRowAtIndex(self.rowSelectionTracker.selectedRowIndex);
-            }
-            self.rowSelectionTracker.selectedRowIndex = null
-            self.redrawSequencer();
-            self.saveCurrentSequencerStateToUrlHash();
+            self.rowMovementWindowMouseUpHandler(self, event);
         }
         self.circleSelectionTracker.circleBeingMoved = null
         self.setNoteTrashBinVisibility(false)
         self.rowSelectionTracker.selectedRowIndex = null
+    }
+
+    rowMovementWindowMouseUpHandler(self, event) {
+        // un-selecting the row will be handled in 'redraw', as long as we set selected row index to null here
+        if (self.rowSelectionTracker.removeRow) {
+            self.sequencer.removeRowAtIndex(self.rowSelectionTracker.selectedRowIndex);
+        }
+        self.rowSelectionTracker.selectedRowIndex = null
+        self.redrawSequencer();
+        self.saveCurrentSequencerStateToUrlHash();
     }
 
     /**
