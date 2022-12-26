@@ -2103,25 +2103,29 @@ class DrumMachineGui {
         if (mouseHasMoved) {
             let mouseMoveDistance = self.shiftToolTracker.rowHandleStartingPosition.x - mouseX; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
             if (self.shiftToolTracker.resourcesToShift.notes) { // start with adjusting note positions
-                if (self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized) { // handle note shifting for when the row is quantized
-                    // for now don't do anything, we will implement this later.
-                    console.log("row shift tool -- shift quantized notes logic placeholder. do nothing")
-                } else { // handle note shifting for when the row is not quantized
-                    for (let noteCircleIndex = 0; noteCircleIndex < self.shiftToolTracker.noteCircles.length; noteCircleIndex++) {
-                        let currentNoteCircle = self.shiftToolTracker.noteCircles[noteCircleIndex];
-                        let noteXPositionAdjustedForSequencerLeftEdge = (self.shiftToolTracker.noteCirclesStartingPositions[noteCircleIndex] - self.configurations.sequencer.left - mouseMoveDistance) % self.configurations.sequencer.width;
-                        if (noteXPositionAdjustedForSequencerLeftEdge < 0) { // wrap negative values back to the other end of the sequencer
-                            noteXPositionAdjustedForSequencerLeftEdge = self.configurations.sequencer.width + noteXPositionAdjustedForSequencerLeftEdge
-                        }
-                        let newNoteXPosition = self.configurations.sequencer.left + noteXPositionAdjustedForSequencerLeftEdge
-                        currentNoteCircle.translation.x = newNoteXPosition; 
-                        // replace the node in the sequencer data structure with an identical note that has the new priority (time) we have set the note to.
-                        // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
-                        let node = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].removeNode(currentNoteCircle.guiData.label);
-                        let newNodeTimestampMillis = self.sequencer.loopLengthInMillis * ((newNoteXPosition - self.configurations.sequencer.left) / self.configurations.sequencer.width)
-                        node.priority = newNodeTimestampMillis;
-                        self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].insertNode(node, currentNoteCircle.guiData.label);
+                for (let noteCircleIndex = 0; noteCircleIndex < self.shiftToolTracker.noteCircles.length; noteCircleIndex++) {
+                    let currentNoteCircle = self.shiftToolTracker.noteCircles[noteCircleIndex];
+                    let noteXPositionAdjustedForSequencerLeftEdge = (self.shiftToolTracker.noteCirclesStartingPositions[noteCircleIndex] - self.configurations.sequencer.left - mouseMoveDistance) % self.configurations.sequencer.width;
+                    if (noteXPositionAdjustedForSequencerLeftEdge < 0) { // wrap negative values back to the other end of the sequencer
+                        noteXPositionAdjustedForSequencerLeftEdge = self.configurations.sequencer.width + noteXPositionAdjustedForSequencerLeftEdge
                     }
+                    let newNoteXPosition = self.configurations.sequencer.left + noteXPositionAdjustedForSequencerLeftEdge
+                    let newNoteBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED;
+                    if (self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized) { // handle note shifting for when the row is quantized
+                        // determine which subdivision we are closest to
+                        newNoteBeatNumber = self.getIndexOfClosestSubdivisionLine(newNoteXPosition, self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].getNumberOfSubdivisions())
+                        newNoteXPosition = self.getXPositionOfSubdivisionLine(newNoteBeatNumber, self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].getNumberOfSubdivisions())
+                        newNoteXPosition = newNoteXPosition // todo: calculate this value to account for quantization
+                    }
+                    currentNoteCircle.translation.x = newNoteXPosition; 
+                    currentNoteCircle.guiData.beat = newNoteBeatNumber;
+                    // replace the node in the sequencer data structure with an identical note that has the new priority (time) we have set the note to.
+                    // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
+                    let node = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].removeNode(currentNoteCircle.guiData.label);
+                    let newNodeTimestampMillis = self.sequencer.loopLengthInMillis * ((newNoteXPosition - self.configurations.sequencer.left) / self.configurations.sequencer.width)
+                    node.priority = newNodeTimestampMillis;
+                    node.data.beat = newNoteBeatNumber;
+                    self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].insertNode(node, currentNoteCircle.guiData.label);
                 }
             }
         }
