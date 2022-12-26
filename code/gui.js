@@ -88,6 +88,21 @@ class DrumMachineGui {
             }
         }
 
+        // this object will keep track of which resources (out of notes, reference lines, and subdivision lines) should currently be moved by the shift tool.
+        this.shiftToolTracker = {
+            resourcesToShift: {
+                notes: false,
+                subdivisionLines: false,
+                referenceLines: false,
+            },
+            selectedRowIndex: null,
+            noteCircles: [],
+            rowHandleStartingPosition: {
+                x: null,
+                y: null,
+            }
+        }
+
         this.noteBankNoteVolumesTracker = {}
         for (let sampleName of this.sampleNameList) {
             this.noteBankNoteVolumesTracker[sampleName] = {
@@ -109,15 +124,6 @@ class DrumMachineGui {
 
         // keep a list of all the circles (i.e. notes) that have been drawn on the screen
         this.allDrawnCircles = []
-
-        // this object will keep track of which resources (out of notes, reference lines, and subdivision lines) should currently be moved by the shift tool.
-        this.shiftToolTracker = {
-            resourcesToShift: {
-                notes: false,
-                subdivisionLines: false,
-                referenceLines: false,
-            }
-        }
 
         this.initializeShiftToolToggleButtonActionListeners();
         this.initializeMidiOutputSelectorActionListeners();
@@ -433,6 +439,22 @@ class DrumMachineGui {
 
     initializeRowShiftToolVariablesAndVisuals(rowIndex) {
         // do nothing for now
+        this.shiftToolTracker.selectedRowIndex = rowIndex;
+        this.shiftToolTracker.noteCircles = [];
+        for (let circle of this.allDrawnCircles) {
+            if (circle.guiData.row === rowIndex) {
+                this.shiftToolTracker.noteCircles.push(circle)
+            }
+        }
+        this.shiftToolTracker.rowHandleStartingPosition.x = this.components.shapes.shiftToolRowHandles[rowIndex].translation.x
+        this.shiftToolTracker.rowHandleStartingPosition.y = this.components.shapes.shiftToolRowHandles[rowIndex].translation.y
+        // update visuals
+        let circle = this.components.shapes.shiftToolRowHandles[rowIndex]
+        circle.stroke = 'black'
+        circle.linewidth = 2
+        circle.fill = this.configurations.shiftToolRowHandles.selectedColor
+        let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
+        rowSelectionRectangle.stroke = this.configurations.shiftToolRowHandles.selectedColor
     }
 
     /**
