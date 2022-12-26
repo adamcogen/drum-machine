@@ -88,9 +88,8 @@ class DrumMachineGui {
             }
         }
 
-        // this object will keep track of which resources (out of notes, reference lines, and subdivision lines) should currently be moved by the shift tool.
         this.shiftToolTracker = {
-            resourcesToShift: {
+            resourcesToShift: { // this object will keep track of which resources (out of notes, reference lines, and subdivision lines) should currently be moved by the shift tool.
                 notes: false,
                 subdivisionLines: false,
                 referenceLines: false,
