@@ -111,10 +111,12 @@ class DrumMachineGui {
         this.allDrawnCircles = []
 
         // this object will keep track of which resources (out of notes, reference lines, and subdivision lines) should currently be moved by the shift tool.
-        this.shiftModeTracker = {
-            notes: false,
-            subdivisionLines: false,
-            referenceLines: false,
+        this.shiftToolTracker = {
+            resourcesToShift: {
+                notes: false,
+                subdivisionLines: false,
+                referenceLines: false,
+            }
         }
 
         this.initializeShiftToolToggleButtonActionListeners();
@@ -1046,8 +1048,8 @@ class DrumMachineGui {
     // there is one button each for: notes, subdivision lines, and refernce lines.
     initializeShiftToolToggleButtonActionListeners() {
         this.components.shapes.shiftModeMoveNotesButton._renderer.elem.addEventListener('click', () => {
-            this.shiftModeTracker.notes = !this.shiftModeTracker.notes
-            if (this.shiftModeTracker.notes) {
+            this.shiftToolTracker.resourcesToShift.notes = !this.shiftToolTracker.resourcesToShift.notes
+            if (this.shiftToolTracker.notes) {
                 // move notes
                 this.components.shapes.shiftModeMoveNotesButton.fill = this.configurations.buttonBehavior.clickedButtonColor
             } else {
@@ -1057,8 +1059,8 @@ class DrumMachineGui {
             this.redrawSequencer(); // redraw sequencer so we can show or hide the 'shift' tool row handles if necessary
         });
         this.components.shapes.shiftModeMoveSubdivisionLinesButton._renderer.elem.addEventListener('click', () => {
-            this.shiftModeTracker.subdivisionLines = !this.shiftModeTracker.subdivisionLines
-            if (this.shiftModeTracker.subdivisionLines) {
+            this.shiftToolTracker.resourcesToShift.subdivisionLines = !this.shiftToolTracker.resourcesToShift.subdivisionLines
+            if (this.shiftToolTracker.resourcesToShift.subdivisionLines) {
                 // move subdivision lines
                 this.components.shapes.shiftModeMoveSubdivisionLinesButton.fill = this.configurations.buttonBehavior.clickedButtonColor
             } else {
@@ -1068,8 +1070,8 @@ class DrumMachineGui {
             this.redrawSequencer(); // redraw sequencer so we can show or hide the 'shift' tool row handles if necessary
         });
         this.components.shapes.shiftModeMoveReferenceLinesButton._renderer.elem.addEventListener('click', () => {
-            this.shiftModeTracker.referenceLines = !this.shiftModeTracker.referenceLines
-            if (this.shiftModeTracker.referenceLines) {
+            this.shiftToolTracker.resourcesToShift.referenceLines = !this.shiftToolTracker.resourcesToShift.referenceLines
+            if (this.shiftToolTracker.resourcesToShift.referenceLines) {
                 // move reference lines
                 this.components.shapes.shiftModeMoveReferenceLinesButton.fill = this.configurations.buttonBehavior.clickedButtonColor
             } else {
@@ -1922,7 +1924,7 @@ class DrumMachineGui {
         this.drawAllNoteBankCircles();
         this.drawNotesToReflectSequencerCurrentState();
         // only draw shift tool row handles if the shift tool is active (as in, if any resources are selected for use with the shift tool)
-        let shiftToolIsActivated = this.shiftModeTracker.notes || this.shiftModeTracker.referenceLines || this.shiftModeTracker.subdivisionLines
+        let shiftToolIsActivated = this.shiftToolTracker.resourcesToShift.notes || this.shiftToolTracker.resourcesToShift.referenceLines || this.shiftToolTracker.resourcesToShift.subdivisionLines
         if (shiftToolIsActivated) {
             this.components.shapes.shiftToolRowHandles = this.initializeCirclesPerSequencerRow(this.configurations.shiftToolRowHandles.leftPadding, this.configurations.shiftToolRowHandles.topPadding, this.configurations.shiftToolRowHandles.radius, this.configurations.shiftToolRowHandles.unselectedColor)
         }
