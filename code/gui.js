@@ -350,17 +350,10 @@ class DrumMachineGui {
         this.rowSelectionTracker.removeRow = false // start this out false until we move the row around (i.e. into the trash bin)
         // save a list, of all the shapes that are associated with the selected row.
         // we are saving this list so that we can move them all as we move the row around.
-        // at the same time, also save the note circles to a list of note circles specifically. this is so that we can perform
-        // operations on all the notes in a row if we want to (such as changing all their volumes at the same time).
-        // also track the starting radius of each circle on the row. this will also be used in adjusting note volumes for the row.
         this.rowSelectionTracker.shapes = [];
-        this.rowSelectionTracker.noteCircles = [];
-        this.rowSelectionTracker.noteCirclesStartingRadiuses = [];
         for (let circle of this.allDrawnCircles) {
             if (circle.guiData.row === rowIndex) {
                 this.rowSelectionTracker.shapes.push(circle)
-                this.rowSelectionTracker.noteCircles.push(circle)
-                this.rowSelectionTracker.noteCirclesStartingRadiuses.push(circle.guiData.radiusWhenUnplayed)
             }
         }
         this.rowSelectionTracker.shapes.push(...this.components.shapes.subdivisionLineLists[rowIndex])
@@ -434,6 +427,10 @@ class DrumMachineGui {
         circle.fill = this.configurations.volumeAdjusterRowHandles.selectedColor
         let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
         rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.selectedColor
+    }
+
+    initializeRowShiftToolVariablesAndVisuals(rowIndex) {
+        // do nothing for now
     }
 
     /**
@@ -808,7 +805,7 @@ class DrumMachineGui {
             // we will de-select it later whenever you lift your mouse.
             circle._renderer.elem.addEventListener('mousedown', () => {
                 // save relevant info about whichever row is selected
-                this.initializeRowMovementVariablesAndVisuals(rowIndex);
+                this.initializeRowShiftToolVariablesAndVisuals(rowIndex);
             });
             // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
             // because if we implement snap-into-place for sequencer rows, the row handle may not actually
