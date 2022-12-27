@@ -2109,15 +2109,26 @@ class DrumMachineGui {
                     if (noteXPositionAdjustedForSequencerLeftEdge < 0) { // wrap negative values back to the other end of the sequencer
                         noteXPositionAdjustedForSequencerLeftEdge = self.configurations.sequencer.width + noteXPositionAdjustedForSequencerLeftEdge
                     }
-                    let newNoteXPosition = self.configurations.sequencer.left + noteXPositionAdjustedForSequencerLeftEdge
-                    let newNoteBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED;
+                    let newNoteXPosition;
+                    let newNoteBeatNumber;
                     if (self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized) { // handle note shifting for when the row is quantized
-                        // determine which subdivision we are closest to
-                        newNoteBeatNumber = self.getIndexOfClosestSubdivisionLine(newNoteXPosition, self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].getNumberOfSubdivisions())
-                        newNoteXPosition = self.getXPositionOfSubdivisionLine(newNoteBeatNumber, self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].getNumberOfSubdivisions())
-                        newNoteXPosition = newNoteXPosition // todo: calculate this value to account for quantization
+                        // determine which subdivision we are closest to. this logic is mostly adapted from the Sequencer.setQuantization method with some modificaions.
+                        let integerSequencerWidthInPixels = Math.round(self.configurations.sequencer.width); // this will probably be a round number anyway, but see SequencerRow.setQuantization method comments for context here
+                        let numberOfSubdivisionsInRow = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].getNumberOfSubdivisions();
+                        let widthOfEachBeatInPixels = integerSequencerWidthInPixels / numberOfSubdivisionsInRow
+                        let numberOfBeatsBeforeNote = Math.floor(noteXPositionAdjustedForSequencerLeftEdge / widthOfEachBeatInPixels)
+                        let noteIsCloserToRightBeatThanLeft = (noteXPositionAdjustedForSequencerLeftEdge % widthOfEachBeatInPixels) > (widthOfEachBeatInPixels / 2);
+                        let closestBeat = numberOfBeatsBeforeNote
+                        if (noteIsCloserToRightBeatThanLeft) {
+                            closestBeat += 1;
+                        }
+                        newNoteBeatNumber = closestBeat % numberOfSubdivisionsInRow;
+                        newNoteXPosition = self.getXPositionOfSubdivisionLine(newNoteBeatNumber, numberOfSubdivisionsInRow)
+                    } else { // handle note shifting for when the row is _not_ quantized 
+                        newNoteXPosition = self.configurations.sequencer.left + noteXPositionAdjustedForSequencerLeftEdge
+                        newNoteBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED;
                     }
-                    currentNoteCircle.translation.x = newNoteXPosition; 
+                    currentNoteCircle.translation.x = newNoteXPosition;
                     currentNoteCircle.guiData.beat = newNoteBeatNumber;
                     // replace the node in the sequencer data structure with an identical note that has the new priority (time) we have set the note to.
                     // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
