@@ -577,7 +577,7 @@ class SequencerRow {
     }
 
     setReferenceLineShiftMilliseconds(milliseconds) {
-        this.referenseLineShiftInMilliseconds = milliseconds;
+        this.referenceLineShiftInMilliseconds = milliseconds;
     }
 
     getReferenceLineShiftInMilliseconds() {
