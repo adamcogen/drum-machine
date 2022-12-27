@@ -27,7 +27,7 @@ class DrumMachineGui {
 
         this.currentGuiMode = DrumMachineGui.MOVE_NOTES_MODE; // start the GUI in 'move notes' mode
 
-        this.referenceLinesShiftInPixelsPerRow = []; // save us some calculation time by keeping track of the shift value for reference lines in pixels (they're stored elsewhere as milliseconds)
+        this.referenceLinesShiftInPixelsPerRow = []; // save us some calculation time later by keeping track of the shift value for reference lines in pixels (they're stored everywhere else as milliseconds only)
         this.initializeReferenceLinesShiftPixelsTracker();
 
         this.components.shapes = this.initializeGuiShapes();
@@ -100,7 +100,7 @@ class DrumMachineGui {
             selectedRowIndex: null,
             noteCircles: [],
             noteCirclesStartingPositions: [],
-            referenseLinesStartingShiftInPixels: 0,
+            referenceLinesStartingShiftInPixels: 0,
             rowHandleStartingPosition: {
                 x: null,
                 y: null,
@@ -452,6 +452,7 @@ class DrumMachineGui {
                 this.shiftToolTracker.noteCirclesStartingPositions.push(circle.translation.x)
             }
         }
+        this.shiftToolTracker.referenceLinesStartingShiftInPixels = this.referenceLinesShiftInPixelsPerRow[rowIndex];
         this.shiftToolTracker.rowHandleStartingPosition.x = this.components.shapes.shiftToolRowHandles[rowIndex].translation.x
         this.shiftToolTracker.rowHandleStartingPosition.y = this.components.shapes.shiftToolRowHandles[rowIndex].translation.y
         // update visuals
@@ -474,8 +475,8 @@ class DrumMachineGui {
         for (let rowIndex = 0; rowIndex < this.sequencer.numberOfRows; rowIndex++) {
             // convert shift in millis to pixels
             let shiftInMillis = this.sequencer.rows[rowIndex].getReferenceLineShiftInMilliseconds();
-            let shiftPercentageOfLoopInMillis = shiftInMillis / this.sequencer.loopLengthInMillis;
-            let shiftInPixels = shiftPercentageOfLoopInMillis * this.configurations.sequencer.width;
+            let shiftAsPercentageOfFullLoop = shiftInMillis / this.sequencer.loopLengthInMillis;
+            let shiftInPixels = shiftAsPercentageOfFullLoop * this.configurations.sequencer.width;
             // store shift in pixels to a tracker object for quick access elsewhere
             this.referenceLinesShiftInPixelsPerRow.push(shiftInPixels);
         }
@@ -499,10 +500,7 @@ class DrumMachineGui {
     }
 
     initializeReferenceLinesForRow(rowIndex) {
-        // let shiftInMilliseconds = 30; // hard-code a shift value for now, for debugging the shift tool
-        // let referenceLineBeatWidthInMillis = this.sequencer.loopLengthInMillis / this.sequencer.rows[rowIndex].getNumberOfReferenceLines()
-        // shiftInMilliseconds = referenceLineBeatWidthInMillis % shiftInMilliseconds;
-        let shiftInPixels = this.referenceLinesShiftInPixelsPerRow[rowIndex];
+        let shiftInPixelsForRow = this.referenceLinesShiftInPixelsPerRow[rowIndex];
         let referenceLinesForRow = []
         if (this.sequencer.rows[rowIndex].getNumberOfReferenceLines() <= 0) {
             return [] // don't draw reference lines for this row if it has 0 or fewer
@@ -512,14 +510,14 @@ class DrumMachineGui {
             let sequencerLineCenterY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows)
             let halfOfLineWidth = Math.floor(this.configurations.sequencer.lineWidth / 2)
             // calculate the x position of this row line. incorporate the 'reference line shift' value for the row.
-            let referenceLineXPosition = (xIncrementBetweenLines * linesDrawnForRow);
-            referenceLineXPosition += shiftInPixels
-            if (referenceLineXPosition < 0) {
+            let referenceLineXPosition = (xIncrementBetweenLines * linesDrawnForRow); // start with basic reference line position based on width of each beat and which beat we're on
+            referenceLineXPosition += shiftInPixelsForRow // add offset to account for 'shift' tool changes made to reference lines for row
+            if (referenceLineXPosition < 0) { // if the x position of the reference line is past the left edge of the sequencer, wrap it to the other side
                 referenceLineXPosition = this.configurations.sequencer.width + referenceLineXPosition
-            } else {
+            } else { // if the x position of the reference line is past the right edge of the sequencer, wrap it to the other side
                 referenceLineXPosition = referenceLineXPosition % this.configurations.sequencer.width
             }
-            referenceLineXPosition += this.configurations.sequencer.left
+            referenceLineXPosition += this.configurations.sequencer.left // move the reference line position to account for the left position of the whole sequencer
             // draw the actual line
             let lineStart = {
                 x: referenceLineXPosition,
@@ -2174,8 +2172,14 @@ class DrumMachineGui {
             }
             if (self.shiftToolTracker.resourcesToShift.referenceLines) { // next deal with adjusting reference row positions
                 // this logic will always be the same regardless of whether the row is quantized or not, since reference rows can't be snapped to grid.
-                let newReferenceLinesShiftInMilliseconds = 0;
-                self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].setReferenceLineShiftMilliseconds(newReferenceLinesShiftInMilliseconds)
+                // reference line shift tool steps: first calculate the new shift value in pixels based on: mouse move amount, and starting position. store it to the tracker.
+                let shiftInPixels = self.shiftToolTracker.referenceLinesStartingShiftInPixels - mouseMoveDistance; 
+                self.referenceLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex] = shiftInPixels;
+                // then convert the new shift value to milliseconds, and store that to the sequencer. 
+                let shiftAsPercentageOfFullLoop = shiftInPixels / self.configurations.sequencer.width;
+                let shiftInMilliseconds = shiftAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis;
+                self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].setReferenceLineShiftMilliseconds(shiftInMilliseconds)
+                // then we will need to delete and redraw the reference lines.
             }
         }
         let circle = self.components.shapes.shiftToolRowHandles[self.shiftToolTracker.selectedRowIndex]
