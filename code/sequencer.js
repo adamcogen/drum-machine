@@ -417,6 +417,7 @@ class SequencerRow {
         this.subdivisions = 0
         this.quantized = false
         this.referenceLines = 0
+        this.referenceLineShiftInMilliseconds = 0;
     }
 
     // serialize the sequencer row so that it can be recreated later. this method is 'private' (starts with _) and there is no corresponding deserialize
@@ -573,6 +574,14 @@ class SequencerRow {
 
     setNumberOfReferenceLines(newNumberOfReferenceLines) {
         this.referenceLines = newNumberOfReferenceLines
+    }
+
+    setReferenceLineShiftMilliseconds(milliseconds) {
+        this.referenseLineShiftInMilliseconds = milliseconds;
+    }
+
+    getReferenceLineShiftInMilliseconds() {
+        return this.referenceLineShiftInMilliseconds;
     }
 
     // set whether this row should be quantized or not.
