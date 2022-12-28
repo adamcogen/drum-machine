@@ -202,6 +202,10 @@ class Sequencer {
         this.rows[rowIndex].setNumberOfReferenceLines(newNumberOfReferenceLines)
     }
 
+    setReferenceLineShiftMillisecondsForRow(newReferenceLineShiftInMilliseconds, rowIndex) {
+        this.rows[rowIndex].setReferenceLineShiftMilliseconds(newReferenceLineShiftInMilliseconds);
+    }
+
     setQuantizationForRow(quantize, rowIndex) {
         this.rows[rowIndex].setQuantization(quantize);
     }
@@ -375,9 +379,12 @@ class Sequencer {
             let deserializedRowObject = JSON.parse(deserializedObject.rows[rowIndex])
             let numberOfSubdivisionsForRow = deserializedRowObject.subdivisions;
             let quantizeRow = deserializedRowObject.quantized;
+            let referenceLinesShift = deserializedRowObject.referenceLinesShift;
+            referenceLinesShift = (referenceLinesShift === null || referenceLinesShift === undefined) ? 0 : referenceLinesShift // populate value with 0 if it isn't stored
             this.setNumberOfSubdivisionsForRow(numberOfSubdivisionsForRow, rowIndex);
             this.setQuantizationForRow(quantizeRow, rowIndex);
             this.setNumberOfReferenceLinesForRow(deserializedRowObject.referenceLines, rowIndex);
+            this.setReferenceLineShiftMillisecondsForRow(referenceLinesShift, rowIndex);
             for (let deserializedNote of deserializedRowObject.notes) {
                 let sequencerNode = sampleBankNodeGenerator.createNewNodeForSample(deserializedNote.sample)
                 if (quantizeRow) {
@@ -446,6 +453,7 @@ class SequencerRow {
             "quantized": this.quantized,
             "subdivisions": this.subdivisions,
             "referenceLines": this.referenceLines,
+            "referenceLinesShift": this.referenceLineShiftInMilliseconds,
             "notes": notes,
         })
     }

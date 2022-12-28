@@ -2220,7 +2220,6 @@ class DrumMachineGui {
             }
             if (self.shiftToolTracker.resourcesToShift.referenceLines) { // next deal with adjusting reference row positions
                 // this logic will always be the same regardless of whether the row is quantized or not, since reference rows can't be snapped to grid.
-                // todo: clean up the reference lines shift logic so that we use some modular math to represent stored shift values as the lower number possible (since they reset on each beat)
                 for (let lineIndex = 0; lineIndex < self.components.shapes.referenceLineLists[self.shiftToolTracker.selectedRowIndex].length; lineIndex++) {
                     let line = self.components.shapes.referenceLineLists[self.shiftToolTracker.selectedRowIndex][lineIndex];
                     let lineXPositionAdjustedForSequencerLeftEdge = (self.shiftToolTracker.referenceLinesStartingPositions[lineIndex] - mouseMoveDistance) - self.configurations.sequencer.left;
@@ -2234,6 +2233,7 @@ class DrumMachineGui {
                 }
                 // store values in relevant places
                 let shiftInPixels = self.shiftToolTracker.referenceLinesStartingShiftInPixels - mouseMoveDistance; 
+                shiftInPixels = shiftInPixels % self.sequencer.loopLengthInMillis; // shift values repeat when they get to the end of the sequencer, so use modular math to reduce them
                 self.referenceLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex] = shiftInPixels;
                 // convert the new shift value to milliseconds, and store that to the sequencer. 
                 let shiftAsPercentageOfFullLoop = shiftInPixels / self.configurations.sequencer.width;
