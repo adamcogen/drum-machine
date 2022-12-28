@@ -29,6 +29,7 @@ class DrumMachineGui {
 
         this.referenceLinesShiftInPixelsPerRow = []; // save us some calculation time later by keeping track of the shift value for reference lines in pixels (they're stored everywhere else as milliseconds only)
         this.initializeReferenceLinesShiftPixelsTracker();
+        this.initializeSubdivisionLinesShiftPixelsTracker();
 
         this.subdivisionLinesShiftInPixelsPerRow = []; 
         this.initializeSubdivisionLinesShiftPixelsTracker();
@@ -105,6 +106,8 @@ class DrumMachineGui {
             noteCirclesStartingPositions: [],
             referenceLinesStartingShiftInPixels: 0,
             referenceLinesStartingPositions: [],
+            subdivisionLinesStartingShiftInPixels: 0,
+            subdivisionLinesStartingPositions: [],
             rowHandleStartingPosition: {
                 x: null,
                 y: null,
@@ -457,11 +460,19 @@ class DrumMachineGui {
                 this.shiftToolTracker.noteCirclesStartingPositions.push(circle.translation.x)
             }
         }
+        // reference lines
         this.shiftToolTracker.referenceLinesStartingPositions = [];
         for (let line of this.components.shapes.referenceLineLists[rowIndex]) {
             this.shiftToolTracker.referenceLinesStartingPositions.push(line.translation.x);
         }
         this.shiftToolTracker.referenceLinesStartingShiftInPixels = this.referenceLinesShiftInPixelsPerRow[rowIndex];
+        // subdivision lines
+        this.shiftToolTracker.subdivisionLinesStartingPositions = [];
+        for (let line of this.components.shapes.subdivisionLineLists[rowIndex]) {
+            this.shiftToolTracker.subdivisionLinesStartingPositions.push(line.translation.x);
+        }
+        this.shiftToolTracker.subdivisionLinesStartingShiftInPixels = this.subdivisionLinesShiftInPixelsPerRow[rowIndex];
+        // row handle posisitions
         this.shiftToolTracker.rowHandleStartingPosition.x = this.components.shapes.shiftToolRowHandles[rowIndex].translation.x
         this.shiftToolTracker.rowHandleStartingPosition.y = this.components.shapes.shiftToolRowHandles[rowIndex].translation.y
         // update visuals
@@ -2044,6 +2055,7 @@ class DrumMachineGui {
         // update mouse event listeners to reflect current state of sequencer (number of rows, etc.)
         this.refreshWindowMouseMoveEvent();
         this.initializeReferenceLinesShiftPixelsTracker(); // set up variables for handling reference line 'shift' values
+        this.initializeSubdivisionLinesShiftPixelsTracker(); // set up variables for handling subdivision line 'shift' values
         // redraw notes and lines
         this.resetNotesAndLinesDisplayForAllRows();
         // redraw html inputs, such as subdivision and reference line text areas, quantization checkboxes
