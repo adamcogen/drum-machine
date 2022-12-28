@@ -2251,7 +2251,26 @@ class DrumMachineGui {
         if (mouseHasMoved) {
             let mouseMoveDistance = self.shiftToolTracker.rowHandleStartingPosition.x - mouseX; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
             if (self.shiftToolTracker.resourcesToShift.subdivisionLines) { // adjust subdivision lines first, because if we move those, the way we move quantized notes also need to change.
-                console.log("<placeholder for subdivision shift logic>")
+                // this logic will always be the same regardless of whether the row is quantized or not, since subdivision lines _are_ the grid things get snapped to
+                for (let lineIndex = 0; lineIndex < self.components.shapes.subdivisionLineLists[self.shiftToolTracker.selectedRowIndex].length; lineIndex++) {
+                    let line = self.components.shapes.subdivisionLineLists[self.shiftToolTracker.selectedRowIndex][lineIndex];
+                    let lineXPositionAdjustedForSequencerLeftEdge = (self.shiftToolTracker.subdivisionLinesStartingPositions[lineIndex] - mouseMoveDistance) - self.configurations.sequencer.left;
+                    if (lineXPositionAdjustedForSequencerLeftEdge < 0) {
+                        lineXPositionAdjustedForSequencerLeftEdge = self.configurations.sequencer.width + lineXPositionAdjustedForSequencerLeftEdge
+                    } else if (lineXPositionAdjustedForSequencerLeftEdge > self.configurations.sequencer.width) {
+                        lineXPositionAdjustedForSequencerLeftEdge = lineXPositionAdjustedForSequencerLeftEdge % self.configurations.sequencer.width
+                    }
+                    let newLineXPosition = self.configurations.sequencer.left + lineXPositionAdjustedForSequencerLeftEdge
+                    line.translation.x = newLineXPosition
+                }
+                // store values in relevant places
+                let shiftInPixels = self.shiftToolTracker.subdivisionLinesStartingShiftInPixels - mouseMoveDistance; 
+                shiftInPixels = shiftInPixels % self.sequencer.loopLengthInMillis; // shift values repeat when they get to the end of the sequencer, so use modular math to reduce them
+                self.subdivisionLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex] = shiftInPixels;
+                // convert the new shift value to milliseconds, and store that to the sequencer. 
+                let shiftAsPercentageOfFullLoop = shiftInPixels / self.configurations.sequencer.width;
+                let shiftInMilliseconds = shiftAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis;
+                self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].setSubdivisionLineShiftMilliseconds(shiftInMilliseconds)
             }
             // if the row is quantized and we are moving subdivision lines, move notes too regardless of whether 'shift' is turned on for notes, since the notes have to stay quantized to the subdivision lines
             let notesNeedToBeMovedWithSubdivisionLines = self.shiftToolTracker.resourcesToShift.subdivisionLines && self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized;
@@ -2296,7 +2315,7 @@ class DrumMachineGui {
                 }
             }
             if (self.shiftToolTracker.resourcesToShift.referenceLines) { // next deal with adjusting reference row positions
-                // this logic will always be the same regardless of whether the row is quantized or not, since reference rows can't be snapped to grid.
+                // this logic will always be the same regardless of whether the row is quantized or not, since reference lines can't be snapped to grid.
                 for (let lineIndex = 0; lineIndex < self.components.shapes.referenceLineLists[self.shiftToolTracker.selectedRowIndex].length; lineIndex++) {
                     let line = self.components.shapes.referenceLineLists[self.shiftToolTracker.selectedRowIndex][lineIndex];
                     let lineXPositionAdjustedForSequencerLeftEdge = (self.shiftToolTracker.referenceLinesStartingPositions[lineIndex] - mouseMoveDistance) - self.configurations.sequencer.left;
