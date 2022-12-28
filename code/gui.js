@@ -1484,7 +1484,7 @@ class DrumMachineGui {
     clearRowButtonClickHandler(self, rowIndex) {
         self.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = self.sequencer.currentTime
         self.components.shapes.clearNotesForRowButtonShapes[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
-        self.clearNotesForRow(self, rowIndex);
+        self.clearNotesForRow(rowIndex);
         self.resetNotesAndLinesDisplayForRow(rowIndex);
         self.saveCurrentSequencerStateToUrlHash();
     }
