@@ -198,6 +198,10 @@ class Sequencer {
         this.rows[rowIndex].setNumberOfSubdivisions(newNumberOfSubdivisions)
     }
 
+    setSubdivisionLineShiftMillisecondsForRow(newSubdivisionLineShiftInMilliseconds, rowIndex) {
+        this.rows[rowIndex].setSubdivisionLineShiftMilliseconds(newSubdivisionLineShiftInMilliseconds);
+    }
+
     setNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex) {
         this.rows[rowIndex].setNumberOfReferenceLines(newNumberOfReferenceLines)
     }
@@ -381,10 +385,13 @@ class Sequencer {
             let quantizeRow = deserializedRowObject.quantized;
             let referenceLinesShift = deserializedRowObject.referenceLinesShift;
             referenceLinesShift = (referenceLinesShift === null || referenceLinesShift === undefined) ? 0 : referenceLinesShift // populate value with 0 if it isn't stored
+            let subdivisionLinesShift = deserializedRowObject.subdivisionLinesShift;
+            subdivisionLinesShift = (subdivisionLinesShift === null || subdivisionLinesShift === undefined) ? 0 : subdivisionLinesShift // populate value with 0 if it isn't stored
             this.setNumberOfSubdivisionsForRow(numberOfSubdivisionsForRow, rowIndex);
             this.setQuantizationForRow(quantizeRow, rowIndex);
             this.setNumberOfReferenceLinesForRow(deserializedRowObject.referenceLines, rowIndex);
             this.setReferenceLineShiftMillisecondsForRow(referenceLinesShift, rowIndex);
+            this.setSubdivisionLineShiftMillisecondsForRow(subdivisionLinesShift, rowIndex);
             for (let deserializedNote of deserializedRowObject.notes) {
                 let sequencerNode = sampleBankNodeGenerator.createNewNodeForSample(deserializedNote.sample)
                 if (quantizeRow) {
@@ -425,6 +432,7 @@ class SequencerRow {
         this.quantized = false
         this.referenceLines = 0
         this.referenceLineShiftInMilliseconds = 0;
+        this.subdivisionLineShiftInMilliseconds = 0;
     }
 
     // serialize the sequencer row so that it can be recreated later. this method is 'private' (starts with _) and there is no corresponding deserialize
@@ -454,6 +462,7 @@ class SequencerRow {
             "subdivisions": this.subdivisions,
             "referenceLines": this.referenceLines,
             "referenceLinesShift": this.referenceLineShiftInMilliseconds,
+            "subdivisionLinesShift": this.subdivisionLineShiftInMilliseconds,
             "notes": notes,
         })
     }
@@ -578,6 +587,14 @@ class SequencerRow {
             }
         }
         this.subdivisions = newNumberOfSubdivisions
+    }
+
+    setSubdivisionLineShiftMilliseconds(milliseconds) {
+        this.subdivisionLineShiftInMilliseconds = milliseconds;
+    }
+
+    getSubdivisionLineShiftInMilliseconds() {
+        return this.subdivisionLineShiftInMilliseconds;
     }
 
     setNumberOfReferenceLines(newNumberOfReferenceLines) {

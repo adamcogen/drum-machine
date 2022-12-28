@@ -30,6 +30,9 @@ class DrumMachineGui {
         this.referenceLinesShiftInPixelsPerRow = []; // save us some calculation time later by keeping track of the shift value for reference lines in pixels (they're stored everywhere else as milliseconds only)
         this.initializeReferenceLinesShiftPixelsTracker();
 
+        this.subdivisionLinesShiftInPixelsPerRow = []; 
+        this.initializeSubdivisionLinesShiftPixelsTracker();
+
         this.components.shapes = this.initializeGuiShapes();
         this.components.domElements = this.initializeDomElements();
         this.eventHandlerFunctions = {}; // make a hash to store references to event handler functions. that way we can remove them from the DOM elements they are attached to later
@@ -566,6 +569,20 @@ class DrumMachineGui {
     /**
      * sequencer row lines
      */
+
+    // update a tracker that stores how much each row's subdivision lines are shifted in pixels.
+    // we should call this when we open the page, when we load a sequencer from a URL, etc.
+    initializeSubdivisionLinesShiftPixelsTracker() {
+        this.subdivisionLinesShiftInPixelsPerRow = []
+        for (let rowIndex = 0; rowIndex < this.sequencer.numberOfRows; rowIndex++) {
+            // convert shift in millis to pixels
+            let shiftInMillis = this.sequencer.rows[rowIndex].getSubdivisionLineShiftInMilliseconds();
+            let shiftAsPercentageOfFullLoop = shiftInMillis / this.sequencer.loopLengthInMillis;
+            let shiftInPixels = shiftAsPercentageOfFullLoop * this.configurations.sequencer.width;
+            // store shift in pixels to a tracker object for quick access elsewhere
+            this.subdivisionLinesShiftInPixelsPerRow.push(shiftInPixels);
+        }
+    }
 
     // draw lines for sequencer rows. return a list of the drawn lines. these will be Two.js 'path' objects.
     initializeAllSequencerRowLines() {
