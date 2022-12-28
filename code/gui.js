@@ -233,8 +233,8 @@ class DrumMachineGui {
         shapes.shiftModeMoveSubdivisionLinesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveSubdivisionLinesButton.top, this.configurations.shiftModeMoveSubdivisionLinesButton.left, this.configurations.shiftModeMoveSubdivisionLinesButton.height, this.configurations.shiftModeMoveSubdivisionLinesButton.width)
         shapes.shiftModeMoveReferenceLinesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveReferenceLinesButton.top, this.configurations.shiftModeMoveReferenceLinesButton.left, this.configurations.shiftModeMoveReferenceLinesButton.height, this.configurations.shiftModeMoveReferenceLinesButton.width)
         // comment out these 'shift tool' buttons until we are ready to start adding logic to them
-        // shapes.shiftModeResetSubdivisionLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetSubdivisionLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.height, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of subdivision lines for each row
-        // shapes.shiftModeResetReferenceLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetReferenceLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.height, this.configurations.shiftModeResetReferenceLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of reference lines for each row
+        //shapes.shiftModeResetSubdivisionLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetSubdivisionLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.height, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of subdivision lines for each row
+        shapes.shiftModeResetReferenceLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetReferenceLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.height, this.configurations.shiftModeResetReferenceLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of reference lines for each row
         this.two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
         return shapes;
     }
@@ -374,6 +374,7 @@ class DrumMachineGui {
         this.rowSelectionTracker.shapes.push(this.components.shapes.sequencerRowLines[rowIndex])
         this.rowSelectionTracker.shapes.push(this.components.shapes.sequencerRowSelectionRectangles[rowIndex])
         this.rowSelectionTracker.shapes.push(this.components.shapes.clearNotesForRowButtonShapes[rowIndex])
+        this.rowSelectionTracker.shapes.push(this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex])
         this.rowSelectionTracker.shapes.push(this.components.shapes.volumeAdjusterRowHandles[rowIndex])
         if (this.components.shapes.shiftToolRowHandles[rowIndex] !== null && this.components.shapes.shiftToolRowHandles[rowIndex] !== undefined) {
             this.rowSelectionTracker.shapes.push(this.components.shapes.shiftToolRowHandles[rowIndex]);
@@ -1483,13 +1484,46 @@ class DrumMachineGui {
     clearRowButtonClickHandler(self, rowIndex) {
         self.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = self.sequencer.currentTime
         self.components.shapes.clearNotesForRowButtonShapes[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
-        self.clearNotesForRow(rowIndex);
+        self.clearNotesForRow(self, rowIndex);
         self.resetNotesAndLinesDisplayForRow(rowIndex);
         self.saveCurrentSequencerStateToUrlHash();
     }
 
     clearNotesForRow(rowIndex) { 
         this.sequencer.clearRow(rowIndex)
+    }
+
+    /**
+     * shift tool 'reset reference lines shift' button (one button per row) logic
+     */
+    
+    addShiftToolResetReferenceLinesButtonsActionListeners() {
+        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            this.lastButtonClickTimeTrackers["resetReferenceLinesShift" + rowIndex] = {
+                lastClickTime: Number.MIN_SAFE_INTEGER,
+                shape: this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex],
+            }
+            if (this.eventHandlerFunctions["resetReferenceLinesShiftShape" + rowIndex] !== null && this.eventHandlerFunctions["resetReferenceLinesShiftShape" + rowIndex] !== undefined){
+                // remove event listeners if they've already been added to avoid duplicates
+                this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]._renderer.elem.removeEventListener('click', this.eventHandlerFunctions["resetReferenceLinesShiftShape" + rowIndex] );
+            }
+            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+            this.eventHandlerFunctions["resetReferenceLinesShiftShape" + rowIndex] = () => this.resetReferenceLinesShiftClickHandler(this, rowIndex);
+            this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]._renderer.elem.addEventListener('click', this.eventHandlerFunctions["resetReferenceLinesShiftShape" + rowIndex] );
+        }
+    }
+
+    resetReferenceLinesShiftClickHandler(self, rowIndex) {
+        self.lastButtonClickTimeTrackers["resetReferenceLinesShift" + rowIndex].lastClickTime = self.sequencer.currentTime
+        self.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
+        self.resetReferenceLineShiftForRow(rowIndex);
+        self.referenceLinesShiftInPixelsPerRow[rowIndex] = self.sequencer.rows[rowIndex].getReferenceLineShiftInMilliseconds();
+        self.resetNotesAndLinesDisplayForRow(rowIndex);
+        self.saveCurrentSequencerStateToUrlHash();
+    }
+
+    resetReferenceLineShiftForRow(rowIndex) {
+        this.sequencer.rows[rowIndex].setReferenceLineShiftMilliseconds(0);
     }
 
     /**
@@ -2008,6 +2042,11 @@ class DrumMachineGui {
         }
         this.components.shapes.clearNotesForRowButtonShapes = []
         this.components.shapes.clearNotesForRowButtonShapes = this.initializeButtonPerSequencerRow(this.configurations.clearRowButtons.topPaddingPerRow, this.configurations.clearRowButtons.leftPaddingPerRow, this.configurations.clearRowButtons.height, this.configurations.clearRowButtons.width); // this is a list of button rectangles, one per row, to clear the notes on that row
+        for (let shape of this.components.shapes.shiftModeResetReferenceLinesButtons) {
+            shape.remove();
+        }
+        this.components.shapes.shiftModeResetReferenceLinesButtons = []
+        this.components.shapes.shiftModeResetReferenceLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetReferenceLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.height, this.configurations.shiftModeResetReferenceLinesForRowButtons.width)
         this.components.shapes.addRowButtonShape.remove();
         this.components.shapes.addRowButtonShape = this.initializeRectangleShape(this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * (this.sequencer.rows.length - 1)) + this.configurations.addRowButton.topPadding, this.configurations.sequencer.left + (this.configurations.sequencer.width / 2) + this.configurations.addRowButton.leftPadding - (this.configurations.addRowButton.width / 2), this.configurations.addRowButton.height, this.configurations.addRowButton.width)
         this.components.shapes.addRowButtonShape.fill = this.configurations.buttonBehavior.clickedButtonColor
@@ -2017,6 +2056,7 @@ class DrumMachineGui {
         this.initializeSubdivisionTextInputsActionListeners();
         this.initializeReferenceLineTextInputsActionListeners();
         this.addClearNotesForRowButtonsActionListeners();
+        this.addShiftToolResetReferenceLinesButtonsActionListeners();
         this.initializeQuantizationCheckboxActionListeners();
         this.initializeAddRowButtonActionListener();
         this.initializeSequencerRowHandlesActionListeners();
