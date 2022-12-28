@@ -654,8 +654,19 @@ class DrumMachineGui {
         for (let subdivisionsDrawnForRow = 0; subdivisionsDrawnForRow < this.sequencer.rows[rowIndex].getNumberOfSubdivisions(); subdivisionsDrawnForRow++) {
             let sequencerLineCenterY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows)
             let halfOfLineWidth = Math.floor(this.configurations.sequencer.lineWidth / 2)
+            // calculate the x position of this row line. incorporate the 'subdivision line shift' value for the row.
+            let shiftInPixelsForRow = this.subdivisionLinesShiftInPixelsPerRow[rowIndex] % xIncrementBetweenSubdivisions;
+            let subdivisionLineXPosition = (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow) // start with basic subdivision line position based on width of each beat and which beat we're on
+            subdivisionLineXPosition += shiftInPixelsForRow; // add offset to account for 'shift' tool changes made to subdivision lines for row
+            if (subdivisionLineXPosition < 0) { // if the x position of the subdivision line is past the left edge of the sequencer, wrap it to the other side
+                subdivisionLineXPosition = this.configurations.sequencer.width + subdivisionLineXPosition
+            } else { // if the x position of the subdivision line is past the right edge of the sequencer, wrap it to the other side
+                subdivisionLineXPosition = subdivisionLineXPosition % this.configurations.sequencer.width
+            }
+            subdivisionLineXPosition += this.configurations.sequencer.left // move the subdivision line position to account for the left position of the whole sequencer
+            // draw the actual line
             let lineStart = {
-                x: this.configurations.sequencer.left + (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow),
+                x: subdivisionLineXPosition,
                 y: sequencerLineCenterY - halfOfLineWidth // make sure to account for 'line width' when trying to make subdivision lines reach the top of the sequencer line. that's why we subtract the value here
             }
             let lineEnd = {
@@ -1403,10 +1414,10 @@ class DrumMachineGui {
      * this function is the second part of the logic explained in the block comment 
      * above, where we find the x coordinate for a given beat number.
      */
-    getXPositionOfSubdivisionLine(subdivisionIndex, numberOfSubdivisions) {
+    getXPositionOfSubdivisionLine(subdivisionIndex, numberOfSubdivisions, shiftOffsetInPixels) {
         let sequencerLeftEdge = this.configurations.sequencer.left
         let widthOfEachSubdivision = this.configurations.sequencer.width / numberOfSubdivisions
-        return sequencerLeftEdge + (widthOfEachSubdivision * subdivisionIndex)
+        return sequencerLeftEdge + (widthOfEachSubdivision * subdivisionIndex) + (shiftOffsetInPixels % widthOfEachSubdivision);
     }
 
     /**
@@ -2298,7 +2309,7 @@ class DrumMachineGui {
                             closestBeat += 1;
                         }
                         newNoteBeatNumber = closestBeat % numberOfSubdivisionsInRow;
-                        newNoteXPosition = self.getXPositionOfSubdivisionLine(newNoteBeatNumber, numberOfSubdivisionsInRow)
+                        newNoteXPosition = self.getXPositionOfSubdivisionLine(newNoteBeatNumber, numberOfSubdivisionsInRow, self.subdivisionLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex])
                     } else { // handle note shifting for when the row is _not_ quantized 
                         newNoteXPosition = self.configurations.sequencer.left + noteXPositionAdjustedForSequencerLeftEdge
                         newNoteBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED;
@@ -2404,7 +2415,7 @@ class DrumMachineGui {
                         if (self.sequencer.rows[rowIndex].quantized === true) {
                             // determine which subdivision we are closest to
                             self.circleSelectionTracker.circleBeingMovedNewBeatNumber = self.getIndexOfClosestSubdivisionLine(mouseX, self.sequencer.rows[rowIndex].getNumberOfSubdivisions())
-                            self.circleSelectionTracker.circleBeingMoved.translation.x = self.getXPositionOfSubdivisionLine(self.circleSelectionTracker.circleBeingMovedNewBeatNumber, self.sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                            self.circleSelectionTracker.circleBeingMoved.translation.x = self.getXPositionOfSubdivisionLine(self.circleSelectionTracker.circleBeingMovedNewBeatNumber, self.sequencer.rows[rowIndex].getNumberOfSubdivisions(), self.subdivisionLinesShiftInPixelsPerRow[rowIndex])
                         } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
                             self.circleSelectionTracker.circleBeingMoved.translation.x = Util.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
                             self.circleSelectionTracker.circleBeingMovedNewBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED
