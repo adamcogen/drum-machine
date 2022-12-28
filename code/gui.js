@@ -2250,8 +2250,13 @@ class DrumMachineGui {
         let mouseHasMoved = (mouseX !== self.shiftToolTracker.rowHandleStartingPosition.x || mouseY !== self.shiftToolTracker.rowHandleStartingPosition.y)
         if (mouseHasMoved) {
             let mouseMoveDistance = self.shiftToolTracker.rowHandleStartingPosition.x - mouseX; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
-            if (self.shiftToolTracker.resourcesToShift.notes) { // start with adjusting note positions
-                // we need to have some different logic here depending on whether the row is quantized or not
+            if (self.shiftToolTracker.resourcesToShift.subdivisionLines) { // adjust subdivision lines first, because if we move those, the way we move quantized notes also need to change.
+                console.log("<placeholder for subdivision shift logic>")
+            }
+            // if the row is quantized and we are moving subdivision lines, move notes too regardless of whether 'shift' is turned on for notes, since the notes have to stay quantized to the subdivision lines
+            let notesNeedToBeMovedWithSubdivisionLines = self.shiftToolTracker.resourcesToShift.subdivisionLines && self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized;
+            if (self.shiftToolTracker.resourcesToShift.notes || notesNeedToBeMovedWithSubdivisionLines) { // adjust note positions
+                // we need to have some different logic here depending on whether the row is quantized or not.
                 for (let noteCircleIndex = 0; noteCircleIndex < self.shiftToolTracker.noteCircles.length; noteCircleIndex++) {
                     let currentNoteCircle = self.shiftToolTracker.noteCircles[noteCircleIndex];
                     let noteXPositionAdjustedForSequencerLeftEdge = (self.shiftToolTracker.noteCirclesStartingPositions[noteCircleIndex] - self.configurations.sequencer.left - mouseMoveDistance);
@@ -2311,9 +2316,6 @@ class DrumMachineGui {
                 let shiftAsPercentageOfFullLoop = shiftInPixels / self.configurations.sequencer.width;
                 let shiftInMilliseconds = shiftAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis;
                 self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].setReferenceLineShiftMilliseconds(shiftInMilliseconds)
-            }
-            if (self.shiftToolTracker.resourcesToShift.subdivisionLines) {
-                console.log("<placeholder for subdivision shift logic>")
             }
         }
         let circle = self.components.shapes.shiftToolRowHandles[self.shiftToolTracker.selectedRowIndex]
