@@ -396,7 +396,8 @@ class Sequencer {
                 let sequencerNode = sampleBankNodeGenerator.createNewNodeForSample(deserializedNote.sample)
                 if (quantizeRow) {
                     sequencerNode.data.beat = deserializedNote.beat;
-                    sequencerNode.priority = (this.loopLengthInMillis / numberOfSubdivisionsForRow) * sequencerNode.data.beat // calculate the time that the note should play at, given its beat number
+                    let lengthOfEachBeat = this.loopLengthInMillis / numberOfSubdivisionsForRow
+                    sequencerNode.priority = (subdivisionLinesShift % lengthOfEachBeat) + (lengthOfEachBeat * sequencerNode.data.beat) // calculate the time that the note should play at, given its beat number and subdivision shift amount
                 } else {
                     sequencerNode.beat = Sequencer.NOTE_IS_NOT_QUANTIZED
                     sequencerNode.priority = deserializedNote.priority;
@@ -693,7 +694,6 @@ class SequencerRow {
     _getPriorityForBeatNumber(beatNumber) {
         let lengthOfEachBeatInMilliseconds = this.loopLengthInMillis / this.getNumberOfSubdivisions();
         let priorityOfBeatZero = this.getSubdivisionLineShiftInMilliseconds() % lengthOfEachBeatInMilliseconds;
-        console.log(priorityOfBeatZero + (beatNumber * lengthOfEachBeatInMilliseconds))
         return priorityOfBeatZero + (beatNumber * lengthOfEachBeatInMilliseconds);
     }
 
