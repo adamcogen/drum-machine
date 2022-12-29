@@ -104,6 +104,7 @@ class DrumMachineGui {
             selectedRowIndex: null,
             noteCircles: [],
             noteCirclesStartingPositions: [],
+            noteCirclesStartingBeats: [],
             referenceLinesStartingShiftInPixels: 0,
             referenceLinesStartingPositions: [],
             subdivisionLinesStartingShiftInPixels: 0,
@@ -451,14 +452,15 @@ class DrumMachineGui {
     }
 
     initializeRowShiftToolVariablesAndVisuals(rowIndex) {
-        // do nothing for now
         this.shiftToolTracker.selectedRowIndex = rowIndex;
         this.shiftToolTracker.noteCircles = [];
         this.shiftToolTracker.noteCirclesStartingPositions = [];
+        this.shiftToolTracker.noteCirclesStartingBeats = []
         for (let circle of this.allDrawnCircles) {
             if (circle.guiData.row === rowIndex) {
                 this.shiftToolTracker.noteCircles.push(circle)
                 this.shiftToolTracker.noteCirclesStartingPositions.push(circle.translation.x)
+                this.shiftToolTracker.noteCirclesStartingBeats.push(circle.guiData.beat)
             }
         }
         // reference lines
@@ -1419,7 +1421,8 @@ class DrumMachineGui {
     getXPositionOfSubdivisionLine(subdivisionIndex, numberOfSubdivisions, shiftOffsetInPixels) {
         let sequencerLeftEdge = this.configurations.sequencer.left
         let widthOfEachSubdivision = this.configurations.sequencer.width / numberOfSubdivisions
-        let xPositionOfLeftmostSubdivisionLineWithinSequencer = (shiftOffsetInPixels % widthOfEachSubdivision)
+        let xPositionOfLeftmostSubdivisionLineWithinSequencer;
+        xPositionOfLeftmostSubdivisionLineWithinSequencer = shiftOffsetInPixels % widthOfEachSubdivision;
         return sequencerLeftEdge + xPositionOfLeftmostSubdivisionLineWithinSequencer + (widthOfEachSubdivision * subdivisionIndex);
     }
 
@@ -2257,6 +2260,8 @@ class DrumMachineGui {
         rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.selectedColor
     }
 
+    // this method is very messy. my top priority was to get it working, and not worry about duplicated code or using the most perfect straightforward logic flow.
+    // this will definitely need to be refactored later, but that will be easier once we know exactly how everything will work / what the logic needs to do.
     shiftToolMouseMoveEventHandler(self, event){
         self.adjustEventCoordinates(event)
         let mouseX = event.pageX
@@ -2280,6 +2285,9 @@ class DrumMachineGui {
                 // store values in relevant places
                 let shiftInPixels = self.shiftToolTracker.subdivisionLinesStartingShiftInPixels - mouseMoveDistance; 
                 shiftInPixels = shiftInPixels % self.configurations.sequencer.width; // shift values repeat when they get to the end of the sequencer, so use modular math to reduce them
+                if (shiftInPixels < 0) { // convert negative shift values to equivalent positive ones, so that calculations with them always use a positive number later
+                    shiftInPixels = shiftInPixels + self.configurations.sequencer.width
+                }
                 self.subdivisionLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex] = shiftInPixels;
                 // convert the new shift value to milliseconds, and store that to the sequencer. 
                 let shiftAsPercentageOfFullLoop = shiftInPixels / self.configurations.sequencer.width;
@@ -2292,28 +2300,47 @@ class DrumMachineGui {
                 // we need to have some different logic here depending on whether the row is quantized or not.
                 for (let noteCircleIndex = 0; noteCircleIndex < self.shiftToolTracker.noteCircles.length; noteCircleIndex++) {
                     let currentNoteCircle = self.shiftToolTracker.noteCircles[noteCircleIndex];
-                    let noteXPositionAdjustedForSequencerLeftEdge = (self.shiftToolTracker.noteCirclesStartingPositions[noteCircleIndex] - self.configurations.sequencer.left - mouseMoveDistance);
-                    if (noteXPositionAdjustedForSequencerLeftEdge < 0) { // wrap negative values back to the other end of the sequencer
-                        noteXPositionAdjustedForSequencerLeftEdge = self.configurations.sequencer.width + noteXPositionAdjustedForSequencerLeftEdge
-                    } else if (noteXPositionAdjustedForSequencerLeftEdge > self.configurations.sequencer.width) { // wrap notes beyond the right edge of the sequencer back to the other side
-                        noteXPositionAdjustedForSequencerLeftEdge = noteXPositionAdjustedForSequencerLeftEdge % self.configurations.sequencer.width
-                    }
                     let newNoteXPosition;
                     let newNoteBeatNumber;
-                    if (self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized) { // handle note shifting for when the row is quantized
+                    if (self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized) { // handle note shifting for when the row is quantized)
                         // determine which subdivision we are closest to. this logic is mostly adapted from the Sequencer.setQuantization method with some modificaions.
-                        let integerSequencerWidthInPixels = Math.round(self.configurations.sequencer.width); // this will probably be a round number anyway, but see SequencerRow.setQuantization method comments for context here
-                        let numberOfSubdivisionsInRow = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].getNumberOfSubdivisions();
-                        let widthOfEachBeatInPixels = integerSequencerWidthInPixels / numberOfSubdivisionsInRow
-                        let numberOfBeatsBeforeNote = Math.floor(noteXPositionAdjustedForSequencerLeftEdge / widthOfEachBeatInPixels)
-                        let noteIsCloserToRightBeatThanLeft = (noteXPositionAdjustedForSequencerLeftEdge % widthOfEachBeatInPixels) > (widthOfEachBeatInPixels / 2);
-                        let closestBeat = numberOfBeatsBeforeNote
-                        if (noteIsCloserToRightBeatThanLeft) {
-                            closestBeat += 1;
+                        if (self.shiftToolTracker.resourcesToShift.subdivisionLines) { 
+                            // if subdivision lines are being moved along with the notes, just move the notes along with those then figure out new beat numbers afterwards.
+                            let shiftInPixels = self.subdivisionLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex]
+                            let noteXPositionAdjustedForSequencerLeftEdge = (self.shiftToolTracker.noteCirclesStartingPositions[noteCircleIndex] - self.configurations.sequencer.left - mouseMoveDistance);
+                            if (noteXPositionAdjustedForSequencerLeftEdge < 0) { // wrap negative values back to the other end of the sequencer
+                                noteXPositionAdjustedForSequencerLeftEdge = self.configurations.sequencer.width + noteXPositionAdjustedForSequencerLeftEdge
+                            } else if (noteXPositionAdjustedForSequencerLeftEdge >= self.configurations.sequencer.width) { // wrap notes beyond the right edge of the sequencer back to the other side
+                                noteXPositionAdjustedForSequencerLeftEdge = noteXPositionAdjustedForSequencerLeftEdge % self.configurations.sequencer.width
+                            }
+                            newNoteXPosition = self.configurations.sequencer.left + noteXPositionAdjustedForSequencerLeftEdge
+                            let numberOfSubdivisionsInRow = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].getNumberOfSubdivisions();
+                            newNoteBeatNumber = self.getIndexOfClosestSubdivisionLine(newNoteXPosition, numberOfSubdivisionsInRow, shiftInPixels)
+                        } else { 
+                            // if subdivision lines ARE NOT being moved, just check how many beats' distance we have moved the mouse, and base new beat quantizations on that.
+                            // that way we can guarantee that all notes will be shifted to a new beat number at the same time, even if there are irregularities in how floating
+                            // point precisision / rounding is handled between different beat numbers.
+                            let numberOfSubdivisionsInRow = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].getNumberOfSubdivisions();
+                            let widthOfEachBeatInPixels = self.configurations.sequencer.width / numberOfSubdivisionsInRow
+                            let shiftInPixels = self.subdivisionLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex]
+                            let beatsMoved = -1 * (Math.round(mouseMoveDistance / widthOfEachBeatInPixels) % numberOfSubdivisionsInRow);
+                            let circleStartingBeat = self.shiftToolTracker.noteCirclesStartingBeats[noteCircleIndex]
+                            let startingBeatPlusBeatsMoved = circleStartingBeat + beatsMoved
+                            newNoteBeatNumber = startingBeatPlusBeatsMoved;
+                            if (newNoteBeatNumber < 0) {
+                                newNoteBeatNumber = newNoteBeatNumber + numberOfSubdivisionsInRow
+                            } else if (newNoteBeatNumber >= numberOfSubdivisionsInRow) {
+                                newNoteBeatNumber = newNoteBeatNumber % numberOfSubdivisionsInRow
+                            }
+                            newNoteXPosition = self.getXPositionOfSubdivisionLine(newNoteBeatNumber, numberOfSubdivisionsInRow, shiftInPixels)
                         }
-                        newNoteBeatNumber = closestBeat % numberOfSubdivisionsInRow;
-                        newNoteXPosition = self.getXPositionOfSubdivisionLine(newNoteBeatNumber, numberOfSubdivisionsInRow, self.subdivisionLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex])
                     } else { // handle note shifting for when the row is _not_ quantized 
+                        let noteXPositionAdjustedForSequencerLeftEdge = (self.shiftToolTracker.noteCirclesStartingPositions[noteCircleIndex] - self.configurations.sequencer.left - mouseMoveDistance);
+                        if (noteXPositionAdjustedForSequencerLeftEdge < 0) { // wrap negative values back to the other end of the sequencer
+                            noteXPositionAdjustedForSequencerLeftEdge = self.configurations.sequencer.width + noteXPositionAdjustedForSequencerLeftEdge
+                        } else if (noteXPositionAdjustedForSequencerLeftEdge >= self.configurations.sequencer.width) { // wrap notes beyond the right edge of the sequencer back to the other side
+                            noteXPositionAdjustedForSequencerLeftEdge = noteXPositionAdjustedForSequencerLeftEdge % self.configurations.sequencer.width
+                        }
                         newNoteXPosition = self.configurations.sequencer.left + noteXPositionAdjustedForSequencerLeftEdge
                         newNoteBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED;
                     }
