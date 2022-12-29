@@ -1601,6 +1601,11 @@ class DrumMachineGui {
     }
 
     resetSubdivisionLineShiftForRow(rowIndex) {
+        let currentNode = this.sequencer.rows[rowIndex]._notesList.head;
+        while(currentNode !== null) {
+            currentNode.priority = currentNode.priority - this.sequencer.rows[rowIndex].getSubdivisionLineShiftInMilliseconds();
+            currentNode = currentNode.next;
+        }
         this.sequencer.rows[rowIndex].setSubdivisionLineShiftMilliseconds(0);
     }
 
