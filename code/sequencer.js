@@ -674,8 +674,10 @@ class SequencerRow {
         // messy with floating point precision issues when the modulo operator is used, but that's just a guess.
         let integerLoopLengthInMillis = Math.round(this.loopLengthInMillis);
         let lengthOfEachBeatInMilliseconds = integerLoopLengthInMillis / this.getNumberOfSubdivisions();
-        let numberOfBeatsBeforeNote = Math.floor(priority / lengthOfEachBeatInMilliseconds);
-        let noteIsCloserToRightBeatThanLeft = (priority % lengthOfEachBeatInMilliseconds) > (lengthOfEachBeatInMilliseconds / 2);
+        let priorityOfBeatZero = this.getSubdivisionLineShiftInMilliseconds() % lengthOfEachBeatInMilliseconds;
+        let unshiftedNotePriority = priority - priorityOfBeatZero;
+        let numberOfBeatsBeforeNote = Math.floor(unshiftedNotePriority / lengthOfEachBeatInMilliseconds);
+        let noteIsCloserToRightBeatThanLeft = (unshiftedNotePriority % lengthOfEachBeatInMilliseconds) > (lengthOfEachBeatInMilliseconds / 2);
         let closestBeat = numberOfBeatsBeforeNote;
         if (noteIsCloserToRightBeatThanLeft) {
             closestBeat += 1;
@@ -690,7 +692,9 @@ class SequencerRow {
      */
     _getPriorityForBeatNumber(beatNumber) {
         let lengthOfEachBeatInMilliseconds = this.loopLengthInMillis / this.getNumberOfSubdivisions();
-        return beatNumber * lengthOfEachBeatInMilliseconds;
+        let priorityOfBeatZero = this.getSubdivisionLineShiftInMilliseconds() % lengthOfEachBeatInMilliseconds;
+        console.log(priorityOfBeatZero + (beatNumber * lengthOfEachBeatInMilliseconds))
+        return priorityOfBeatZero + (beatNumber * lengthOfEachBeatInMilliseconds);
     }
 
     setLoopLengthInMillis(newLoopLengthInMillis) {

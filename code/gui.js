@@ -1421,8 +1421,7 @@ class DrumMachineGui {
     getXPositionOfSubdivisionLine(subdivisionIndex, numberOfSubdivisions, shiftOffsetInPixels) {
         let sequencerLeftEdge = this.configurations.sequencer.left
         let widthOfEachSubdivision = this.configurations.sequencer.width / numberOfSubdivisions
-        let xPositionOfLeftmostSubdivisionLineWithinSequencer;
-        xPositionOfLeftmostSubdivisionLineWithinSequencer = shiftOffsetInPixels % widthOfEachSubdivision;
+        let xPositionOfLeftmostSubdivisionLineWithinSequencer = shiftOffsetInPixels % widthOfEachSubdivision;
         return sequencerLeftEdge + xPositionOfLeftmostSubdivisionLineWithinSequencer + (widthOfEachSubdivision * subdivisionIndex);
     }
 
