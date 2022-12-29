@@ -1391,12 +1391,14 @@ class DrumMachineGui {
      * the other piece we will then need to do is to get the x position for a beat
      * number. that will be handled elsewhere.
      */
-    getIndexOfClosestSubdivisionLine(mouseX, numberOfSubdivisions) {
+    getIndexOfClosestSubdivisionLine(mouseX, numberOfSubdivisions, shiftOffsetInPixels) {
         let sequencerLeftEdge = this.configurations.sequencer.left
         let widthOfEachSubdivision = this.configurations.sequencer.width / numberOfSubdivisions
         let mouseXWithinSequencer = mouseX - sequencerLeftEdge
-        let subdivisionNumberToLeftOfMouse = Math.floor(mouseXWithinSequencer / widthOfEachSubdivision)
-        let mouseIsCloserToRightSubdivisionThanLeft = (mouseXWithinSequencer % widthOfEachSubdivision) > (widthOfEachSubdivision / 2)
+        let xPositionOfLeftmostSubdivisionLineWithinSequencer = (shiftOffsetInPixels % widthOfEachSubdivision)
+        let mouseXWithinSequencerWithShift = mouseXWithinSequencer - xPositionOfLeftmostSubdivisionLineWithinSequencer
+        let subdivisionNumberToLeftOfMouse = Math.floor(mouseXWithinSequencerWithShift / widthOfEachSubdivision)
+        let mouseIsCloserToRightSubdivisionThanLeft = (mouseXWithinSequencerWithShift % widthOfEachSubdivision) > (widthOfEachSubdivision / 2)
         let subdivisionToSnapTo = subdivisionNumberToLeftOfMouse
         if (mouseIsCloserToRightSubdivisionThanLeft) {
             subdivisionToSnapTo += 1
@@ -1417,7 +1419,8 @@ class DrumMachineGui {
     getXPositionOfSubdivisionLine(subdivisionIndex, numberOfSubdivisions, shiftOffsetInPixels) {
         let sequencerLeftEdge = this.configurations.sequencer.left
         let widthOfEachSubdivision = this.configurations.sequencer.width / numberOfSubdivisions
-        return sequencerLeftEdge + (widthOfEachSubdivision * subdivisionIndex) + (shiftOffsetInPixels % widthOfEachSubdivision);
+        let xPositionOfLeftmostSubdivisionLineWithinSequencer = (shiftOffsetInPixels % widthOfEachSubdivision)
+        return sequencerLeftEdge + xPositionOfLeftmostSubdivisionLineWithinSequencer + (widthOfEachSubdivision * subdivisionIndex);
     }
 
     /**
@@ -2276,7 +2279,7 @@ class DrumMachineGui {
                 }
                 // store values in relevant places
                 let shiftInPixels = self.shiftToolTracker.subdivisionLinesStartingShiftInPixels - mouseMoveDistance; 
-                shiftInPixels = shiftInPixels % self.sequencer.loopLengthInMillis; // shift values repeat when they get to the end of the sequencer, so use modular math to reduce them
+                shiftInPixels = shiftInPixels % self.configurations.sequencer.width; // shift values repeat when they get to the end of the sequencer, so use modular math to reduce them
                 self.subdivisionLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex] = shiftInPixels;
                 // convert the new shift value to milliseconds, and store that to the sequencer. 
                 let shiftAsPercentageOfFullLoop = shiftInPixels / self.configurations.sequencer.width;
@@ -2340,7 +2343,7 @@ class DrumMachineGui {
                 }
                 // store values in relevant places
                 let shiftInPixels = self.shiftToolTracker.referenceLinesStartingShiftInPixels - mouseMoveDistance; 
-                shiftInPixels = shiftInPixels % self.sequencer.loopLengthInMillis; // shift values repeat when they get to the end of the sequencer, so use modular math to reduce them
+                shiftInPixels = shiftInPixels % self.configurations.sequencer.width; // shift values repeat when they get to the end of the sequencer, so use modular math to reduce them
                 self.referenceLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex] = shiftInPixels;
                 // convert the new shift value to milliseconds, and store that to the sequencer. 
                 let shiftAsPercentageOfFullLoop = shiftInPixels / self.configurations.sequencer.width;
@@ -2414,7 +2417,7 @@ class DrumMachineGui {
                         // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
                         if (self.sequencer.rows[rowIndex].quantized === true) {
                             // determine which subdivision we are closest to
-                            self.circleSelectionTracker.circleBeingMovedNewBeatNumber = self.getIndexOfClosestSubdivisionLine(mouseX, self.sequencer.rows[rowIndex].getNumberOfSubdivisions())
+                            self.circleSelectionTracker.circleBeingMovedNewBeatNumber = self.getIndexOfClosestSubdivisionLine(mouseX, self.sequencer.rows[rowIndex].getNumberOfSubdivisions(), self.subdivisionLinesShiftInPixelsPerRow[rowIndex])
                             self.circleSelectionTracker.circleBeingMoved.translation.x = self.getXPositionOfSubdivisionLine(self.circleSelectionTracker.circleBeingMovedNewBeatNumber, self.sequencer.rows[rowIndex].getNumberOfSubdivisions(), self.subdivisionLinesShiftInPixelsPerRow[rowIndex])
                         } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
                             self.circleSelectionTracker.circleBeingMoved.translation.x = Util.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
