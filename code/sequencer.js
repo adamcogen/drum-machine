@@ -87,7 +87,6 @@ class Sequencer {
      * when it runs, it will manage updating all time-keeping variables and will schedule upcoming notes.
      */
     update() {
-        this.currentTime = this.audioDrivers[0].getCurrentTimeInMilliseconds()
         if (this.paused) {
             this.timekeeping.currentTimeWithinCurrentLoop = this.timekeeping.mostRecentPauseTimeWithinLoop // updated for the sake of the on-screen time tracking lines
         } else {
@@ -95,6 +94,15 @@ class Sequencer {
             this.timekeeping.theoreticalStartTimeOfCurrentLoop = (this.currentTime - this.timekeeping.currentTimeWithinCurrentLoop) // put this here because no need to update it if we are currently paused
             this.scheduleAllUpcomingNotes(this.currentTime, this.timekeeping.currentTimeWithinCurrentLoop, this.timekeeping.theoreticalStartTimeOfCurrentLoop) // schedule notes
         }
+        /**
+         * we used to update 'current time' at the top of this update() method, instead of here at the bottom. this caused an issue where notes that were supposed
+         * to be scheduled _right_ at the most recent pause time (such as at time 0 whenever the sequencer is restarted) were sometimes being skipped, since there 
+         * was a small time gap before we got around to scheduling the notes.
+         * to fix this, we will instead update current time _after_ scheduling notes, so that we schedule notes immediately after unpausing, so that we hopefully
+         * don't update 'current time' until the next update() call after unpausing. other than that, this change hopefully shouldn't make a difference in 
+         * functionality.
+         */
+        this.currentTime = this.audioDrivers[0].getCurrentTimeInMilliseconds()
     }
 
     getNextNoteToScheduleForRow(rowIndex) {
