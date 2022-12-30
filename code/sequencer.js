@@ -562,12 +562,13 @@ class SequencerRow {
         }
         if (this.quantized) { // if the row is quantized, we should adjust the existing notes to be quantized to the new subdivisions
             let newLengthOfOneSubdivision = (this.loopLengthInMillis / newNumberOfSubdivisions)
+            let shiftInMillis = (this.getSubdivisionLineShiftInMilliseconds() % newLengthOfOneSubdivision)
             if (newNumberOfSubdivisions > this.subdivisions) {
                 // adding more subdivisions: keep existing 'beat' numbers of each note the same, just we'll just add more subdivisions after them, and adjust note priorities.
                 let note = this._notesList.head
                 while(note) {
                     // just adjust note priorities. to do: this means the updated note priorities won't by applied to 'next note to schedule' until the next iteration. that's not ideal!
-                    note.priority = (note.data.beat * newLengthOfOneSubdivision)
+                    note.priority = (note.data.beat * newLengthOfOneSubdivision) + shiftInMillis
                     note = note.next
                 }
             } else if (newNumberOfSubdivisions < this.subdivisions) {
@@ -581,7 +582,7 @@ class SequencerRow {
                         note = nextNoteToCheck // manually skip to the note after the deleted note (which now has a null .next value)
                     } else {
                         // to do: updated priority won't be applied to 'next note to schedule' until the next iteration here:
-                        note.priority = (note.data.beat * newLengthOfOneSubdivision)
+                        note.priority = (note.data.beat * newLengthOfOneSubdivision) + shiftInMillis
                         note = note.next
                     }
                 }
