@@ -19,7 +19,7 @@ window.onload = () => {
     // initialize the list of sample names we will use. the order of this list determines the order of sounds on the sound bank
     let sampleNameList = [WOODBLOCK, HI_HAT_CLOSED, HI_HAT_OPEN, CLAP, SNARE, GHOST_NOTE_SNARE, TOM, BASS_DRUM]
 
-    let drumkitNameList = ['Basic Drum Kit', 'Basic Drum Kit 2', 'Underground']
+    let drumkitNameList = ['Basic Drum Kit', 'Basic Drum Kit 2', 'Underground', 'Basic Drum Kit 3']
 
     /**
      * load sound files.
@@ -47,7 +47,7 @@ window.onload = () => {
         }
     }
 
-    let selectedDrumKit = drumkitNameList[1]; // initialize the drum machine with this particular drum kit (set of drum sounds) selected
+    let selectedDrumKit = drumkitNameList[3]; // initialize the drum machine with this particular drum kit (set of drum sounds) selected
 
     // initialize web audio context and audio driver
     _setUpAudioContextCompatabilityShim();
