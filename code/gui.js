@@ -10,6 +10,8 @@ class DrumMachineGui {
     // create constants that will be used to denote sequencer modes
     static get MOVE_NOTES_MODE() { return "MOVE_NOTES_MODE" }
     static get CHANGE_NOTE_VOLUMES_MODE() { return "CHANGE_NOTE_VOLUMES_MODE" }
+    // create constants relating to exporting sequencer patterns to MIDI files
+    static get MIDI_FILE_EXPORT_NUMBER_OF_TICKS_PER_BEAT() { return 1024 };
 
     constructor(sequencer, sampleNameList, sampleBankNodeGenerator, allDrumKitsHash, selectedDrumKitName) {
         this.sequencer = sequencer
@@ -24,6 +26,8 @@ class DrumMachineGui {
             shapes: {}, // this hash will contain all of the two.js shapes (either as shapes, lists of shapes, or lists of lists of shapes)
             domElements: {} // this hash will contain all of the HTML DOM elements (either as individual elements, lists of elements, or lists of lists of elements, etc.)
         }
+
+        this.configureMidiFileWriterLibrary();
 
         this.currentGuiMode = DrumMachineGui.MOVE_NOTES_MODE; // start the GUI in 'move notes' mode
 
@@ -3043,5 +3047,27 @@ class DrumMachineGui {
         // encode sequencer pattern to json and add it to url. 
         // 'btoa(plaintext)' converts a plaintext string to a base64 string, so that it is URL-safe. we can decode the base64 string back to plaintext later using 'atob(base64)'.
         window.location.hash = btoa(this.sequencer.serialize());
+    }
+
+    /**
+     * MIDI file export helper methods
+     */
+
+    configureMidiFileWriterLibrary() {
+        /**
+         * Configure the MidiWriterJS library for writing sequencer patterns to MIDI files.
+         * 
+         * MIDI files store BPM information, then support storing timing of notes as either beat lengths, or as 'tick' values, where every beat is made up of a defineable numbder
+         * of ticks. When exporting MIDI files, we will use 'ticks' rather than traditional beat lengths, since our sequencer supports unusual beat divisions and unquantized notes. 
+         * 
+         * Set the number of 'ticks' to use per beat in exported MIDI files. By default the value is 128 ticks per beat, but we can set it higher to get higher-resolution timing
+         * in our exported MIDI files.
+         * 
+         * The time that each MIDI tick takes is BPM-dependent. On the other hand, the drum sequener schedules note from raw time values (in milliseconds). So if we try to 
+         * export a low-enough BPM sequencer pattern to  MIDI, it's possible that the MIDI file's time resolution wont' be high enough to accurately represent the rhythms in 
+         * the sequence. If this becomes an issue we can raise the number of ticks per beat set here, or we can raise the minimum beats per minute value. For now we will just 
+         * try to use a value that's good enough for the average BPM range use case (probably between 40 and 200 beats per minute).
+         */
+        MidiWriter.Constants.HEADER_CHUNK_DIVISION = [0, DrumMachineGui.MIDI_FILE_EXPORT_NUMBER_OF_TICKS_PER_BEAT];
     }
 }
