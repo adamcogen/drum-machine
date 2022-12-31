@@ -96,11 +96,12 @@ class Sequencer {
         }
         /**
          * we used to update 'current time' at the top of this update() method, instead of here at the bottom. this caused an issue where notes that were supposed
-         * to be scheduled _right_ at the most recent pause time (such as at time 0 whenever the sequencer is restarted) were sometimes being skipped, since there 
-         * was a small time gap before we got around to scheduling the notes.
-         * to fix this, we will instead update current time _after_ scheduling notes, so that we schedule notes immediately after unpausing, so that we hopefully
-         * don't update 'current time' until the next update() call after unpausing. other than that, this change hopefully shouldn't make a difference in 
-         * functionality.
+         * to be scheduled _right_ at the unpause time (such as at time 0 whenever the sequencer is restarted) were sometimes being skipped, I suspect because of
+         * a race condition with the timing of update() being called and unpause() being called, which would cause an extra update() to run before the unpause() 
+         * goes through fully, causing 'current time' to be changed before we actualled started scheduling notes after unpausing.
+         * to fix this, we will instead update current time _after_ scheduling notes, so that we schedule notes immediately after unpausing. this way we
+         * can be sure not to change 'current time' until the end of the next update() call after unpausing. other than that, this change hopefully shouldn't 
+         * make any difference in functionality. if this causes any other unexpected issues i will look into it further, but this change seems to have fixed it.
          */
         this.currentTime = this.audioDrivers[0].getCurrentTimeInMilliseconds()
     }
