@@ -277,8 +277,9 @@ class Sequencer {
             // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for.
             // don't schedule a note unless it hasn't been scheduled on this loop iteration and it goes after the current time (i.e. don't schedule notes in the past, just skip over them)
             if (nextNoteToSchedule.priority >= currentTimeWithinCurrentLoop && numberOfLoopsSoFar > nextNoteToSchedule.data.lastScheduledOnIteration) {
+                nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFar // record the last iteration that the note was played on to avoid duplicate scheduling within the same iteration. 
+                // we are marking the notes as played before before actually scheduling them since scheduling could take longer, and we want them marked as played as quickly as possible to prevent any accidental duplicates.
                 this.scheduleDrumSample(actualStartTimeOfCurrentLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName, nextNoteToSchedule.data.volume, nextNoteToSchedule.data.midiNote, nextNoteToSchedule.data.midiVelocity)
-                nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFar // record the last iteration that the note was played on to avoid duplicate scheduling within the same iteration
             }
             nextNoteToSchedule = nextNoteToSchedule.next
         }
@@ -293,8 +294,8 @@ class Sequencer {
             while (nextNoteToSchedule !== null && nextNoteToSchedule.priority <= endTimeToScheduleUpToFromBeginningOfLoop) {
                 // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for
                 if (numberOfLoopsSoFarPlusOne > nextNoteToSchedule.data.lastScheduledOnIteration) {
+                    nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFarPlusOne // we are scheduling these for the end of the scheduling time window after it has wrapped to the beginning of the loop, so use an incremented iteration count
                     this.scheduleDrumSample(actualStartTimeOfNextLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName, nextNoteToSchedule.data.volume, nextNoteToSchedule.data.midiNote, nextNoteToSchedule.data.midiVelocity)
-                    nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFarPlusOne
                 }
                 nextNoteToSchedule = nextNoteToSchedule.next
             }
