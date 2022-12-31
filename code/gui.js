@@ -2308,7 +2308,6 @@ class DrumMachineGui {
                     let newNoteXPosition;
                     let newNoteBeatNumber;
                     if (self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized) { // handle note shifting for when the row is quantized)
-                        // determine which subdivision we are closest to. this logic is mostly adapted from the Sequencer.setQuantization method with some modificaions.
                         if (self.shiftToolTracker.resourcesToShift.subdivisionLines) { 
                             // if subdivision lines are being moved along with the notes, just move the notes along with those then figure out new beat numbers afterwards.
                             let shiftInPixels = self.subdivisionLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex]
