@@ -11,7 +11,7 @@ class DrumMachineGui {
     static get MOVE_NOTES_MODE() { return "MOVE_NOTES_MODE" }
     static get CHANGE_NOTE_VOLUMES_MODE() { return "CHANGE_NOTE_VOLUMES_MODE" }
     // create constants relating to exporting sequencer patterns to MIDI files
-    static get MIDI_FILE_EXPORT_NUMBER_OF_TICKS_PER_BEAT() { return 1024 };
+    static get MIDI_FILE_EXPORT_NUMBER_OF_TICKS_PER_BEAT() { return 128 };
 
     constructor(sequencer, sampleNameList, sampleBankNodeGenerator, allDrumKitsHash, selectedDrumKitName) {
         this.sequencer = sequencer
@@ -3067,7 +3067,63 @@ class DrumMachineGui {
          * export a low-enough BPM sequencer pattern to  MIDI, it's possible that the MIDI file's time resolution wont' be high enough to accurately represent the rhythms in 
          * the sequence. If this becomes an issue we can raise the number of ticks per beat set here, or we can raise the minimum beats per minute value. For now we will just 
          * try to use a value that's good enough for the average BPM range use case (probably between 40 and 200 beats per minute).
+         * 
+         * Later update: it looks like updating the number of ticks per beat doesn't work the way I expected, so for now I will just use the default value (128 ticks per beat).
+         * I will look further into this if it causes any issues with the accuracy of exported MIDI files. 
          */
         MidiWriter.Constants.HEADER_CHUNK_DIVISION = [0, DrumMachineGui.MIDI_FILE_EXPORT_NUMBER_OF_TICKS_PER_BEAT];
+    }
+
+    exportSequencerPatternToMidiDataUri() {
+        // create the MIDI track we will export
+        let midiTrack = new MidiWriter.Track();
+        // set the tempo of the MIDI track
+        midiTrack.setTempo(this.sequencer.tempoRepresentation.beatsPerMinute); 
+        // set the key signature of the MIDI track
+        let timeSignatureNumerator = this.sequencer.tempoRepresentation.numberOfBeatsPerLoop;
+        let timeSignatureDenominator = 4; // assume the time signature denominator is always 4 for convenience, since we don't let the user actually set a denominator currently
+        midiTrack.setTimeSignature(timeSignatureNumerator, timeSignatureDenominator)
+        // iterate through all sequencer rows and write relevant information from their notes to a single list of objects with details about midi messages.
+        // the MIDI file writer library we are using has some convenient features so that we only need to create 'note on' events with durations, rather than
+        // also worrying about 'note off' events. but if we _did_ need to create 'note off' events too, we would add them here, with timestamps incremented
+        // by whatever MIDI note duration we choose, so that all of the events would then get sorted before being turned into real MIDI messages later.
+        let midiNoteDurationInTicks = 2 // just use an arbitrary short amount of time for now. make this longer if notes aren't showing up, etc.
+        let allMidiMessagesDetails = [];
+        for (let row of this.sequencer.rows) {
+            let note = row._notesList.head
+            while (note !== null) {
+                let noteOn = {
+                    noteOn: true,
+                    timeInTicks: this.convertMillisecondTimeToMidiTicks(note.priority),
+                    velocity: note.data.midiVelocity,
+                    pitch: note.data.midiNote,
+                }
+                allMidiMessagesDetails.push(noteOn);
+                note = note.next
+            }
+        }
+        // sort the list of note MIDI data objects by their times in MIDI ticks
+        allMidiMessagesDetails.sort( (note1, note2) => { return note1.timeInTicks - note2.timeInTicks} )
+        // create actual MIDI events and add them to the MIDI track
+        let allMidiMessages = []
+        for (let noteMidiDetails of allMidiMessagesDetails) {
+            allMidiMessages.push(
+                new MidiWriter.NoteEvent({
+                    pitch: noteMidiDetails.pitch,
+                    duration: 'T' + midiNoteDurationInTicks,
+                    velocity: noteMidiDetails.velocity,
+                    startTick: noteMidiDetails.timeInTicks
+			}));
+        }
+        midiTrack.addEvent(allMidiMessages);
+        // write MIDI track to a file
+        let midiTrackWriter = new MidiWriter.Writer(midiTrack);
+        console.log(midiTrackWriter.dataUri());
+    }
+
+    // convert a time in milliseconds (assumed to be within the sequencer length) to its corresponding MIDI tick number within the sequencer pattern
+    convertMillisecondTimeToMidiTicks(milliseconds) {
+        let numberOfMidiTicksInFullLoop = this.sequencer.tempoRepresentation.numberOfBeatsPerLoop * DrumMachineGui.MIDI_FILE_EXPORT_NUMBER_OF_TICKS_PER_BEAT;
+        return Math.round(Util.calculateLinearConversion(milliseconds, 0, this.sequencer.loopLengthInMillis, 0, numberOfMidiTicksInFullLoop));
     }
 }

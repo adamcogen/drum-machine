@@ -166,14 +166,13 @@ class MidiAudioDriver extends BaseAudioDriver {
     // these are just constants used by the WebMidi API to represent 'note on' and 'note off' in MIDI messages, respectively
     static get NOTE_ON_DATA() { return 0x90 }
     static get NOTE_OFF_DATA() { return 0x80 }
+    static get NOTE_DURATION() { return .2 } // without overlap (since as far as I know the same note can't be played more than once at the same time).
 
     constructor(webMidiOutput) {
         super(true)
         this.schedulingTimeOffsetInMilliseconds = 0;
         this.midiOutput = webMidiOutput
          // How long each MIDI note should play for, in milliseconds. This is short so that we can send many MIDI notes in a row as fast as possible
-        this.defaultNoteDuration = .2; // without overlap (since as far as I know the same note can't be played more than once at the same time).
-        
     }
 
     scheduleSound(soundData, time) {
@@ -184,7 +183,7 @@ class MidiAudioDriver extends BaseAudioDriver {
         let midiOffMessage = [MidiAudioDriver.NOTE_OFF_DATA, soundData.note, soundData.velocity]
         let timeWithOffset = time + this.getSchedulingTimeOffsetInMilliseconds();
         this.midiOutput.send(midiOnMessage, timeWithOffset)
-        this.midiOutput.send(midiOffMessage, timeWithOffset + this.defaultNoteDuration);
+        this.midiOutput.send(midiOffMessage, timeWithOffset + MidiAudioDriver.NOTE_DURATION);
     }
 
     playSoundNow(soundData) {
@@ -194,7 +193,7 @@ class MidiAudioDriver extends BaseAudioDriver {
         let midiOnMessage = [MidiAudioDriver.NOTE_ON_DATA, soundData.note, soundData.velocity]
         let midiOffMessage = [MidiAudioDriver.NOTE_OFF_DATA, soundData.note, soundData.velocity]
         this.midiOutput.send(midiOnMessage)
-        this.midiOutput.send(midiOffMessage, this.getCurrentTimeInMilliseconds() + this.defaultNoteDuration)
+        this.midiOutput.send(midiOffMessage, this.getCurrentTimeInMilliseconds() + MidiAudioDriver.NOTE_DURATION)
     }
 
     getCurrentTimeInMilliseconds() {
