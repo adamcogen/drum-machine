@@ -292,5 +292,11 @@ function getGuiConfigurations(hideIcons=false) {
             height: 20,
             width: 20,
         },
+        exportPatternToMidiFileButton: {
+            top: 20,
+            left: 830,
+            height: 48,
+            width: 48,
+        },
     }
 }

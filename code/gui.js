@@ -156,6 +156,7 @@ class DrumMachineGui {
         this.addTapTempoButtonActionListeners();
         this.refreshWindowMouseMoveEvent();
         this.refreshWindowMouseUpEvent();
+        this.initializeExportPatternToMidiFileButtonActionListener();
 
         this.pause(); // start the sequencer paused
         this.redrawSequencer(); // redraw the display
@@ -243,9 +244,9 @@ class DrumMachineGui {
         shapes.shiftModeMoveNotesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveNotesButton.top, this.configurations.shiftModeMoveNotesButton.left, this.configurations.shiftModeMoveNotesButton.height, this.configurations.shiftModeMoveNotesButton.width)
         shapes.shiftModeMoveSubdivisionLinesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveSubdivisionLinesButton.top, this.configurations.shiftModeMoveSubdivisionLinesButton.left, this.configurations.shiftModeMoveSubdivisionLinesButton.height, this.configurations.shiftModeMoveSubdivisionLinesButton.width)
         shapes.shiftModeMoveReferenceLinesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveReferenceLinesButton.top, this.configurations.shiftModeMoveReferenceLinesButton.left, this.configurations.shiftModeMoveReferenceLinesButton.height, this.configurations.shiftModeMoveReferenceLinesButton.width)
-        // comment out these 'shift tool' buttons until we are ready to start adding logic to them
         shapes.shiftModeResetSubdivisionLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetSubdivisionLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.height, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of subdivision lines for each row
         shapes.shiftModeResetReferenceLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetReferenceLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.height, this.configurations.shiftModeResetReferenceLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of reference lines for each row
+        shapes.exportPatternToMidiFileButton = this.initializeRectangleShape(this.configurations.exportPatternToMidiFileButton.top, this.configurations.exportPatternToMidiFileButton.left, this.configurations.exportPatternToMidiFileButton.height, this.configurations.exportPatternToMidiFileButton.width) // clicking this button will download a MIDI file containing the sequencer pattern
         this.two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
         return shapes;
     }
@@ -329,7 +330,11 @@ class DrumMachineGui {
             tapTempo: {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
                 shape: this.components.shapes.tapTempoButton,
-            }
+            },
+            exportPatternToMidiFile: {
+                lastClickTime: Number.MIN_SAFE_INTEGER,
+                shape: this.components.shapes.exportPatternToMidiFileButton,
+            },
         }
         return lastButtonClickTimeTrackers;
     }
@@ -1540,6 +1545,26 @@ class DrumMachineGui {
 
     clearNotesForRow(rowIndex) { 
         this.sequencer.clearRow(rowIndex)
+    }
+
+    /**
+     * add action listener to the 'export sequencer pattern to midi file' button
+     */
+    initializeExportPatternToMidiFileButtonActionListener() {
+        this.lastButtonClickTimeTrackers.exportPatternToMidiFile.shape = this.components.shapes.exportPatternToMidiFileButton;
+        if (this.eventHandlerFunctions.exportPatternToMidiFile !== null && this.eventHandlerFunctions.exportPatternToMidiFile !== undefined) {
+            // remove event listeners if they've already been added to avoid duplicates
+            this.components.shapes.exportPatternToMidiFile._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.exportPatternToMidiFile)
+        }
+        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+        this.eventHandlerFunctions.exportPatternToMidiFile = () => this.exportPatternToMidiFileButtonClickHandler(this)
+        this.components.shapes.exportPatternToMidiFileButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.exportPatternToMidiFile)
+    }
+
+    exportPatternToMidiFileButtonClickHandler(self) {
+        self.lastButtonClickTimeTrackers["exportPatternToMidiFile"].lastClickTime = self.sequencer.currentTime
+        self.components.shapes.exportPatternToMidiFileButton.fill = self.configurations.buttonBehavior.clickedButtonColor
+        self.exportSequencerPatternToMidiDataUri();
     }
 
     /**
