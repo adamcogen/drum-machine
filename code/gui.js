@@ -2896,6 +2896,48 @@ class DrumMachineGui {
         this.components.domElements.images.moveNotesModeIcon.style.height = "" + this.configurations.moveNotesModeButton.icon.height + "px"
         this.components.domElements.images.moveNotesModeIcon.style.left = "" + this.configurations.moveNotesModeButton.left + "px"
         this.components.domElements.images.moveNotesModeIcon.style.top = "" + this.configurations.moveNotesModeButton.top + "px"
+        // ********** new button icons with no action listeners added yet start here **********
+        // edit mode: change note volumes
+        this.components.domElements.images.changeVolumesModeIcon.style.width = "" + this.configurations.editVolumesModeButton.icon.width + "px"
+        this.components.domElements.images.changeVolumesModeIcon.style.height = "" + this.configurations.editVolumesModeButton.icon.height + "px"
+        this.components.domElements.images.changeVolumesModeIcon.style.left = "" + this.configurations.editVolumesModeButton.left + "px"
+        this.components.domElements.images.changeVolumesModeIcon.style.top = "" + this.configurations.editVolumesModeButton.top + "px"
+        // loop length input mode: bpm
+        this.components.domElements.images.bpmLoopLengthModeIcon.style.width = "" + this.configurations.tempoInputModeSelectionBpmButton.icon.width + "px"
+        this.components.domElements.images.bpmLoopLengthModeIcon.style.height = "" + this.configurations.tempoInputModeSelectionBpmButton.icon.height + "px"
+        this.components.domElements.images.bpmLoopLengthModeIcon.style.left = "" + this.configurations.tempoInputModeSelectionBpmButton.left + "px"
+        this.components.domElements.images.bpmLoopLengthModeIcon.style.top = "" + this.configurations.tempoInputModeSelectionBpmButton.top + "px"
+        // loop length input mode: milliseconds
+        this.components.domElements.images.millisecondsLoopLengthModeIcon.style.width = "" + this.configurations.tempoInputModeSelectionMillisecondsButton.icon.width + "px"
+        this.components.domElements.images.millisecondsLoopLengthModeIcon.style.height = "" + this.configurations.tempoInputModeSelectionMillisecondsButton.icon.height + "px"
+        this.components.domElements.images.millisecondsLoopLengthModeIcon.style.left = "" + this.configurations.tempoInputModeSelectionMillisecondsButton.left + "px"
+        this.components.domElements.images.millisecondsLoopLengthModeIcon.style.top = "" + this.configurations.tempoInputModeSelectionMillisecondsButton.top + "px"
+        // tap tempo
+        this.components.domElements.images.tapTempoIcon.style.width = "" + this.configurations.tapTempoButton.icon.width + "px"
+        this.components.domElements.images.tapTempoIcon.style.height = "" + this.configurations.tapTempoButton.icon.height + "px"
+        this.components.domElements.images.tapTempoIcon.style.left = "" + this.configurations.tapTempoButton.left + "px"
+        this.components.domElements.images.tapTempoIcon.style.top = "" + this.configurations.tapTempoButton.top + "px"
+        // export pattern to MIDI file
+        this.components.domElements.images.exportPatternAsMidiFileIcon.style.width = "" + this.configurations.exportPatternToMidiFileButton.icon.width + "px"
+        this.components.domElements.images.exportPatternAsMidiFileIcon.style.height = "" + this.configurations.exportPatternToMidiFileButton.icon.height + "px"
+        this.components.domElements.images.exportPatternAsMidiFileIcon.style.left = "" + this.configurations.exportPatternToMidiFileButton.left + "px"
+        this.components.domElements.images.exportPatternAsMidiFileIcon.style.top = "" + this.configurations.exportPatternToMidiFileButton.top + "px"
+        // activate shift notes
+        this.components.domElements.images.activateShiftNotesIcon.style.width = "" + this.configurations.shiftModeMoveNotesButton.icon.width + "px"
+        this.components.domElements.images.activateShiftNotesIcon.style.height = "" + this.configurations.shiftModeMoveNotesButton.icon.height + "px"
+        this.components.domElements.images.activateShiftNotesIcon.style.left = "" + this.configurations.shiftModeMoveNotesButton.left + "px"
+        this.components.domElements.images.activateShiftNotesIcon.style.top = "" + this.configurations.shiftModeMoveNotesButton.top + "px"
+        // activate shift subdivision lines
+        this.components.domElements.images.activateShiftSubdivisionLinesIcon.style.width = "" + this.configurations.shiftModeMoveSubdivisionLinesButton.icon.width + "px"
+        this.components.domElements.images.activateShiftSubdivisionLinesIcon.style.height = "" + this.configurations.shiftModeMoveSubdivisionLinesButton.icon.height + "px"
+        this.components.domElements.images.activateShiftSubdivisionLinesIcon.style.left = "" + this.configurations.shiftModeMoveSubdivisionLinesButton.left + "px"
+        this.components.domElements.images.activateShiftSubdivisionLinesIcon.style.top = "" + this.configurations.shiftModeMoveSubdivisionLinesButton.top + "px"
+        // activate shift reference lines
+        this.components.domElements.images.activateShiftReferenceLinesIcon.style.width = "" + this.configurations.shiftModeMoveReferenceLinesButton.icon.width + "px"
+        this.components.domElements.images.activateShiftReferenceLinesIcon.style.height = "" + this.configurations.shiftModeMoveReferenceLinesButton.icon.height + "px"
+        this.components.domElements.images.activateShiftReferenceLinesIcon.style.left = "" + this.configurations.shiftModeMoveReferenceLinesButton.left + "px"
+        this.components.domElements.images.activateShiftReferenceLinesIcon.style.top = "" + this.configurations.shiftModeMoveReferenceLinesButton.top + "px"
+        // ********** new button icons with no action listeners added yet end here **********
         // clear row buttons -- one per row
         for (let icon of this.components.domElements.iconLists.clearRowIcons) {
             icon.remove();
@@ -2984,17 +3026,19 @@ class DrumMachineGui {
         }
         this.components.domElements.images.unlockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         this.components.domElements.images.lockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
-        // hide icons that aren't being used yet
+        // hide icons that aren't ready to be shown yet
         this.components.domElements.images.changeVolumesModeIcon.style.display = 'none';
         this.components.domElements.images.bpmLoopLengthModeIcon.style.display = 'none';
         this.components.domElements.images.millisecondsLoopLengthModeIcon.style.display = 'none';
         this.components.domElements.images.tapTempoIcon.style.display = 'none';
-        this.components.domElements.images.resetSubdvisionsLinesShiftForRowIcon.style.display = 'none';
-        this.components.domElements.images.resetReferenceLinesShiftForRowIcon.style.display = 'none';
         this.components.domElements.images.exportPatternAsMidiFileIcon.style.display = 'none';
         this.components.domElements.images.activateShiftNotesIcon.style.display = 'none';
         this.components.domElements.images.activateShiftSubdivisionLinesIcon.style.display = 'none';
         this.components.domElements.images.activateShiftReferenceLinesIcon.style.display = 'none';
+        // TODO: add reset subdivision lines shift for row icons (one per row)
+        this.components.domElements.images.resetSubdvisionsLinesShiftForRowIcon.style.display = 'none';
+        // TODO: add reset reference lines shift for row icons (one per row)
+        this.components.domElements.images.resetReferenceLinesShiftForRowIcon.style.display = 'none';
     }
 
     /**
