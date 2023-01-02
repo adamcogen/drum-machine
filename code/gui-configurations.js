@@ -111,12 +111,24 @@ function getGuiConfigurations(hideIcons=false) {
             left: 40,
             width: 48,
             height: 48,
+            icon: {
+                height: 48,
+                width: 48,
+                topPadding: 0,
+                leftPadding: 0,
+            },
         },
         editVolumesModeButton: {
             top: 715,
             left: 40,
             width: 48,
             height: 48,
+            icon: {
+                height: 48,
+                width: 48,
+                topPadding: 0,
+                leftPadding: 0,
+            },
         },
         mouseEvents: {
             notePlacementPadding: 20, // give this many pixels of padding on either side of things when we're placing, so we don't have to place them _precisely_ on the line, the trash bin, etc.
@@ -201,18 +213,36 @@ function getGuiConfigurations(hideIcons=false) {
             left: 12,
             height: 48,
             width: 48,
+            icon: {
+                height: 48,
+                width: 48,
+                topPadding: 0,
+                leftPadding: 0,
+            },
         },
         tempoInputModeSelectionMillisecondsButton: { // button for toggling between different modes of inputting tempo. this one is to select 'loop length in milliseconds' input mode.
             top: 20,
             left: 68,
             height: 48,
             width: 48,
+            icon: {
+                height: 48,
+                width: 48,
+                topPadding: 0,
+                leftPadding: 0,
+            },
         },
         tapTempoButton: {
             top: 20,
             left: 380,
             height: 48,
-            width: 48
+            width: 48,
+            icon: {
+                height: 48,
+                width: 48,
+                topPadding: 0,
+                leftPadding: 0,
+            },
         },
         sequencerRowHandles: { // these will be circles, one to the left of each sequencer row, that allow you to select the row and click-drag it.
             topPadding: 0,
@@ -267,36 +297,72 @@ function getGuiConfigurations(hideIcons=false) {
             left: 550,
             width: 48,
             height: 48,
+            icon: {
+                height: 48,
+                width: 48,
+                topPadding: 0,
+                leftPadding: 0,
+            },
         },
         shiftModeMoveSubdivisionLinesButton: {
             top: 20,
             left: 610,
             width: 48,
             height: 48,
+            icon: {
+                height: 48,
+                width: 48,
+                topPadding: 0,
+                leftPadding: 0,
+            },
         },
         shiftModeMoveReferenceLinesButton: {
             top: 20,
             left: 670,
             width: 48,
             height: 48,
+            icon: {
+                height: 48,
+                width: 48,
+                topPadding: 0,
+                leftPadding: 0,
+            },
         },
         shiftModeResetReferenceLinesForRowButtons: {
             topPaddingPerRow: -23,
             leftPaddingPerRow: 155,
             height: 20,
             width: 20,
+            icon: {
+                height: 20,
+                width: 20,
+                topPadding: 0,
+                leftPadding: 0,
+            },
         },
         shiftModeResetSubdivisionLinesForRowButtons: {
             topPaddingPerRow: 2,
             leftPaddingPerRow: 155,
             height: 20,
             width: 20,
+            icon: {
+                height: 20,
+                width: 20,
+                topPadding: 0,
+                leftPadding: 0,
+            },
         },
         exportPatternToMidiFileButton: {
             top: 20,
             left: 830,
             height: 48,
             width: 48,
+            icon: {
+                height: 48,
+                width: 48,
+                topPadding: 0,
+                leftPadding: 0,
+            },
         },
     }
 }
