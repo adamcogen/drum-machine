@@ -3135,7 +3135,7 @@ class DrumMachineGui {
             allMidiMessages.push(
                 new MidiWriter.NoteEvent({
                     pitch: noteMidiDetails.pitch,
-                    duration: 'T' + midiNoteDurationInTicks,
+                    duration: 'T' + midiNoteDurationInTicks, // a duration such as 'T10' specifies a number of ticks (in this example, 10 ticks)
                     velocity: noteMidiDetails.velocity,
                     startTick: noteMidiDetails.timeInTicks
 			}));
@@ -3143,13 +3143,9 @@ class DrumMachineGui {
         midiTrack.addEvent(allMidiMessages);
         // write MIDI track to a file
         let midiTrackWriter = new MidiWriter.Writer(midiTrack);
-        this.exportDataUriToFile(midiTrackWriter.dataUri(), "drum-machine-pattern.midi")
-    }
-
-    // given a data URI, export it to a file with the given name
-    exportDataUriToFile(dataUri, filename){
-        // todo: implement this function
-        console.log(dataUri);
+        let midiUint8Array = midiTrackWriter.buildFile()
+        let blob = new Blob([midiUint8Array.buffer])
+        saveAs(blob, "drums.midi"); // the 'saveAs()' function here is implemented within the FileSaver.js library dependency
     }
 
     // convert a time in milliseconds (assumed to be within the sequencer length) to its corresponding MIDI tick number within the sequencer pattern
