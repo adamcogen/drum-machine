@@ -1693,10 +1693,12 @@ class DrumMachineGui {
         if (this.eventHandlerFunctions.moveNotesModeButton !== null && this.eventHandlerFunctions.moveNotesModeButton !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.moveNotesModeButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.moveNotesModeButton)
+            this.components.domElements.images.moveNotesModeIcon.removeEventListener('click', this.eventHandlerFunctions.moveNotesModeButton)
         }
         // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
         this.eventHandlerFunctions.moveNotesModeButton = () => this.moveNotesModeButtonClickHandler(this);
         this.components.shapes.moveNotesModeButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.moveNotesModeButton)
+        this.components.domElements.images.moveNotesModeIcon.addEventListener('click', this.eventHandlerFunctions.moveNotesModeButton)
     }
 
     addEditVolumesModeButtonActionListeners() {
@@ -2889,6 +2891,11 @@ class DrumMachineGui {
         this.components.domElements.images.playIcon.style.height = "" + this.configurations.pauseButton.icon.height + "px"
         this.components.domElements.images.playIcon.style.left = "" + this.configurations.pauseButton.left + "px"
         this.components.domElements.images.playIcon.style.top = "" + this.configurations.pauseButton.top + "px"
+        // edit mode: move notes
+        this.components.domElements.images.moveNotesModeIcon.style.width = "" + this.configurations.moveNotesModeButton.icon.width + "px"
+        this.components.domElements.images.moveNotesModeIcon.style.height = "" + this.configurations.moveNotesModeButton.icon.height + "px"
+        this.components.domElements.images.moveNotesModeIcon.style.left = "" + this.configurations.moveNotesModeButton.left + "px"
+        this.components.domElements.images.moveNotesModeIcon.style.top = "" + this.configurations.moveNotesModeButton.top + "px"
         // clear row buttons -- one per row
         for (let icon of this.components.domElements.iconLists.clearRowIcons) {
             icon.remove();
@@ -2978,7 +2985,6 @@ class DrumMachineGui {
         this.components.domElements.images.unlockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         this.components.domElements.images.lockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         // hide icons that aren't being used yet
-        this.components.domElements.images.moveNotesModeIcon.style.display = 'none';
         this.components.domElements.images.changeVolumesModeIcon.style.display = 'none';
         this.components.domElements.images.bpmLoopLengthModeIcon.style.display = 'none';
         this.components.domElements.images.millisecondsLoopLengthModeIcon.style.display = 'none';
