@@ -1,4 +1,8 @@
+This directory contains the SVG files that were used to create the icons on the drum machine's GUI. These SVGs were created in Inkscape, then further edited in GIMP and exported to PNGs. The PNGs are what actaully appear on the drum machine GUI. These SVG files are included here so that they can be modified in Inkscape again later if we want to make changes to these icons.
+
+Some details about how they were made:
+
 - line width should be 2
-- current final resolution will be 48x48
+- planned final on-screen image resolution will be 48x48
 
 scale linewidth proportionally for differently-sized icons

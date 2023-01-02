@@ -5,7 +5,7 @@
 window.onload = () => {
 
     // initialize sound file constants
-    const SOUND_FILES_PATH = './sounds/';
+    const SOUND_FILES_PATH = './assets/sounds/';
     const BASS_DRUM = "bass-drum";
     const HI_HAT_CLOSED = 'hi-hat-closed';
     const HI_HAT_OPEN = 'hi-hat-open';
@@ -19,6 +19,7 @@ window.onload = () => {
     // initialize the list of sample names we will use. the order of this list determines the order of sounds on the sound bank
     let sampleNameList = [WOODBLOCK, HI_HAT_CLOSED, HI_HAT_OPEN, CLAP, SNARE, GHOST_NOTE_SNARE, TOM, BASS_DRUM]
 
+    // each drum kit is stored in the ./assets/sounds/ directory, as a folder with the name listed here
     let drumkitNameList = ['Basic Drum Kit', 'Basic Drum Kit 2', 'Underground', 'Basic Drum Kit 3']
 
     /**
