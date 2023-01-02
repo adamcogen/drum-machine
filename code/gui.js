@@ -1845,11 +1845,13 @@ class DrumMachineGui {
 
     hideTapTempoButton() {
         this.components.shapes.tapTempoButton.remove();
+        this.components.domElements.images.tapTempoIcon.style.display = 'none';
     }
 
     showTapTempoButton() {
         this.components.shapes.tapTempoButton = this.initializeRectangleShape(this.configurations.tapTempoButton.top, this.configurations.tapTempoButton.left, this.configurations.tapTempoButton.height, this.configurations.tapTempoButton.width);
         this.lastButtonClickTimeTrackers.tapTempo.shape = this.components.shapes.tapTempoButton;
+        this.components.domElements.images.tapTempoIcon.style.display = 'block';
         this.two.update();
         this.addTapTempoButtonActionListeners();
     }
