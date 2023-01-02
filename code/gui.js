@@ -1169,39 +1169,51 @@ class DrumMachineGui {
     // add action listeners to the buttons that let you select which resources will be moved by the shift tool.
     // there is one button each for: notes, subdivision lines, and refernce lines.
     initializeShiftToolToggleButtonActionListeners() {
-        this.components.shapes.shiftModeMoveNotesButton._renderer.elem.addEventListener('click', () => {
-            this.shiftToolTracker.resourcesToShift.notes = !this.shiftToolTracker.resourcesToShift.notes
-            if (this.shiftToolTracker.resourcesToShift.notes) {
-                // move notes
-                this.components.shapes.shiftModeMoveNotesButton.fill = this.configurations.buttonBehavior.clickedButtonColor
-            } else {
-                // don't move notes
-                this.components.shapes.shiftModeMoveNotesButton.fill = 'transparent'
-            }
-            this.redrawSequencer(); // redraw sequencer so we can show or hide the 'shift' tool row handles if necessary
-        });
-        this.components.shapes.shiftModeMoveSubdivisionLinesButton._renderer.elem.addEventListener('click', () => {
-            this.shiftToolTracker.resourcesToShift.subdivisionLines = !this.shiftToolTracker.resourcesToShift.subdivisionLines
-            if (this.shiftToolTracker.resourcesToShift.subdivisionLines) {
-                // move subdivision lines
-                this.components.shapes.shiftModeMoveSubdivisionLinesButton.fill = this.configurations.buttonBehavior.clickedButtonColor
-            } else {
-                // don't move subdivision lines
-                this.components.shapes.shiftModeMoveSubdivisionLinesButton.fill = 'transparent'
-            }
-            this.redrawSequencer(); // redraw sequencer so we can show or hide the 'shift' tool row handles if necessary
-        });
-        this.components.shapes.shiftModeMoveReferenceLinesButton._renderer.elem.addEventListener('click', () => {
-            this.shiftToolTracker.resourcesToShift.referenceLines = !this.shiftToolTracker.resourcesToShift.referenceLines
-            if (this.shiftToolTracker.resourcesToShift.referenceLines) {
-                // move reference lines
-                this.components.shapes.shiftModeMoveReferenceLinesButton.fill = this.configurations.buttonBehavior.clickedButtonColor
-            } else {
-                // don't move reference lines
-                this.components.shapes.shiftModeMoveReferenceLinesButton.fill = 'transparent'
-            }
-            this.redrawSequencer(); // redraw sequencer so we can show or hide the 'shift' tool row handles if necessary
-        });
+        // shift notes
+        this.components.shapes.shiftModeMoveNotesButton._renderer.elem.addEventListener('click', () => this.shiftModeMoveNotesClickHandler(this));
+        this.components.domElements.images.activateShiftNotesIcon.addEventListener('click', () => this.shiftModeMoveNotesClickHandler(this))
+        // shift subdivision lines
+        this.components.shapes.shiftModeMoveSubdivisionLinesButton._renderer.elem.addEventListener('click', () => this.shiftModeMoveSubdivisionLinesClickHandler(this));
+        this.components.domElements.images.activateShiftSubdivisionLinesIcon.addEventListener('click', () => this.shiftModeMoveSubdivisionLinesClickHandler(this))
+        // shift reference lines
+        this.components.shapes.shiftModeMoveReferenceLinesButton._renderer.elem.addEventListener('click', () => this.shiftModeMoveReferenceLinesClickHandler(this));
+        this.components.domElements.images.activateShiftReferenceLinesIcon.addEventListener('click', () => this.shiftModeMoveReferenceLinesClickHandler(this))
+    }
+
+    shiftModeMoveNotesClickHandler(self) {
+        self.shiftToolTracker.resourcesToShift.notes = !self.shiftToolTracker.resourcesToShift.notes
+        if (self.shiftToolTracker.resourcesToShift.notes) {
+            // move notes
+            self.components.shapes.shiftModeMoveNotesButton.fill = self.configurations.buttonBehavior.clickedButtonColor
+        } else {
+            // don't move notes
+            self.components.shapes.shiftModeMoveNotesButton.fill = 'transparent'
+        }
+        self.redrawSequencer(); // redraw sequencer so we can show or hide the 'shift' tool row handles if necessary
+    }
+
+    shiftModeMoveSubdivisionLinesClickHandler(self) {
+        self.shiftToolTracker.resourcesToShift.subdivisionLines = !self.shiftToolTracker.resourcesToShift.subdivisionLines
+        if (self.shiftToolTracker.resourcesToShift.subdivisionLines) {
+            // move subdivision lines
+            self.components.shapes.shiftModeMoveSubdivisionLinesButton.fill = self.configurations.buttonBehavior.clickedButtonColor
+        } else {
+            // don't move subdivision lines
+            self.components.shapes.shiftModeMoveSubdivisionLinesButton.fill = 'transparent'
+        }
+        self.redrawSequencer(); // redraw sequencer so we can show or hide the 'shift' tool row handles if necessary
+    }
+
+    shiftModeMoveReferenceLinesClickHandler(self) {
+        self.shiftToolTracker.resourcesToShift.referenceLines = !self.shiftToolTracker.resourcesToShift.referenceLines
+        if (self.shiftToolTracker.resourcesToShift.referenceLines) {
+            // move reference lines
+            self.components.shapes.shiftModeMoveReferenceLinesButton.fill = self.configurations.buttonBehavior.clickedButtonColor
+        } else {
+            // don't move reference lines
+            self.components.shapes.shiftModeMoveReferenceLinesButton.fill = 'transparent'
+        }
+        self.redrawSequencer(); // redraw sequencer so we can show or hide the 'shift' tool row handles if necessary
     }
 
     /**
@@ -1566,10 +1578,12 @@ class DrumMachineGui {
         if (this.eventHandlerFunctions.exportPatternToMidiFile !== null && this.eventHandlerFunctions.exportPatternToMidiFile !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.exportPatternToMidiFile._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.exportPatternToMidiFile)
+            this.components.domElements.images.exportPatternAsMidiFileIcon.removeEventListener('click', this.eventHandlerFunctions.exportPatternToMidiFile)
         }
         // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
         this.eventHandlerFunctions.exportPatternToMidiFile = () => this.exportPatternToMidiFileButtonClickHandler(this)
         this.components.shapes.exportPatternToMidiFileButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.exportPatternToMidiFile)
+        this.components.domElements.images.exportPatternAsMidiFileIcon.addEventListener('click', this.eventHandlerFunctions.exportPatternToMidiFile)
     }
 
     exportPatternToMidiFileButtonClickHandler(self) {
@@ -1705,10 +1719,12 @@ class DrumMachineGui {
         if (this.eventHandlerFunctions.editVolumesModeButton !== null && this.eventHandlerFunctions.editVolumesModeButton !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.editVolumesModeButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.editVolumesModeButton)
+            this.components.domElements.images.changeVolumesModeIcon.removeEventListener('click', this.eventHandlerFunctions.editVolumesModeButton)
         }
         // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
         this.eventHandlerFunctions.editVolumesModeButton = () => this.editVolumesModeButtonClickHandler(this);
         this.components.shapes.editVolumesModeButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.editVolumesModeButton)
+        this.components.domElements.images.changeVolumesModeIcon.addEventListener('click', this.eventHandlerFunctions.editVolumesModeButton)
     }
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
@@ -1746,10 +1762,12 @@ class DrumMachineGui {
         if (this.eventHandlerFunctions.tempoInputModeSelectionBpmButton !== null && this.eventHandlerFunctions.tempoInputModeSelectionBpmButton !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.tempoInputModeSelectionBpmButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
+            this.components.domElements.images.bpmLoopLengthModeIcon.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
         }
         // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
         this.eventHandlerFunctions.tempoInputModeSelectionBpmButton = () => this.tempoInputModeSelectionBpmClickHandler(this);
         this.components.shapes.tempoInputModeSelectionBpmButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
+        this.components.domElements.images.bpmLoopLengthModeIcon.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
     }
 
     hideTempoBpmTextLabels() {
@@ -1801,10 +1819,12 @@ class DrumMachineGui {
         if (this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton !== null && this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.tempoInputModeSelectionMillisecondsButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
+            this.components.domElements.images.millisecondsLoopLengthModeIcon.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
         }
         // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
         this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton = () => this.tempoInputModeSelectionMillisecondsClickHandler(this);
         this.components.shapes.tempoInputModeSelectionMillisecondsButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
+        this.components.domElements.images.millisecondsLoopLengthModeIcon.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
     }
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
@@ -1838,10 +1858,12 @@ class DrumMachineGui {
         if (this.eventHandlerFunctions.tapTempoButton !== null && this.eventHandlerFunctions.tapTempoButton !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.tapTempoButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tapTempoButton)
+            this.components.domElements.images.tapTempoIcon.removeEventListener('click', this.eventHandlerFunctions.tapTempoButton)
         }
         // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
         this.eventHandlerFunctions.tapTempoButton = () => this.tapTempoClickHandler(this);
         this.components.shapes.tapTempoButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tapTempoButton)
+        this.components.domElements.images.tapTempoIcon.addEventListener('click', this.eventHandlerFunctions.tapTempoButton)
     }
     
     /**
@@ -2896,7 +2918,6 @@ class DrumMachineGui {
         this.components.domElements.images.moveNotesModeIcon.style.height = "" + this.configurations.moveNotesModeButton.icon.height + "px"
         this.components.domElements.images.moveNotesModeIcon.style.left = "" + this.configurations.moveNotesModeButton.left + "px"
         this.components.domElements.images.moveNotesModeIcon.style.top = "" + this.configurations.moveNotesModeButton.top + "px"
-        // ********** new button icons with no action listeners added yet start here **********
         // edit mode: change note volumes
         this.components.domElements.images.changeVolumesModeIcon.style.width = "" + this.configurations.editVolumesModeButton.icon.width + "px"
         this.components.domElements.images.changeVolumesModeIcon.style.height = "" + this.configurations.editVolumesModeButton.icon.height + "px"
@@ -2937,7 +2958,6 @@ class DrumMachineGui {
         this.components.domElements.images.activateShiftReferenceLinesIcon.style.height = "" + this.configurations.shiftModeMoveReferenceLinesButton.icon.height + "px"
         this.components.domElements.images.activateShiftReferenceLinesIcon.style.left = "" + this.configurations.shiftModeMoveReferenceLinesButton.left + "px"
         this.components.domElements.images.activateShiftReferenceLinesIcon.style.top = "" + this.configurations.shiftModeMoveReferenceLinesButton.top + "px"
-        // ********** new button icons with no action listeners added yet end here **********
         // clear row buttons -- one per row
         for (let icon of this.components.domElements.iconLists.clearRowIcons) {
             icon.remove();
@@ -3026,15 +3046,6 @@ class DrumMachineGui {
         }
         this.components.domElements.images.unlockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         this.components.domElements.images.lockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
-        // hide icons that aren't ready to be shown yet
-        this.components.domElements.images.changeVolumesModeIcon.style.display = 'none';
-        this.components.domElements.images.bpmLoopLengthModeIcon.style.display = 'none';
-        this.components.domElements.images.millisecondsLoopLengthModeIcon.style.display = 'none';
-        this.components.domElements.images.tapTempoIcon.style.display = 'none';
-        this.components.domElements.images.exportPatternAsMidiFileIcon.style.display = 'none';
-        this.components.domElements.images.activateShiftNotesIcon.style.display = 'none';
-        this.components.domElements.images.activateShiftSubdivisionLinesIcon.style.display = 'none';
-        this.components.domElements.images.activateShiftReferenceLinesIcon.style.display = 'none';
         // TODO: add reset subdivision lines shift for row icons (one per row)
         this.components.domElements.images.resetSubdvisionsLinesShiftForRowIcon.style.display = 'none';
         // TODO: add reset reference lines shift for row icons (one per row)
