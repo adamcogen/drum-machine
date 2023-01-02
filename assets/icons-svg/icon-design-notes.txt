@@ -1,0 +1,4 @@
+- line width should be 2
+- current final resolution will be 48x48
+
+scale linewidth proportionally for differently-sized icons

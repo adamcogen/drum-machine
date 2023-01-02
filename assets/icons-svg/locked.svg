@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="240"
+   height="240"
+   viewBox="0 0 63.499988 63.5"
+   version="1.1"
+   id="svg5"
+   inkscape:export-filename="/Users/adamcogen/Desktop/drum-machine/assets/locked-round.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   inkscape:version="1.1.2 (b8e25be8, 2022-02-05)"
+   sodipodi:docname="locked.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     units="px"
+     width="100px"
+     scale-x="1.1"
+     inkscape:zoom="2.0317629"
+     inkscape:cx="113.44828"
+     inkscape:cy="87.362556"
+     inkscape:window-width="1580"
+     inkscape:window-height="997"
+     inkscape:window-x="973"
+     inkscape:window-y="173"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1">
+    <sodipodi:guide
+       position="0,132.29166"
+       orientation="0,500"
+       id="guide2753" />
+    <sodipodi:guide
+       position="132.29166,132.29166"
+       orientation="500,0"
+       id="guide2755" />
+    <sodipodi:guide
+       position="132.29166,0"
+       orientation="0,-500"
+       id="guide2757" />
+    <sodipodi:guide
+       position="0,0"
+       orientation="-500,0"
+       id="guide2759" />
+    <sodipodi:guide
+       position="0,132.29166"
+       orientation="0,500"
+       id="guide2873" />
+    <sodipodi:guide
+       position="132.29166,132.29166"
+       orientation="500,0"
+       id="guide2875" />
+    <sodipodi:guide
+       position="132.29166,0"
+       orientation="0,-500"
+       id="guide2877" />
+    <sodipodi:guide
+       position="0,0"
+       orientation="-500,0"
+       id="guide2879" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     id="layer1"
+     style="display:inline"
+     inkscape:groupmode="layer">
+    <path
+       sodipodi:type="star"
+       style="display:none;fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.800365;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path4314"
+       inkscape:flatsided="false"
+       sodipodi:sides="3"
+       sodipodi:cx="12.294377"
+       sodipodi:cy="10.278905"
+       sodipodi:r1="5.8152556"
+       sodipodi:r2="2.9076276"
+       sodipodi:arg1="2.0943951"
+       sodipodi:arg2="3.1415927"
+       inkscape:rounded="0"
+       inkscape:randomized="0"
+       d="m 9.3867495,15.315064 2e-7,-5.036159 -2e-7,-5.0361592 4.3614415,2.5180798 4.361442,2.5180794 -4.361442,2.518079 z"
+       transform="matrix(2.6446276,0,0,2.6446276,-10.901069,-1.7898243)"
+       inkscape:transform-center-x="-3.8447945"
+       inkscape:export-filename="/Users/adamcogen/Desktop/drum-machine/assets/play.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96"
+       inkscape:label="play" />
+    <ellipse
+       style="display:inline;fill:none;fill-opacity:1;stroke:#000000;stroke-width:2.21915;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="ellipse4862"
+       cx="31.75"
+       cy="18.521168"
+       rx="8.9382029"
+       ry="10.346173" />
+    <ellipse
+       style="display:none;fill:none;fill-opacity:1;stroke:#000000;stroke-width:2.11667;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path4302"
+       cx="49.741688"
+       cy="18.469927"
+       rx="8.9382029"
+       ry="10.346173" />
+    <rect
+       style="display:none;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:2.19339;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4886"
+       width="19.14896"
+       height="9.8088665"
+       x="40.441109"
+       y="19.573168" />
+    <circle
+       style="display:inline;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:2.11667;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path3956"
+       cx="31.75"
+       cy="31.914022"
+       r="11.244792" />
+    <rect
+       style="display:inline;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.99277;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4126"
+       width="22.597158"
+       height="11.706762"
+       x="20.451418"
+       y="20.279236" />
+    <rect
+       style="display:inline;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:2.7312;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4648"
+       width="1.3659738"
+       height="4.5421801"
+       x="31.067013"
+       y="28.756361" />
+    <path
+       style="display:none;fill:none;stroke:#000000;stroke-width:2.11667;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 58.683904,18.589855 V 22.53427"
+       id="path5001" />
+    <path
+       style="display:none;fill:none;stroke:#000000;stroke-width:2.11667;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 40.79521,18.683044 v 6.527978"
+       id="path6574" />
+  </g>
+</svg>
