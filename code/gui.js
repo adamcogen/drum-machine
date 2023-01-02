@@ -287,6 +287,17 @@ class DrumMachineGui {
                 clearRowIcon: document.getElementById('clear-row-icon'),
                 lockedIcon: document.getElementById('locked-icon'),
                 unlockedIcon: document.getElementById('unlocked-icon'),
+                moveNotesModeIcon: document.getElementById('edit-mode-move-notes-icon'),
+                changeVolumesModeIcon: document.getElementById('edit-mode-change-note-volumes-icon'),
+                bpmLoopLengthModeIcon: document.getElementById('loop-length-bpm-mode-icon'),
+                millisecondsLoopLengthModeIcon: document.getElementById('loop-length-milliseconds-mode-icon'), 
+                tapTempoIcon: document.getElementById('tap-tempo-icon'),
+                resetSubdvisionsLinesShiftForRowIcon: document.getElementById('reset-subdivision-lines-shift-for-row-icon'),
+                resetReferenceLinesShiftForRowIcon: document.getElementById('reset-reference-lines-shift-for-row-icon'),
+                exportPatternAsMidiFileIcon: document.getElementById('save-pattern-as-midi-file-icon'),
+                activateShiftNotesIcon: document.getElementById('shift-notes-icon'),
+                activateShiftSubdivisionLinesIcon: document.getElementById('shift-subdivision-lines-icon'),
+                activateShiftReferenceLinesIcon: document.getElementById('shift-reference-lines-icon'),
             },
             iconLists: {
                 clearRowIcons: [], // list of icons for "clear row" buttons, one per sequencer row
@@ -2966,6 +2977,18 @@ class DrumMachineGui {
         }
         this.components.domElements.images.unlockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         this.components.domElements.images.lockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
+        // hide icons that aren't being used yet
+        this.components.domElements.images.moveNotesModeIcon.style.display = 'none';
+        this.components.domElements.images.changeVolumesModeIcon.style.display = 'none';
+        this.components.domElements.images.bpmLoopLengthModeIcon.style.display = 'none';
+        this.components.domElements.images.millisecondsLoopLengthModeIcon.style.display = 'none';
+        this.components.domElements.images.tapTempoIcon.style.display = 'none';
+        this.components.domElements.images.resetSubdvisionsLinesShiftForRowIcon.style.display = 'none';
+        this.components.domElements.images.resetReferenceLinesShiftForRowIcon.style.display = 'none';
+        this.components.domElements.images.exportPatternAsMidiFileIcon.style.display = 'none';
+        this.components.domElements.images.activateShiftNotesIcon.style.display = 'none';
+        this.components.domElements.images.activateShiftSubdivisionLinesIcon.style.display = 'none';
+        this.components.domElements.images.activateShiftReferenceLinesIcon.style.display = 'none';
     }
 
     /**
