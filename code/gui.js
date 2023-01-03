@@ -3078,8 +3078,34 @@ class DrumMachineGui {
             document.body.appendChild(resetSubdivisionsShiftIcon)
         }
         this.components.domElements.images.resetSubdvisionsLinesShiftForRowIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
-        // TODO: add reset reference lines shift for row icons (one per row)
-        this.components.domElements.images.resetReferenceLinesShiftForRowIcon.style.display = 'none';
+        // add reset reference lines shift for row icons (one per row)
+        for (let icon of this.components.domElements.iconLists.resetReferenceLinesShiftIcons) {
+            icon.remove();
+        }
+        this.components.domElements.iconLists.resetReferenceLinesShiftIcons = [];
+        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            // create a new copy of the original icon
+            let resetReferenceLinesShiftIcon = this.components.domElements.images.resetReferenceLinesShiftForRowIcon.cloneNode()
+            // make the copy visible
+            resetReferenceLinesShiftIcon.style.display = 'block'
+            // set the copy's position -- we will have one per row
+            resetReferenceLinesShiftIcon.style.width = "" + this.configurations.shiftModeResetReferenceLinesForRowButtons.icon.width + "px";
+            resetReferenceLinesShiftIcon.style.height = "" + this.configurations.shiftModeResetReferenceLinesForRowButtons.icon.height + "px"
+            resetReferenceLinesShiftIcon.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.shiftModeResetReferenceLinesForRowButtons.leftPaddingPerRow) + "px"
+            resetReferenceLinesShiftIcon.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.shiftModeResetReferenceLinesForRowButtons.topPaddingPerRow) + "px"
+            // add event listeners to our icon
+            if (this.eventHandlerFunctions["resetReferenceLinesShiftForRowIcon" + rowIndex] !== null && this.eventHandlerFunctions["resetReferenceLinesShiftForRowIcon" + rowIndex] !== undefined) {
+                // remove event listeners if they've already been added to avoid duplicates
+                resetReferenceLinesShiftIcon.removeEventListener('click', this.eventHandlerFunctions["resetReferenceLinesShiftForRowIcon" + rowIndex] );
+            }
+            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+            this.eventHandlerFunctions["resetReferenceLinesShiftForRowIcon" + rowIndex] = () => this.resetReferenceLinesShiftClickHandler(this, rowIndex);
+            resetReferenceLinesShiftIcon.addEventListener('click', this.eventHandlerFunctions["resetReferenceLinesShiftForRowIcon" + rowIndex]);
+            // add the copy to the dom and to our list that tracks these icons
+            this.components.domElements.iconLists.resetReferenceLinesShiftIcons.push(resetReferenceLinesShiftIcon)
+            document.body.appendChild(resetReferenceLinesShiftIcon)
+        }
+        this.components.domElements.images.resetReferenceLinesShiftForRowIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
     }
 
     /**
