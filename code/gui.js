@@ -303,6 +303,8 @@ class DrumMachineGui {
                 clearRowIcons: [], // list of icons for "clear row" buttons, one per sequencer row
                 lockedIcons: [], // list of icons for "quantize row" buttons, one per sequencer row
                 unlockedIcons: [], // list of icons for "unquantize row" buttons, one per sequencer row
+                resetSubdivisionLinesShiftIcons: [],  // list of icons for the button to reset subdivision lines shift, one per sequencer row
+                resetReferenceLinesShiftIcons: [],  // list of icons for the button to reset reference lines shift, one per sequencer row
             },
             selectors: {
                 midiOutput: document.getElementById('midi-output-selector'),
@@ -3048,8 +3050,34 @@ class DrumMachineGui {
         }
         this.components.domElements.images.unlockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         this.components.domElements.images.lockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
-        // TODO: add reset subdivision lines shift for row icons (one per row)
-        this.components.domElements.images.resetSubdvisionsLinesShiftForRowIcon.style.display = 'none';
+        // add reset subdivision lines shift for row icons (one per row)
+        for (let icon of this.components.domElements.iconLists.resetSubdivisionLinesShiftIcons) {
+            icon.remove();
+        }
+        this.components.domElements.iconLists.resetSubdivisionLinesShiftIcons = [];
+        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            // create a new copy of the original icon
+            let resetSubdivisionsShiftIcon = this.components.domElements.images.resetSubdvisionsLinesShiftForRowIcon.cloneNode()
+            // make the copy visible
+            resetSubdivisionsShiftIcon.style.display = 'block'
+            // set the copy's position -- we will have one per row
+            resetSubdivisionsShiftIcon.style.width = "" + this.configurations.shiftModeResetSubdivisionLinesForRowButtons.icon.width + "px";
+            resetSubdivisionsShiftIcon.style.height = "" + this.configurations.shiftModeResetSubdivisionLinesForRowButtons.icon.height + "px"
+            resetSubdivisionsShiftIcon.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.shiftModeResetSubdivisionLinesForRowButtons.leftPaddingPerRow) + "px"
+            resetSubdivisionsShiftIcon.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.shiftModeResetSubdivisionLinesForRowButtons.topPaddingPerRow) + "px"
+            // add event listeners to our icon
+            if (this.eventHandlerFunctions["resetSubdvisionsLinesShiftForRowIcon" + rowIndex] !== null && this.eventHandlerFunctions["resetSubdvisionsLinesShiftForRowIcon" + rowIndex] !== undefined) {
+                // remove event listeners if they've already been added to avoid duplicates
+                resetSubdivisionsShiftIcon.removeEventListener('click', this.eventHandlerFunctions["resetSubdvisionsLinesShiftForRowIcon" + rowIndex] );
+            }
+            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+            this.eventHandlerFunctions["resetSubdvisionsLinesShiftForRowIcon" + rowIndex] = () => this.resetSubdivisionLinesShiftClickHandler(this, rowIndex);
+            resetSubdivisionsShiftIcon.addEventListener('click', this.eventHandlerFunctions["resetSubdvisionsLinesShiftForRowIcon" + rowIndex]);
+            // add the copy to the dom and to our list that tracks these icons
+            this.components.domElements.iconLists.resetSubdivisionLinesShiftIcons.push(resetSubdivisionsShiftIcon)
+            document.body.appendChild(resetSubdivisionsShiftIcon)
+        }
+        this.components.domElements.images.resetSubdvisionsLinesShiftForRowIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         // TODO: add reset reference lines shift for row icons (one per row)
         this.components.domElements.images.resetReferenceLinesShiftForRowIcon.style.display = 'none';
     }
