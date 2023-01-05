@@ -182,16 +182,16 @@ function getGuiConfigurations(hideIcons=false) {
         },
         buttonBehavior: {
             showClicksForHowManyMilliseconds: 100,
-            clickedButtonColor: "#c4c4c4",
+            clickedButtonColor: "#a3a3a3",
         },
         clearRowButtons: {
-            topPaddingPerRow: -10,
+            topPaddingPerRow: -15,
             leftPaddingPerRow: 114,
-            height: 20,
-            width: 20,
+            height: 30,
+            width: 30,
             icon: {
-                height: 20,
-                width: 20,
+                height: 30,
+                width: 30,
                 topPadding: 0,
                 leftPadding: 0,
             }
@@ -268,14 +268,14 @@ function getGuiConfigurations(hideIcons=false) {
         sequencerRowSelections: {
             leftPadding: -100,
             topPadding: -40,
-            width: 285,
+            width: 295,
             height: 80,
         },
         quantizationButtons: {
             icon: {
                 width: 42,
                 height: 42,
-                topPaddingPerRow: -1,
+                topPaddingPerRow: 0,
                 leftPaddingPerRow: 66,
             }
         },
@@ -329,13 +329,13 @@ function getGuiConfigurations(hideIcons=false) {
             },
         },
         shiftModeResetReferenceLinesForRowButtons: {
-            topPaddingPerRow: -23,
+            topPaddingPerRow: -33,
             leftPaddingPerRow: 155,
-            height: 20,
-            width: 20,
+            height: 30,
+            width: 30,
             icon: {
-                height: 20,
-                width: 20,
+                height: 30,
+                width: 30,
                 topPadding: 0,
                 leftPadding: 0,
             },
@@ -343,11 +343,11 @@ function getGuiConfigurations(hideIcons=false) {
         shiftModeResetSubdivisionLinesForRowButtons: {
             topPaddingPerRow: 2,
             leftPaddingPerRow: 155,
-            height: 20,
-            width: 20,
+            height: 30,
+            width: 30,
             icon: {
-                height: 20,
-                width: 20,
+                height: 30,
+                width: 30,
                 topPadding: 0,
                 leftPadding: 0,
             },

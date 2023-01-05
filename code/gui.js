@@ -218,6 +218,16 @@ class DrumMachineGui {
     // is drawn first.
     initializeGuiShapes() {
         let shapes = {};
+        // add shapes for menu outlines
+        // edit mode buttons outline
+        shapes.editModeSelectionButtonsOutline = this.initializeRectangleShape(this.configurations.moveNotesModeButton.top, this.configurations.moveNotesModeButton.left, this.configurations.moveNotesModeButton.height + (this.configurations.editVolumesModeButton.top - this.configurations.moveNotesModeButton.top), this.configurations.moveNotesModeButton.width)
+        shapes.editModeSelectionButtonsOutline.stroke = this.configurations.referenceLines.color;
+        // loop length mode buttons outline
+        shapes.loopLengthModeSelectionButtonsOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top, this.configurations.tempoInputModeSelectionBpmButton.left, this.configurations.tempoInputModeSelectionBpmButton.height, this.configurations.tempoInputModeSelectionBpmButton.width + (this.configurations.tempoInputModeSelectionMillisecondsButton.left - this.configurations.tempoInputModeSelectionBpmButton.left))
+        shapes.loopLengthModeSelectionButtonsOutline.stroke = this.configurations.referenceLines.color;
+        // tempo menu outline
+        // ...
+        // add button and sequencer shapes etc.
         shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
         shapes.referenceLineLists = this.initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
         shapes.sequencerRowLines = this.initializeAllSequencerRowLines() // list of sequencer row lines
@@ -431,6 +441,8 @@ class DrumMachineGui {
             this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.lockedIcons[rowIndex]);
             this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.unlockedIcons[rowIndex]);
             this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.clearRowIcons[rowIndex]);
+            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.resetSubdivisionLinesShiftIcons[rowIndex]);
+            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.resetReferenceLinesShiftIcons[rowIndex]);
         }
         this.rowSelectionTracker.domElementsOriginalPositions = [];
         for (let domElement of this.rowSelectionTracker.domElements) {
