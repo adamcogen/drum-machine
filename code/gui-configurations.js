@@ -107,8 +107,8 @@ function getGuiConfigurations(hideIcons=false) {
             }
         },
         moveNotesModeButton: {
-            top: 655,
-            left: 40,
+            top: 274,
+            left: 30,
             width: 48,
             height: 48,
             icon: {
@@ -119,8 +119,8 @@ function getGuiConfigurations(hideIcons=false) {
             },
         },
         editVolumesModeButton: {
-            top: 715,
-            left: 40,
+            top: 334,
+            left: 30,
             width: 48,
             height: 48,
             icon: {
@@ -182,7 +182,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         buttonBehavior: {
             showClicksForHowManyMilliseconds: 100,
-            clickedButtonColor: "#a3a3a3",
+            clickedButtonColor: "#a8a8a8",
         },
         clearRowButtons: {
             topPaddingPerRow: -15,
