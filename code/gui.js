@@ -221,10 +221,10 @@ class DrumMachineGui {
         // add shapes for menu outlines
         // edit mode buttons outline
         shapes.editModeSelectionButtonsOutline = this.initializeRectangleShape(this.configurations.moveNotesModeButton.top, this.configurations.moveNotesModeButton.left, this.configurations.moveNotesModeButton.height + (this.configurations.editVolumesModeButton.top - this.configurations.moveNotesModeButton.top), this.configurations.moveNotesModeButton.width)
-        shapes.editModeSelectionButtonsOutline.stroke = this.configurations.referenceLines.color;
+        shapes.editModeSelectionButtonsOutline.stroke = this.configurations.subdivisionLines.color;
         // loop length mode buttons outline
         shapes.loopLengthModeSelectionButtonsOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top, this.configurations.tempoInputModeSelectionBpmButton.left, this.configurations.tempoInputModeSelectionBpmButton.height, this.configurations.tempoInputModeSelectionBpmButton.width + (this.configurations.tempoInputModeSelectionMillisecondsButton.left - this.configurations.tempoInputModeSelectionBpmButton.left))
-        shapes.loopLengthModeSelectionButtonsOutline.stroke = this.configurations.referenceLines.color;
+        shapes.loopLengthModeSelectionButtonsOutline.stroke = this.configurations.subdivisionLines.color;
         // tempo menu outline
         // ...
         // add button and sequencer shapes etc.
@@ -257,6 +257,7 @@ class DrumMachineGui {
         shapes.shiftModeResetSubdivisionLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetSubdivisionLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.height, this.configurations.shiftModeResetSubdivisionLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of subdivision lines for each row
         shapes.shiftModeResetReferenceLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetReferenceLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.height, this.configurations.shiftModeResetReferenceLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of reference lines for each row
         shapes.exportPatternToMidiFileButton = this.initializeRectangleShape(this.configurations.exportPatternToMidiFileButton.top, this.configurations.exportPatternToMidiFileButton.left, this.configurations.exportPatternToMidiFileButton.height, this.configurations.exportPatternToMidiFileButton.width) // clicking this button will download a MIDI file containing the sequencer pattern
+        shapes.toggleQuantizationButtonsRectangles = this.initializeButtonPerSequencerRow(this.configurations.quantizationButtons.topPaddingPerRow, this.configurations.quantizationButtons.leftPaddingPerRow, this.configurations.quantizationButtons.height, this.configurations.quantizationButtons.width) // this is a list of button rectangles, one per row, to toggle whether each row's notes should be snapped to subdivision lines (quantized) or not
         this.two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
         return shapes;
     }
@@ -3141,7 +3142,7 @@ class DrumMachineGui {
         // new button rectangle: make a rectangle with rounded corners
         let shape = this.two.makeRoundedRectangle(left + (width / 2), top + (height / 2), width, height, radius)
         shape.linewidth = this.configurations.sequencer.lineWidth
-        shape.stroke = this.configurations.sequencer.color
+        shape.stroke = 'black' // this.configurations.sequencer.color
         shape.fill = 'transparent'
         return shape
     }

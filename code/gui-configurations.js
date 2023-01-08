@@ -182,11 +182,11 @@ function getGuiConfigurations(hideIcons=false) {
         },
         buttonBehavior: {
             showClicksForHowManyMilliseconds: 100,
-            clickedButtonColor: "#a8a8a8",
+            clickedButtonColor: "#b8b8b8",
         },
         clearRowButtons: {
             topPaddingPerRow: -24,
-            leftPaddingPerRow: 102,
+            leftPaddingPerRow: 166,
             height: 48,
             width: 48,
             icon: {
@@ -272,11 +272,15 @@ function getGuiConfigurations(hideIcons=false) {
             height: 80,
         },
         quantizationButtons: {
+            topPaddingPerRow: -24,
+            leftPaddingPerRow: 76,
+            height: 48,
+            width: 48,
             icon: {
-                width: 42,
-                height: 42,
-                topPaddingPerRow: 0,
-                leftPaddingPerRow: 66,
+                width: 48,
+                height: 48,
+                topPaddingPerRow: -24,
+                leftPaddingPerRow: 76,
             }
         },
         midiOutputSelector: {
@@ -330,7 +334,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         shiftModeResetReferenceLinesForRowButtons: {
             topPaddingPerRow: -33,
-            leftPaddingPerRow: 155,
+            leftPaddingPerRow: 130,
             height: 30,
             width: 30,
             icon: {
@@ -342,7 +346,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         shiftModeResetSubdivisionLinesForRowButtons: {
             topPaddingPerRow: 2,
-            leftPaddingPerRow: 155,
+            leftPaddingPerRow: 130,
             height: 30,
             width: 30,
             icon: {
