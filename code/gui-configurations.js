@@ -185,13 +185,13 @@ function getGuiConfigurations(hideIcons=false) {
             clickedButtonColor: "#a8a8a8",
         },
         clearRowButtons: {
-            topPaddingPerRow: -15,
-            leftPaddingPerRow: 114,
-            height: 30,
-            width: 30,
+            topPaddingPerRow: -24,
+            leftPaddingPerRow: 102,
+            height: 48,
+            width: 48,
             icon: {
-                height: 30,
-                width: 30,
+                height: 48,
+                width: 48,
                 topPadding: 0,
                 leftPadding: 0,
             }
