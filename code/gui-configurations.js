@@ -250,6 +250,12 @@ function getGuiConfigurations(hideIcons=false) {
             radius: 6,
             unselectedColor: lighterSequencerColor,
             selectedColor: defaultSequencerLineColor,
+            icon: {
+                height: 48,
+                width: 48,
+                topPadding: 0,
+                leftPadding: 0,
+            }
         },
         volumeAdjusterRowHandles: { // these will probably be replaced with an icon eventually, but adding circles for now as a placeholder. click and drag these to adjust the volume for one row
             topPadding: 0,
@@ -257,6 +263,12 @@ function getGuiConfigurations(hideIcons=false) {
             radius: 6,
             unselectedColor: lighterSequencerColor,
             selectedColor: defaultSequencerLineColor,
+            icon: {
+                height: 48,
+                width: 48,
+                topPadding: 0,
+                leftPadding: 0,
+            }
         },
         shiftToolRowHandles: { // these will probably be replaced with an icon eventually, but adding circles for now as a placeholder. click and drag these to use the 'shift' tool
             topPadding: 0,
@@ -264,6 +276,12 @@ function getGuiConfigurations(hideIcons=false) {
             radius: 6,
             unselectedColor: lighterSequencerColor,
             selectedColor: defaultSequencerLineColor,
+            icon: {
+                height: 48,
+                width: 48,
+                topPadding: 0,
+                leftPadding: 0,
+            }
         },
         sequencerRowSelections: {
             leftPadding: -100,

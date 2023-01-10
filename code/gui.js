@@ -309,6 +309,9 @@ class DrumMachineGui {
                 activateShiftNotesIcon: document.getElementById('shift-notes-icon'),
                 activateShiftSubdivisionLinesIcon: document.getElementById('shift-subdivision-lines-icon'),
                 activateShiftReferenceLinesIcon: document.getElementById('shift-reference-lines-icon'),
+                shiftRowIcon: document.getElementById('shift-row-icon'),
+                moveRowIcon: document.getElementById('move-row-icon'),
+                changeRowVolumesIcon: document.getElementById('change-row-volumes-icon'),
             },
             iconLists: {
                 clearRowIcons: [], // list of icons for "clear row" buttons, one per sequencer row
@@ -3119,6 +3122,10 @@ class DrumMachineGui {
             document.body.appendChild(resetReferenceLinesShiftIcon)
         }
         this.components.domElements.images.resetReferenceLinesShiftForRowIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
+        // hide icons we're not using yet
+        this.components.domElements.images.shiftRowIcon.style.display = 'none'
+        this.components.domElements.images.moveRowIcon.style.display = 'none'
+        this.components.domElements.images.changeRowVolumesIcon.style.display = 'none'
     }
 
     /**
