@@ -279,8 +279,8 @@ function getGuiConfigurations(hideIcons=false) {
             icon: {
                 height: 48,
                 width: 48,
-                topPadding: 0,
-                leftPadding: 0,
+                topPaddingPerRow: -24,
+                leftPaddingPerRow: -24,
             }
         },
         sequencerRowSelections: {

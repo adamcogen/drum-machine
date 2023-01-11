@@ -319,6 +319,9 @@ class DrumMachineGui {
                 unlockedIcons: [], // list of icons for "unquantize row" buttons, one per sequencer row
                 resetSubdivisionLinesShiftIcons: [],  // list of icons for the button to reset subdivision lines shift, one per sequencer row
                 resetReferenceLinesShiftIcons: [],  // list of icons for the button to reset reference lines shift, one per sequencer row
+                shiftRowIcons: [], // list of icons for the button to use the 'shift' tool on each row (one per sequencer row)
+                moveRowIcons: [], // list of icons for the button to move (rearrange) rows (one per sequencer row)
+                changeRowVolumesIcons: [], // list of icons for the button to change all note volumes a each row (one per sequencer row)
             },
             selectors: {
                 midiOutput: document.getElementById('midi-output-selector'),
@@ -3122,8 +3125,31 @@ class DrumMachineGui {
             document.body.appendChild(resetReferenceLinesShiftIcon)
         }
         this.components.domElements.images.resetReferenceLinesShiftForRowIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
-        // hide icons we're not using yet
+        // set up 'shift row' icons.
+        for (let icon of this.components.domElements.iconLists.shiftRowIcons) {
+            icon.remove();
+        }
+        this.components.domElements.iconLists.shiftRowIcons = [];
+        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            // make copies of the original image so that we can freely throw them away or add more
+            let shiftIcon = this.components.domElements.images.shiftRowIcon.cloneNode();
+            // put each icon into the right place, resize it, etc.
+            let shiftIconVerticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + this.configurations.shiftToolRowHandles.topPadding + this.configurations.shiftToolRowHandles.icon.topPaddingPerRow;
+            let shiftIconHorizontalPosition = this.configurations.sequencer.left + this.configurations.shiftToolRowHandles.leftPadding + this.configurations.shiftToolRowHandles.icon.leftPaddingPerRow;
+            shiftIcon.style.width = "" + this.configurations.shiftToolRowHandles.icon.width + "px"
+            shiftIcon.style.height = "" + this.configurations.shiftToolRowHandles.icon.height + "px"
+            shiftIcon.style.left = "" + shiftIconHorizontalPosition + "px"
+            shiftIcon.style.top = "" + shiftIconVerticalPosition + "px"
+            // todo: add event listeners for shift icons, either here or the same place it happens for the already-existing row handles
+            // add the icons to the dom and to our list that tracks these icons
+            this.components.domElements.iconLists.shiftRowIcons.push(shiftIcon)
+            document.body.appendChild(shiftIcon)
+            // hide the icons for now until they have action listeners and we adjust the layout to include them, etc.
+            shiftIcon.style.display = 'none'; // 'block';
+        }
+        // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         this.components.domElements.images.shiftRowIcon.style.display = 'none'
+        // hide icons we're not using yet
         this.components.domElements.images.moveRowIcon.style.display = 'none'
         this.components.domElements.images.changeRowVolumesIcon.style.display = 'none'
     }
