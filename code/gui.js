@@ -3140,7 +3140,7 @@ class DrumMachineGui {
             shiftIcon.style.height = "" + this.configurations.shiftToolRowHandles.icon.height + "px"
             shiftIcon.style.left = "" + shiftIconHorizontalPosition + "px"
             shiftIcon.style.top = "" + shiftIconVerticalPosition + "px"
-            // todo: add event listeners for shift icons, either here or the same place it happens for the already-existing row handles
+            // todo: add event listeners, either here or the same place it happens for the already-existing row handles
             // add the icons to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.shiftRowIcons.push(shiftIcon)
             document.body.appendChild(shiftIcon)
@@ -3149,8 +3149,53 @@ class DrumMachineGui {
         }
         // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         this.components.domElements.images.shiftRowIcon.style.display = 'none'
-        // hide icons we're not using yet
+        // set up 'move row' icons.
+        for (let icon of this.components.domElements.iconLists.moveRowIcons) {
+            icon.remove();
+        }
+        this.components.domElements.iconLists.moveRowIcons = [];
+        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            // make copies of the original image so that we can freely throw them away or add more
+            let moveIcon = this.components.domElements.images.moveRowIcon.cloneNode();
+            // put each icon into the right place, resize it, etc.
+            let moveIconVerticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + this.configurations.sequencerRowHandles.topPadding + this.configurations.sequencerRowHandles.icon.topPaddingPerRow;
+            let moveIconHorizontalPosition = this.configurations.sequencer.left + this.configurations.sequencerRowHandles.leftPadding + this.configurations.sequencerRowHandles.icon.leftPaddingPerRow;
+            moveIcon.style.width = "" + this.configurations.sequencerRowHandles.icon.width + "px"
+            moveIcon.style.height = "" + this.configurations.sequencerRowHandles.icon.height + "px"
+            moveIcon.style.left = "" + moveIconHorizontalPosition + "px"
+            moveIcon.style.top = "" + moveIconVerticalPosition + "px"
+            // todo: add event listeners, either here or the same place it happens for the already-existing row handles
+            // add the icons to the dom and to our list that tracks these icons
+            this.components.domElements.iconLists.moveRowIcons.push(moveIcon)
+            document.body.appendChild(moveIcon)
+            // hide the icons for now until they have action listeners and we adjust the layout to include them, etc.
+            moveIcon.style.display = 'none'; // 'block';
+        }
+        // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         this.components.domElements.images.moveRowIcon.style.display = 'none'
+        // set up 'change note volumes for row' icons.
+        for (let icon of this.components.domElements.iconLists.changeRowVolumesIcons) {
+            icon.remove();
+        }
+        this.components.domElements.iconLists.changeRowVolumesIcons = [];
+        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            // make copies of the original image so that we can freely throw them away or add more
+            let changeRowVolumeIcon = this.components.domElements.images.changeRowVolumesIcon.cloneNode();
+            // put each icon into the right place, resize it, etc.
+            let changeRowVolumeIconVerticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + this.configurations.volumeAdjusterRowHandles.topPadding + this.configurations.volumeAdjusterRowHandles.icon.topPaddingPerRow;
+            let changeRowVolumeIconHorizontalPosition = this.configurations.sequencer.left + this.configurations.volumeAdjusterRowHandles.leftPadding + this.configurations.volumeAdjusterRowHandles.icon.leftPaddingPerRow;
+            changeRowVolumeIcon.style.width = "" + this.configurations.volumeAdjusterRowHandles.icon.width + "px"
+            changeRowVolumeIcon.style.height = "" + this.configurations.volumeAdjusterRowHandles.icon.height + "px"
+            changeRowVolumeIcon.style.left = "" + changeRowVolumeIconHorizontalPosition + "px"
+            changeRowVolumeIcon.style.top = "" + changeRowVolumeIconVerticalPosition + "px"
+            // todo: add event listeners, either here or the same place it happens for the already-existing row handles
+            // add the icons to the dom and to our list that tracks these icons
+            this.components.domElements.iconLists.changeRowVolumesIcons.push(changeRowVolumeIcon)
+            document.body.appendChild(changeRowVolumeIcon)
+            // hide the icons for now until they have action listeners and we adjust the layout to include them, etc.
+            changeRowVolumeIcon.style.display = 'none'; // 'block';
+        }
+        // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         this.components.domElements.images.changeRowVolumesIcon.style.display = 'none'
     }
 

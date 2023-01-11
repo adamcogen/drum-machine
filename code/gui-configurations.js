@@ -253,8 +253,8 @@ function getGuiConfigurations(hideIcons=false) {
             icon: {
                 height: 48,
                 width: 48,
-                topPadding: 0,
-                leftPadding: 0,
+                topPaddingPerRow: -24,
+                leftPaddingPerRow: -24,
             }
         },
         volumeAdjusterRowHandles: { // these will probably be replaced with an icon eventually, but adding circles for now as a placeholder. click and drag these to adjust the volume for one row
@@ -266,8 +266,8 @@ function getGuiConfigurations(hideIcons=false) {
             icon: {
                 height: 48,
                 width: 48,
-                topPadding: 0,
-                leftPadding: 0,
+                topPaddingPerRow: -24,
+                leftPaddingPerRow: -24,
             }
         },
         shiftToolRowHandles: { // these will probably be replaced with an icon eventually, but adding circles for now as a placeholder. click and drag these to use the 'shift' tool
