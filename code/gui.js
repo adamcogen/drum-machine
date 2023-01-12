@@ -912,40 +912,61 @@ class DrumMachineGui {
     initializeVolumeAdjusterRowHandlesActionListeners() {
         for (let rowIndex = 0; rowIndex < this.components.shapes.volumeAdjusterRowHandles.length; rowIndex++) {
             let circle = this.components.shapes.volumeAdjusterRowHandles[rowIndex];
-            let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex]
 
             // add border to circle on mouseover
             circle._renderer.elem.addEventListener('mouseenter', () => {
-                if (this.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
-                    circle.stroke = 'black'
-                    circle.linewidth = 2
-                    circle.fill = this.configurations.volumeAdjusterRowHandles.unselectedColor
-                    rowSelectionRectangle.stroke = this.configurations.volumeAdjusterRowHandles.unselectedColor
-                }
+                this.changeRowVolumesMouseEnterEventHandler(this, rowIndex);
             });
             // remove border from circle when mouse is no longer over it
             circle._renderer.elem.addEventListener('mouseleave', () => {
-                circle.stroke = 'transparent'
-                circle.fill = this.configurations.volumeAdjusterRowHandles.unselectedColor
-                rowSelectionRectangle.stroke = 'transparent'
+                this.changeRowVolumesMouseLeaveEventHandler(this, rowIndex);
             });
             // when you hold your mouse down on the row handle circle, select that row.
             // we will de-select it later whenever you lift your mouse.
             circle._renderer.elem.addEventListener('mousedown', () => {
-                // save relevant info about whichever row is selected
-                this.initializeRowVolumeAdjustmentVariablesAndVisuals(rowIndex);
+                this.changeRowVolumesMouseDownEventHandler(this, rowIndex);
             });
             // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
             // because if we implement snap-into-place for sequencer rows, the row handle may not actually
             // be under our mouse when we lift our mouse to drop the row into place.
             // just putting the most basic functionality for visual effects here for now.
             circle._renderer.elem.addEventListener('mouseup', () => {
-                circle.stroke = 'black'
-                circle.linewidth = 2
-                circle.fill = this.configurations.volumeAdjusterRowHandles.unselectedColor
-                rowSelectionRectangle.stroke = this.configurations.volumeAdjusterRowHandles.unselectedColor
+                this.changeRowVolumesMouseUpEventHandler(this, rowIndex);
             });
         }
+    }
+
+    changeRowVolumesMouseEnterEventHandler(self, rowIndex) {
+        let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
+        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+        if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
+            circle.stroke = 'black'
+            circle.linewidth = 2
+            circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
+            rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.unselectedColor
+        }
+    }
+
+    changeRowVolumesMouseLeaveEventHandler(self, rowIndex) {
+        let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
+        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+        circle.stroke = 'transparent'
+        circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
+        rowSelectionRectangle.stroke = 'transparent'
+    }
+
+    changeRowVolumesMouseDownEventHandler(self, rowIndex) {
+        // save relevant info about whichever row is selected
+        self.initializeRowVolumeAdjustmentVariablesAndVisuals(rowIndex);
+    }
+
+    changeRowVolumesMouseUpEventHandler(self, rowIndex) {
+        let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
+        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+        circle.stroke = 'black'
+        circle.linewidth = 2
+        circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
+        rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.unselectedColor
     }
 
     initializeShiftToolRowHandlesActionListeners() {
