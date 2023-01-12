@@ -251,10 +251,10 @@ function getGuiConfigurations(hideIcons=false) {
             unselectedColor: lighterSequencerColor,
             selectedColor: defaultSequencerLineColor,
             icon: {
-                height: 48,
-                width: 48,
-                topPaddingPerRow: -24,
-                leftPaddingPerRow: -24,
+                height: 30,
+                width: 30,
+                topPaddingPerRow: -15,
+                leftPaddingPerRow: -15,
             }
         },
         volumeAdjusterRowHandles: { // these will probably be replaced with an icon eventually, but adding circles for now as a placeholder. click and drag these to adjust the volume for one row
@@ -264,10 +264,10 @@ function getGuiConfigurations(hideIcons=false) {
             unselectedColor: lighterSequencerColor,
             selectedColor: defaultSequencerLineColor,
             icon: {
-                height: 48,
-                width: 48,
-                topPaddingPerRow: -24,
-                leftPaddingPerRow: -24,
+                height: 30,
+                width: 30,
+                topPaddingPerRow: -15,
+                leftPaddingPerRow: -15,
             }
         },
         shiftToolRowHandles: { // these will probably be replaced with an icon eventually, but adding circles for now as a placeholder. click and drag these to use the 'shift' tool
@@ -277,10 +277,10 @@ function getGuiConfigurations(hideIcons=false) {
             unselectedColor: lighterSequencerColor,
             selectedColor: defaultSequencerLineColor,
             icon: {
-                height: 48,
-                width: 48,
-                topPaddingPerRow: -24,
-                leftPaddingPerRow: -24,
+                height: 30,
+                width: 30,
+                topPaddingPerRow: -15,
+                leftPaddingPerRow: -15,
             }
         },
         sequencerRowSelections: {
