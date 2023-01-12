@@ -832,6 +832,8 @@ class DrumMachineGui {
      * sequencer row handles
      */
 
+    // 'move rows' row handles event listener initializations
+
     // these are circles that are to the left of the sequencer, which we can click on to select sequencer rows,
     // so that we can move those rows by clicking and dragging, to rearrange the sequencer row order, throw 
     // rows away, etc.
@@ -874,8 +876,6 @@ class DrumMachineGui {
         }
     }
 
-    // 'move rows' row handle event listener functions
-
     moveRowMouseEnterEventHandler(self, rowIndex) {
         let circle = self.components.shapes.sequencerRowHandles[rowIndex];
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
@@ -908,6 +908,8 @@ class DrumMachineGui {
         circle.fill = self.configurations.sequencerRowHandles.unselectedColor
         rowSelectionRectangle.stroke = self.configurations.sequencerRowHandles.unselectedColor
     }
+
+    // 'adjust row volumes' row handles event listener initializations
 
     initializeVolumeAdjusterRowHandlesActionListeners() {
         for (let rowIndex = 0; rowIndex < this.components.shapes.volumeAdjusterRowHandles.length; rowIndex++) {
@@ -969,43 +971,66 @@ class DrumMachineGui {
         rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.unselectedColor
     }
 
+    // 'shift row' row handles event listener initializations
+
     initializeShiftToolRowHandlesActionListeners() {
         for (let rowIndex = 0; rowIndex < this.components.shapes.shiftToolRowHandles.length; rowIndex++) {
             let circle = this.components.shapes.shiftToolRowHandles[rowIndex];
-            let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex]
 
             // add border to circle on mouseover
             circle._renderer.elem.addEventListener('mouseenter', () => {
-                if (this.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
-                    circle.stroke = 'black'
-                    circle.linewidth = 2
-                    circle.fill = this.configurations.shiftToolRowHandles.unselectedColor
-                    rowSelectionRectangle.stroke = this.configurations.shiftToolRowHandles.unselectedColor
-                }
+                this.shiftRowMouseEnterEventHandler(this, rowIndex);
             });
             // remove border from circle when mouse is no longer over it
             circle._renderer.elem.addEventListener('mouseleave', () => {
-                circle.stroke = 'transparent'
-                circle.fill = this.configurations.shiftToolRowHandles.unselectedColor
-                rowSelectionRectangle.stroke = 'transparent'
+                this.shiftRowMouseLeaveEventHandler(this, rowIndex);
             });
             // when you hold your mouse down on the row handle circle, select that row.
             // we will de-select it later whenever you lift your mouse.
             circle._renderer.elem.addEventListener('mousedown', () => {
-                // save relevant info about whichever row is selected
-                this.initializeRowShiftToolVariablesAndVisuals(rowIndex);
+                this.shiftRowMouseDownEventHandler(this, rowIndex);
             });
             // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
             // because if we implement snap-into-place for sequencer rows, the row handle may not actually
             // be under our mouse when we lift our mouse to drop the row into place.
             // just putting the most basic functionality for visual effects here for now.
             circle._renderer.elem.addEventListener('mouseup', () => {
-                circle.stroke = 'black'
-                circle.linewidth = 2
-                circle.fill = this.configurations.shiftToolRowHandles.unselectedColor
-                rowSelectionRectangle.stroke = this.configurations.shiftToolRowHandles.unselectedColor
+                this.shiftRowMouseUpEventHandler(this, rowIndex);
             });
         }
+    }
+
+    shiftRowMouseEnterEventHandler(self, rowIndex) {
+        let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
+        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+        if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
+            circle.stroke = 'black'
+            circle.linewidth = 2
+            circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
+            rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
+        }
+    }
+
+    shiftRowMouseLeaveEventHandler(self, rowIndex) {
+        let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
+        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+        circle.stroke = 'transparent'
+        circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
+        rowSelectionRectangle.stroke = 'transparent'
+    }
+
+    shiftRowMouseDownEventHandler(self, rowIndex) {
+        // save relevant info about whichever row is selected
+        self.initializeRowShiftToolVariablesAndVisuals(rowIndex);
+    }
+
+    shiftRowMouseUpEventHandler(self, rowIndex) {
+        let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
+        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+        circle.stroke = 'black'
+        circle.linewidth = 2
+        circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
+        rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
     }
 
     /**
