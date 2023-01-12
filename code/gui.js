@@ -3193,29 +3193,52 @@ class DrumMachineGui {
             document.body.appendChild(resetReferenceLinesShiftIcon)
         }
         this.components.domElements.images.resetReferenceLinesShiftForRowIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
-        // set up 'shift row' icons.
+        // set up 'shift row' icons. 
         for (let icon of this.components.domElements.iconLists.shiftRowIcons) {
             icon.remove();
         }
         this.components.domElements.iconLists.shiftRowIcons = [];
-        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
-            // make copies of the original image so that we can freely throw them away or add more
-            let shiftIcon = this.components.domElements.images.shiftRowIcon.cloneNode();
-            // put each icon into the right place, resize it, etc.
-            let shiftIconVerticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + this.configurations.shiftToolRowHandles.topPadding + this.configurations.shiftToolRowHandles.icon.topPaddingPerRow;
-            let shiftIconHorizontalPosition = this.configurations.sequencer.left + this.configurations.shiftToolRowHandles.leftPadding + this.configurations.shiftToolRowHandles.icon.leftPaddingPerRow;
-            shiftIcon.style.width = "" + this.configurations.shiftToolRowHandles.icon.width + "px"
-            shiftIcon.style.height = "" + this.configurations.shiftToolRowHandles.icon.height + "px"
-            shiftIcon.style.left = "" + shiftIconHorizontalPosition + "px"
-            shiftIcon.style.top = "" + shiftIconVerticalPosition + "px"
-            // todo: add event listeners, either here or the same place it happens for the already-existing row handles
-            // add the icons to the dom and to our list that tracks these icons
-            this.components.domElements.iconLists.shiftRowIcons.push(shiftIcon)
-            document.body.appendChild(shiftIcon)
-            // hide the icons for now until they have action listeners and we adjust the layout to include them, etc.
-            shiftIcon.style.display = 'none'; // 'block';
+        // only draw shift tool icons if the shift tool is active (as in, if any resources are selected for use with the shift tool)
+        let shiftToolIsActivated = this.shiftToolTracker.resourcesToShift.notes || this.shiftToolTracker.resourcesToShift.referenceLines || this.shiftToolTracker.resourcesToShift.subdivisionLines
+        if (shiftToolIsActivated) {
+            for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+                // make copies of the original image so that we can freely throw them away or add more
+                let shiftIcon = this.components.domElements.images.shiftRowIcon.cloneNode();
+                // put each icon into the right place, resize it, etc.
+                let shiftIconVerticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + this.configurations.shiftToolRowHandles.topPadding + this.configurations.shiftToolRowHandles.icon.topPaddingPerRow;
+                let shiftIconHorizontalPosition = this.configurations.sequencer.left + this.configurations.shiftToolRowHandles.leftPadding + this.configurations.shiftToolRowHandles.icon.leftPaddingPerRow;
+                shiftIcon.style.width = "" + this.configurations.shiftToolRowHandles.icon.width + "px"
+                shiftIcon.style.height = "" + this.configurations.shiftToolRowHandles.icon.height + "px"
+                shiftIcon.style.left = "" + shiftIconHorizontalPosition + "px"
+                shiftIcon.style.top = "" + shiftIconVerticalPosition + "px"
+                // add event listeners to our icon
+                if (this.eventHandlerFunctions["shiftRowIcon" + rowIndex] !== null && this.eventHandlerFunctions["shiftRowIcon" + rowIndex] !== undefined) {
+                    // remove event listeners if they've already been added to avoid duplicates.
+                    // for this one we will make each event type its own hash item, since we have multiple types.
+                    shiftIcon.removeEventListener('mouseenter', this.eventHandlerFunctions["shiftRowIcon" + rowIndex]['mouseenter'] );
+                    shiftIcon.removeEventListener('mouseleave', this.eventHandlerFunctions["shiftRowIcon" + rowIndex]['mouseleave'] );
+                    shiftIcon.removeEventListener('mousedown', this.eventHandlerFunctions["shiftRowIcon" + rowIndex]['mousedown'] );
+                    shiftIcon.removeEventListener('mouseup', this.eventHandlerFunctions["shiftRowIcon" + rowIndex]['mouseup'] );
+                }
+                // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+                this.eventHandlerFunctions["shiftRowIcon" + rowIndex] = {
+                    mouseenter: () => this.shiftRowMouseEnterEventHandler(this, rowIndex),
+                    mouseleave: () => this.shiftRowMouseLeaveEventHandler(this, rowIndex),
+                    mousedown: () => this.shiftRowMouseDownEventHandler(this, rowIndex),
+                    mouseup: () => this.shiftRowMouseUpEventHandler(this, rowIndex),
+                };
+                shiftIcon.addEventListener('mouseenter', this.eventHandlerFunctions["shiftRowIcon" + rowIndex]['mouseenter']);
+                shiftIcon.addEventListener('mouseleave', this.eventHandlerFunctions["shiftRowIcon" + rowIndex]['mouseleave']);
+                shiftIcon.addEventListener('mousedown', this.eventHandlerFunctions["shiftRowIcon" + rowIndex]['mousedown']);
+                shiftIcon.addEventListener('mouseup', this.eventHandlerFunctions["shiftRowIcon" + rowIndex]['mouseup']);
+                // add the icons to the dom and to our list that tracks these icons
+                this.components.domElements.iconLists.shiftRowIcons.push(shiftIcon)
+                document.body.appendChild(shiftIcon)
+                // hide the icons for now until they have action listeners and we adjust the layout to include them, etc.
+                shiftIcon.style.display = 'block';
+            }
         }
-        // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
+        // hide the original shift tool image. we won't touch it so we can delete and re-add our clones as much as we want to
         this.components.domElements.images.shiftRowIcon.style.display = 'none'
         // set up 'move row' icons.
         for (let icon of this.components.domElements.iconLists.moveRowIcons) {
