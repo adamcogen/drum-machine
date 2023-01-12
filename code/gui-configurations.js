@@ -247,7 +247,7 @@ function getGuiConfigurations(hideIcons=false) {
         sequencerRowHandles: { // these will be circles, one to the left of each sequencer row, that allow you to select the row and click-drag it.
             topPadding: 0,
             leftPadding: -30,
-            radius: 6,
+            radius: 15,
             unselectedColor: lighterSequencerColor,
             selectedColor: defaultSequencerLineColor,
             icon: {
@@ -260,7 +260,7 @@ function getGuiConfigurations(hideIcons=false) {
         volumeAdjusterRowHandles: { // these will probably be replaced with an icon eventually, but adding circles for now as a placeholder. click and drag these to adjust the volume for one row
             topPadding: 0,
             leftPadding: -60,
-            radius: 6,
+            radius: 15,
             unselectedColor: lighterSequencerColor,
             selectedColor: defaultSequencerLineColor,
             icon: {
@@ -273,7 +273,7 @@ function getGuiConfigurations(hideIcons=false) {
         shiftToolRowHandles: { // these will probably be replaced with an icon eventually, but adding circles for now as a placeholder. click and drag these to use the 'shift' tool
             topPadding: 0,
             leftPadding: -90,
-            radius: 6,
+            radius: 15,
             unselectedColor: lighterSequencerColor,
             selectedColor: defaultSequencerLineColor,
             icon: {
