@@ -3193,12 +3193,12 @@ class DrumMachineGui {
             document.body.appendChild(resetReferenceLinesShiftIcon)
         }
         this.components.domElements.images.resetReferenceLinesShiftForRowIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
-        // set up 'shift row' icons. 
+        // set up 'shift row' icons.
         for (let icon of this.components.domElements.iconLists.shiftRowIcons) {
             icon.remove();
         }
         this.components.domElements.iconLists.shiftRowIcons = [];
-        // only draw shift tool icons if the shift tool is active (as in, if any resources are selected for use with the shift tool)
+        // only redraw shift tool icons if the shift tool is active (as in, if any resources are selected for use with the shift tool)
         let shiftToolIsActivated = this.shiftToolTracker.resourcesToShift.notes || this.shiftToolTracker.resourcesToShift.referenceLines || this.shiftToolTracker.resourcesToShift.subdivisionLines
         if (shiftToolIsActivated) {
             for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
@@ -3255,12 +3255,31 @@ class DrumMachineGui {
             moveIcon.style.height = "" + this.configurations.sequencerRowHandles.icon.height + "px"
             moveIcon.style.left = "" + moveIconHorizontalPosition + "px"
             moveIcon.style.top = "" + moveIconVerticalPosition + "px"
-            // todo: add event listeners, either here or the same place it happens for the already-existing row handles
+            // add event listeners to our icon
+            if (this.eventHandlerFunctions["moveRowIcon" + rowIndex] !== null && this.eventHandlerFunctions["moveRowIcon" + rowIndex] !== undefined) {
+                // remove event listeners if they've already been added to avoid duplicates.
+                // for this one we will make each event type its own hash item, since we have multiple types.
+                moveIcon.removeEventListener('mouseenter', this.eventHandlerFunctions["moveRowIcon" + rowIndex]['mouseenter'] );
+                moveIcon.removeEventListener('mouseleave', this.eventHandlerFunctions["moveRowIcon" + rowIndex]['mouseleave'] );
+                moveIcon.removeEventListener('mousedown', this.eventHandlerFunctions["moveRowIcon" + rowIndex]['mousedown'] );
+                moveIcon.removeEventListener('mouseup', this.eventHandlerFunctions["moveRowIcon" + rowIndex]['mouseup'] );
+            }
+            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+            this.eventHandlerFunctions["moveRowIcon" + rowIndex] = {
+                mouseenter: () => this.moveRowMouseEnterEventHandler(this, rowIndex),
+                mouseleave: () => this.moveRowMouseLeaveEventHandler(this, rowIndex),
+                mousedown: () => this.moveRowMouseDownEventHandler(this, rowIndex),
+                mouseup: () => this.moveRowMouseUpEventHandler(this, rowIndex),
+            };
+            moveIcon.addEventListener('mouseenter', this.eventHandlerFunctions["moveRowIcon" + rowIndex]['mouseenter']);
+            moveIcon.addEventListener('mouseleave', this.eventHandlerFunctions["moveRowIcon" + rowIndex]['mouseleave']);
+            moveIcon.addEventListener('mousedown', this.eventHandlerFunctions["moveRowIcon" + rowIndex]['mousedown']);
+            moveIcon.addEventListener('mouseup', this.eventHandlerFunctions["moveRowIcon" + rowIndex]['mouseup']);
             // add the icons to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.moveRowIcons.push(moveIcon)
             document.body.appendChild(moveIcon)
             // hide the icons for now until they have action listeners and we adjust the layout to include them, etc.
-            moveIcon.style.display = 'none'; // 'block';
+            moveIcon.style.display = 'block';
         }
         // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         this.components.domElements.images.moveRowIcon.style.display = 'none'
