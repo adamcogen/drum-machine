@@ -3298,12 +3298,31 @@ class DrumMachineGui {
             changeRowVolumeIcon.style.height = "" + this.configurations.volumeAdjusterRowHandles.icon.height + "px"
             changeRowVolumeIcon.style.left = "" + changeRowVolumeIconHorizontalPosition + "px"
             changeRowVolumeIcon.style.top = "" + changeRowVolumeIconVerticalPosition + "px"
-            // todo: add event listeners, either here or the same place it happens for the already-existing row handles
+            // add event listeners to our icon
+            if (this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex] !== null && this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex] !== undefined) {
+                // remove event listeners if they've already been added to avoid duplicates.
+                // for this one we will make each event type its own hash item, since we have multiple types.
+                changeRowVolumeIcon.removeEventListener('mouseenter', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mouseenter'] );
+                changeRowVolumeIcon.removeEventListener('mouseleave', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mouseleave'] );
+                changeRowVolumeIcon.removeEventListener('mousedown', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mousedown'] );
+                changeRowVolumeIcon.removeEventListener('mouseup', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mouseup'] );
+            }
+            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+            this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex] = {
+                mouseenter: () => this.changeRowVolumesMouseEnterEventHandler(this, rowIndex),
+                mouseleave: () => this.changeRowVolumesMouseLeaveEventHandler(this, rowIndex),
+                mousedown: () => this.changeRowVolumesMouseDownEventHandler(this, rowIndex),
+                mouseup: () => this.changeRowVolumesMouseUpEventHandler(this, rowIndex),
+            };
+            changeRowVolumeIcon.addEventListener('mouseenter', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mouseenter']);
+            changeRowVolumeIcon.addEventListener('mouseleave', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mouseleave']);
+            changeRowVolumeIcon.addEventListener('mousedown', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mousedown']);
+            changeRowVolumeIcon.addEventListener('mouseup', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mouseup']);
             // add the icons to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.changeRowVolumesIcons.push(changeRowVolumeIcon)
             document.body.appendChild(changeRowVolumeIcon)
             // hide the icons for now until they have action listeners and we adjust the layout to include them, etc.
-            changeRowVolumeIcon.style.display = 'none'; // 'block';
+            changeRowVolumeIcon.style.display = 'block';
         }
         // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         this.components.domElements.images.changeRowVolumesIcon.style.display = 'none'
