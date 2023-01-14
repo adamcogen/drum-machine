@@ -694,6 +694,9 @@ class SequencerRow {
         if (noteIsCloserToRightBeatThanLeft) {
             closestBeat += 1;
         }
+        if (closestBeat < 0) { // if value is, for example, negative 1, wrap it back around to the other side of the sequencer. this case can happen on shifted rows.
+            closestBeat = this.getNumberOfSubdivisions() + closestBeat
+        }
         return closestBeat % this.getNumberOfSubdivisions() // modulo operator is used here so that we wrap around to the beggining if we're close enough to end of the loop
     }
 
