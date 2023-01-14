@@ -1731,9 +1731,11 @@ class DrumMachineGui {
     resetSubdivisionLineShiftForRow(rowIndex) {
         let lengthOfOneBeat = this.sequencer.loopLengthInMillis / this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
         let currentNode = this.sequencer.rows[rowIndex]._notesList.head;
-        while(currentNode !== null) {
-            currentNode.priority = currentNode.priority - (this.sequencer.rows[rowIndex].getSubdivisionLineShiftInMilliseconds() % lengthOfOneBeat);
-            currentNode = currentNode.next;
+        if (this.sequencer.rows[rowIndex].quantized) { // if the row is quantized, keep notes snapped to subdivision lines. otherwise we don't need to keep them aligned.
+            while(currentNode !== null) {
+                currentNode.priority = currentNode.priority - (this.sequencer.rows[rowIndex].getSubdivisionLineShiftInMilliseconds() % lengthOfOneBeat);
+                currentNode = currentNode.next;
+            }
         }
         this.sequencer.rows[rowIndex].setSubdivisionLineShiftMilliseconds(0);
     }
