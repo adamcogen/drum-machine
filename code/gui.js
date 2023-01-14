@@ -460,8 +460,6 @@ class DrumMachineGui {
         }
         // update visuals
         let circle = this.components.shapes.sequencerRowHandles[rowIndex]
-        circle.stroke = 'black'
-        circle.linewidth = 2
         circle.fill = this.configurations.sequencerRowHandles.selectedColor
         let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
         rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.selectedColor
@@ -485,8 +483,6 @@ class DrumMachineGui {
         this.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y = this.components.shapes.volumeAdjusterRowHandles[rowIndex].translation.y
         // update visuals
         let circle = this.components.shapes.volumeAdjusterRowHandles[rowIndex]
-        circle.stroke = 'black'
-        circle.linewidth = 2
         circle.fill = this.configurations.volumeAdjusterRowHandles.selectedColor
         let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
         rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.selectedColor
@@ -521,8 +517,6 @@ class DrumMachineGui {
         this.shiftToolTracker.rowHandleStartingPosition.y = this.components.shapes.shiftToolRowHandles[rowIndex].translation.y
         // update visuals
         let circle = this.components.shapes.shiftToolRowHandles[rowIndex]
-        circle.stroke = 'black'
-        circle.linewidth = 2
         circle.fill = this.configurations.shiftToolRowHandles.selectedColor
         let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
         rowSelectionRectangle.stroke = this.configurations.shiftToolRowHandles.selectedColor
@@ -843,8 +837,9 @@ class DrumMachineGui {
             let horizontalPosition = this.configurations.sequencer.left + leftPaddingPerRow
             let verticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + topPaddingPerRow
             let circle = this.two.makeCircle(horizontalPosition, verticalPosition, radius);
-            circle.fill = unselectedColor
-            circle.stroke = "transparent"
+            circle.fill = 'transparent'
+            circle.linewidth = 2
+            circle.stroke = 'black'
             allCircles.push(circle)
         }
         return allCircles
@@ -880,9 +875,6 @@ class DrumMachineGui {
         let circle = self.components.shapes.sequencerRowHandles[rowIndex];
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
         if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
-            circle.stroke = 'black'
-            circle.linewidth = 2
-            circle.fill = self.configurations.sequencerRowHandles.unselectedColor
             rowSelectionRectangle.stroke = self.configurations.sequencerRowHandles.unselectedColor
         }
     }
@@ -890,7 +882,6 @@ class DrumMachineGui {
     moveRowMouseLeaveEventHandler(self, rowIndex) {
         let circle = self.components.shapes.sequencerRowHandles[rowIndex];
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-        circle.stroke = 'transparent'
         circle.fill = self.configurations.sequencerRowHandles.unselectedColor
         rowSelectionRectangle.stroke = 'transparent'
     }
@@ -903,8 +894,6 @@ class DrumMachineGui {
     moveRowMouseUpEventHandler(self, rowIndex) {
         let circle = self.components.shapes.sequencerRowHandles[rowIndex];
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-        circle.stroke = 'black'
-        circle.linewidth = 2
         circle.fill = self.configurations.sequencerRowHandles.unselectedColor
         rowSelectionRectangle.stroke = self.configurations.sequencerRowHandles.unselectedColor
     }
@@ -942,8 +931,6 @@ class DrumMachineGui {
         let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
         if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
-            circle.stroke = 'black'
-            circle.linewidth = 2
             circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
             rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.unselectedColor
         }
@@ -952,7 +939,6 @@ class DrumMachineGui {
     changeRowVolumesMouseLeaveEventHandler(self, rowIndex) {
         let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-        circle.stroke = 'transparent'
         circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
         rowSelectionRectangle.stroke = 'transparent'
     }
@@ -965,8 +951,6 @@ class DrumMachineGui {
     changeRowVolumesMouseUpEventHandler(self, rowIndex) {
         let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-        circle.stroke = 'black'
-        circle.linewidth = 2
         circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
         rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.unselectedColor
     }
@@ -1004,8 +988,6 @@ class DrumMachineGui {
         let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
         if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
-            circle.stroke = 'black'
-            circle.linewidth = 2
             circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
             rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
         }
@@ -1014,7 +996,6 @@ class DrumMachineGui {
     shiftRowMouseLeaveEventHandler(self, rowIndex) {
         let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-        circle.stroke = 'transparent'
         circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
         rowSelectionRectangle.stroke = 'transparent'
     }
@@ -1027,8 +1008,6 @@ class DrumMachineGui {
     shiftRowMouseUpEventHandler(self, rowIndex) {
         let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-        circle.stroke = 'black'
-        circle.linewidth = 2
         circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
         rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
     }

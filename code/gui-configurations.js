@@ -248,8 +248,8 @@ function getGuiConfigurations(hideIcons=false) {
             topPadding: 0,
             leftPadding: -30,
             radius: 15,
-            unselectedColor: lighterSequencerColor,
-            selectedColor: defaultSequencerLineColor,
+            unselectedColor: 'transparent',
+            selectedColor: lighterSequencerColor,
             icon: {
                 height: 30,
                 width: 30,
@@ -261,8 +261,8 @@ function getGuiConfigurations(hideIcons=false) {
             topPadding: 0,
             leftPadding: -60,
             radius: 15,
-            unselectedColor: lighterSequencerColor,
-            selectedColor: defaultSequencerLineColor,
+            unselectedColor: 'transparent',
+            selectedColor: lighterSequencerColor,
             icon: {
                 height: 30,
                 width: 30,
@@ -274,8 +274,8 @@ function getGuiConfigurations(hideIcons=false) {
             topPadding: 0,
             leftPadding: -90,
             radius: 15,
-            unselectedColor: lighterSequencerColor,
-            selectedColor: defaultSequencerLineColor,
+            unselectedColor: 'transparent',
+            selectedColor: lighterSequencerColor,
             icon: {
                 height: 30,
                 width: 30,
