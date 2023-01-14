@@ -426,6 +426,7 @@ class DrumMachineGui {
         if (this.components.shapes.shiftToolRowHandles[rowIndex] !== null && this.components.shapes.shiftToolRowHandles[rowIndex] !== undefined) {
             this.rowSelectionTracker.shapes.push(this.components.shapes.shiftToolRowHandles[rowIndex]);
         }
+        this.rowSelectionTracker.shapes.push(this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex]);
         // this part gets a little weird. save a list of all of the starting positions of each
         // shape that is being moved. that way we can translate them proporionally to how far
         // the row handle has moved.
@@ -450,6 +451,11 @@ class DrumMachineGui {
             this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.clearRowIcons[rowIndex]);
             this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.resetSubdivisionLinesShiftIcons[rowIndex]);
             this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.resetReferenceLinesShiftIcons[rowIndex]);
+            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.moveRowIcons[rowIndex]);
+            if (this.components.domElements.iconLists.shiftRowIcons[rowIndex] !== null && this.components.domElements.iconLists.shiftRowIcons[rowIndex] !== undefined) {
+                this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.shiftRowIcons[rowIndex]);
+            }
+            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.changeRowVolumesIcons[rowIndex]);
         }
         this.rowSelectionTracker.domElementsOriginalPositions = [];
         for (let domElement of this.rowSelectionTracker.domElements) {
@@ -2277,6 +2283,13 @@ class DrumMachineGui {
         this.components.shapes.addRowButtonShape.remove();
         this.components.shapes.addRowButtonShape = this.initializeRectangleShape(this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * (this.sequencer.rows.length - 1)) + this.configurations.addRowButton.topPadding, this.configurations.sequencer.left + (this.configurations.sequencer.width / 2) + this.configurations.addRowButton.leftPadding - (this.configurations.addRowButton.width / 2), this.configurations.addRowButton.height, this.configurations.addRowButton.width)
         this.components.shapes.addRowButtonShape.fill = this.configurations.buttonBehavior.clickedButtonColor
+        // quantization toggle buttons
+        for (let shape of this.components.shapes.toggleQuantizationButtonsRectangles) {
+            shape.remove();
+        }
+        this.components.shapes.toggleQuantizationButtonsRectangles = []
+        this.components.shapes.toggleQuantizationButtonsRectangles = this.initializeButtonPerSequencerRow(this.configurations.quantizationButtons.topPaddingPerRow, this.configurations.quantizationButtons.leftPaddingPerRow, this.configurations.quantizationButtons.height, this.configurations.quantizationButtons.width)
+
         // update two.js so we can add action listeners to shapes
         this.two.update()
         // initialize action listeners
