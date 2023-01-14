@@ -226,7 +226,8 @@ class DrumMachineGui {
         shapes.loopLengthModeSelectionButtonsOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top, this.configurations.tempoInputModeSelectionBpmButton.left, this.configurations.tempoInputModeSelectionBpmButton.height, this.configurations.tempoInputModeSelectionBpmButton.width + (this.configurations.tempoInputModeSelectionMillisecondsButton.left - this.configurations.tempoInputModeSelectionBpmButton.left))
         shapes.loopLengthModeSelectionButtonsOutline.stroke = this.configurations.subdivisionLines.color;
         // tempo menu outline
-        // ...
+        shapes.tempoMenuOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top - 5, this.configurations.tempoTextInputBpm.left - 5, 128, 300)
+        shapes.tempoMenuOutline.stroke = "#bfbfbf"
         // add button and sequencer shapes etc.
         shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
         shapes.referenceLineLists = this.initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
@@ -251,6 +252,9 @@ class DrumMachineGui {
         shapes.tempoLabelBeats = this.initializeLabelText(this.configurations.tempoTextLabelBeats.text, this.configurations.tempoTextLabelBeats.left, this.configurations.tempoTextLabelBeats.top, "left");
         shapes.tempoLabelBeatsPerMinute = this.initializeLabelText(this.configurations.tempoTextLabelBeatsPerMinute.text, this.configurations.tempoTextLabelBeatsPerMinute.left, this.configurations.tempoTextLabelBeatsPerMinute.top, "left");
         shapes.tempoLabelMilliseconds = this.initializeLabelText(this.configurations.tempoTextLabelMilliseconds.text, this.configurations.tempoTextLabelMilliseconds.left, this.configurations.tempoTextLabelMilliseconds.top, "left");
+        shapes.tempoLabelMenuTitle = this.initializeLabelText(this.configurations.tempoTextLabelMenuTitle.text, this.configurations.tempoTextLabelMenuTitle.left, this.configurations.tempoTextLabelMenuTitle.top, "left");
+        shapes.tempoLabelMenuTitle.size = 25
+        shapes.tempoLabelMenuTitle.fill = this.configurations.subdivisionLines.color
         shapes.shiftModeMoveNotesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveNotesButton.top, this.configurations.shiftModeMoveNotesButton.left, this.configurations.shiftModeMoveNotesButton.height, this.configurations.shiftModeMoveNotesButton.width)
         shapes.shiftModeMoveSubdivisionLinesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveSubdivisionLinesButton.top, this.configurations.shiftModeMoveSubdivisionLinesButton.left, this.configurations.shiftModeMoveSubdivisionLinesButton.height, this.configurations.shiftModeMoveSubdivisionLinesButton.width)
         shapes.shiftModeMoveReferenceLinesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveReferenceLinesButton.top, this.configurations.shiftModeMoveReferenceLinesButton.left, this.configurations.shiftModeMoveReferenceLinesButton.height, this.configurations.shiftModeMoveReferenceLinesButton.width)
@@ -798,7 +802,7 @@ class DrumMachineGui {
         let height = (this.configurations.notes.circleRadiusUsedForNoteBankSpacing * (this.sampleNameList.length - 1)) + ((this.sampleNameList.length - 1) * this.configurations.sampleBank.spaceBetweenNotes) + (this.configurations.sampleBank.borderPadding * 2)
         let noteBankContainer = this.initializeRectangleShape(this.configurations.sampleBank.top, this.configurations.sampleBank.left, height, width)
         noteBankContainer.linewidth = this.configurations.sequencer.lineWidth;
-        noteBankContainer.stroke = this.configurations.sequencer.color
+        noteBankContainer.stroke = this.configurations.subdivisionLines.color
         noteBankContainer.fill = 'transparent'
         return noteBankContainer
     }
@@ -844,7 +848,7 @@ class DrumMachineGui {
             let verticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + topPaddingPerRow
             let circle = this.two.makeCircle(horizontalPosition, verticalPosition, radius);
             circle.fill = 'transparent'
-            circle.linewidth = 2
+            circle.linewidth = 3
             circle.stroke = 'black'
             allCircles.push(circle)
         }
@@ -2408,7 +2412,7 @@ class DrumMachineGui {
         }
         let circle = self.components.shapes.volumeAdjusterRowHandles[self.rowVolumeAdjustmentTracker.selectedRowIndex]
         circle.stroke = 'black'
-        circle.linewidth = 2
+        circle.linewidth = 3
         circle.fill = self.configurations.volumeAdjusterRowHandles.selectedColor
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.rowVolumeAdjustmentTracker.selectedRowIndex]
         rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.selectedColor
@@ -2533,7 +2537,7 @@ class DrumMachineGui {
         }
         let circle = self.components.shapes.shiftToolRowHandles[self.shiftToolTracker.selectedRowIndex]
         circle.stroke = 'black'
-        circle.linewidth = 2
+        circle.linewidth = 3
         circle.fill = self.configurations.shiftToolRowHandles.selectedColor
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.shiftToolTracker.selectedRowIndex]
         rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.selectedColor
@@ -2640,7 +2644,7 @@ class DrumMachineGui {
 
         let circle = self.components.shapes.sequencerRowHandles[self.rowSelectionTracker.selectedRowIndex]
         circle.stroke = 'black'
-        circle.linewidth = 2
+        circle.linewidth = 3
         circle.fill = self.configurations.sequencerRowHandles.selectedColor
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.rowSelectionTracker.selectedRowIndex]
         rowSelectionRectangle.stroke = self.configurations.sequencerRowHandles.selectedColor

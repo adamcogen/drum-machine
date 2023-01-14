@@ -9,8 +9,8 @@ function getGuiConfigurations(hideIcons=false) {
     return {
         hideIcons: hideIcons,
         sequencer: {
-            top: 130,
-            left: 260,
+            top: 180,
+            left: 320,
             width: 700,
             spaceBetweenRows: 80,
             color: defaultSequencerLineColor,
@@ -40,7 +40,7 @@ function getGuiConfigurations(hideIcons=false) {
             },
         },
         sampleBank: {
-            top: 94,
+            top: 144,
             left: 100,
             spaceBetweenNotes: 40,
             borderPadding: 20
@@ -58,7 +58,7 @@ function getGuiConfigurations(hideIcons=false) {
             color: lighterSequencerColor, // meant to be slightly lighter than the subdivision line color
         },
         noteTrashBin: {
-            top: 480,
+            top: 530,
             left: 100,
             width: 48,
             height: 48,
@@ -71,7 +71,7 @@ function getGuiConfigurations(hideIcons=false) {
             }
         },
         pauseButton: {
-            top: 94,
+            top: 144,
             left: 30,
             width: 48,
             height: 48,
@@ -83,7 +83,7 @@ function getGuiConfigurations(hideIcons=false) {
             }
         },
         restartSequencerButton: {
-            top: 154,
+            top: 204,
             left: 30,
             width: 48,
             height: 48,
@@ -95,7 +95,7 @@ function getGuiConfigurations(hideIcons=false) {
             }
         },
         clearAllNotesButton: {
-            top: 214,
+            top: 264,
             left: 30,
             width: 48,
             height: 48,
@@ -107,7 +107,7 @@ function getGuiConfigurations(hideIcons=false) {
             }
         },
         moveNotesModeButton: {
-            top: 274,
+            top: 324,
             left: 30,
             width: 48,
             height: 48,
@@ -119,7 +119,7 @@ function getGuiConfigurations(hideIcons=false) {
             },
         },
         editVolumesModeButton: {
-            top: 334,
+            top: 384,
             left: 30,
             width: 48,
             height: 48,
@@ -138,37 +138,43 @@ function getGuiConfigurations(hideIcons=false) {
             throwRowAwayTopAndBottomPadding: 70,
         },
         tempoTextInputBeatsPerLoop: {
-            top: 50,
-            left: 140,
+            top: 95,
+            left: 170,
             maximumValue: 9999 // fractional numbers less than this could go over the width of the text input
         },
         tempoTextInputBpm: {
-            top: 12,
-            left: 140,
+            top: 57,
+            left: 170,
             maximumValue: 99999 // fractional numbers less than this could go over the width of the text input
         },
         tempoTextInputMilliseconds: {
-            top: 28,
-            left: 140,
+            top: 73,
+            left: 170,
             maximumValue: 99999 // fractional numbers less than this could go over the width of the text input
+        },
+        tempoTextLabelMenuTitle: {
+            text: "tempo or time",
+            color: "black",
+            top: 30,
+            left: 170,
         },
         tempoTextLabelBeats: {
             text: "beats long",
             color: "black",
-            top: 69,
-            left: 204,
+            top: 114,
+            left: 234,
         },
         tempoTextLabelBeatsPerMinute: {
             text: "beats per minute",
             color: "black",
-            top: 33,
-            left: 215,
+            top: 78,
+            left: 245,
         },
         tempoTextLabelMilliseconds: {
-            text: "milliseconds",
+            text: "milliseconds long",
             color: "black",
-            top: 48,
-            left: 215,
+            top: 94,
+            left: 245,
         },
         subdivisionLineTextInputs: {
             topPaddingPerRow: 0, // centered on sequencer line would be: -17
@@ -186,7 +192,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         clearRowButtons: {
             topPaddingPerRow: -24,
-            leftPaddingPerRow: 166,
+            leftPaddingPerRow: 178,
             height: 48,
             width: 48,
             icon: {
@@ -209,8 +215,8 @@ function getGuiConfigurations(hideIcons=false) {
             },
         },
         tempoInputModeSelectionBpmButton: { // button for toggling between different modes of inputting tempo. this one is to select 'beats per minute' input mode.
-            top: 20,
-            left: 12,
+            top: 10,
+            left: 354,
             height: 48,
             width: 48,
             icon: {
@@ -221,8 +227,8 @@ function getGuiConfigurations(hideIcons=false) {
             },
         },
         tempoInputModeSelectionMillisecondsButton: { // button for toggling between different modes of inputting tempo. this one is to select 'loop length in milliseconds' input mode.
-            top: 20,
-            left: 68,
+            top: 10,
+            left: 410,
             height: 48,
             width: 48,
             icon: {
@@ -233,8 +239,8 @@ function getGuiConfigurations(hideIcons=false) {
             },
         },
         tapTempoButton: {
-            top: 20,
-            left: 380,
+            top: 70,
+            left: 410,
             height: 48,
             width: 48,
             icon: {
@@ -246,8 +252,8 @@ function getGuiConfigurations(hideIcons=false) {
         },
         sequencerRowHandles: { // these will be circles, one to the left of each sequencer row, that allow you to select the row and click-drag it.
             topPadding: 0,
-            leftPadding: -30,
-            radius: 15,
+            leftPadding: -45,
+            radius: 18,
             unselectedColor: 'transparent',
             selectedColor: lighterSequencerColor,
             icon: {
@@ -259,8 +265,8 @@ function getGuiConfigurations(hideIcons=false) {
         },
         volumeAdjusterRowHandles: { // these will probably be replaced with an icon eventually, but adding circles for now as a placeholder. click and drag these to adjust the volume for one row
             topPadding: 0,
-            leftPadding: -60,
-            radius: 15,
+            leftPadding: -90,
+            radius: 18,
             unselectedColor: 'transparent',
             selectedColor: lighterSequencerColor,
             icon: {
@@ -272,8 +278,8 @@ function getGuiConfigurations(hideIcons=false) {
         },
         shiftToolRowHandles: { // these will probably be replaced with an icon eventually, but adding circles for now as a placeholder. click and drag these to use the 'shift' tool
             topPadding: 0,
-            leftPadding: -90,
-            radius: 15,
+            leftPadding: -135,
+            radius: 18,
             unselectedColor: 'transparent',
             selectedColor: lighterSequencerColor,
             icon: {
@@ -284,21 +290,21 @@ function getGuiConfigurations(hideIcons=false) {
             }
         },
         sequencerRowSelections: {
-            leftPadding: -100,
+            leftPadding: -160,
             topPadding: -40,
-            width: 295,
+            width: 405,
             height: 80,
         },
         quantizationButtons: {
             topPaddingPerRow: -24,
-            leftPaddingPerRow: 76,
+            leftPaddingPerRow: 80,
             height: 48,
             width: 48,
             icon: {
                 width: 48,
                 height: 48,
                 topPaddingPerRow: -24,
-                leftPaddingPerRow: 76,
+                leftPaddingPerRow: 80,
             }
         },
         midiOutputSelector: {
@@ -352,7 +358,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         shiftModeResetReferenceLinesForRowButtons: {
             topPaddingPerRow: -33,
-            leftPaddingPerRow: 130,
+            leftPaddingPerRow: 138,
             height: 30,
             width: 30,
             icon: {
@@ -364,7 +370,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         shiftModeResetSubdivisionLinesForRowButtons: {
             topPaddingPerRow: 2,
-            leftPaddingPerRow: 130,
+            leftPaddingPerRow: 138,
             height: 30,
             width: 30,
             icon: {
