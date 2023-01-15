@@ -387,7 +387,6 @@ function getGuiConfigurations(hideIcons=false) {
             left: 493,
             top: 55,
             lines: ["select what will get", "moved when using", "the row shifter tool."],
-            lineSpacing: 15
         },
         shiftModeMenuIcon: {
             left: 522,
@@ -446,7 +445,12 @@ function getGuiConfigurations(hideIcons=false) {
                 left: 1070,
                 top: 45,
             },
-            noExamplePatternSelectedText: "--"
+            noExamplePatternSelectedText: ""
+        },
+        examplePatternMenuExplanation: {
+            left: 1073,
+            top: 90,
+            lines: ["load some example sequencer", " patterns to see what the drum", "machine can do."],
         }
     }
 }
