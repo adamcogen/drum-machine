@@ -27,6 +27,8 @@ class DrumMachineGui {
             domElements: {} // this hash will contain all of the HTML DOM elements (either as individual elements, lists of elements, or lists of lists of elements, etc.)
         }
 
+        this.exampleSequencerPatternsHash = {}; // this hash will contain all of the example sequencer patterns that will show up in the 'example patterns' menu dropdown
+
         this.configureMidiFileWriterLibrary();
 
         this.currentGuiMode = DrumMachineGui.MOVE_NOTES_MODE; // start the GUI in 'move notes' mode
@@ -47,6 +49,7 @@ class DrumMachineGui {
         this.initializeTempoTextInputValuesAndStyles();
         this.initializeMidiOutputSelectorValuesAndStyles();
         this.initializeDrumKitSelectorValuesAndStyles();
+        this.initializeExamplePatternSelectorValuesAndStyles()
         this.initializeModeSelectionButtonStyles();
         this.initializeTempoBpmTextLabelsStyles();
         this.initializeTempoMillisecondsTextLabelsStyles();
@@ -144,6 +147,7 @@ class DrumMachineGui {
         this.initializeShiftToolToggleButtonActionListeners();
         this.initializeMidiOutputSelectorActionListeners();
         this.initializeDrumKitSelectorActionListeners();
+        this.initializeExamplePatternSelectorActionListeners()
         this.initializeLoopLengthInMillisecondsTextInputActionListeners();
         this.initializeBeatsPerMinuteTextInputActionListeners();
         this.initializeNumberOfBeatsInLoopInputActionListeners();
@@ -264,6 +268,12 @@ class DrumMachineGui {
         shapes.outputMenuMidiLabel.size = 18
         shapes.outputMenuOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top - 5, this.configurations.outputMenuTitle.left - 5, 128, 320) // use bpm button as a reference again to keep the top of all the menus aligned
         shapes.outputMenuOutline.stroke = "#bfbfbf";
+        // 'example patterns' menu
+        shapes.examplePatternsMenuTitle = this.initializeLabelText(this.configurations.examplePatternsMenuTitle.text, this.configurations.examplePatternsMenuTitle.left, this.configurations.examplePatternsMenuTitle.top, "left");
+        shapes.examplePatternsMenuTitle.size = 25
+        shapes.examplePatternsMenuTitle.fill = this.configurations.subdivisionLines.color
+        shapes.examplePatternsMenuOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top - 5, this.configurations.examplePatternsMenuTitle.left - 5, 128, 190) // use bpm button as a reference again to keep the top of all the menus aligned
+        shapes.examplePatternsMenuOutline.stroke = "#bfbfbf";
         // add button and sequencer shapes etc.
         shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
         shapes.referenceLineLists = this.initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
@@ -313,6 +323,7 @@ class DrumMachineGui {
                 subdivisionTextInputs: document.getElementById('subdivision-text-inputs'),
                 midiOutputSelector: document.getElementById('midi-output-selector-div'),
                 drumkitSelector: document.getElementById('drum-kit-selector-div'),
+                examplePatternSelector: document.getElementById('example-pattern-selector-div'),
             },
             textInputs: {
                 loopLengthMillis: document.getElementById('text-input-loop-length-millis'),
@@ -363,6 +374,7 @@ class DrumMachineGui {
             selectors: {
                 midiOutput: document.getElementById('midi-output-selector'),
                 drumkit: document.getElementById('drum-kit-selector'),
+                examplePatterns: document.getElementById('example-pattern-selector'),
             }
         }
         return domElements;
@@ -1286,6 +1298,33 @@ class DrumMachineGui {
             } else {
                 this.sequencer.audioDrivers[0].muted = false;
                 this.sequencer.samples = this.allDrumKitsHash[this.components.domElements.selectors.drumkit.value];
+            }
+        });
+    }
+
+    initializeExamplePatternSelectorValuesAndStyles() {
+        this.components.domElements.divs.examplePatternSelector.style.left = "" + this.configurations.examplePatternSelector.position.left + "px";
+        this.components.domElements.divs.examplePatternSelector.style.top = "" + this.configurations.examplePatternSelector.position.top + "px";
+        // Add a default option to the selector for 'custom pattern'
+        let customPattern = document.createElement("option");
+        customPattern.text = this.configurations.examplePatternSelector.noExamplePatternSelectedText;
+        this.components.domElements.selectors.examplePatterns.add(customPattern);
+        // add an option for each different example pattern we want to include
+        for(let [patternName, patternUrl] of Object.entries(this.exampleSequencerPatternsHash)) {
+            let option = document.createElement("option");
+            option.text = patternName;
+            this.components.domElements.selectors.examplePatterns.add(option);
+        }
+    }
+
+    initializeExamplePatternSelectorActionListeners() {
+        this.components.domElements.selectors.examplePatterns.addEventListener('change', () => {
+            let selectedValue = this.components.domElements.selectors.examplePatterns.value;
+            if (selectedValue === this.configurations.examplePatternSelector.noExamplePatternSelectedText) { // if the 'don't use an example pattern' option is selected
+                // do nothing. we don't want to load or change anything when someone selects the 'don't use an example pattern' option
+            } else {
+                // if an example pattern was selected, here we will want to load it. we will do that be deserializing it from the serialized sequencer string we stored in our 'example patterns' hash.
+                this.sequencer = this.sequencer.deserialize(this.examplePatternsHash[selectedValue]);
             }
         });
     }

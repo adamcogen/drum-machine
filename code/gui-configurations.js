@@ -434,5 +434,17 @@ function getGuiConfigurations(hideIcons=false) {
             top: 63,
             text: "midi:"
         },
+        examplePatternsMenuTitle: {
+            left: 1070,
+            top: 30,
+            text: "examples"
+        },
+        examplePatternSelector: {
+            position: {
+                left: 1070,
+                top: 45,
+            },
+            noExamplePatternSelectedText: "--"
+        }
     }
 }
