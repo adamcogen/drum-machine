@@ -238,7 +238,7 @@ class DrumMachineGui {
         shapes.tempoLabelMenuTitleTimeWord.size = 25
         shapes.tempoLabelMenuTitleTimeWord.fill = this.configurations.subdivisionLines.color
         // shift tool menu
-        shapes.shiftMenuOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top - 5, this.configurations.shiftModeLabelMenuTitle.left - 5, 128, 240)
+        shapes.shiftMenuOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top - 5, this.configurations.shiftModeLabelMenuTitle.left - 5, 128, 240) // use bpm button as a reference again to keep the top of all the menus aligned
         shapes.shiftMenuOutline.stroke = "#bfbfbf";
         shapes.shiftMenuTitle = this.initializeLabelText(this.configurations.shiftModeLabelMenuTitle.text, this.configurations.shiftModeLabelMenuTitle.left, this.configurations.shiftModeLabelMenuTitle.top, "left");
         shapes.shiftMenuTitle.size = 25
@@ -252,6 +252,18 @@ class DrumMachineGui {
             textLine.size = 13
             textLine.fill = this.configurations.subdivisionLines.color
         }
+        // output menu
+        shapes.outputMenuTitle = this.initializeLabelText(this.configurations.outputMenuTitle.text, this.configurations.outputMenuTitle.left, this.configurations.outputMenuTitle.top, "left");
+        shapes.outputMenuTitle.size = 25
+        shapes.outputMenuTitle.fill = this.configurations.subdivisionLines.color
+        shapes.outputMenuAudioLabel = this.initializeLabelText(this.configurations.outputMenuAudioLabel.text, this.configurations.outputMenuAudioLabel.left, this.configurations.outputMenuAudioLabel.top, "right");
+        shapes.outputMenuAudioLabel.fill = this.configurations.subdivisionLines.color
+        shapes.outputMenuAudioLabel.size = 18
+        shapes.outputMenuMidiLabel = this.initializeLabelText(this.configurations.outputMenuMidiLabel.text, this.configurations.outputMenuMidiLabel.left, this.configurations.outputMenuMidiLabel.top, "right");
+        shapes.outputMenuMidiLabel.fill = this.configurations.subdivisionLines.color
+        shapes.outputMenuMidiLabel.size = 18
+        shapes.outputMenuOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top - 5, this.configurations.outputMenuTitle.left - 5, 128, 320) // use bpm button as a reference again to keep the top of all the menus aligned
+        shapes.outputMenuOutline.stroke = "#bfbfbf";
         // add button and sequencer shapes etc.
         shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
         shapes.referenceLineLists = this.initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
@@ -1220,8 +1232,15 @@ class DrumMachineGui {
             // add all available MIDI outputs to the selector
             for (let output of midiAccess.outputs) {
                 let option = document.createElement("option");
-                option.text = output[1].name + " [ID: " + output[0] + "]";
-                this.midiOutputsMap[option.text] = output[0];
+                let midiName = output[1].name
+                // let midiId = " [ID: " + output[0] + "]"
+                // midiName = midiName + " [ID: " + midiId + "]"
+                if (midiName.length >= this.configurations.midiOutputSelector.maximumTextLength) {
+                    midiName = midiName.substring(0, this.configurations.midiOutputSelector.maximumTextLength - 3);
+                    midiName += "..."
+                }
+                option.text = midiName;
+                this.midiOutputsMap[option.text] = output[0]
                 this.components.domElements.selectors.midiOutput.add(option);
             }
         });

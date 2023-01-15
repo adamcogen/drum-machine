@@ -316,19 +316,6 @@ function getGuiConfigurations(hideIcons=false) {
                 leftPaddingPerRow: 80,
             }
         },
-        midiOutputSelector: {
-            position: {
-                top: 5,
-                left: 900,
-            }
-        },
-        drumkitSelector: {
-            position: {
-                top: 40,
-                left: 900,
-            },
-            noWebAudioOutputOptionText: "No Live Audio Output",
-        },
         shiftModeMoveNotesButton: {
             top: 41,
             left: 615,
@@ -407,16 +394,45 @@ function getGuiConfigurations(hideIcons=false) {
             width: 35,
         },
         exportPatternToMidiFileButton: {
-            top: 20,
-            left: 830,
-            height: 48,
-            width: 48,
+            top: 47,
+            left: 802,
+            height: 27,
+            width: 27,
             icon: {
-                height: 48,
-                width: 48,
+                height: 27,
+                width: 27,
                 topPadding: 0,
                 leftPadding: 0,
             },
+        },
+        midiOutputSelector: {
+            position: {
+                top: 45,
+                left: 834,
+            },
+            maximumTextLength: 20
+        },
+        drumkitSelector: {
+            position: {
+                top: 80,
+                left: 800,
+            },
+            noWebAudioOutputOptionText: "No Live Audio Output",
+        },
+        outputMenuTitle: {
+            left: 740,
+            top: 30,
+            text: "outputs"
+        },
+        outputMenuAudioLabel: {
+            left: 797,
+            top: 95,
+            text: "audio:"
+        },
+        outputMenuMidiLabel: {
+            left: 797,
+            top: 63,
+            text: "midi:"
         },
     }
 }
