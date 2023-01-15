@@ -212,10 +212,10 @@ function getGuiConfigurations(hideIcons=false) {
             }
         },
         addRowButton: {
-            topPadding: 60,
-            leftPadding: 0,
+            topPadding: 60, // this button will always be a certain distance from the bottom of the sequencer
+            left: 320, // leftPadding: 0, // this button used to be calculated to be centered on the sequencer, but now it's wider to also be manually centered on subdivision / reference line text inputs
             height: 48,
-            width: 700,
+            width: 765,
             icon: {
                 height: 48,
                 width: 48,
