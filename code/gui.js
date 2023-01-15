@@ -1228,22 +1228,24 @@ class DrumMachineGui {
         noMidiOutputOption.text = "No Live MIDI Output";
         this.midiOutputsMap["No Live MIDI Output"] = null;
         this.components.domElements.selectors.midiOutput.add(noMidiOutputOption);
-        navigator.requestMIDIAccess().then((midiAccess) => { // asynchronously request access to the system's MIDI ports.
-            // add all available MIDI outputs to the selector
-            for (let output of midiAccess.outputs) {
-                let option = document.createElement("option");
-                let midiName = output[1].name
-                // let midiId = " [ID: " + output[0] + "]"
-                // midiName = midiName + " [ID: " + midiId + "]"
-                if (midiName.length >= this.configurations.midiOutputSelector.maximumTextLength) {
-                    midiName = midiName.substring(0, this.configurations.midiOutputSelector.maximumTextLength - 3);
-                    midiName += "..."
+        if (navigator.requestMIDIAccess !== null && navigator.requestMIDIAccess !== undefined) {
+            navigator.requestMIDIAccess().then((midiAccess) => { // asynchronously request access to the system's MIDI ports.
+                // add all available MIDI outputs to the selector
+                for (let output of midiAccess.outputs) {
+                    let option = document.createElement("option");
+                    let midiName = output[1].name
+                    // let midiId = " [ID: " + output[0] + "]"
+                    // midiName = midiName + " [ID: " + midiId + "]"
+                    if (midiName.length >= this.configurations.midiOutputSelector.maximumTextLength) {
+                        midiName = midiName.substring(0, this.configurations.midiOutputSelector.maximumTextLength - 3);
+                        midiName += "..."
+                    }
+                    option.text = midiName;
+                    this.midiOutputsMap[option.text] = output[0]
+                    this.components.domElements.selectors.midiOutput.add(option);
                 }
-                option.text = midiName;
-                this.midiOutputsMap[option.text] = output[0]
-                this.components.domElements.selectors.midiOutput.add(option);
-            }
-        });
+            });
+        }
     }
 
     initializeMidiOutputSelectorActionListeners() {
