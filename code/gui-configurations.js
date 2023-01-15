@@ -15,6 +15,8 @@ function getGuiConfigurations(hideIcons=false) {
             spaceBetweenRows: 80,
             color: defaultSequencerLineColor,
             lineWidth: 3,
+            // the following serialized (base64) sequencer pattern string will be loaded when we click the 'delete sequencer pattern' button:
+            clearedPatternBase64String: "eyJsb29wTGVuZ3RoIjoyMDAwLCJyb3dzIjpbIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjo4LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjowLFwibm90ZXNcIjpbXX0iXSwiYnBtIjoxMjAsIm51bWJlck9mQmVhdHMiOjQsImlzSW5CcG1Nb2RlIjp0cnVlfQ=="
         },
         defaultFont: {
             color: 'black' // "#575757",
