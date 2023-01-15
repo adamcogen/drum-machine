@@ -879,23 +879,6 @@ class DrumMachineGui {
 
     // 'move rows' row handles event listener initializations
 
-    // these are circles that are to the left of the sequencer, which we can click on to select sequencer rows,
-    // so that we can move those rows by clicking and dragging, to rearrange the sequencer row order, throw 
-    // rows away, etc.
-    initializeCirclesPerSequencerRow(leftPaddingPerRow, topPaddingPerRow, radius, unselectedColor) {
-        let allCircles = []
-        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
-            let horizontalPosition = this.configurations.sequencer.left + leftPaddingPerRow
-            let verticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + topPaddingPerRow
-            let circle = this.two.makeCircle(horizontalPosition, verticalPosition, radius);
-            circle.fill = 'transparent'
-            circle.linewidth = 3
-            circle.stroke = this.configurations.sequencerRowHandles.selectedColor
-            allCircles.push(circle)
-        }
-        return allCircles
-    }
-
     initializeSequencerRowHandlesActionListeners() {
         for (let rowIndex = 0; rowIndex < this.components.shapes.sequencerRowHandles.length; rowIndex++) {
             let circle = this.components.shapes.sequencerRowHandles[rowIndex];
@@ -2186,7 +2169,7 @@ class DrumMachineGui {
         });
 
         // add info to the circle object that the gui uses to keep track of things
-        circle.guiData = {}
+        circle.guiData = {};
         circle.guiData.sampleName = sampleName
         circle.guiData.row = row
         circle.guiData.label = label
@@ -3444,6 +3427,35 @@ class DrumMachineGui {
     }
 
     /**
+     * we will hide buttons that don't need to be shown. for example, if there aren't any notes on a row,
+     * we don't need to show the volume adjuster, the 'shift notes only' 
+     */
+
+    refreshNoteDependentButtonsForRow(rowIndex){
+        if (this.sequencer.rows[rowIndex]._notesList.head === null || this.sequencer.rows[rowIndex]._notesList.head === undefined) {
+            // hide stuff that shouldn't be visible if there are no notes on the row. this includes..
+            // 'change volume' button, 'delete all notes for row' button
+        } else {
+            // show stuff that should be visible when there are notes on the row
+        }
+    }
+
+    refreshShiftDependentButtonsForRow(rowIndex){
+        if (this.sequencer.rows[rowIndex].getSubdivisionLineShiftInMilliseconds() === 0) {
+            // hide stuff that shouldn't be visible if the row's subdivisions aren't shifted. this includes..
+            // 'reset subdivision shift for row' button
+        } else {
+            // show stuff that should be visible when the row's subdivisions are shifted
+        }
+        if (this.sequencer.rows[rowIndex].getReferenceLineShiftInMilliseconds() === 0) {
+            // hide stuff that shouldn't be visible if the row's reference lines aren't shifted. this includes..
+            // 'reset reference lines shift for row' button
+        } else {
+            // show stuff that should be visible when the row's reference lines are shifted
+        }
+    }
+
+    /**
      * general helper methods
      */
 
@@ -3466,6 +3478,9 @@ class DrumMachineGui {
         shape.linewidth = this.configurations.sequencer.lineWidth
         shape.stroke = 'black' // this.configurations.sequencer.color
         shape.fill = 'transparent'
+        shape.guiData = {
+            isVisible: true, // this will be accessed later to give us a convenient way to hide shapes onscreen without having to fully delete them or change their colors to transparent etc.
+        }
         return shape
     }
 
@@ -3493,9 +3508,33 @@ class DrumMachineGui {
         for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
             let top = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + topPaddingPerRow
             let left = this.configurations.sequencer.left + this.configurations.sequencer.width + leftPaddingPerRow
-            shapes[rowIndex] = this.initializeRectangleShape(top, left, height, width)
+            let shape = this.initializeRectangleShape(top, left, height, width);
+            shape.guiData = {
+                isVisible: true, // this will be accessed later to give us a convenient way to hide shapes onscreen without having to fully delete them or change their colors to transparent etc.
+            }
+            shapes[rowIndex] = shape;
         }
         return shapes
+    }
+
+    // these are circles that are to the left of the sequencer, which we can click on to select sequencer rows,
+    // so that we can move those rows by clicking and dragging, to rearrange the sequencer row order, throw 
+    // rows away, etc.
+    initializeCirclesPerSequencerRow(leftPaddingPerRow, topPaddingPerRow, radius, unselectedColor) {
+        let allCircles = []
+        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            let horizontalPosition = this.configurations.sequencer.left + leftPaddingPerRow
+            let verticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + topPaddingPerRow
+            let circle = this.two.makeCircle(horizontalPosition, verticalPosition, radius);
+            circle.fill = 'transparent'
+            circle.linewidth = 3
+            circle.stroke = this.configurations.sequencerRowHandles.selectedColor
+            circle.guiData = {
+                isVisible: true, // this will be accessed later to give us a convenient way to hide shapes onscreen without having to fully delete them or change their colors to transparent etc.
+            }
+            allCircles.push(circle)
+        }
+        return allCircles
     }
 
     initializeCheckbox(verticalPosition, horizontalPosition) {
