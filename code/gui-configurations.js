@@ -154,9 +154,18 @@ function getGuiConfigurations(hideIcons=false) {
         },
         tempoTextLabelMenuTitle: {
             text: "tempo or time",
-            color: "black",
             top: 30,
             left: 170,
+        },
+        tempoTextLabelMenuTitleTempoWord: {
+            text: "tempo",
+            top: 30,
+            left: 170
+        },
+        tempoTextLabelMenuTitleTimeWord: {
+            text: "time",
+            top: 30,
+            left: 275.5
         },
         tempoTextLabelBeats: {
             text: "beats long",
@@ -321,8 +330,8 @@ function getGuiConfigurations(hideIcons=false) {
             noWebAudioOutputOptionText: "No Live Audio Output",
         },
         shiftModeMoveNotesButton: {
-            top: 20,
-            left: 550,
+            top: 41,
+            left: 615,
             width: 48,
             height: 48,
             icon: {
@@ -333,8 +342,8 @@ function getGuiConfigurations(hideIcons=false) {
             },
         },
         shiftModeMoveSubdivisionLinesButton: {
-            top: 20,
-            left: 610,
+            top: 71,
+            left: 670,
             width: 48,
             height: 48,
             icon: {
@@ -345,7 +354,7 @@ function getGuiConfigurations(hideIcons=false) {
             },
         },
         shiftModeMoveReferenceLinesButton: {
-            top: 20,
+            top: 15,
             left: 670,
             width: 48,
             height: 48,
@@ -379,6 +388,23 @@ function getGuiConfigurations(hideIcons=false) {
                 topPadding: 0,
                 leftPadding: 0,
             },
+        },
+        shiftModeLabelMenuTitle: {
+            left: 490,
+            top: 30,
+            text: "shifter tool"
+        },
+        shiftModeLabelMenuExplanation: {
+            left: 493,
+            top: 55,
+            lines: ["select what will get", "moved when using", "the row shifter tool."],
+            lineSpacing: 15
+        },
+        shiftModeMenuIcon: {
+            left: 522,
+            top: 93,
+            height: 35,
+            width: 35,
         },
         exportPatternToMidiFileButton: {
             top: 20,

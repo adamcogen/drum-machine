@@ -225,9 +225,33 @@ class DrumMachineGui {
         // loop length mode buttons outline
         shapes.loopLengthModeSelectionButtonsOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top, this.configurations.tempoInputModeSelectionBpmButton.left, this.configurations.tempoInputModeSelectionBpmButton.height, this.configurations.tempoInputModeSelectionBpmButton.width + (this.configurations.tempoInputModeSelectionMillisecondsButton.left - this.configurations.tempoInputModeSelectionBpmButton.left))
         shapes.loopLengthModeSelectionButtonsOutline.stroke = this.configurations.subdivisionLines.color;
-        // tempo menu outline
+        // tempo menu outline and title
         shapes.tempoMenuOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top - 5, this.configurations.tempoTextInputBpm.left - 5, 128, 300)
         shapes.tempoMenuOutline.stroke = "#bfbfbf"
+        shapes.tempoLabelMenuTitle = this.initializeLabelText(this.configurations.tempoTextLabelMenuTitle.text, this.configurations.tempoTextLabelMenuTitle.left, this.configurations.tempoTextLabelMenuTitle.top, "left");
+        shapes.tempoLabelMenuTitle.size = 25
+        shapes.tempoLabelMenuTitle.fill = this.configurations.referenceLines.color
+        shapes.tempoLabelMenuTitleTempoWord = this.initializeLabelText(this.configurations.tempoTextLabelMenuTitleTempoWord.text, this.configurations.tempoTextLabelMenuTitleTempoWord.left, this.configurations.tempoTextLabelMenuTitleTempoWord.top, "left"); // this is the word 'tempo' in the tempo menu title, so that we can change its color independently from the rest of the title
+        shapes.tempoLabelMenuTitleTempoWord.size = 25
+        shapes.tempoLabelMenuTitleTempoWord.fill = this.configurations.subdivisionLines.color
+        shapes.tempoLabelMenuTitleTimeWord = this.initializeLabelText(this.configurations.tempoTextLabelMenuTitleTimeWord.text, this.configurations.tempoTextLabelMenuTitleTimeWord.left, this.configurations.tempoTextLabelMenuTitleTimeWord.top, "left"); // this is the word 'time' in the tempo menu title, so that we can change its color independently from the rest of the title
+        shapes.tempoLabelMenuTitleTimeWord.size = 25
+        shapes.tempoLabelMenuTitleTimeWord.fill = this.configurations.subdivisionLines.color
+        // shift tool menu
+        shapes.shiftMenuOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top - 5, this.configurations.shiftModeLabelMenuTitle.left - 5, 128, 240)
+        shapes.shiftMenuOutline.stroke = "#bfbfbf";
+        shapes.shiftMenuTitle = this.initializeLabelText(this.configurations.shiftModeLabelMenuTitle.text, this.configurations.shiftModeLabelMenuTitle.left, this.configurations.shiftModeLabelMenuTitle.top, "left");
+        shapes.shiftMenuTitle.size = 25
+        shapes.shiftMenuTitle.fill = this.configurations.subdivisionLines.color
+        for (let lineNumber = 0; lineNumber < this.configurations.shiftModeLabelMenuExplanation.lines.length; lineNumber++) {
+            // Two.js 2D graphics library doesn't currently support wrapping text, so just make one text object per line of text we want.
+            // because of the way I'm doing this, these shapes don't get saved anywhere. we could push them to an array, but for now there's no reason to since they never change after being initiailized.
+            let textLineContents = this.configurations.shiftModeLabelMenuExplanation.lines[lineNumber];
+            let lineTopPosition = (this.configurations.shiftModeLabelMenuExplanation.lineSpacing * lineNumber) + this.configurations.shiftModeLabelMenuExplanation.top
+            let textLine = this.initializeLabelText(textLineContents, this.configurations.shiftModeLabelMenuExplanation.left, lineTopPosition, "left")
+            textLine.size = 13
+            textLine.fill = this.configurations.subdivisionLines.color
+        }
         // add button and sequencer shapes etc.
         shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
         shapes.referenceLineLists = this.initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
@@ -252,9 +276,6 @@ class DrumMachineGui {
         shapes.tempoLabelBeats = this.initializeLabelText(this.configurations.tempoTextLabelBeats.text, this.configurations.tempoTextLabelBeats.left, this.configurations.tempoTextLabelBeats.top, "left");
         shapes.tempoLabelBeatsPerMinute = this.initializeLabelText(this.configurations.tempoTextLabelBeatsPerMinute.text, this.configurations.tempoTextLabelBeatsPerMinute.left, this.configurations.tempoTextLabelBeatsPerMinute.top, "left");
         shapes.tempoLabelMilliseconds = this.initializeLabelText(this.configurations.tempoTextLabelMilliseconds.text, this.configurations.tempoTextLabelMilliseconds.left, this.configurations.tempoTextLabelMilliseconds.top, "left");
-        shapes.tempoLabelMenuTitle = this.initializeLabelText(this.configurations.tempoTextLabelMenuTitle.text, this.configurations.tempoTextLabelMenuTitle.left, this.configurations.tempoTextLabelMenuTitle.top, "left");
-        shapes.tempoLabelMenuTitle.size = 25
-        shapes.tempoLabelMenuTitle.fill = this.configurations.subdivisionLines.color
         shapes.shiftModeMoveNotesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveNotesButton.top, this.configurations.shiftModeMoveNotesButton.left, this.configurations.shiftModeMoveNotesButton.height, this.configurations.shiftModeMoveNotesButton.width)
         shapes.shiftModeMoveSubdivisionLinesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveSubdivisionLinesButton.top, this.configurations.shiftModeMoveSubdivisionLinesButton.left, this.configurations.shiftModeMoveSubdivisionLinesButton.height, this.configurations.shiftModeMoveSubdivisionLinesButton.width)
         shapes.shiftModeMoveReferenceLinesButton = this.initializeRectangleShape(this.configurations.shiftModeMoveReferenceLinesButton.top, this.configurations.shiftModeMoveReferenceLinesButton.left, this.configurations.shiftModeMoveReferenceLinesButton.height, this.configurations.shiftModeMoveReferenceLinesButton.width)
@@ -1053,12 +1074,16 @@ class DrumMachineGui {
             this.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'block';
             this.components.domElements.textInputs.loopLengthBpm.style.display = 'block';
             this.components.domElements.textInputs.loopLengthMillis.style.display = 'none';
+            this.components.shapes.tempoLabelMenuTitleTimeWord.fill = 'transparent'
+            this.components.shapes.tempoLabelMenuTitleTempoWord.fill = this.configurations.subdivisionLines.color
             this.hideTempoMillisecondsTextLabels(); // tempo text labels are shown by default, so just hide them if we need to
         } else {
             this.components.shapes.tempoInputModeSelectionMillisecondsButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
             this.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'none';
             this.components.domElements.textInputs.loopLengthBpm.style.display = 'none';
             this.components.domElements.textInputs.loopLengthMillis.style.display = 'block';
+            this.components.shapes.tempoLabelMenuTitleTimeWord.fill = this.configurations.subdivisionLines.color
+            this.components.shapes.tempoLabelMenuTitleTempoWord.fill = 'transparent'
             this.hideTapTempoButton(); // tap tempo button is shown by default, so just hide it if we need to
             this.hideTempoBpmTextLabels(); // tempo text labels are shown by default, so just hide them if we need to
 
@@ -1369,6 +1394,7 @@ class DrumMachineGui {
             textArea.style.borderColor = this.configurations.sequencer.color
             textArea.value = this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
             textArea.style.color = this.configurations.defaultFont.color // set font color
+            textArea.title = "Number of beats"
             this.components.domElements.divs.subdivisionTextInputs.appendChild(textArea);
             // note for later: the opposite of appendChild is removeChild
             this.components.domElements.textInputs.subdivisionTextInputs.push(textArea)
@@ -1412,6 +1438,7 @@ class DrumMachineGui {
             } else {
                 textArea.style.color = this.configurations.defaultFont.color // set font color
             }
+            textArea.title = "Number of visual guide lines"
             this.components.domElements.divs.subdivisionTextInputs.appendChild(textArea);
             // note for later: the opposite of appendChild is removeChild
             this.components.domElements.textInputs.referenceLineTextInputs.push(textArea)
@@ -1843,11 +1870,13 @@ class DrumMachineGui {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.tempoInputModeSelectionBpmButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
             this.components.domElements.images.bpmLoopLengthModeIcon.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
+            this.components.shapes.tempoLabelMenuTitleTempoWord._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
         }
         // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
         this.eventHandlerFunctions.tempoInputModeSelectionBpmButton = () => this.tempoInputModeSelectionBpmClickHandler(this);
         this.components.shapes.tempoInputModeSelectionBpmButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
         this.components.domElements.images.bpmLoopLengthModeIcon.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
+        this.components.shapes.tempoLabelMenuTitleTempoWord._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
     }
 
     hideTempoBpmTextLabels() {
@@ -1888,6 +1917,8 @@ class DrumMachineGui {
             self.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'block';
             self.components.domElements.textInputs.loopLengthBpm.style.display = 'block';
             self.components.domElements.textInputs.loopLengthMillis.style.display = 'none';
+            self.components.shapes.tempoLabelMenuTitleTimeWord.fill = 'transparent'
+            self.components.shapes.tempoLabelMenuTitleTempoWord.fill = self.configurations.subdivisionLines.color
             self.saveCurrentSequencerStateToUrlHash();
             self.showTapTempoButton();
             self.showTempoBpmTextLabels();
@@ -1900,11 +1931,13 @@ class DrumMachineGui {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.tempoInputModeSelectionMillisecondsButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
             this.components.domElements.images.millisecondsLoopLengthModeIcon.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
+            this.components.shapes.tempoLabelMenuTitleTimeWord._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
         }
         // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
         this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton = () => this.tempoInputModeSelectionMillisecondsClickHandler(this);
         this.components.shapes.tempoInputModeSelectionMillisecondsButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
         this.components.domElements.images.millisecondsLoopLengthModeIcon.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
+        this.components.shapes.tempoLabelMenuTitleTimeWord._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
     }
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
@@ -1916,6 +1949,8 @@ class DrumMachineGui {
             self.components.domElements.textInputs.numberOfBeatsInLoop.style.display = 'none';
             self.components.domElements.textInputs.loopLengthBpm.style.display = 'none';
             self.components.domElements.textInputs.loopLengthMillis.style.display = 'block';
+            self.components.shapes.tempoLabelMenuTitleTimeWord.fill = self.configurations.subdivisionLines.color
+            self.components.shapes.tempoLabelMenuTitleTempoWord.fill = 'transparent'
             self.saveCurrentSequencerStateToUrlHash();
             self.hideTapTempoButton();
             self.hideTempoBpmTextLabels();
@@ -3236,8 +3271,12 @@ class DrumMachineGui {
                 shiftIcon.style.display = 'block';
             }
         }
-        // hide the original shift tool image. we won't touch it so we can delete and re-add our clones as much as we want to
+        // we can use original 'shift' icon image in the 'shift tool' menu to show what the shift tool looks like. we can still make more clones of it as we need to.
         this.components.domElements.images.shiftRowIcon.style.display = 'none'
+        this.components.domElements.images.shiftRowIcon.style.left = "" + this.configurations.shiftModeMenuIcon.left + "px"
+        this.components.domElements.images.shiftRowIcon.style.top = "" + this.configurations.shiftModeMenuIcon.top + "px"
+        this.components.domElements.images.shiftRowIcon.style.width = "" + this.configurations.shiftModeMenuIcon.width + "px"
+        this.components.domElements.images.shiftRowIcon.style.height = "" + this.configurations.shiftModeMenuIcon.height + "px"
         // set up 'move row' icons.
         for (let icon of this.components.domElements.iconLists.moveRowIcons) {
             icon.remove();
