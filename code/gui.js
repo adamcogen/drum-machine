@@ -2870,46 +2870,9 @@ class DrumMachineGui {
             let mouseX = event.pageX;
             let mouseY = event.pageY;
             let mouseHasMoved = (mouseX !== this.circleSelectionTracker.firstClickPosition.x || mouseY !== this.circleSelectionTracker.firstClickPosition.y)
-            if (!mouseHasMoved) { // if the mouse _has_ moved, volume was updated in the mouse move event, since this was a click-drag. so no need to make any other volume change.
-                // if the mouse _hasn't_ moved, this mouseup is for a click, not a click-drag. so we will flip to the next volume in our
-                // list of volume presets (that will be either the next highest one, or the lowest one if we got to the end of the list).
-                let list = [4, 6, 8, 10, 12]; // list of possible numbers, in ascending order // self.configurations.notes.volumePresets
-                let originalNumber = self.circleSelectionTracker.circleBeingMoved.radius;
-                // if current value is greater than or equal to the largest option, we want to set new number to the smallest option.
-                let newNumber = list[0]; // so start with the smallest number in the list as a default new value, which will only be replaced if the original value isn't less than any number in the list
-                for (let i = 0; i < list.length; i++) { // determine which option is the next highest above the original value.
-                    if (originalNumber >= list[i]) { // if the original number is larger than or equal to the current list item, we can move on to checking the next item
-                        continue;
-                    } else {
-                        // if the original number is smaller than the current item, we should set the new number to this item. 
-                        // since the list is sorted, we know this is the first number in the list larger than the original number.
-                        newNumber = list[i];
-                        break;
-                    }
-                }
-                // set the note being changed to have the right new radius on the GUI.
-                self.circleSelectionTracker.circleBeingMoved.radius = newNumber;
-                self.circleSelectionTracker.circleBeingMoved.guiData.radiusWhenUnplayed = self.circleSelectionTracker.circleBeingMoved.radius;
-                // convert the circle radius into a proportionate note volume.
-                let newVolume = this.calculateVolumeForCircleRadius(self.circleSelectionTracker.circleBeingMoved.radius);
-                if (this.circleSelectionTracker.circleBeingMovedOldRow < 0) { // the note we are changing the volume for is in the note bank.
-                    // todo: eventually, maybe changing the volume of any note in the note bank should change the volume of all notes
-                    // in the note bank, such that you can adjust the default volume of all new notes that will be pulled from the note bank.
-                    self.noteBankNoteVolumesTracker[self.circleSelectionTracker.circleBeingMoved.guiData.sampleName].volume = newVolume;
-                    self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
-                    self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(newVolume)
-                } else { // the note we are changing the volume for is on an actual sequencer row (i.e. it's not in the note bank).
-                    self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
-                    self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(newVolume)
-                    // replace the node in the sequencer data structure with an identical note that has the new volume we have set the note to.
-                    // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
-                    let node = self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
-                    node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
-                    node.data.midiVelocity = self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity;
-                    self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedNewRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
-                    self.saveCurrentSequencerStateToUrlHash();
-                }
-            } else {
+            if (mouseHasMoved) { 
+                // if the mouse has moved, volume was updated in the mouse move event, since this was a click-drag. so no need to make any other volume change.
+                // just commit those changes to the URL hash. we do that here instead of in the mouse move event to prevent the need to constantly update the hash.
                 self.saveCurrentSequencerStateToUrlHash();
             }
             // in 'change note volumes' mode, notes won't play their sound on 'mouse down' -- instead, they will play it on 'mouse up', so that we can hear the end result of our volume adjustment.
