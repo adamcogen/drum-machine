@@ -167,6 +167,8 @@ class DrumMachineGui {
 
         this.pause(); // start the sequencer paused
         this.redrawSequencer(); // redraw the display
+
+        this.mostRecentSavedUrlHash = window.location.hash.substring(1); // track the most recently saved URL hash (without its first character '#')
     }
 
     // main GUI update logic.
@@ -218,6 +220,19 @@ class DrumMachineGui {
         }
 
         this.two.update() // apply the visual update the GUI display by refreshing the two.js canvas
+
+        // an explanation of how the 'mostRecentSavedUrlHash' tracking variable is used:
+        // in Chrome browser, pressing the 'back' button causes the URL bar to change to its previous location hash value,
+        // but it doesn't actually reload the page. if you manually press enter in the URL bar after pressing 'back', it
+        // will cause the page to reload, and the updated URL hash to be read, but manually pressing enter is annoying, 
+        // and normal websites don't require you to do that. to get around this, we want to automatically reload the page 
+        // if we see a location hash value that doesn't match the last one we saved, to make it so that the browser forward 
+        // and back buttons behave like they would on any normal website. 
+        // by doing this we will be able to use the browser back and forward buttons as undo and redo buttons.
+        let currentUrlHash = window.location.hash.substring(1); // first trim the '#' character from the start of the URL hash
+        if (currentUrlHash !== this.mostRecentSavedUrlHash) { // if the URL hash has changed from what we last saved, load it
+            this.loadSequencerPatternFromBase64String(currentUrlHash)
+        }
     }
     
     // create and store on-screen lines, shapes, etc. (these will be Two.js 'path' objects).
@@ -3643,7 +3658,8 @@ class DrumMachineGui {
     saveCurrentSequencerStateToUrlHash(){
         // encode sequencer pattern to json and add it to url. 
         // 'btoa(plaintext)' converts a plaintext string to a base64 string, so that it is URL-safe. we can decode the base64 string back to plaintext later using 'atob(base64)'.
-        window.location.hash = btoa(this.sequencer.serialize());
+        this.mostRecentSavedUrlHash = btoa(this.sequencer.serialize());
+        window.location.hash = this.mostRecentSavedUrlHash;
     }
 
     loadSequencerPatternFromBase64String(base64String) {
