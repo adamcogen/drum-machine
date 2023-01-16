@@ -1681,15 +1681,11 @@ class DrumMachineGui {
 
     initializeAddRowButtonActionListener() {
         this.lastButtonClickTimeTrackers.addRow.shape = this.components.shapes.addRowButtonShape;
-        if (this.eventHandlerFunctions.addRowButton !== null && this.eventHandlerFunctions.addRowButton !== undefined) {
-            // remove event listeners if they've already been added to avoid duplicates
-            this.components.shapes.addRowButtonShape._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.addRowButton)
-            this.components.domElements.images.addIcon.removeEventListener('click', this.eventHandlerFunctions.addRowButton)
+        let shapesToAddEventListenersTo = [this.components.shapes.addRowButtonShape._renderer.elem, this.components.domElements.images.addIcon]
+        let eventHandlersHash = {
+            "click": () => this.addRowClickHandler(this)
         }
-        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        this.eventHandlerFunctions.addRowButton = () => this.addRowClickHandler(this)
-        this.components.shapes.addRowButtonShape._renderer.elem.addEventListener('click', this.eventHandlerFunctions.addRowButton)
-        this.components.domElements.images.addIcon.addEventListener('click', this.eventHandlerFunctions.addRowButton)
+        this.addEventListenersWithoutDuplicates("addRowButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
@@ -3526,6 +3522,50 @@ class DrumMachineGui {
     /**
      * general helper methods
      */
+
+    /**
+     * This function is for initializing event listeners while ensuring that duplicate event listeners are 
+     * never added to a DOM element. It checks whether the event listeners already exist, and if they do it, 
+     * it deletes the existing event listeners before initializing new ones.
+     * 
+     * This is a reusable version of logic I have already created several times in this codebase, I may try
+     * to eventually consolidate the various versions I have of this here to clean things up a bit.
+     * 
+     * Parameters:
+     * 
+     * shapes: a list of shapes to add event listeners to
+     * 
+     * eventHandlersHash: a hash of event type => event handler.
+     * for example:
+     * { 
+     *   "mousedown": eventHandlerFunction1,
+     *   "mouseup": eventHandlerFunction2
+     * }
+     * 
+     * uniqueHandlerIdentifier: a string by which we can identify this set of handlers, such as "addRowButton".
+     * this is only used under the hood to disambiguate sets of action listeners and check whether they have
+     * already been created, etc.
+     */
+    addEventListenersWithoutDuplicates(uniqueHandlerIdentifier, shapes, eventHandlersHash) {
+        if (this.eventHandlerFunctions[uniqueHandlerIdentifier] !== null && this.eventHandlerFunctions[uniqueHandlerIdentifier] !== undefined) {
+            // remove event listeners if they've already been added to avoid duplicates
+            for (let shape of shapes) {
+                for (let [eventHandlerType, _] of Object.entries(eventHandlersHash)) {
+                    // we could iterate through handlers in this.eventHandlerFunctions[uniqueHandlerIdentifier] instead of iterating
+                    // through the hash that was passed in. for all of our use cases though, these should have the same outcome.
+                    shape.removeEventListener(eventHandlerType, this.eventHandlerFunctions[uniqueHandlerIdentifier][eventHandlerType]);
+                }
+            }
+        }
+        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+        this.eventHandlerFunctions[uniqueHandlerIdentifier] = {}
+        for (let shape of shapes) {
+            for (let [eventHandlerType, eventHandlerFunction] of Object.entries(eventHandlersHash)) {
+                this.eventHandlerFunctions[uniqueHandlerIdentifier][eventHandlerType] = eventHandlerFunction
+                shape.addEventListener(eventHandlerType, this.eventHandlerFunctions[uniqueHandlerIdentifier][eventHandlerType]);
+            }
+        }
+    }
 
     initializeLine(startX, startY, endX, endY, lineWidth, color) {
         let line = this.two.makePath(
