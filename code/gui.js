@@ -2419,6 +2419,7 @@ class DrumMachineGui {
             // if a row is selected, set variables appropriately for moving it around
             this.initializeRowMovementVariablesAndVisuals(this.rowSelectionTracker.selectedRowIndex);
         }
+        this.refreshNoteAndShiftDependentButtonsForAllRows();
     }
 
     /**
@@ -3429,7 +3430,6 @@ class DrumMachineGui {
             // add the icons to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.changeRowVolumesIcons.push(changeRowVolumeIcon)
             document.body.appendChild(changeRowVolumeIcon)
-            // hide the icons for now until they have action listeners and we adjust the layout to include them, etc.
             changeRowVolumeIcon.style.display = 'block';
         }
         // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
@@ -3440,6 +3440,13 @@ class DrumMachineGui {
      * we will hide buttons that don't need to be shown. for example, if there aren't any notes on a row,
      * we don't need to show the volume adjuster, the 'shift notes only' 
      */
+
+    refreshNoteAndShiftDependentButtonsForAllRows() {
+        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            this.refreshNoteDependentButtonsForRow(rowIndex);
+            this.refreshShiftDependentButtonsForRow(rowIndex);
+        }
+    }
 
     refreshNoteDependentButtonsForRow(rowIndex) {
         if (this.sequencer.rows[rowIndex]._notesList.head === null || this.sequencer.rows[rowIndex]._notesList.head === undefined) {
