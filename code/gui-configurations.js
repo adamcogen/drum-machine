@@ -60,8 +60,8 @@ function getGuiConfigurations(hideIcons=false) {
             color: lighterSequencerColor, // meant to be slightly lighter than the subdivision line color
         },
         noteTrashBin: {
-            top: 530,
-            left: 100,
+            top: 444,
+            left: 30,
             width: 48,
             height: 48,
             color: "red",
