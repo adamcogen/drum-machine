@@ -118,21 +118,21 @@ window.onload = () => {
         sequencer.rows[0].setNumberOfReferenceLines(4)
         sequencer.rows[0].setQuantization(true)
         sequencer.addEmptyRow();
-        sequencer.rows[1].setNumberOfSubdivisions(8)
+        sequencer.rows[1].setNumberOfSubdivisions(16)
         sequencer.rows[1].setNumberOfReferenceLines(4)
         sequencer.rows[1].setQuantization(true)
         sequencer.addEmptyRow();
-        sequencer.rows[2].setNumberOfSubdivisions(8)
+        sequencer.rows[2].setNumberOfSubdivisions(16)
         sequencer.rows[2].setNumberOfReferenceLines(4)
         sequencer.rows[2].setQuantization(true)
         sequencer.addEmptyRow();
-        sequencer.rows[3].setNumberOfSubdivisions(8)
+        sequencer.rows[3].setNumberOfSubdivisions(16)
         sequencer.rows[3].setNumberOfReferenceLines(4)
-        sequencer.rows[3].setQuantization(false)
+        sequencer.rows[3].setQuantization(true)
         sequencer.addEmptyRow();
-        sequencer.rows[4].setNumberOfSubdivisions(4)
+        sequencer.rows[4].setNumberOfSubdivisions(16)
         sequencer.rows[4].setNumberOfReferenceLines(4)
-        sequencer.rows[4].setQuantization(true)
+        sequencer.rows[4].setQuantization(false)
     }
 
     // set up a default initial drum sequence with some notes in it.
