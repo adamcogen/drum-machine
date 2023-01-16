@@ -1733,15 +1733,18 @@ class DrumMachineGui {
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
     clearRowButtonClickHandler(self, rowIndex) {
-        self.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = self.sequencer.currentTime
-        self.components.shapes.clearNotesForRowButtonShapes[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
-        self.clearNotesForRow(rowIndex);
-        self.resetNotesAndLinesDisplayForRow(rowIndex);
-        self.saveCurrentSequencerStateToUrlHash();
+        if (self.components.shapes.clearNotesForRowButtonShapes[rowIndex].guiData.isVisible) {
+            self.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = self.sequencer.currentTime
+            self.components.shapes.clearNotesForRowButtonShapes[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
+            self.clearNotesForRow(rowIndex);
+            self.resetNotesAndLinesDisplayForRow(rowIndex);
+            self.saveCurrentSequencerStateToUrlHash();
+        }
     }
 
     clearNotesForRow(rowIndex) { 
         this.sequencer.clearRow(rowIndex)
+        this.refreshNoteDependentButtonsForRow(rowIndex)
     }
 
     /**
@@ -3455,19 +3458,25 @@ class DrumMachineGui {
             // start with 'change row volumes' button shape
             this.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.isVisible = false;
             this.components.shapes.volumeAdjusterRowHandles[rowIndex].stroke = 'transparent';
-            this.components.domElements.iconLists.changeRowVolumesIcons[rowIndex].style.display = 'none'
             // next do 'change row volumes' button icon
+            this.components.domElements.iconLists.changeRowVolumesIcons[rowIndex].style.display = 'none'
             // 'delete all notes for row' button shape
+            this.components.shapes.clearNotesForRowButtonShapes[rowIndex].guiData.isVisible = false;
+            this.components.shapes.clearNotesForRowButtonShapes[rowIndex].stroke = 'transparent';
             // 'delete all notes for row' button icon
+            this.components.domElements.iconLists.clearRowIcons[rowIndex].style.display = 'none'
         } else {
             // show stuff that should be visible when there are notes on the row
             // start with 'change row volumes' button shape
             this.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.isVisible = true;
             this.components.shapes.volumeAdjusterRowHandles[rowIndex].stroke = this.configurations.volumeAdjusterRowHandles.selectedColor;
-            this.components.domElements.iconLists.changeRowVolumesIcons[rowIndex].style.display = 'block'
             // next do 'change row volumes' button icon
+            this.components.domElements.iconLists.changeRowVolumesIcons[rowIndex].style.display = 'block'
             // 'delete all notes for row' button shape
+            this.components.shapes.clearNotesForRowButtonShapes[rowIndex].guiData.isVisible = true;
+            this.components.shapes.clearNotesForRowButtonShapes[rowIndex].stroke = 'black';
             // 'delete all notes for row' button icon
+            this.components.domElements.iconLists.clearRowIcons[rowIndex].style.display = 'block'
         }
     }
 
