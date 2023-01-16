@@ -1879,15 +1879,13 @@ class DrumMachineGui {
      */
 
     addClearAllNotesButtonEventListeners() {
-        if (this.eventHandlerFunctions.clearAllNotesButton !== null && this.eventHandlerFunctions.clearAllNotesButton !== undefined) {
-            // remove event listeners if they've already been added to avoid duplicates
-            this.components.shapes.clearAllNotesButtonShape._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.clearAllNotesButton)
-            this.components.domElements.images.clearAllIcon.removeEventListener('click', this.eventHandlerFunctions.clearAllNotesButton)
+        let shapesToAddEventListenersTo = [this.components.shapes.clearAllNotesButtonShape._renderer.elem, this.components.domElements.images.clearAllIcon]
+        let eventHandlersHash = {
+            "click": () => this.clearAllNotesButtonClickHandler(this),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearAllNotesButtonShape),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearAllNotesButtonShape),
         }
-        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        this.eventHandlerFunctions.clearAllNotesButton = () => this.clearAllNotesButtonClickHandler(this);
-        this.components.shapes.clearAllNotesButtonShape._renderer.elem.addEventListener('click', this.eventHandlerFunctions.clearAllNotesButton)
-        this.components.domElements.images.clearAllIcon.addEventListener('click', this.eventHandlerFunctions.clearAllNotesButton)
+        this.addEventListenersWithoutDuplicates("clearAllNotes", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
@@ -1910,27 +1908,23 @@ class DrumMachineGui {
     }
 
     addMoveNotesModeButtonEventListeners() {
-        if (this.eventHandlerFunctions.moveNotesModeButton !== null && this.eventHandlerFunctions.moveNotesModeButton !== undefined) {
-            // remove event listeners if they've already been added to avoid duplicates
-            this.components.shapes.moveNotesModeButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.moveNotesModeButton)
-            this.components.domElements.images.moveNotesModeIcon.removeEventListener('click', this.eventHandlerFunctions.moveNotesModeButton)
+        let shapesToAddEventListenersTo = [this.components.shapes.moveNotesModeButton._renderer.elem, this.components.domElements.images.moveNotesModeIcon]
+        let eventHandlersHash = {
+            "click": () => this.moveNotesModeButtonClickHandler(this),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.moveNotesModeButton),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.moveNotesModeButton),
         }
-        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        this.eventHandlerFunctions.moveNotesModeButton = () => this.moveNotesModeButtonClickHandler(this);
-        this.components.shapes.moveNotesModeButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.moveNotesModeButton)
-        this.components.domElements.images.moveNotesModeIcon.addEventListener('click', this.eventHandlerFunctions.moveNotesModeButton)
+        this.addEventListenersWithoutDuplicates("moveNotesModeButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     addEditVolumesModeButtonEventListeners() {
-        if (this.eventHandlerFunctions.editVolumesModeButton !== null && this.eventHandlerFunctions.editVolumesModeButton !== undefined) {
-            // remove event listeners if they've already been added to avoid duplicates
-            this.components.shapes.editVolumesModeButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.editVolumesModeButton)
-            this.components.domElements.images.changeVolumesModeIcon.removeEventListener('click', this.eventHandlerFunctions.editVolumesModeButton)
+        let shapesToAddEventListenersTo = [this.components.shapes.editVolumesModeButton._renderer.elem, this.components.domElements.images.changeVolumesModeIcon]
+        let eventHandlersHash = {
+            "click": () => this.editVolumesModeButtonClickHandler(this),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.editVolumesModeButton),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.editVolumesModeButton),
         }
-        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        this.eventHandlerFunctions.editVolumesModeButton = () => this.editVolumesModeButtonClickHandler(this);
-        this.components.shapes.editVolumesModeButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.editVolumesModeButton)
-        this.components.domElements.images.changeVolumesModeIcon.addEventListener('click', this.eventHandlerFunctions.editVolumesModeButton)
+        this.addEventListenersWithoutDuplicates("editVolumesModeButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
@@ -1965,17 +1959,13 @@ class DrumMachineGui {
     }
 
     addTempoInputModeSelectionBpmButtonEventListener() {
-        if (this.eventHandlerFunctions.tempoInputModeSelectionBpmButton !== null && this.eventHandlerFunctions.tempoInputModeSelectionBpmButton !== undefined) {
-            // remove event listeners if they've already been added to avoid duplicates
-            this.components.shapes.tempoInputModeSelectionBpmButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
-            this.components.domElements.images.bpmLoopLengthModeIcon.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
-            this.components.shapes.tempoLabelMenuTitleTempoWord._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
+        let shapesToAddEventListenersTo = [this.components.shapes.tempoInputModeSelectionBpmButton._renderer.elem, this.components.domElements.images.bpmLoopLengthModeIcon, this.components.shapes.tempoLabelMenuTitleTempoWord._renderer.elem]
+        let eventHandlersHash = {
+            "click": () => this.tempoInputModeSelectionBpmClickHandler(this),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.tempoInputModeSelectionBpmButton),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.tempoInputModeSelectionBpmButton),
         }
-        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        this.eventHandlerFunctions.tempoInputModeSelectionBpmButton = () => this.tempoInputModeSelectionBpmClickHandler(this);
-        this.components.shapes.tempoInputModeSelectionBpmButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
-        this.components.domElements.images.bpmLoopLengthModeIcon.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
-        this.components.shapes.tempoLabelMenuTitleTempoWord._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
+        this.addEventListenersWithoutDuplicates("tempoInputModeSelectionBpmButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     hideTempoBpmTextLabels() {
@@ -2026,17 +2016,13 @@ class DrumMachineGui {
     }
 
     addTempoInputModeSelectionMillisecondsButtonEventListener() {
-        if (this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton !== null && this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton !== undefined) {
-            // remove event listeners if they've already been added to avoid duplicates
-            this.components.shapes.tempoInputModeSelectionMillisecondsButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
-            this.components.domElements.images.millisecondsLoopLengthModeIcon.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
-            this.components.shapes.tempoLabelMenuTitleTimeWord._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
+        let shapesToAddEventListenersTo = [this.components.shapes.tempoInputModeSelectionMillisecondsButton._renderer.elem, this.components.domElements.images.millisecondsLoopLengthModeIcon, this.components.shapes.tempoLabelMenuTitleTimeWord._renderer.elem]
+        let eventHandlersHash = {
+            "click": () => this.tempoInputModeSelectionMillisecondsClickHandler(this),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.tempoInputModeSelectionMillisecondsButton),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.tempoInputModeSelectionMillisecondsButton),
         }
-        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton = () => this.tempoInputModeSelectionMillisecondsClickHandler(this);
-        this.components.shapes.tempoInputModeSelectionMillisecondsButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
-        this.components.domElements.images.millisecondsLoopLengthModeIcon.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
-        this.components.shapes.tempoLabelMenuTitleTimeWord._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
+        this.addEventListenersWithoutDuplicates("tempoInputModeSelectionMillisecondsButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
@@ -2071,15 +2057,13 @@ class DrumMachineGui {
     }
 
     addTapTempoButtonEventListeners() {
-        if (this.eventHandlerFunctions.tapTempoButton !== null && this.eventHandlerFunctions.tapTempoButton !== undefined) {
-            // remove event listeners if they've already been added to avoid duplicates
-            this.components.shapes.tapTempoButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tapTempoButton)
-            this.components.domElements.images.tapTempoIcon.removeEventListener('click', this.eventHandlerFunctions.tapTempoButton)
+        let shapesToAddEventListenersTo = [this.components.shapes.tapTempoButton._renderer.elem, this.components.domElements.images.tapTempoIcon]
+        let eventHandlersHash = {
+            "click": () => this.tapTempoClickHandler(this),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.tapTempoButton),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.tapTempoButton),
         }
-        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        this.eventHandlerFunctions.tapTempoButton = () => this.tapTempoClickHandler(this);
-        this.components.shapes.tapTempoButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.tapTempoButton)
-        this.components.domElements.images.tapTempoIcon.addEventListener('click', this.eventHandlerFunctions.tapTempoButton)
+        this.addEventListenersWithoutDuplicates("tapTempoButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
     
     /**
@@ -2116,7 +2100,10 @@ class DrumMachineGui {
      */
     resetTapTempoButtonState() {
         this.tapTempoTracker.absoluteTimeOfMostRecentTapTempoButtonClick = Number.MIN_SAFE_INTEGER
-        this.components.shapes.tapTempoButton.fill = 'transparent'
+        if (this.components.shapes.tapTempoButton.fill !== this.configurations.buttonBehavior.buttonHoverColor) {
+            // only reset color if the mouse isn't currently hovering over the button
+            this.components.shapes.tapTempoButton.fill = 'transparent'
+        }
     }
 
     /**
