@@ -413,6 +413,10 @@ class DrumMachineGui {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
                 shape: this.components.shapes.restartSequencerButtonShape,
             },
+            clearAllNotes: {
+                lastClickTime: Number.MIN_SAFE_INTEGER,
+                shape: this.components.shapes.clearAllNotesButtonShape,
+            },
             addRow: {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
                 shape: this.components.shapes.addRowButtonShape,
@@ -1760,10 +1764,6 @@ class DrumMachineGui {
 
     addClearNotesForRowButtonsEventListeners() {
         for(let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
-            this.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex] = {
-                lastClickTime: Number.MIN_SAFE_INTEGER,
-                shape: this.components.shapes.clearNotesForRowButtonShapes[rowIndex],
-            }
             let shapesToAddEventListenersTo = [this.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem]
             let eventHandlersHash = {
                 "click": () => this.clearRowButtonClickHandler(this, rowIndex),
@@ -1777,7 +1777,6 @@ class DrumMachineGui {
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
     clearRowButtonClickHandler(self, rowIndex) {
         if (self.components.shapes.clearNotesForRowButtonShapes[rowIndex].guiData.respondToEvents) {
-            self.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = self.sequencer.currentTime
             self.components.shapes.clearNotesForRowButtonShapes[rowIndex].fill = 'transparent'
             self.clearNotesForRow(rowIndex);
             self.resetNotesAndLinesDisplayForRow(rowIndex);
@@ -1915,6 +1914,7 @@ class DrumMachineGui {
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
     clearAllNotesButtonClickHandler(self) {
+        self.lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = self.sequencer.currentTime
         self.components.shapes.clearAllNotesButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
         self.loadSequencerPatternFromBase64String(this.configurations.sequencer.clearedPatternBase64String); 
         self.redrawSequencer();
