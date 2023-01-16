@@ -3210,22 +3210,22 @@ class DrumMachineGui {
             unlockedIcon.style.height = "" + this.configurations.quantizationButtons.icon.height + "px"
             unlockedIcon.style.left = "" + lockIconsHorizontalPosition + "px"
             unlockedIcon.style.top = "" + lockIconsVerticalPosition + "px"
-            // add event listeners for 'locked icon'
-            if (this.eventHandlerFunctions["lockedIcon" + rowIndex] !== null && this.eventHandlerFunctions["lockedIcon" + rowIndex] !== undefined) {
-                // remove event listeners if they've already been added to avoid duplicates
-                lockedIcon.removeEventListener('click', this.eventHandlerFunctions["lockedIcon" + rowIndex])
+            // add event listeners for 'locked icon' (row quantization toggle button)
+            let shapesToAddEventListenersTo = [lockedIcon] // we don't include the button shape here, only the icon, to keep things simpler for now
+            let eventHandlersHash = {
+                "click": () => this.setQuantizationButtonClickHandler(this, rowIndex, false),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex]),
+                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex]),
             }
-            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-            this.eventHandlerFunctions["lockedIcon" + rowIndex] = () => this.setQuantizationButtonClickHandler(this, rowIndex, false);
-            lockedIcon.addEventListener('click', this.eventHandlerFunctions["lockedIcon" + rowIndex])
+            this.addEventListenersWithoutDuplicates("turnOffQuantizationForRow" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add event listeners for 'unlocked icon'
-            if (this.eventHandlerFunctions["unlockedIcon" + rowIndex] !== null && this.eventHandlerFunctions["unlockedIcon" + rowIndex] !== undefined) {
-                // remove event listeners if they've already been added to avoid duplicates
-                unlockedIcon.removeEventListener('click', this.eventHandlerFunctions["unlockedIcon" + rowIndex])
+            shapesToAddEventListenersTo = [unlockedIcon] // we don't include the button shape here, only the icon, to keep things simpler for now
+            eventHandlersHash = {
+                "click": () => this.setQuantizationButtonClickHandler(this, rowIndex, true),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex]),
+                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex]),
             }
-            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-            this.eventHandlerFunctions["unlockedIcon" + rowIndex] = () => this.setQuantizationButtonClickHandler(this, rowIndex, true);
-            unlockedIcon.addEventListener('click', this.eventHandlerFunctions["unlockedIcon" + rowIndex])
+            this.addEventListenersWithoutDuplicates("turnOnQuantizationForRow" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add the icons to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.lockedIcons.push(lockedIcon)
             this.components.domElements.iconLists.unlockedIcons.push(unlockedIcon)
