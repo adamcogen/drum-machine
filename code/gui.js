@@ -1842,13 +1842,13 @@ class DrumMachineGui {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
                 shape: this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex],
             }
-            if (this.eventHandlerFunctions["resetReferenceLinesShiftShape" + rowIndex] !== null && this.eventHandlerFunctions["resetReferenceLinesShiftShape" + rowIndex] !== undefined){
-                // remove event listeners if they've already been added to avoid duplicates
-                this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]._renderer.elem.removeEventListener('click', this.eventHandlerFunctions["resetReferenceLinesShiftShape" + rowIndex] );
+            let shapesToAddEventListenersTo = [this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]._renderer.elem]
+            let eventHandlersHash = {
+                "click": () => this.resetReferenceLinesShiftClickHandler(this, rowIndex),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]),
+                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]),
             }
-            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-            this.eventHandlerFunctions["resetReferenceLinesShiftShape" + rowIndex] = () => this.resetReferenceLinesShiftClickHandler(this, rowIndex);
-            this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]._renderer.elem.addEventListener('click', this.eventHandlerFunctions["resetReferenceLinesShiftShape" + rowIndex] );
+            this.addEventListenersWithoutDuplicates("resetReferenceLinesShiftShape" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
         }
     }
 
@@ -3306,13 +3306,13 @@ class DrumMachineGui {
             resetReferenceLinesShiftIcon.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.shiftModeResetReferenceLinesForRowButtons.leftPaddingPerRow) + "px"
             resetReferenceLinesShiftIcon.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.shiftModeResetReferenceLinesForRowButtons.topPaddingPerRow) + "px"
             // add event listeners to our icon
-            if (this.eventHandlerFunctions["resetReferenceLinesShiftForRowIcon" + rowIndex] !== null && this.eventHandlerFunctions["resetReferenceLinesShiftForRowIcon" + rowIndex] !== undefined) {
-                // remove event listeners if they've already been added to avoid duplicates
-                resetReferenceLinesShiftIcon.removeEventListener('click', this.eventHandlerFunctions["resetReferenceLinesShiftForRowIcon" + rowIndex] );
+            let shapesToAddEventListenersTo = [resetReferenceLinesShiftIcon] // we don't include the button shape here, only the icon, because the shape event listeners are set up elsewhere
+            let eventHandlersHash = {
+                "click": () => this.resetReferenceLinesShiftClickHandler(this, rowIndex),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]),
+                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]),
             }
-            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-            this.eventHandlerFunctions["resetReferenceLinesShiftForRowIcon" + rowIndex] = () => this.resetReferenceLinesShiftClickHandler(this, rowIndex);
-            resetReferenceLinesShiftIcon.addEventListener('click', this.eventHandlerFunctions["resetReferenceLinesShiftForRowIcon" + rowIndex]);
+            this.addEventListenersWithoutDuplicates("resetReferenceLinesShiftForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add the copy to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.resetReferenceLinesShiftIcons.push(resetReferenceLinesShiftIcon)
             document.body.appendChild(resetReferenceLinesShiftIcon)
