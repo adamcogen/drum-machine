@@ -1778,6 +1778,7 @@ class DrumMachineGui {
     clearRowButtonClickHandler(self, rowIndex) {
         if (self.components.shapes.clearNotesForRowButtonShapes[rowIndex].guiData.respondToEvents) {
             self.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = self.sequencer.currentTime
+            self.components.shapes.clearNotesForRowButtonShapes[rowIndex].fill = 'transparent'
             self.clearNotesForRow(rowIndex);
             self.resetNotesAndLinesDisplayForRow(rowIndex);
             self.saveCurrentSequencerStateToUrlHash();
@@ -1845,6 +1846,7 @@ class DrumMachineGui {
 
     resetReferenceLinesShiftClickHandler(self, rowIndex) {
         if (self.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex].guiData.respondToEvents) {
+            self.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex].fill = 'transparent'
             self.resetReferenceLineShiftForRow(rowIndex);
             self.referenceLinesShiftInPixelsPerRow[rowIndex] = self.sequencer.rows[rowIndex].getReferenceLineShiftInMilliseconds();
             self.resetNotesAndLinesDisplayForRow(rowIndex);
@@ -1876,6 +1878,7 @@ class DrumMachineGui {
 
     resetSubdivisionLinesShiftClickHandler(self, rowIndex) {
         if (self.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex].guiData.respondToEvents) {
+            self.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex].fill = 'transparent'
             self.resetSubdivisionLineShiftForRow(rowIndex);
             self.subdivisionLinesShiftInPixelsPerRow[rowIndex] = self.sequencer.rows[rowIndex].getSubdivisionLineShiftInMilliseconds();
             self.resetNotesAndLinesDisplayForRow(rowIndex);
