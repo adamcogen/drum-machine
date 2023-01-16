@@ -1791,16 +1791,13 @@ class DrumMachineGui {
      * add event listener to the 'export sequencer pattern to midi file' button
      */
     initializeExportPatternToMidiFileButtonEventListener() {
-        this.lastButtonClickTimeTrackers.exportPatternToMidiFile.shape = this.components.shapes.exportPatternToMidiFileButton;
-        if (this.eventHandlerFunctions.exportPatternToMidiFile !== null && this.eventHandlerFunctions.exportPatternToMidiFile !== undefined) {
-            // remove event listeners if they've already been added to avoid duplicates
-            this.components.shapes.exportPatternToMidiFile._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.exportPatternToMidiFile)
-            this.components.domElements.images.exportPatternAsMidiFileIcon.removeEventListener('click', this.eventHandlerFunctions.exportPatternToMidiFile)
+        let shapesToAddEventListenersTo = [this.components.shapes.exportPatternToMidiFileButton._renderer.elem, this.components.domElements.images.exportPatternAsMidiFileIcon]
+        let eventHandlersHash = {
+            "click": () => this.exportPatternToMidiFileButtonClickHandler(this),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.exportPatternToMidiFileButton),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.exportPatternToMidiFileButton),
         }
-        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        this.eventHandlerFunctions.exportPatternToMidiFile = () => this.exportPatternToMidiFileButtonClickHandler(this)
-        this.components.shapes.exportPatternToMidiFileButton._renderer.elem.addEventListener('click', this.eventHandlerFunctions.exportPatternToMidiFile)
-        this.components.domElements.images.exportPatternAsMidiFileIcon.addEventListener('click', this.eventHandlerFunctions.exportPatternToMidiFile)
+        this.addEventListenersWithoutDuplicates("exportPatternToMidiFile", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     exportPatternToMidiFileButtonClickHandler(self) {
