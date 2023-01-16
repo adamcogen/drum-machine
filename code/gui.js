@@ -962,31 +962,39 @@ class DrumMachineGui {
     }
 
     changeRowVolumesMouseEnterEventHandler(self, rowIndex) {
-        let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
-        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-        if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
-            circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
-            rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.unselectedColor
+        if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.isVisible) {
+            let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
+            let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+            if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
+                circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
+                rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.unselectedColor
+            }
         }
     }
 
     changeRowVolumesMouseLeaveEventHandler(self, rowIndex) {
-        let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
-        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-        circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
-        rowSelectionRectangle.stroke = 'transparent'
+        if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.isVisible) {
+            let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
+            let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+            circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
+            rowSelectionRectangle.stroke = 'transparent'
+        }
     }
 
     changeRowVolumesMouseDownEventHandler(self, rowIndex) {
-        // save relevant info about whichever row is selected
-        self.initializeRowVolumeAdjustmentVariablesAndVisuals(rowIndex);
+        if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.isVisible) {
+            // save relevant info about whichever row is selected
+            self.initializeRowVolumeAdjustmentVariablesAndVisuals(rowIndex);
+        }
     }
 
     changeRowVolumesMouseUpEventHandler(self, rowIndex) {
-        let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
-        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-        circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
-        rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.unselectedColor
+        if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.isVisible) {
+            let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
+            let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+            circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
+            rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.unselectedColor
+        }
     }
 
     // 'shift row' row handles event listener initializations
@@ -3440,6 +3448,7 @@ class DrumMachineGui {
             // start with 'change row volumes' button shape
             this.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.isVisible = false;
             this.components.shapes.volumeAdjusterRowHandles[rowIndex].stroke = 'transparent';
+            this.components.domElements.iconLists.changeRowVolumesIcons[rowIndex].style.display = 'none'
             // next do 'change row volumes' button icon
             // 'delete all notes for row' button shape
             // 'delete all notes for row' button icon
@@ -3448,6 +3457,7 @@ class DrumMachineGui {
             // start with 'change row volumes' button shape
             this.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.isVisible = true;
             this.components.shapes.volumeAdjusterRowHandles[rowIndex].stroke = this.configurations.volumeAdjusterRowHandles.selectedColor;
+            this.components.domElements.iconLists.changeRowVolumesIcons[rowIndex].style.display = 'block'
             // next do 'change row volumes' button icon
             // 'delete all notes for row' button shape
             // 'delete all notes for row' button icon
