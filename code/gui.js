@@ -1449,18 +1449,13 @@ class DrumMachineGui {
     }
 
     addPauseButtonEventListeners() {
-
-        if (this.eventHandlerFunctions.pauseButton !== null && this.eventHandlerFunctions.pauseButton !== undefined) {
-            // remove event listeners if they've already been added to avoid duplicates
-            this.components.shapes.pauseButtonShape._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.pauseButton)
-            this.components.domElements.images.pauseIcon.removeEventListener('click', this.eventHandlerFunctions.pauseButton)
-            this.components.domElements.images.playIcon.removeEventListener('click', this.eventHandlerFunctions.pauseButton)
+        let shapesToAddEventListenersTo = [this.components.shapes.pauseButtonShape._renderer.elem, this.components.domElements.images.playIcon, this.components.domElements.images.pauseIcon]
+        let eventHandlersHash = {
+            "click": () => this.pauseButtonClickHandler(this),
+            "mouseenter": () => this.pauseButtonMouseEnterHandler(this),
+            "mouseleave": () => this.pauseButtonMouseLeaveHandler(this),
         }
-        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        this.eventHandlerFunctions.pauseButton = () => this.pauseButtonClickHandler(this)
-        this.components.shapes.pauseButtonShape._renderer.elem.addEventListener('click', this.eventHandlerFunctions.pauseButton)
-        this.components.domElements.images.pauseIcon.addEventListener('click', this.eventHandlerFunctions.pauseButton)
-        this.components.domElements.images.playIcon.addEventListener('click', this.eventHandlerFunctions.pauseButton)
+        this.addEventListenersWithoutDuplicates("pauseButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     /**
@@ -1474,6 +1469,20 @@ class DrumMachineGui {
         self.lastButtonClickTimeTrackers.pause.lastClickTime = self.sequencer.currentTime
         self.components.shapes.pauseButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
         self.togglePaused()
+    }
+
+    pauseButtonMouseEnterHandler(self){
+        if (self.components.shapes.pauseButtonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor) {
+            // don't change to hover color if we are still waiting for a 'click' color change to complete
+            self.components.shapes.pauseButtonShape.fill = self.configurations.buttonBehavior.buttonHoverColor
+        }
+    }
+
+    pauseButtonMouseLeaveHandler(self) {
+        if (self.components.shapes.pauseButtonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor) {
+            // don't change to hover color if we are still waiting for a 'click' color change to complete
+            self.components.shapes.pauseButtonShape.fill = 'transparent'
+        }
     }
 
     /**
@@ -1707,11 +1716,17 @@ class DrumMachineGui {
     }
 
     addRowMouseEnterHandler(self) {
-        self.components.shapes.addRowButtonShape.fill = self.configurations.buttonBehavior.buttonHoverColor
+        if (self.components.shapes.addRowButtonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor) {
+            // don't change to hover color if we are still waiting for a 'click' color change to complete
+            self.components.shapes.addRowButtonShape.fill = self.configurations.buttonBehavior.buttonHoverColor
+        }
     }
 
     addRowMouseLeaveHandler(self) {
-        self.components.shapes.addRowButtonShape.fill = 'transparent'
+        if (self.components.shapes.addRowButtonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor) {
+            // don't change to hover color if we are still waiting for a 'click' color change to complete
+            self.components.shapes.addRowButtonShape.fill = 'transparent'
+        }
     }
 
     addEmptySequencerRow() {
