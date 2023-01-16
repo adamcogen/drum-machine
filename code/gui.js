@@ -1610,6 +1610,13 @@ class DrumMachineGui {
             // you can't quantize a row if it has 0 subdivisions, so automatically change the value to 1 in this case
             self.updateNumberOfSubdivisionsForRow(1, rowIndex)
         }
+        // update button click time trackers. i'm nor actually sure these get used. i think this may be because the
+        // quantization toggle buttons get redrawn when the sequencer gets redraw, so the old button that had its color 
+        // changed gets overwritten right away. that's fine though, since the button's icon changes when you click it,
+        // giving immediate feedback that it did something. but we can debug this later if it becomes a problem.
+        self.lastButtonClickTimeTrackers["toggleQuantizationButton" + rowIndex].lastClickTime = self.sequencer.currentTime
+        self.components.shapes.toggleQuantizationButtonsRectangles[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
+        // update quantization values
         self.sequencer.rows[rowIndex].setQuantization(quantize)
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
@@ -1761,13 +1768,13 @@ class DrumMachineGui {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
                 shape: this.components.shapes.clearNotesForRowButtonShapes[rowIndex],
             }
-            if (this.eventHandlerFunctions["clearNotesForRowShape" + rowIndex] !== null && this.eventHandlerFunctions["clearNotesForRowShape" + rowIndex] !== undefined) {
-                // remove event listeners if they've already been added to avoid duplicates
-                this.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.removeEventListener('click', this.eventHandlerFunctions["clearNotesForRowShape" + rowIndex] );
+            let shapesToAddEventListenersTo = [this.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem]
+            let eventHandlersHash = {
+                "click": () => this.clearRowButtonClickHandler(this, rowIndex),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex]),
+                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex]),
             }
-            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-            this.eventHandlerFunctions["clearNotesForRowShape" + rowIndex] = () => this.clearRowButtonClickHandler(this, rowIndex);
-            this.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem.addEventListener('click', this.eventHandlerFunctions["clearNotesForRowShape" + rowIndex] );
+            this.addEventListenersWithoutDuplicates("clearNotesForRowShape" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
         }
     }
 
@@ -1785,6 +1792,25 @@ class DrumMachineGui {
     clearNotesForRow(rowIndex) { 
         this.sequencer.clearRow(rowIndex)
         this.refreshNoteDependentButtonsForRow(rowIndex)
+    }
+
+    /**
+     * quantization button rectangle (not icon) event listeners
+     * icon event listeners get set up when the icons themselves 
+     * are initialized.
+     */
+
+    addQuantizationButtonShapeEventListeners() {
+        for(let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
+            // initialize button click time trackers
+            this.lastButtonClickTimeTrackers["toggleQuantizationButton" + rowIndex] = {
+                lastClickTime: Number.MIN_SAFE_INTEGER,
+                shape: this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex],
+            }
+            // we don't include event listeners here yet, because we don't need to. the quantization
+            // button's icons are approximately the same size as the button rectangle, so it's currently
+            // not really possible to click one without clicking the other. if this changes
+        }
     }
 
     /**
@@ -2435,6 +2461,7 @@ class DrumMachineGui {
         this.initializeSubdivisionTextInputsEventListeners();
         this.initializeReferenceLineTextInputsEventListeners();
         this.addClearNotesForRowButtonsEventListeners();
+        this.addQuantizationButtonShapeEventListeners();
         this.addShiftToolResetReferenceLinesButtonsEventListeners();
         this.addShiftToolResetSubdivisionLinesButtonsEventListeners();
         this.initializeQuantizationCheckboxEventListeners();
@@ -3162,13 +3189,13 @@ class DrumMachineGui {
             clearRowIcon.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.clearRowButtons.leftPaddingPerRow) + "px"
             clearRowIcon.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.clearRowButtons.topPaddingPerRow) + "px"
             // add event listeners to our icon
-            if (this.eventHandlerFunctions["clearNotesForRowIcon" + rowIndex] !== null && this.eventHandlerFunctions["clearNotesForRowIcon" + rowIndex] !== undefined) {
-                // remove event listeners if they've already been added to avoid duplicates
-                clearRowIcon.removeEventListener('click', this.eventHandlerFunctions["clearNotesForRowIcon" + rowIndex] );
+            let shapesToAddEventListenersTo = [clearRowIcon] // we don't include the button shape here, only the icon, because the shape event listeners are set up elsewhere
+            let eventHandlersHash = {
+                "click": () => this.clearRowButtonClickHandler(this, rowIndex),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex]),
+                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex]),
             }
-            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-            this.eventHandlerFunctions["clearNotesForRowIcon" + rowIndex] = () => this.clearRowButtonClickHandler(this, rowIndex);
-            clearRowIcon.addEventListener('click', this.eventHandlerFunctions["clearNotesForRowIcon" + rowIndex]);
+            this.addEventListenersWithoutDuplicates("clearNotesForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add the copy to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.clearRowIcons.push(clearRowIcon)
             document.body.appendChild(clearRowIcon)
