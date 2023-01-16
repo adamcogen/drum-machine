@@ -1878,13 +1878,14 @@ class DrumMachineGui {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
                 shape: this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex],
             }
-            if (this.eventHandlerFunctions["resetSubdivisionLinesShiftShape" + rowIndex] !== null && this.eventHandlerFunctions["resetSubdivisionLinesShiftShape" + rowIndex] !== undefined){
-                // remove event listeners if they've already been added to avoid duplicates
-                this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]._renderer.elem.removeEventListener('click', this.eventHandlerFunctions["resetSubdivisionLinesShiftShape" + rowIndex] );
+            // add event listeners. the icon event listeners are set up separately, when the icons get initialized
+            let shapesToAddEventListenersTo = [this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]._renderer.elem]
+            let eventHandlersHash = {
+                "click": () => this.resetSubdivisionLinesShiftClickHandler(this, rowIndex),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]),
+                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]),
             }
-            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-            this.eventHandlerFunctions["resetSubdivisionLinesShiftShape" + rowIndex] = () => this.resetSubdivisionLinesShiftClickHandler(this, rowIndex);
-            this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]._renderer.elem.addEventListener('click', this.eventHandlerFunctions["resetSubdivisionLinesShiftShape" + rowIndex] );
+            this.addEventListenersWithoutDuplicates("resetSubdivisionLinesShiftShape" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
         }
     }
 
@@ -3277,13 +3278,13 @@ class DrumMachineGui {
             resetSubdivisionsShiftIcon.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.shiftModeResetSubdivisionLinesForRowButtons.leftPaddingPerRow) + "px"
             resetSubdivisionsShiftIcon.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.shiftModeResetSubdivisionLinesForRowButtons.topPaddingPerRow) + "px"
             // add event listeners to our icon
-            if (this.eventHandlerFunctions["resetSubdvisionsLinesShiftForRowIcon" + rowIndex] !== null && this.eventHandlerFunctions["resetSubdvisionsLinesShiftForRowIcon" + rowIndex] !== undefined) {
-                // remove event listeners if they've already been added to avoid duplicates
-                resetSubdivisionsShiftIcon.removeEventListener('click', this.eventHandlerFunctions["resetSubdvisionsLinesShiftForRowIcon" + rowIndex] );
+            let shapesToAddEventListenersTo = [resetSubdivisionsShiftIcon] // we don't include the button shape here, only the icon, because the shape event listeners are set up elsewhere
+            let eventHandlersHash = {
+                "click": () => this.resetSubdivisionLinesShiftClickHandler(this, rowIndex),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]),
+                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]),
             }
-            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-            this.eventHandlerFunctions["resetSubdvisionsLinesShiftForRowIcon" + rowIndex] = () => this.resetSubdivisionLinesShiftClickHandler(this, rowIndex);
-            resetSubdivisionsShiftIcon.addEventListener('click', this.eventHandlerFunctions["resetSubdvisionsLinesShiftForRowIcon" + rowIndex]);
+            this.addEventListenersWithoutDuplicates("resetSubdvisionsLinesShiftForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add the copy to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.resetSubdivisionLinesShiftIcons.push(resetSubdivisionsShiftIcon)
             document.body.appendChild(resetSubdivisionsShiftIcon)
@@ -3599,14 +3600,14 @@ class DrumMachineGui {
     }
 
     simpleButtonHoverMouseEnterLogic(self, buttonShape) {
-        if (buttonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor) {
+        if (buttonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor && buttonShape.guiData.respondToEvents) {
             // don't change to hover color if we are still waiting for a 'click' color change to complete
             buttonShape.fill = self.configurations.buttonBehavior.buttonHoverColor
         }
     }
 
     simpleButtonHoverMouseLeaveLogic(self, buttonShape) {
-        if (buttonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor) {
+        if (buttonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor && buttonShape.guiData.respondToEvents) {
             // don't change to hover color if we are still waiting for a 'click' color change to complete
             buttonShape.fill = 'transparent'
         }
