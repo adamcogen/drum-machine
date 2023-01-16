@@ -207,7 +207,7 @@ class DrumMachineGui {
          */
         for (let buttonName in this.lastButtonClickTimeTrackers) {
             let buttonClickTimeTracker = this.lastButtonClickTimeTrackers[buttonName]
-            if (this.sequencer.currentTime - buttonClickTimeTracker.lastClickTime > this.configurations.buttonBehavior.showClicksForHowManyMilliseconds) {
+            if (this.sequencer.currentTime - buttonClickTimeTracker.lastClickTime > this.configurations.buttonBehavior.showClicksForHowManyMilliseconds && buttonClickTimeTracker.shape.fill === this.configurations.buttonBehavior.clickedButtonColor) {
                 buttonClickTimeTracker.shape.fill = "transparent"
             }
         }
@@ -1683,7 +1683,9 @@ class DrumMachineGui {
         this.lastButtonClickTimeTrackers.addRow.shape = this.components.shapes.addRowButtonShape;
         let shapesToAddEventListenersTo = [this.components.shapes.addRowButtonShape._renderer.elem, this.components.domElements.images.addIcon]
         let eventHandlersHash = {
-            "click": () => this.addRowClickHandler(this)
+            "click": () => this.addRowClickHandler(this),
+            "mouseenter": () => this.addRowMouseEnterHandler(this),
+            "mouseleave": () => this.addRowMouseLeaveHandler(this),
         }
         this.addEventListenersWithoutDuplicates("addRowButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
@@ -1695,6 +1697,14 @@ class DrumMachineGui {
         self.addEmptySequencerRow();
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
+    }
+
+    addRowMouseEnterHandler(self) {
+        self.components.shapes.addRowButtonShape.fill = self.configurations.buttonBehavior.buttonHoverColor
+    }
+
+    addRowMouseLeaveHandler(self) {
+        self.components.shapes.addRowButtonShape.fill = 'transparent'
     }
 
     addEmptySequencerRow() {
@@ -3525,8 +3535,8 @@ class DrumMachineGui {
 
     /**
      * This function is for initializing event listeners while ensuring that duplicate event listeners are 
-     * never added to a DOM element. It checks whether the event listeners already exist, and if they do it, 
-     * it deletes the existing event listeners before initializing new ones.
+     * never added to a DOM element. It checks whether the event listeners already exist, and if they do, it 
+     * deletes the existing event listeners before initializing new ones.
      * 
      * This is a reusable version of logic I have already created several times in this codebase, I may try
      * to eventually consolidate the various versions I have of this here to clean things up a bit.
