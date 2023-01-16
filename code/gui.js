@@ -1373,14 +1373,29 @@ class DrumMachineGui {
     // there is one button each for: notes, subdivision lines, and refernce lines.
     initializeShiftToolToggleButtonEventListeners() {
         // shift notes
-        this.components.shapes.shiftModeMoveNotesButton._renderer.elem.addEventListener('click', () => this.shiftModeMoveNotesClickHandler(this));
-        this.components.domElements.images.activateShiftNotesIcon.addEventListener('click', () => this.shiftModeMoveNotesClickHandler(this))
+        let shapesToAddEventListenersTo = [this.components.shapes.shiftModeMoveNotesButton._renderer.elem, this.components.domElements.images.activateShiftNotesIcon]
+        let eventHandlersHash = {
+            "click": () => this.shiftModeMoveNotesClickHandler(this),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeMoveNotesButton),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeMoveNotesButton),
+        }
+        this.addEventListenersWithoutDuplicates("shiftNotesToggleButton", shapesToAddEventListenersTo, eventHandlersHash);
         // shift subdivision lines
-        this.components.shapes.shiftModeMoveSubdivisionLinesButton._renderer.elem.addEventListener('click', () => this.shiftModeMoveSubdivisionLinesClickHandler(this));
-        this.components.domElements.images.activateShiftSubdivisionLinesIcon.addEventListener('click', () => this.shiftModeMoveSubdivisionLinesClickHandler(this))
+        shapesToAddEventListenersTo = [this.components.shapes.shiftModeMoveSubdivisionLinesButton._renderer.elem, this.components.domElements.images.activateShiftSubdivisionLinesIcon]
+        eventHandlersHash = {
+            "click": () => this.shiftModeMoveSubdivisionLinesClickHandler(this),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeMoveSubdivisionLinesButton),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeMoveSubdivisionLinesButton),
+        }
+        this.addEventListenersWithoutDuplicates("shiftSubdivisionLinesToggleButton", shapesToAddEventListenersTo, eventHandlersHash);
         // shift reference lines
-        this.components.shapes.shiftModeMoveReferenceLinesButton._renderer.elem.addEventListener('click', () => this.shiftModeMoveReferenceLinesClickHandler(this));
-        this.components.domElements.images.activateShiftReferenceLinesIcon.addEventListener('click', () => this.shiftModeMoveReferenceLinesClickHandler(this))
+        shapesToAddEventListenersTo = [this.components.shapes.shiftModeMoveReferenceLinesButton._renderer.elem, this.components.domElements.images.activateShiftReferenceLinesIcon]
+        eventHandlersHash = {
+            "click": () => this.shiftModeMoveReferenceLinesClickHandler(this),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeMoveReferenceLinesButton),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeMoveReferenceLinesButton),
+        }
+        this.addEventListenersWithoutDuplicates("shiftReferenceLinesToggleButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     shiftModeMoveNotesClickHandler(self) {
