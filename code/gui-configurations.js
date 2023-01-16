@@ -16,7 +16,7 @@ function getGuiConfigurations(hideIcons=false) {
             color: defaultSequencerLineColor,
             lineWidth: 3,
             // the following serialized (base64) sequencer pattern string will be loaded when we click the 'delete sequencer pattern' button:
-            clearedPatternBase64String: "eyJsb29wTGVuZ3RoIjoyMDAwLCJyb3dzIjpbIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjo4LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjowLFwibm90ZXNcIjpbXX0iXSwiYnBtIjoxMjAsIm51bWJlck9mQmVhdHMiOjQsImlzSW5CcG1Nb2RlIjp0cnVlfQ=="
+            clearedPatternBase64String: "eyJsb29wTGVuZ3RoIjoyMDAwLCJyb3dzIjpbIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjoxNixcInJlZmVyZW5jZUxpbmVzXCI6NCxcInJlZmVyZW5jZUxpbmVzU2hpZnRcIjowLFwic3ViZGl2aXNpb25MaW5lc1NoaWZ0XCI6MCxcIm5vdGVzXCI6W119Il0sImJwbSI6MTIwLCJudW1iZXJPZkJlYXRzIjo0LCJpc0luQnBtTW9kZSI6dHJ1ZX0="
         },
         defaultFont: {
             color: 'black' // "#575757",

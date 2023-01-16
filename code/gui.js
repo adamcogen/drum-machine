@@ -1682,7 +1682,7 @@ class DrumMachineGui {
         let newRowIndex = this.sequencer.rows.length - 1
         // set new row default configuration
         this.sequencer.rows[newRowIndex].setNumberOfReferenceLines(4);
-        this.sequencer.rows[newRowIndex].setNumberOfSubdivisions(8);
+        this.sequencer.rows[newRowIndex].setNumberOfSubdivisions(16);
         this.sequencer.rows[newRowIndex].setQuantization(true);
     }
 
@@ -3456,6 +3456,7 @@ class DrumMachineGui {
         }
     }
 
+    // some buttons don't need to be shown if a row doesn't have any notes. adjust the visibility of those buttons here.
     refreshNoteDependentButtonsForRow(rowIndex) {
         if (this.sequencer.rows[rowIndex]._notesList.head === null || this.sequencer.rows[rowIndex]._notesList.head === undefined) {
             // hide stuff that shouldn't be visible if there are no notes on the row. this includes..
@@ -3485,6 +3486,7 @@ class DrumMachineGui {
         }
     }
 
+    // some buttons don't need to be shown if a row ins't shifted. adjust the visibility of those buttons here.
     refreshShiftDependentButtonsForRow(rowIndex){
         if (this.sequencer.rows[rowIndex].getSubdivisionLineShiftInMilliseconds() === 0) {
             // hide stuff that shouldn't be visible if the row's subdivisions aren't shifted. this includes..
