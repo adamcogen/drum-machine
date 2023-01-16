@@ -413,10 +413,6 @@ class DrumMachineGui {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
                 shape: this.components.shapes.restartSequencerButtonShape,
             },
-            clearAllNotes: {
-                lastClickTime: Number.MIN_SAFE_INTEGER,
-                shape: this.components.shapes.clearAllNotesButtonShape,
-            },
             addRow: {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
                 shape: this.components.shapes.addRowButtonShape,
@@ -1782,7 +1778,6 @@ class DrumMachineGui {
     clearRowButtonClickHandler(self, rowIndex) {
         if (self.components.shapes.clearNotesForRowButtonShapes[rowIndex].guiData.respondToEvents) {
             self.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex].lastClickTime = self.sequencer.currentTime
-            self.components.shapes.clearNotesForRowButtonShapes[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
             self.clearNotesForRow(rowIndex);
             self.resetNotesAndLinesDisplayForRow(rowIndex);
             self.saveCurrentSequencerStateToUrlHash();
@@ -1838,10 +1833,6 @@ class DrumMachineGui {
     
     addShiftToolResetReferenceLinesButtonsEventListeners() {
         for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
-            this.lastButtonClickTimeTrackers["resetReferenceLinesShift" + rowIndex] = {
-                lastClickTime: Number.MIN_SAFE_INTEGER,
-                shape: this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex],
-            }
             let shapesToAddEventListenersTo = [this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]._renderer.elem]
             let eventHandlersHash = {
                 "click": () => this.resetReferenceLinesShiftClickHandler(this, rowIndex),
@@ -1854,8 +1845,6 @@ class DrumMachineGui {
 
     resetReferenceLinesShiftClickHandler(self, rowIndex) {
         if (self.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex].guiData.respondToEvents) {
-            self.lastButtonClickTimeTrackers["resetReferenceLinesShift" + rowIndex].lastClickTime = self.sequencer.currentTime
-            self.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
             self.resetReferenceLineShiftForRow(rowIndex);
             self.referenceLinesShiftInPixelsPerRow[rowIndex] = self.sequencer.rows[rowIndex].getReferenceLineShiftInMilliseconds();
             self.resetNotesAndLinesDisplayForRow(rowIndex);
@@ -1874,10 +1863,6 @@ class DrumMachineGui {
     
      addShiftToolResetSubdivisionLinesButtonsEventListeners() {
         for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
-            this.lastButtonClickTimeTrackers["resetSubdivisionLinesShift" + rowIndex] = {
-                lastClickTime: Number.MIN_SAFE_INTEGER,
-                shape: this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex],
-            }
             // add event listeners. the icon event listeners are set up separately, when the icons get initialized
             let shapesToAddEventListenersTo = [this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]._renderer.elem]
             let eventHandlersHash = {
@@ -1891,8 +1876,6 @@ class DrumMachineGui {
 
     resetSubdivisionLinesShiftClickHandler(self, rowIndex) {
         if (self.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex].guiData.respondToEvents) {
-            self.lastButtonClickTimeTrackers["resetSubdivisionLinesShift" + rowIndex].lastClickTime = self.sequencer.currentTime
-            self.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
             self.resetSubdivisionLineShiftForRow(rowIndex);
             self.subdivisionLinesShiftInPixelsPerRow[rowIndex] = self.sequencer.rows[rowIndex].getSubdivisionLineShiftInMilliseconds();
             self.resetNotesAndLinesDisplayForRow(rowIndex);
@@ -1929,7 +1912,6 @@ class DrumMachineGui {
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
     clearAllNotesButtonClickHandler(self) {
-        self.lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = self.sequencer.currentTime
         self.components.shapes.clearAllNotesButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
         self.loadSequencerPatternFromBase64String(this.configurations.sequencer.clearedPatternBase64String); 
         self.redrawSequencer();
