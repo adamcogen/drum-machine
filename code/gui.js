@@ -1045,31 +1045,39 @@ class DrumMachineGui {
     }
 
     shiftRowMouseEnterEventHandler(self, rowIndex) {
-        let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
-        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-        if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
-            circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
-            rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
+        if (self.components.shapes.shiftToolRowHandles[rowIndex].guiData.respondToEvents) {
+            let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
+            let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+            if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
+                circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
+                rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
+            }
         }
     }
 
     shiftRowMouseLeaveEventHandler(self, rowIndex) {
-        let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
-        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-        circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
-        rowSelectionRectangle.stroke = 'transparent'
+        if (self.components.shapes.shiftToolRowHandles[rowIndex].guiData.respondToEvents) {
+            let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
+            let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+            circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
+            rowSelectionRectangle.stroke = 'transparent'
+        }
     }
 
     shiftRowMouseDownEventHandler(self, rowIndex) {
-        // save relevant info about whichever row is selected
-        self.initializeRowShiftToolVariablesAndVisuals(rowIndex);
+        if (self.components.shapes.shiftToolRowHandles[rowIndex].guiData.respondToEvents) {
+            // save relevant info about whichever row is selected
+            self.initializeRowShiftToolVariablesAndVisuals(rowIndex);
+        }
     }
 
     shiftRowMouseUpEventHandler(self, rowIndex) {
-        let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
-        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-        circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
-        rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
+        if (self.components.shapes.shiftToolRowHandles[rowIndex].guiData.respondToEvents) {
+            let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
+            let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
+            circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
+            rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
+        }
     }
 
     /**
