@@ -512,6 +512,7 @@ class DrumMachineGui {
         // update visuals
         let circle = this.components.shapes.sequencerRowHandles[rowIndex]
         circle.fill = this.configurations.sequencerRowHandles.selectedColor
+        circle.stroke = this.configurations.subdivisionLines.color
         let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
         rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.selectedColor
     }
@@ -535,6 +536,7 @@ class DrumMachineGui {
         // update visuals
         let circle = this.components.shapes.volumeAdjusterRowHandles[rowIndex]
         circle.fill = this.configurations.volumeAdjusterRowHandles.selectedColor
+        circle.stroke = this.configurations.subdivisionLines.color
         let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
         rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.selectedColor
     }
@@ -569,6 +571,7 @@ class DrumMachineGui {
         // update visuals
         let circle = this.components.shapes.shiftToolRowHandles[rowIndex]
         circle.fill = this.configurations.shiftToolRowHandles.selectedColor
+        circle.stroke = this.configurations.subdivisionLines.color
         let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
         rowSelectionRectangle.stroke = this.configurations.shiftToolRowHandles.selectedColor
     }
@@ -2515,7 +2518,7 @@ class DrumMachineGui {
             // we will save the sequencer state to the URL in the 'mouse up' event instead of here, for performance reasons
         }
         let circle = self.components.shapes.volumeAdjusterRowHandles[self.rowVolumeAdjustmentTracker.selectedRowIndex]
-        circle.stroke = self.configurations.sequencerRowHandles.selectedColor
+        circle.stroke = self.configurations.subdivisionLines.color
         circle.linewidth = 3
         circle.fill = self.configurations.volumeAdjusterRowHandles.selectedColor
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.rowVolumeAdjustmentTracker.selectedRowIndex]
@@ -2640,7 +2643,7 @@ class DrumMachineGui {
             }
         }
         let circle = self.components.shapes.shiftToolRowHandles[self.shiftToolTracker.selectedRowIndex]
-        circle.stroke = self.configurations.sequencerRowHandles.selectedColor
+        circle.stroke = self.configurations.subdivisionLines.color
         circle.linewidth = 3
         circle.fill = self.configurations.shiftToolRowHandles.selectedColor
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.shiftToolTracker.selectedRowIndex]
@@ -2747,7 +2750,7 @@ class DrumMachineGui {
         let mouseY = event.pageY
 
         let circle = self.components.shapes.sequencerRowHandles[self.rowSelectionTracker.selectedRowIndex]
-        circle.stroke = self.configurations.sequencerRowHandles.selectedColor
+        circle.stroke = self.configurations.subdivisionLines.color
         circle.linewidth = 3
         circle.fill = self.configurations.sequencerRowHandles.selectedColor
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.rowSelectionTracker.selectedRowIndex]
@@ -3479,15 +3482,21 @@ class DrumMachineGui {
     refreshShiftDependentButtonsForRow(rowIndex){
         if (this.sequencer.rows[rowIndex].getSubdivisionLineShiftInMilliseconds() === 0) {
             // hide stuff that shouldn't be visible if the row's subdivisions aren't shifted. this includes..
-            // 'reset subdivision shift for row' button
+            // 'reset subdivision shift for row' button shape
+            // 'reset subdivision shift for row' button icon
         } else {
             // show stuff that should be visible when the row's subdivisions are shifted
+            // 'reset subdivision shift for row' button shape
+            // 'reset subdivision shift for row' button icon
         }
         if (this.sequencer.rows[rowIndex].getReferenceLineShiftInMilliseconds() === 0) {
             // hide stuff that shouldn't be visible if the row's reference lines aren't shifted. this includes..
-            // 'reset reference lines shift for row' button
+            // 'reset reference lines shift for row' button shape
+            // 'reset reference lines shift for row' button icon
         } else {
             // show stuff that should be visible when the row's reference lines are shifted
+            // 'reset reference lines shift for row' button shape
+            // 'reset reference lines shift for row' button icon
         }
     }
 
