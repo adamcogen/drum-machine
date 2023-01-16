@@ -1452,8 +1452,8 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = [this.components.shapes.pauseButtonShape._renderer.elem, this.components.domElements.images.playIcon, this.components.domElements.images.pauseIcon]
         let eventHandlersHash = {
             "click": () => this.pauseButtonClickHandler(this),
-            "mouseenter": () => this.pauseButtonMouseEnterHandler(this),
-            "mouseleave": () => this.pauseButtonMouseLeaveHandler(this),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.pauseButtonShape),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.pauseButtonShape),
         }
         this.addEventListenersWithoutDuplicates("pauseButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
@@ -1469,20 +1469,6 @@ class DrumMachineGui {
         self.lastButtonClickTimeTrackers.pause.lastClickTime = self.sequencer.currentTime
         self.components.shapes.pauseButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
         self.togglePaused()
-    }
-
-    pauseButtonMouseEnterHandler(self){
-        if (self.components.shapes.pauseButtonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor) {
-            // don't change to hover color if we are still waiting for a 'click' color change to complete
-            self.components.shapes.pauseButtonShape.fill = self.configurations.buttonBehavior.buttonHoverColor
-        }
-    }
-
-    pauseButtonMouseLeaveHandler(self) {
-        if (self.components.shapes.pauseButtonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor) {
-            // don't change to hover color if we are still waiting for a 'click' color change to complete
-            self.components.shapes.pauseButtonShape.fill = 'transparent'
-        }
     }
 
     /**
@@ -1700,8 +1686,8 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = [this.components.shapes.addRowButtonShape._renderer.elem, this.components.domElements.images.addIcon]
         let eventHandlersHash = {
             "click": () => this.addRowClickHandler(this),
-            "mouseenter": () => this.addRowMouseEnterHandler(this),
-            "mouseleave": () => this.addRowMouseLeaveHandler(this),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.addRowButtonShape),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.addRowButtonShape),
         }
         this.addEventListenersWithoutDuplicates("addRowButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
@@ -1713,20 +1699,6 @@ class DrumMachineGui {
         self.addEmptySequencerRow();
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
-    }
-
-    addRowMouseEnterHandler(self) {
-        if (self.components.shapes.addRowButtonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor) {
-            // don't change to hover color if we are still waiting for a 'click' color change to complete
-            self.components.shapes.addRowButtonShape.fill = self.configurations.buttonBehavior.buttonHoverColor
-        }
-    }
-
-    addRowMouseLeaveHandler(self) {
-        if (self.components.shapes.addRowButtonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor) {
-            // don't change to hover color if we are still waiting for a 'click' color change to complete
-            self.components.shapes.addRowButtonShape.fill = 'transparent'
-        }
     }
 
     addEmptySequencerRow() {
@@ -1747,15 +1719,13 @@ class DrumMachineGui {
     }
 
     addRestartSequencerButtonEventListeners() {
-        if (this.eventHandlerFunctions.restartSequencer !== null && this.eventHandlerFunctions.restartSequencer !== undefined) {
-            // remove event listeners if they've already been added to avoid duplicates
-            this.components.shapes.restartSequencerButtonShape._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.restartSequencer)
-            this.components.domElements.images.restartIcon.removeEventListener('click', this.eventHandlerFunctions.restartSequencer)
+        let shapesToAddEventListenersTo = [this.components.shapes.restartSequencerButtonShape._renderer.elem, this.components.domElements.images.restartIcon]
+        let eventHandlersHash = {
+            "click": () => this.restartSequencerButtonClickHandler(this),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.restartSequencerButtonShape),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.restartSequencerButtonShape),
         }
-        // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-        this.eventHandlerFunctions.restartSequencer = () => this.restartSequencerButtonClickHandler(this)
-        this.components.shapes.restartSequencerButtonShape._renderer.elem.addEventListener('click', this.eventHandlerFunctions.restartSequencer)
-        this.components.domElements.images.restartIcon.addEventListener('click', this.eventHandlerFunctions.restartSequencer)
+        this.addEventListenersWithoutDuplicates("restartSequencer", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
@@ -3599,6 +3569,20 @@ class DrumMachineGui {
                 this.eventHandlerFunctions[uniqueHandlerIdentifier][eventHandlerType] = eventHandlerFunction
                 shape.addEventListener(eventHandlerType, this.eventHandlerFunctions[uniqueHandlerIdentifier][eventHandlerType]);
             }
+        }
+    }
+
+    simpleButtonHoverMouseEnterLogic(self, buttonShape) {
+        if (buttonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor) {
+            // don't change to hover color if we are still waiting for a 'click' color change to complete
+            buttonShape.fill = self.configurations.buttonBehavior.buttonHoverColor
+        }
+    }
+
+    simpleButtonHoverMouseLeaveLogic(self, buttonShape) {
+        if (buttonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor) {
+            // don't change to hover color if we are still waiting for a 'click' color change to complete
+            buttonShape.fill = 'transparent'
         }
     }
 
