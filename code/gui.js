@@ -3471,6 +3471,14 @@ class DrumMachineGui {
             this.components.shapes.clearNotesForRowButtonShapes[rowIndex].stroke = 'transparent';
             // 'delete all notes for row' button icon
             this.components.domElements.iconLists.clearRowIcons[rowIndex].style.display = 'none'
+            // if shift mode is active and we are only shifting notes but there aren't any notes present, don't show the shift button
+            if (this.shiftToolTracker.resourcesToShift.notes && !this.shiftToolTracker.resourcesToShift.subdivisionLines && !this.shiftToolTracker.resourcesToShift.referenceLines) {
+                // start with the button shape
+                this.components.shapes.shiftToolRowHandles[rowIndex].guiData.respondToEvents = false;
+                this.components.shapes.shiftToolRowHandles[rowIndex].stroke = 'transparent'
+                // then the button icon
+                this.components.domElements.iconLists.shiftRowIcons[rowIndex].style.display = 'none'
+            }
         } else {
             // show stuff that should be visible when there are notes on the row
             // start with 'change row volumes' button shape
@@ -3483,6 +3491,14 @@ class DrumMachineGui {
             this.components.shapes.clearNotesForRowButtonShapes[rowIndex].stroke = 'black';
             // 'delete all notes for row' button icon
             this.components.domElements.iconLists.clearRowIcons[rowIndex].style.display = 'block'
+            // if shift mode is active and we are only shifting notes and there are notes present, show the shift button
+            if (this.shiftToolTracker.resourcesToShift.notes && !this.shiftToolTracker.resourcesToShift.subdivisionLines && !this.shiftToolTracker.resourcesToShift.referenceLines) {
+                // start with the button shape
+                this.components.shapes.shiftToolRowHandles[rowIndex].guiData.respondToEvents = true;
+                this.components.shapes.shiftToolRowHandles[rowIndex].stroke = this.configurations.shiftToolRowHandles.selectedColor;
+                // then the button icon
+                this.components.domElements.iconLists.shiftRowIcons[rowIndex].style.display = 'block'
+            }
         }
     }
 
