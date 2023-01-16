@@ -927,6 +927,7 @@ class DrumMachineGui {
         let circle = self.components.shapes.sequencerRowHandles[rowIndex];
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
         if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
+            circle.fill = self.configurations.buttonBehavior.buttonHoverColor
             rowSelectionRectangle.stroke = self.configurations.sequencerRowHandles.unselectedColor
         }
     }
@@ -984,7 +985,7 @@ class DrumMachineGui {
             let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
-                circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
+                circle.fill = self.configurations.buttonBehavior.buttonHoverColor
                 rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.unselectedColor
             }
         }
@@ -1049,7 +1050,7 @@ class DrumMachineGui {
             let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
-                circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
+                circle.fill = self.configurations.buttonBehavior.buttonHoverColor
                 rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
             }
         }

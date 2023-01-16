@@ -200,6 +200,7 @@ function getGuiConfigurations(hideIcons=false) {
         buttonBehavior: {
             showClicksForHowManyMilliseconds: 100,
             clickedButtonColor: "#b8b8b8",
+            buttonHoverColor: "#cfcfcf"
         },
         clearRowButtons: {
             topPaddingPerRow: -24,
