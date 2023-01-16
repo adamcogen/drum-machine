@@ -204,7 +204,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         clearRowButtons: {
             topPaddingPerRow: -24,
-            leftPaddingPerRow: 178,
+            leftPaddingPerRow: 138,
             height: 48,
             width: 48,
             icon: {
@@ -357,7 +357,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         shiftModeResetReferenceLinesForRowButtons: {
             topPaddingPerRow: -33,
-            leftPaddingPerRow: 138,
+            leftPaddingPerRow: 196,
             height: 30,
             width: 30,
             icon: {
@@ -369,7 +369,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         shiftModeResetSubdivisionLinesForRowButtons: {
             topPaddingPerRow: 2,
-            leftPaddingPerRow: 138,
+            leftPaddingPerRow: 196,
             height: 30,
             width: 30,
             icon: {
