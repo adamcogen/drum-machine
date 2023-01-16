@@ -147,23 +147,23 @@ class DrumMachineGui {
         // keep a list of all the circles (i.e. notes) that have been drawn on the screen
         this.allDrawnCircles = []
 
-        this.initializeShiftToolToggleButtonActionListeners();
-        this.initializeMidiOutputSelectorActionListeners();
-        this.initializeDrumKitSelectorActionListeners();
-        this.initializeExamplePatternSelectorActionListeners()
-        this.initializeLoopLengthInMillisecondsTextInputActionListeners();
-        this.initializeBeatsPerMinuteTextInputActionListeners();
-        this.initializeNumberOfBeatsInLoopInputActionListeners();
-        this.addPauseButtonActionListeners();
-        this.addRestartSequencerButtonActionListeners();
-        this.addClearAllNotesButtonActionListeners();
-        this.addMoveNotesModeButtonActionListeners();
-        this.addEditVolumesModeButtonActionListeners();
-        this.addTempoInputModeSelectionButtonsActionListeners();
-        this.addTapTempoButtonActionListeners();
+        this.initializeShiftToolToggleButtonEventListeners();
+        this.initializeMidiOutputSelectorEventListeners();
+        this.initializeDrumKitSelectorEventListeners();
+        this.initializeExamplePatternSelectorEventListeners()
+        this.initializeLoopLengthInMillisecondsTextInputEventListeners();
+        this.initializeBeatsPerMinuteTextInputEventListeners();
+        this.initializeNumberOfBeatsInLoopInputEventListeners();
+        this.addPauseButtonEventListeners();
+        this.addRestartSequencerButtonEventListeners();
+        this.addClearAllNotesButtonEventListeners();
+        this.addMoveNotesModeButtonEventListeners();
+        this.addEditVolumesModeButtonEventListeners();
+        this.addTempoInputModeSelectionButtonsEventListeners();
+        this.addTapTempoButtonEventListeners();
         this.refreshWindowMouseMoveEvent();
         this.refreshWindowMouseUpEvent();
-        this.initializeExportPatternToMidiFileButtonActionListener();
+        this.initializeExportPatternToMidiFileButtonEventListener();
 
         this.pause(); // start the sequencer paused
         this.redrawSequencer(); // redraw the display
@@ -204,6 +204,10 @@ class DrumMachineGui {
          * the logic below the button's background gets set back to "transparent" after the desired amount of 
          * time has elapsed. this lets us animate buttons to appear clicked, even if the action they perform
          * is done instantly after clicking.
+         * we also only change the color back to 'transparent' if it is set to the 'clicked' color. that way
+         * we can do all of this while still allowing for changing the button to other colors in different 
+         * contexts, such as having a different color for when the mouse is hovering over a button but hasn't
+         * clicked it yet.
          */
         for (let buttonName in this.lastButtonClickTimeTrackers) {
             let buttonClickTimeTracker = this.lastButtonClickTimeTrackers[buttonName]
@@ -316,7 +320,7 @@ class DrumMachineGui {
         shapes.shiftModeResetReferenceLinesButtons = this.initializeButtonPerSequencerRow(this.configurations.shiftModeResetReferenceLinesForRowButtons.topPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.leftPaddingPerRow, this.configurations.shiftModeResetReferenceLinesForRowButtons.height, this.configurations.shiftModeResetReferenceLinesForRowButtons.width) // this is a list of button rectangles, one per row, to reset 'shift' of reference lines for each row
         shapes.exportPatternToMidiFileButton = this.initializeRectangleShape(this.configurations.exportPatternToMidiFileButton.top, this.configurations.exportPatternToMidiFileButton.left, this.configurations.exportPatternToMidiFileButton.height, this.configurations.exportPatternToMidiFileButton.width) // clicking this button will download a MIDI file containing the sequencer pattern
         shapes.toggleQuantizationButtonsRectangles = this.initializeButtonPerSequencerRow(this.configurations.quantizationButtons.topPaddingPerRow, this.configurations.quantizationButtons.leftPaddingPerRow, this.configurations.quantizationButtons.height, this.configurations.quantizationButtons.width) // this is a list of button rectangles, one per row, to toggle whether each row's notes should be snapped to subdivision lines (quantized) or not
-        this.two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add action listeners to, so it needs to go here
+        this.two.update(); // this initial 'update' creates SVG '_renderer' properties for our shapes that we can add event listeners to, so it needs to go here
         return shapes;
     }
 
@@ -398,7 +402,7 @@ class DrumMachineGui {
         /**
          * keep track of when each button was last clicked, so we can make the button darker for a little while after clicking it.
          * we also keep track of when each button was clicked for buttons that are generated one-per-row, but those are initialized
-         * within the relevant action listenever methods, not here. same for a few other of these trackers. 
+         * within the relevant event listenever methods, not here. same for a few other of these trackers. 
          */
         let lastButtonClickTimeTrackers = {
             pause: {
@@ -660,7 +664,7 @@ class DrumMachineGui {
         return referenceLinesForRow
     }
 
-    initializeReferenceLineTextInputsActionListeners() {
+    initializeReferenceLineTextInputsEventListeners() {
         for (let rowIndex = 0; rowIndex < this.sequencer.numberOfRows; rowIndex++) {
             let referenceLineTextInput = this.components.domElements.textInputs.referenceLineTextInputs[rowIndex]
             referenceLineTextInput.addEventListener('blur', () => {
@@ -796,7 +800,7 @@ class DrumMachineGui {
         this.components.shapes.subdivisionLineLists[rowIndex] = []
     }
 
-    initializeSubdivisionTextInputsActionListeners() {
+    initializeSubdivisionTextInputsEventListeners() {
         for (let rowIndex = 0; rowIndex < this.sequencer.numberOfRows; rowIndex++) {
             let subdivisionTextInput = this.components.domElements.textInputs.subdivisionTextInputs[rowIndex]
             subdivisionTextInput.addEventListener('blur', () => {
@@ -897,7 +901,7 @@ class DrumMachineGui {
 
     // 'move rows' row handles event listener initializations
 
-    initializeSequencerRowHandlesActionListeners() {
+    initializeSequencerRowHandlesEventListeners() {
         for (let rowIndex = 0; rowIndex < this.components.shapes.sequencerRowHandles.length; rowIndex++) {
             let circle = this.components.shapes.sequencerRowHandles[rowIndex];
             // add border to circle on mouseover
@@ -953,7 +957,7 @@ class DrumMachineGui {
 
     // 'adjust row volumes' row handles event listener initializations
 
-    initializeVolumeAdjusterRowHandlesActionListeners() {
+    initializeVolumeAdjusterRowHandlesEventListeners() {
         for (let rowIndex = 0; rowIndex < this.components.shapes.volumeAdjusterRowHandles.length; rowIndex++) {
             let circle = this.components.shapes.volumeAdjusterRowHandles[rowIndex];
 
@@ -1018,7 +1022,7 @@ class DrumMachineGui {
 
     // 'shift row' row handles event listener initializations
 
-    initializeShiftToolRowHandlesActionListeners() {
+    initializeShiftToolRowHandlesEventListeners() {
         for (let rowIndex = 0; rowIndex < this.components.shapes.shiftToolRowHandles.length; rowIndex++) {
             let circle = this.components.shapes.shiftToolRowHandles[rowIndex];
 
@@ -1148,7 +1152,7 @@ class DrumMachineGui {
         }
     }
 
-    initializeLoopLengthInMillisecondsTextInputActionListeners() {
+    initializeLoopLengthInMillisecondsTextInputEventListeners() {
         /**
          * set up 'focus' and 'blur' events for the 'loop length in millis' text input.
          * the plan is that when you update the values in the text box, they will be applied
@@ -1185,7 +1189,7 @@ class DrumMachineGui {
         return Util.convertLoopLengthInMillisToBeatsPerMinute(this.sequencer.lookAheadMillis, this.sequencer.tempoRepresentation.numberOfBeatsPerLoop);
     }
 
-    initializeBeatsPerMinuteTextInputActionListeners() {
+    initializeBeatsPerMinuteTextInputEventListeners() {
         /**
          * set up 'focus' and 'blur' events for the 'beats per minute' text input.
          * the plan is that when you update the values in the text box, they will be applied
@@ -1213,7 +1217,7 @@ class DrumMachineGui {
         this.addDefaultKeypressEventListenerToTextInput(this.components.domElements.textInputs.loopLengthBpm, true)
     }
 
-    initializeNumberOfBeatsInLoopInputActionListeners() {
+    initializeNumberOfBeatsInLoopInputEventListeners() {
         /**
          * set up 'focus' and 'blur' events for the 'number of beats in loop' text input.
          * the plan is that when you update the values in the text box, they will be applied
@@ -1294,7 +1298,7 @@ class DrumMachineGui {
         }
     }
 
-    initializeMidiOutputSelectorActionListeners() {
+    initializeMidiOutputSelectorEventListeners() {
         this.components.domElements.selectors.midiOutput.addEventListener('change', () => {
             navigator.requestMIDIAccess().then((midiAccess) => {
                 let midiAudioDriver = this.sequencer.audioDrivers[1]; // index 1 is just a hard-coded to always be the index of the MIDI audio driver. and index 0 is the WebAudio driver.
@@ -1325,7 +1329,7 @@ class DrumMachineGui {
         }
     }
 
-    initializeDrumKitSelectorActionListeners() {
+    initializeDrumKitSelectorEventListeners() {
         this.components.domElements.selectors.drumkit.addEventListener('change', () => {
             if (this.components.domElements.selectors.drumkit.value === this.configurations.drumkitSelector.noWebAudioOutputOptionText) { // if the 'no live audio' option is seleted
                 this.sequencer.audioDrivers[0].muted = true;
@@ -1351,7 +1355,7 @@ class DrumMachineGui {
         }
     }
 
-    initializeExamplePatternSelectorActionListeners() {
+    initializeExamplePatternSelectorEventListeners() {
         this.components.domElements.selectors.examplePatterns.addEventListener('change', () => {
             let selectedValue = this.components.domElements.selectors.examplePatterns.value;
             if (selectedValue === this.configurations.examplePatternSelector.noExamplePatternSelectedText) { // if the 'don't use an example pattern' option is selected
@@ -1365,9 +1369,9 @@ class DrumMachineGui {
         });
     }
 
-    // add action listeners to the buttons that let you select which resources will be moved by the shift tool.
+    // add event listeners to the buttons that let you select which resources will be moved by the shift tool.
     // there is one button each for: notes, subdivision lines, and refernce lines.
-    initializeShiftToolToggleButtonActionListeners() {
+    initializeShiftToolToggleButtonEventListeners() {
         // shift notes
         this.components.shapes.shiftModeMoveNotesButton._renderer.elem.addEventListener('click', () => this.shiftModeMoveNotesClickHandler(this));
         this.components.domElements.images.activateShiftNotesIcon.addEventListener('click', () => this.shiftModeMoveNotesClickHandler(this))
@@ -1444,7 +1448,8 @@ class DrumMachineGui {
         this.components.domElements.images.playIcon.style.display = 'none'
     }
 
-    addPauseButtonActionListeners() {
+    addPauseButtonEventListeners() {
+
         if (this.eventHandlerFunctions.pauseButton !== null && this.eventHandlerFunctions.pauseButton !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.pauseButtonShape._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.pauseButton)
@@ -1573,7 +1578,7 @@ class DrumMachineGui {
         }
     }
 
-    initializeQuantizationCheckboxActionListeners() {
+    initializeQuantizationCheckboxEventListeners() {
         if (!this.configurations.hideIcons) {
             return 
         }
@@ -1679,8 +1684,10 @@ class DrumMachineGui {
      * 'add row to sequencer' logic
      */
 
-    initializeAddRowButtonActionListener() {
+    initializeAddRowButtonEventListener() {
+        // store the button's shape here, because this button gets deleted and recreated when new rows are added are deleted from the sequencer.
         this.lastButtonClickTimeTrackers.addRow.shape = this.components.shapes.addRowButtonShape;
+        // initialize event listeners
         let shapesToAddEventListenersTo = [this.components.shapes.addRowButtonShape._renderer.elem, this.components.domElements.images.addIcon]
         let eventHandlersHash = {
             "click": () => this.addRowClickHandler(this),
@@ -1724,7 +1731,7 @@ class DrumMachineGui {
         this.sequencer.restart();
     }
 
-    addRestartSequencerButtonActionListeners() {
+    addRestartSequencerButtonEventListeners() {
         if (this.eventHandlerFunctions.restartSequencer !== null && this.eventHandlerFunctions.restartSequencer !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.restartSequencerButtonShape._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.restartSequencer)
@@ -1748,7 +1755,7 @@ class DrumMachineGui {
      * 'clear notes for sequencer row' logic
      */
 
-    addClearNotesForRowButtonsActionListeners() {
+    addClearNotesForRowButtonsEventListeners() {
         for(let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
             this.lastButtonClickTimeTrackers["clearNotesForRow" + rowIndex] = {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
@@ -1781,9 +1788,9 @@ class DrumMachineGui {
     }
 
     /**
-     * add action listener to the 'export sequencer pattern to midi file' button
+     * add event listener to the 'export sequencer pattern to midi file' button
      */
-    initializeExportPatternToMidiFileButtonActionListener() {
+    initializeExportPatternToMidiFileButtonEventListener() {
         this.lastButtonClickTimeTrackers.exportPatternToMidiFile.shape = this.components.shapes.exportPatternToMidiFileButton;
         if (this.eventHandlerFunctions.exportPatternToMidiFile !== null && this.eventHandlerFunctions.exportPatternToMidiFile !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
@@ -1806,7 +1813,7 @@ class DrumMachineGui {
      * shift tool 'reset reference lines shift' button (one button per row) logic
      */
     
-    addShiftToolResetReferenceLinesButtonsActionListeners() {
+    addShiftToolResetReferenceLinesButtonsEventListeners() {
         for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
             this.lastButtonClickTimeTrackers["resetReferenceLinesShift" + rowIndex] = {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
@@ -1842,7 +1849,7 @@ class DrumMachineGui {
      * shift tool 'reset subdivision lines shift' button (one button per row) logic
      */
     
-     addShiftToolResetSubdivisionLinesButtonsActionListeners() {
+     addShiftToolResetSubdivisionLinesButtonsEventListeners() {
         for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
             this.lastButtonClickTimeTrackers["resetSubdivisionLinesShift" + rowIndex] = {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
@@ -1886,7 +1893,7 @@ class DrumMachineGui {
      * 'clear all sequencer notes' logic
      */
 
-    addClearAllNotesButtonActionListeners() {
+    addClearAllNotesButtonEventListeners() {
         if (this.eventHandlerFunctions.clearAllNotesButton !== null && this.eventHandlerFunctions.clearAllNotesButton !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.clearAllNotesButtonShape._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.clearAllNotesButton)
@@ -1917,7 +1924,7 @@ class DrumMachineGui {
         }
     }
 
-    addMoveNotesModeButtonActionListeners() {
+    addMoveNotesModeButtonEventListeners() {
         if (this.eventHandlerFunctions.moveNotesModeButton !== null && this.eventHandlerFunctions.moveNotesModeButton !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.moveNotesModeButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.moveNotesModeButton)
@@ -1929,7 +1936,7 @@ class DrumMachineGui {
         this.components.domElements.images.moveNotesModeIcon.addEventListener('click', this.eventHandlerFunctions.moveNotesModeButton)
     }
 
-    addEditVolumesModeButtonActionListeners() {
+    addEditVolumesModeButtonEventListeners() {
         if (this.eventHandlerFunctions.editVolumesModeButton !== null && this.eventHandlerFunctions.editVolumesModeButton !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.editVolumesModeButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.editVolumesModeButton)
@@ -1967,12 +1974,12 @@ class DrumMachineGui {
         self.setNoteTrashBinVisibility(false)
     }
 
-    addTempoInputModeSelectionButtonsActionListeners() {
-        this.addTempoInputModeSelectionBpmButtonActionListener();
-        this.addTempoInputModeSelectionMillisecondsButtonActionListener();
+    addTempoInputModeSelectionButtonsEventListeners() {
+        this.addTempoInputModeSelectionBpmButtonEventListener();
+        this.addTempoInputModeSelectionMillisecondsButtonEventListener();
     }
 
-    addTempoInputModeSelectionBpmButtonActionListener() {
+    addTempoInputModeSelectionBpmButtonEventListener() {
         if (this.eventHandlerFunctions.tempoInputModeSelectionBpmButton !== null && this.eventHandlerFunctions.tempoInputModeSelectionBpmButton !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.tempoInputModeSelectionBpmButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionBpmButton)
@@ -2033,7 +2040,7 @@ class DrumMachineGui {
         }
     }
 
-    addTempoInputModeSelectionMillisecondsButtonActionListener() {
+    addTempoInputModeSelectionMillisecondsButtonEventListener() {
         if (this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton !== null && this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.tempoInputModeSelectionMillisecondsButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tempoInputModeSelectionMillisecondsButton)
@@ -2075,10 +2082,10 @@ class DrumMachineGui {
         this.lastButtonClickTimeTrackers.tapTempo.shape = this.components.shapes.tapTempoButton;
         this.components.domElements.images.tapTempoIcon.style.display = 'block';
         this.two.update();
-        this.addTapTempoButtonActionListeners();
+        this.addTapTempoButtonEventListeners();
     }
 
-    addTapTempoButtonActionListeners() {
+    addTapTempoButtonEventListeners() {
         if (this.eventHandlerFunctions.tapTempoButton !== null && this.eventHandlerFunctions.tapTempoButton !== undefined) {
             // remove event listeners if they've already been added to avoid duplicates
             this.components.shapes.tapTempoButton._renderer.elem.removeEventListener('click', this.eventHandlerFunctions.tapTempoButton)
@@ -2438,19 +2445,19 @@ class DrumMachineGui {
         this.components.shapes.toggleQuantizationButtonsRectangles = []
         this.components.shapes.toggleQuantizationButtonsRectangles = this.initializeButtonPerSequencerRow(this.configurations.quantizationButtons.topPaddingPerRow, this.configurations.quantizationButtons.leftPaddingPerRow, this.configurations.quantizationButtons.height, this.configurations.quantizationButtons.width)
 
-        // update two.js so we can add action listeners to shapes
+        // update two.js so we can add event listeners to shapes
         this.two.update()
-        // initialize action listeners
-        this.initializeSubdivisionTextInputsActionListeners();
-        this.initializeReferenceLineTextInputsActionListeners();
-        this.addClearNotesForRowButtonsActionListeners();
-        this.addShiftToolResetReferenceLinesButtonsActionListeners();
-        this.addShiftToolResetSubdivisionLinesButtonsActionListeners();
-        this.initializeQuantizationCheckboxActionListeners();
-        this.initializeAddRowButtonActionListener();
-        this.initializeSequencerRowHandlesActionListeners();
-        this.initializeVolumeAdjusterRowHandlesActionListeners();
-        this.initializeShiftToolRowHandlesActionListeners();
+        // initialize event listeners
+        this.initializeSubdivisionTextInputsEventListeners();
+        this.initializeReferenceLineTextInputsEventListeners();
+        this.addClearNotesForRowButtonsEventListeners();
+        this.addShiftToolResetReferenceLinesButtonsEventListeners();
+        this.addShiftToolResetSubdivisionLinesButtonsEventListeners();
+        this.initializeQuantizationCheckboxEventListeners();
+        this.initializeAddRowButtonEventListener();
+        this.initializeSequencerRowHandlesEventListeners();
+        this.initializeVolumeAdjusterRowHandlesEventListeners();
+        this.initializeShiftToolRowHandlesEventListeners();
         // initialize, format, and move button icons into place
         this.initializeIcons(this.configurations.hideIcons)
         if (this.rowSelectionTracker.selectedRowIndex !== null) {
@@ -3340,7 +3347,7 @@ class DrumMachineGui {
                 // add the icons to the dom and to our list that tracks these icons
                 this.components.domElements.iconLists.shiftRowIcons.push(shiftIcon)
                 document.body.appendChild(shiftIcon)
-                // hide the icons for now until they have action listeners and we adjust the layout to include them, etc.
+                // hide the icons for now until they have event listeners and we adjust the layout to include them, etc.
                 shiftIcon.style.display = 'block';
             }
         }
@@ -3388,7 +3395,7 @@ class DrumMachineGui {
             // add the icons to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.moveRowIcons.push(moveIcon)
             document.body.appendChild(moveIcon)
-            // hide the icons for now until they have action listeners and we adjust the layout to include them, etc.
+            // hide the icons for now until they have event listeners and we adjust the layout to include them, etc.
             moveIcon.style.display = 'block';
         }
         // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
@@ -3539,7 +3546,10 @@ class DrumMachineGui {
      * deletes the existing event listeners before initializing new ones.
      * 
      * This is a reusable version of logic I have already created several times in this codebase, I may try
-     * to eventually consolidate the various versions I have of this here to clean things up a bit.
+     * to eventually consolidate the various versions I have of this here to clean things up a bit. This 
+     * cleanup also might be part of an eventual effort to standardize the logic for different buttons and
+     * move them into their own classes (with a few button type interfaces as superclasses), to majorly
+     * clean up this GUI file.
      * 
      * Parameters:
      * 
@@ -3553,7 +3563,7 @@ class DrumMachineGui {
      * }
      * 
      * uniqueHandlerIdentifier: a string by which we can identify this set of handlers, such as "addRowButton".
-     * this is only used under the hood to disambiguate sets of action listeners and check whether they have
+     * this is only used under the hood to disambiguate sets of event listeners and check whether they have
      * already been created, etc.
      */
     addEventListenersWithoutDuplicates(uniqueHandlerIdentifier, shapes, eventHandlersHash) {
