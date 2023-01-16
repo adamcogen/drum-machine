@@ -1793,16 +1793,19 @@ class DrumMachineGui {
     }
 
     resetReferenceLinesShiftClickHandler(self, rowIndex) {
-        self.lastButtonClickTimeTrackers["resetReferenceLinesShift" + rowIndex].lastClickTime = self.sequencer.currentTime
-        self.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
-        self.resetReferenceLineShiftForRow(rowIndex);
-        self.referenceLinesShiftInPixelsPerRow[rowIndex] = self.sequencer.rows[rowIndex].getReferenceLineShiftInMilliseconds();
-        self.resetNotesAndLinesDisplayForRow(rowIndex);
-        self.saveCurrentSequencerStateToUrlHash();
+        if (self.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex].guiData.respondToEvents) {
+            self.lastButtonClickTimeTrackers["resetReferenceLinesShift" + rowIndex].lastClickTime = self.sequencer.currentTime
+            self.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
+            self.resetReferenceLineShiftForRow(rowIndex);
+            self.referenceLinesShiftInPixelsPerRow[rowIndex] = self.sequencer.rows[rowIndex].getReferenceLineShiftInMilliseconds();
+            self.resetNotesAndLinesDisplayForRow(rowIndex);
+            self.saveCurrentSequencerStateToUrlHash();
+        }
     }
 
     resetReferenceLineShiftForRow(rowIndex) {
         this.sequencer.rows[rowIndex].setReferenceLineShiftMilliseconds(0);
+        this.refreshShiftDependentButtonsForRow(rowIndex);
     }
 
     /**
@@ -1826,12 +1829,14 @@ class DrumMachineGui {
     }
 
     resetSubdivisionLinesShiftClickHandler(self, rowIndex) {
-        self.lastButtonClickTimeTrackers["resetSubdivisionLinesShift" + rowIndex].lastClickTime = self.sequencer.currentTime
-        self.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
-        self.resetSubdivisionLineShiftForRow(rowIndex);
-        self.subdivisionLinesShiftInPixelsPerRow[rowIndex] = self.sequencer.rows[rowIndex].getSubdivisionLineShiftInMilliseconds();
-        self.resetNotesAndLinesDisplayForRow(rowIndex);
-        self.saveCurrentSequencerStateToUrlHash();
+        if (self.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex].guiData.respondToEvents) {
+            self.lastButtonClickTimeTrackers["resetSubdivisionLinesShift" + rowIndex].lastClickTime = self.sequencer.currentTime
+            self.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex].fill = self.configurations.buttonBehavior.clickedButtonColor
+            self.resetSubdivisionLineShiftForRow(rowIndex);
+            self.subdivisionLinesShiftInPixelsPerRow[rowIndex] = self.sequencer.rows[rowIndex].getSubdivisionLineShiftInMilliseconds();
+            self.resetNotesAndLinesDisplayForRow(rowIndex);
+            self.saveCurrentSequencerStateToUrlHash();
+        }
     }
 
     resetSubdivisionLineShiftForRow(rowIndex) {
@@ -1844,6 +1849,7 @@ class DrumMachineGui {
             }
         }
         this.sequencer.rows[rowIndex].setSubdivisionLineShiftMilliseconds(0);
+        this.refreshShiftDependentButtonsForRow(rowIndex);
     }
 
     /**
@@ -3483,20 +3489,32 @@ class DrumMachineGui {
         if (this.sequencer.rows[rowIndex].getSubdivisionLineShiftInMilliseconds() === 0) {
             // hide stuff that shouldn't be visible if the row's subdivisions aren't shifted. this includes..
             // 'reset subdivision shift for row' button shape
+            this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex].guiData.respondToEvents = false;
+            this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex].stroke = 'transparent';
             // 'reset subdivision shift for row' button icon
+            this.components.domElements.iconLists.resetSubdivisionLinesShiftIcons[rowIndex].style.display = 'none'
         } else {
             // show stuff that should be visible when the row's subdivisions are shifted
             // 'reset subdivision shift for row' button shape
+            this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex].guiData.respondToEvents = true;
+            this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex].stroke = 'black';
             // 'reset subdivision shift for row' button icon
+            this.components.domElements.iconLists.resetSubdivisionLinesShiftIcons[rowIndex].style.display = 'block'
         }
         if (this.sequencer.rows[rowIndex].getReferenceLineShiftInMilliseconds() === 0) {
             // hide stuff that shouldn't be visible if the row's reference lines aren't shifted. this includes..
             // 'reset reference lines shift for row' button shape
+            this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex].guiData.respondToEvents = false;
+            this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex].stroke = 'transparent';
             // 'reset reference lines shift for row' button icon
+            this.components.domElements.iconLists.resetReferenceLinesShiftIcons[rowIndex].style.display = 'none'
         } else {
             // show stuff that should be visible when the row's reference lines are shifted
             // 'reset reference lines shift for row' button shape
+            this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex].guiData.respondToEvents = true;
+            this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex].stroke = 'black';
             // 'reset reference lines shift for row' button icon
+            this.components.domElements.iconLists.resetReferenceLinesShiftIcons[rowIndex].style.display = 'block'
         }
     }
 
