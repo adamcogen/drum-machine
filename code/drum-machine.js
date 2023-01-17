@@ -20,7 +20,7 @@ window.onload = () => {
     let sampleNameList = [WOODBLOCK, HI_HAT_CLOSED, HI_HAT_OPEN, CLAP, SNARE, GHOST_NOTE_SNARE, TOM, BASS_DRUM]
 
     // each drum kit is stored in the ./assets/sounds/ directory, as a folder with the name listed here
-    let drumkitNameList = ['Basic Drum Kit', 'Basic Drum Kit 2', 'Underground', 'Basic Drum Kit 3']
+    let drumkitNameList = ['Basic Drum Kit', 'Basic Drum Kit 2', 'Underground', 'Basic Drum Kit 3', 'Basic Drum Kit 4']
 
     /**
      * load sound files.
