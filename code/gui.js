@@ -167,6 +167,7 @@ class DrumMachineGui {
         this.addTapTempoButtonEventListeners();
         this.refreshWindowMouseMoveEvent();
         this.refreshWindowMouseUpEvent();
+        this.refreshWindowKeyDownEvent();
         this.initializeExportPatternToMidiFileButtonEventListener();
 
         this.pause(); // start the sequencer paused
@@ -445,6 +446,17 @@ class DrumMachineGui {
 
     initializeWindowEventListeners() {
         // do nothing yet
+    }
+
+    refreshWindowKeyDownEvent() {
+        let eventHandlersHash = {
+            "keydown": (event) => {
+                if (event.key === " ") { // hitting the space bar should pause or unpause the sequencer
+                    this.pauseButtonClickHandler(this)
+                }
+            }
+        }
+        this.addEventListenersWithoutDuplicates("keydown", [window], eventHandlersHash)
     }
 
     /**
