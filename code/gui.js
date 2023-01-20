@@ -1395,13 +1395,14 @@ class DrumMachineGui {
     initializeExamplePatternSelectorEventListeners() {
         this.components.domElements.selectors.examplePatterns.addEventListener('change', () => {
             let selectedValue = this.components.domElements.selectors.examplePatterns.value;
-            if (selectedValue === this.configurations.examplePatternSelector.noExamplePatternSelectedText) { // if the 'don't use an example pattern' option is selected
-                // do nothing. we don't want to load or change anything when someone selects the 'don't use an example pattern' option
-            } else {
+            if (this.flattenedExampleSequencerPatternsHash[selectedValue]) {
                 // if an example pattern was selected, here we will want to load it. we will do that be deserializing it from the serialized sequencer string we stored in our 'example patterns' hash.
                 this.loadSequencerPatternFromBase64String(this.flattenedExampleSequencerPatternsHash[selectedValue]);
                 // change the selected value back to 'no selection' right away. that way we allow re-selecting the same option over and over to reload the same example pattern
-                this.components.domElements.selectors.examplePatterns.value = this.configurations.examplePatternSelector.noExamplePatternSelectedText
+                this.components.domElements.selectors.examplePatterns.options[0].innerHTML = "*" + selectedValue
+                this.components.domElements.selectors.examplePatterns.options[0].selected = true;
+            } else {
+                // 
             }
         });
     }
