@@ -1771,7 +1771,7 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [this.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem]
             let eventHandlersHash = {
                 "click": () => this.clearRowButtonClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex]),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex], "red"),
                 "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex]),
             }
             this.addEventListenersWithoutDuplicates("clearNotesForRowShape" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
@@ -1840,7 +1840,7 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]._renderer.elem]
             let eventHandlersHash = {
                 "click": () => this.resetReferenceLinesShiftClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex], "red"),
                 "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]),
             }
             this.addEventListenersWithoutDuplicates("resetReferenceLinesShiftShape" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
@@ -1872,7 +1872,7 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]._renderer.elem]
             let eventHandlersHash = {
                 "click": () => this.resetSubdivisionLinesShiftClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex], "red"),
                 "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]),
             }
             this.addEventListenersWithoutDuplicates("resetSubdivisionLinesShiftShape" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
@@ -1910,7 +1910,7 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = [this.components.shapes.clearAllNotesButtonShape._renderer.elem, this.components.domElements.images.clearAllIcon]
         let eventHandlersHash = {
             "click": () => this.clearAllNotesButtonClickHandler(this),
-            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearAllNotesButtonShape),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearAllNotesButtonShape, "red"),
             "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearAllNotesButtonShape),
         }
         this.addEventListenersWithoutDuplicates("clearAllNotes", shapesToAddEventListenersTo, eventHandlersHash);
@@ -3182,7 +3182,7 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [clearRowIcon] // we don't include the button shape here, only the icon, because the shape event listeners are set up elsewhere
             let eventHandlersHash = {
                 "click": () => this.clearRowButtonClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex]),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex], "red"),
                 "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex]),
             }
             this.addEventListenersWithoutDuplicates("clearNotesForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
@@ -3270,7 +3270,7 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [resetSubdivisionsShiftIcon] // we don't include the button shape here, only the icon, because the shape event listeners are set up elsewhere
             let eventHandlersHash = {
                 "click": () => this.resetSubdivisionLinesShiftClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex], "red"),
                 "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]),
             }
             this.addEventListenersWithoutDuplicates("resetSubdvisionsLinesShiftForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
@@ -3298,7 +3298,7 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [resetReferenceLinesShiftIcon] // we don't include the button shape here, only the icon, because the shape event listeners are set up elsewhere
             let eventHandlersHash = {
                 "click": () => this.resetReferenceLinesShiftClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex], "red"),
                 "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]),
             }
             this.addEventListenersWithoutDuplicates("resetReferenceLinesShiftForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
@@ -3588,17 +3588,19 @@ class DrumMachineGui {
         }
     }
 
-    simpleButtonHoverMouseEnterLogic(self, buttonShape) {
+    simpleButtonHoverMouseEnterLogic(self, buttonShape, strokeColor="black", fillColor=self.configurations.buttonBehavior.buttonHoverColor) {
         if (buttonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor && buttonShape.guiData.respondToEvents) {
             // don't change to hover color if we are still waiting for a 'click' color change to complete
-            buttonShape.fill = self.configurations.buttonBehavior.buttonHoverColor
+            buttonShape.fill = fillColor
+            buttonShape.stroke = strokeColor
         }
     }
 
-    simpleButtonHoverMouseLeaveLogic(self, buttonShape) {
+    simpleButtonHoverMouseLeaveLogic(self, buttonShape, strokeColor="black", fillColor='transparent') {
         if (buttonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor && buttonShape.guiData.respondToEvents) {
             // don't change to hover color if we are still waiting for a 'click' color change to complete
-            buttonShape.fill = 'transparent'
+            buttonShape.fill = fillColor
+            buttonShape.stroke = strokeColor
         }
     }
 
