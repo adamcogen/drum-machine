@@ -1386,7 +1386,11 @@ class DrumMachineGui {
                 let option = document.createElement("option");
                 option.text = patternName;
                 optionGroup.appendChild(option);
-                this.flattenedExampleSequencerPatternsHash[patternName] = patternUrl
+                if (this.flattenedExampleSequencerPatternsHash[patternName]) { // perform this check to avoid silently overwriting patterns with repeated names
+                    throw "Example pattern names must be unique! Found multiple patterns with name '" + patternName + "'"
+                } else {
+                    this.flattenedExampleSequencerPatternsHash[patternName] = patternUrl
+                }
             }
             this.components.domElements.selectors.examplePatterns.add(optionGroup);
         }
