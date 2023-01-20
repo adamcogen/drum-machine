@@ -1723,6 +1723,15 @@ class DrumMachineGui {
         self.lastButtonClickTimeTrackers.addRow.lastClickTime = self.sequencer.currentTime
         self.components.shapes.addRowButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
         self.addEmptySequencerRow();
+        if (self.sequencer.rows.length > 1) {
+            // set the number of subdivisions and reference lines and the 
+            // quantization of the new row to be the same as the old last row.
+            let oldLastRow = self.sequencer.rows[self.sequencer.rows.length - 2]
+            let newRow = self.sequencer.rows[self.sequencer.rows.length - 1]
+            newRow.setNumberOfSubdivisions(oldLastRow.getNumberOfSubdivisions())
+            newRow.setNumberOfReferenceLines(oldLastRow.getNumberOfReferenceLines())
+            newRow.setQuantization(oldLastRow.quantized)
+        }
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
     }
