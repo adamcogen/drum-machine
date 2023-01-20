@@ -168,6 +168,7 @@ class DrumMachineGui {
         this.refreshWindowMouseMoveEvent();
         this.refreshWindowMouseUpEvent();
         this.refreshWindowKeyDownEvent();
+        this.refreshWindowContextMenuEvent();
         this.initializeExportPatternToMidiFileButtonEventListener();
 
         this.pause(); // start the sequencer paused
@@ -457,6 +458,13 @@ class DrumMachineGui {
             }
         }
         this.addEventListenersWithoutDuplicates("keydown", [window], eventHandlersHash)
+    }
+
+    refreshWindowContextMenuEvent() {
+        let eventHandlersHash = {
+            "contextmenu": (event) => { event.preventDefault() }
+        }
+        this.addEventListenersWithoutDuplicates("contextmenu", [window], eventHandlersHash)
     }
 
     /**
@@ -1052,7 +1060,7 @@ class DrumMachineGui {
             });
             // when you hold your mouse down on the row handle circle, select that row.
             // we will de-select it later whenever you lift your mouse.
-            circle._renderer.elem.addEventListener('mousedown', () => {
+            circle._renderer.elem.addEventListener('mousedown', (event) => {
                 this.shiftRowMouseDownEventHandler(this, rowIndex);
             });
             // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
@@ -2239,7 +2247,6 @@ class DrumMachineGui {
             } else if (this.currentGuiMode === DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE) {
                 // do nothing, as in don't play the note's sound now. when changing note volumes, the note's sound will play on mouse up instead of mouse down, so we can hear the end result of our volume adjustment.
             }
-            
         });
 
         // add info to the circle object that the gui uses to keep track of things
