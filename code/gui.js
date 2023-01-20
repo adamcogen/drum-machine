@@ -136,11 +136,7 @@ class DrumMachineGui {
         }
 
         this.noteBankNoteVolumesTracker = {}
-        for (let sampleName of this.sampleNameList) {
-            this.noteBankNoteVolumesTracker[sampleName] = {
-                volume: this.configurations.notes.volumes.defaultVolume,
-            }
-        }
+        this.initializeNoteBankVolumesTrackerValues()
 
         this.noteBankMidiNoteNumbersTracker = {}
         for (let sampleName of this.sampleNameList) {
@@ -1964,8 +1960,17 @@ class DrumMachineGui {
         self.lastButtonClickTimeTrackers.clearAllNotes.lastClickTime = self.sequencer.currentTime
         self.components.shapes.clearAllNotesButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
         self.loadSequencerPatternFromBase64String(this.configurations.sequencer.clearedPatternBase64String); 
+        self.initializeNoteBankVolumesTrackerValues();
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
+    }
+
+    initializeNoteBankVolumesTrackerValues() {
+        for (let sampleName of this.sampleNameList) {
+            this.noteBankNoteVolumesTracker[sampleName] = {
+                volume: this.configurations.notes.volumes.defaultVolume,
+            }
+        }
     }
 
     initializeModeSelectionButtonStyles() {
