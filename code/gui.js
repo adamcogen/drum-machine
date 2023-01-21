@@ -2236,6 +2236,7 @@ class DrumMachineGui {
             this.circleSelectionTracker.circleBeingMovedNewRow = this.circleSelectionTracker.circleBeingMovedOldRow
             this.circleSelectionTracker.circleBeingMovedOldBeatNumber = this.circleSelectionTracker.circleBeingMoved.guiData.beat
             this.circleSelectionTracker.circleBeingMovedNewBeatNumber = this.circleSelectionTracker.circleBeingMovedOldBeatNumber
+            this.circleSelectionTracker.mostRecentMovementWasVolumeChange = false
             // todo: make notes being moved a little bit transparent (just while they're being moved, so we can see what's behind them)
             this.setNoteTrashBinVisibility(true);
             this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
@@ -2505,55 +2506,7 @@ class DrumMachineGui {
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
     windowMouseMoveEventHandler(self, event) {
-        if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
-            self.moveNotesModeMouseMoveEventHandler(self, event);
-        } else if (this.currentGuiMode === DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE) {
-            self.changeNoteVolumesModeMouseMoveEventHandler(self, event);
-        }
-    }
-
-    changeNoteVolumesModeMouseMoveEventHandler(self, event) {
-        if (self.circleSelectionTracker.circleBeingMoved !== null) {
-            self.adjustEventCoordinates(event);
-            let mouseX = event.pageX;
-            let mouseY = event.pageY;
-            let mouseHasMoved = (mouseX !== self.circleSelectionTracker.circleBeingMoved.translation.x || mouseY !== self.circleSelectionTracker.circleBeingMoved.translation.x)
-            if (mouseHasMoved) {
-                let mouseMoveDistance = self.circleSelectionTracker.circleBeingMoved.translation.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
-                let volumeAdjustmentAmount = mouseMoveDistance / self.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
-                // set the note being changed to have the right new radius on the GUI. confine the new radius to the minimum and maximum radius allowed.
-                self.circleSelectionTracker.circleBeingMoved.radius = Util.confineNumberToBounds(self.circleSelectionTracker.startingRadius + volumeAdjustmentAmount, self.configurations.notes.volumes.minimumCircleRadius, self.configurations.notes.volumes.maximumCircleRadius);
-                self.circleSelectionTracker.circleBeingMoved.guiData.radiusWhenUnplayed = self.circleSelectionTracker.circleBeingMoved.radius;
-                // convert the circle radius into a proportionate note volume.
-                let newVolume = self.calculateVolumeForCircleRadius(self.circleSelectionTracker.circleBeingMoved.radius);
-                if (self.circleSelectionTracker.circleBeingMovedOldRow < 0) { // the note we are changing the volume for is in the note bank.
-                    // todo: eventually, maybe changing the volume of any note in the note bank should change the volume of all notes
-                    // in the note bank, such that you can adjust the default volume of all new notes that will be pulled from the note bank.
-                    self.noteBankNoteVolumesTracker[self.circleSelectionTracker.circleBeingMoved.guiData.sampleName].volume = newVolume;
-                    self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
-                    self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = self.convertWebAudioVolumeIntoMidiVelocity(newVolume);
-                } else { // the note we are changing the volume for is on an actual sequencer row (i.e. it's not in the note bank).
-                    self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
-                    self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = self.convertWebAudioVolumeIntoMidiVelocity(newVolume)
-                    // replace the node in the sequencer data structure with an identical note that has the new volume we have set the note to.
-                    // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
-                    let node = self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
-                    node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
-                    node.data.midiVelocity = self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity
-                    self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedNewRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
-                    // we will save the sequencer state to the URL in the 'mouse up' event instead of here, for performance reasons
-                }
-            }
-        }
-        if (self.rowVolumeAdjustmentTracker.selectedRowIndex !== null) { // handle mousemove events when adjusting note volumes for a row
-            self.rowVolumeAdjustmentWindowMouseMoveHandler(self, event)
-        }
-        if (self.rowSelectionTracker.selectedRowIndex !== null) {
-            self.rowMovementWindowMouseMoveHandler(self, event);
-        }
-        if (self.shiftToolTracker.selectedRowIndex !== null) {
-            self.shiftToolMouseMoveEventHandler(self, event);
-        }
+        self.moveNotesAndChangeVolumesMouseMoveHandler(self, event);
     }
 
     rowVolumeAdjustmentWindowMouseMoveHandler(self, event) {
@@ -2715,87 +2668,123 @@ class DrumMachineGui {
         rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.selectedColor
     }
 
-    moveNotesModeMouseMoveEventHandler(self, event) {
+    moveNotesAndChangeVolumesMouseMoveHandler(self, event){
         // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
         if (self.circleSelectionTracker.circleBeingMoved !== null) { // handle mousemove events when a note is selected
             self.adjustEventCoordinates(event)
             let mouseX = event.pageX
             let mouseY = event.pageY
-            // start with default note movement behavior, for when the note doesn't fall within range of the trash bin, a sequencer line, etc.
-            self.circleSelectionTracker.circleBeingMoved.translation.x = mouseX
-            self.circleSelectionTracker.circleBeingMoved.translation.y = mouseY
-            self.circleSelectionTracker.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW // start with "it's not colliding with anything", and update the value from there if we find a collision
-            self.circleSelectionTracker.circleBeingMoved.stroke = "black"
-            self.components.domElements.images.trashClosedIcon.style.display = 'block'
-            self.components.domElements.images.trashOpenIcon.style.display = 'none'
-            /**
-             * adding stuff here for new 'snap to grid on move' behavior.
-             * this will be the first part of making it so that notes being moved 'snap' into place when they are close to the trash bin or a sequencer line.
-             * this will also be used for 'snapping' notes to subdivision lines (i.e. quantizing them) during placement onto quantized sequencer rows.
-             * todo: add 'update sequence on move' behavior, so that the sequence will be constantly updated as notes are removed / moved around 
-             * (i.e. the sequence will update in real time even before the note being moved is released).
-             */
-            // check if the note is within range to be placed in the trash bin. if so, move the circle to the center of the trash bin.
-            let centerOfTrashBinX = self.configurations.noteTrashBin.left + (self.configurations.noteTrashBin.width / 2)
-            let centerOfTrashBinY = self.configurations.noteTrashBin.top + (self.configurations.noteTrashBin.height / 2)
-            let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= self.configurations.noteTrashBin.left - self.configurations.mouseEvents.notePlacementPadding) && (mouseX <= self.configurations.noteTrashBin.left + self.configurations.noteTrashBin.width + self.configurations.mouseEvents.notePlacementPadding)
-            let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= self.configurations.noteTrashBin.top - self.configurations.mouseEvents.notePlacementPadding) && (mouseY <= self.configurations.noteTrashBin.top + self.configurations.noteTrashBin.height + self.configurations.mouseEvents.notePlacementPadding)
-            if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
-                self.circleSelectionTracker.circleBeingMoved.translation.x = centerOfTrashBinX
-                self.circleSelectionTracker.circleBeingMoved.translation.y = centerOfTrashBinY
-                self.circleSelectionTracker.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
-                self.circleSelectionTracker.circleBeingMoved.stroke = "red"
-                self.components.domElements.images.trashClosedIcon.style.display = 'none'
-                self.components.domElements.images.trashOpenIcon.style.display = 'block'
-                self.components.shapes.noteTrashBinContainer.stroke = 'red'
-            } else {
-                self.components.shapes.noteTrashBinContainer.stroke = 'transparent'
-            }
-            // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
-            let sequencerLeftBoundary = self.configurations.sequencer.left - self.configurations.mouseEvents.notePlacementPadding
-            let sequencerRightBoundary = (self.configurations.sequencer.left + self.configurations.sequencer.width) + self.configurations.mouseEvents.notePlacementPadding
-            let sequencerTopBoundary = self.configurations.sequencer.top - self.configurations.mouseEvents.notePlacementPadding
-            let sequencerBottomBoundary = self.configurations.sequencer.top + ((self.sequencer.numberOfRows - 1) * self.configurations.sequencer.spaceBetweenRows) + self.configurations.mouseEvents.notePlacementPadding
-            let withinHorizonalBoundaryOfSequencer = (mouseX >= sequencerLeftBoundary) && (mouseX <= sequencerRightBoundary)
-            let withinVerticalBoundaryOfSequencer = (mouseY >= sequencerTopBoundary) && (mouseY <= sequencerBottomBoundary)
-            if (withinHorizonalBoundaryOfSequencer && withinVerticalBoundaryOfSequencer) {
-                // if we get here, we know the circle is within the vertical and horizontal boundaries of the sequencer.
-                // next we want to do a more fine-grained calculation, for whether it is in range to be placed onto one of the sequencer lines.
-                for(let rowIndex = 0; rowIndex < self.sequencer.numberOfRows; rowIndex++) {
-                    let rowActualVerticalLocation = self.configurations.sequencer.top + (rowIndex * self.configurations.sequencer.spaceBetweenRows)
-                    let rowActualLeftBound = self.configurations.sequencer.left
-                    let rowActualRightBound = self.configurations.sequencer.left + self.configurations.sequencer.width
-                    let rowTopLimit = rowActualVerticalLocation - self.configurations.mouseEvents.notePlacementPadding
-                    let rowBottomLimit = rowActualVerticalLocation + self.configurations.mouseEvents.notePlacementPadding
-                    let rowLeftLimit = rowActualLeftBound - self.configurations.mouseEvents.notePlacementPadding
-                    let rowRightLimit = rowActualRightBound + self.configurations.mouseEvents.notePlacementPadding
-                    if (mouseX >= rowLeftLimit && mouseX <= rowRightLimit && mouseY >= rowTopLimit && mouseY <= rowBottomLimit) {
-                        // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
-                        if (self.sequencer.rows[rowIndex].quantized === true) {
-                            // determine which subdivision we are closest to
-                            self.circleSelectionTracker.circleBeingMovedNewBeatNumber = self.getIndexOfClosestSubdivisionLine(mouseX, self.sequencer.rows[rowIndex].getNumberOfSubdivisions(), self.subdivisionLinesShiftInPixelsPerRow[rowIndex])
-                            self.circleSelectionTracker.circleBeingMoved.translation.x = self.getXPositionOfSubdivisionLine(self.circleSelectionTracker.circleBeingMovedNewBeatNumber, self.sequencer.rows[rowIndex].getNumberOfSubdivisions(), self.subdivisionLinesShiftInPixelsPerRow[rowIndex])
-                        } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
-                            self.circleSelectionTracker.circleBeingMoved.translation.x = Util.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
-                            self.circleSelectionTracker.circleBeingMovedNewBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED
-                        }
-                        // quantization has a more complicated effect on x position than y. y position will always just be on line, so always just put it there.
-                        self.circleSelectionTracker.circleBeingMoved.translation.y = rowActualVerticalLocation;
-                        self.circleSelectionTracker.circleBeingMovedNewRow = rowIndex // set 'new row' to whichever row we collided with / 'snapped' to
-                        break; // we found the row that the note will be placed on, so stop iterating thru rows early
+            if (event.ctrlKey) {
+                // when the 'ctrl' key is being held while moving a note, change its volume instead of moving it.
+                let mouseHasMoved = (mouseX !== self.circleSelectionTracker.circleBeingMoved.translation.x || mouseY !== self.circleSelectionTracker.circleBeingMoved.translation.x)
+                if (mouseHasMoved) {
+                    self.circleSelectionTracker.mostRecentMovementWasVolumeChange = true;
+                    let mouseMoveDistance = self.circleSelectionTracker.circleBeingMoved.translation.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
+                    let volumeAdjustmentAmount = mouseMoveDistance / self.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
+                    // set the note being changed to have the right new radius on the GUI. confine the new radius to the minimum and maximum radius allowed.
+                    self.circleSelectionTracker.circleBeingMoved.radius = Util.confineNumberToBounds(self.circleSelectionTracker.startingRadius + volumeAdjustmentAmount, self.configurations.notes.volumes.minimumCircleRadius, self.configurations.notes.volumes.maximumCircleRadius);
+                    self.circleSelectionTracker.circleBeingMoved.guiData.radiusWhenUnplayed = self.circleSelectionTracker.circleBeingMoved.radius;
+                    // convert the circle radius into a proportionate note volume.
+                    let newVolume = self.calculateVolumeForCircleRadius(self.circleSelectionTracker.circleBeingMoved.radius);
+                    if (self.circleSelectionTracker.circleBeingMovedOldRow < 0) { // the note we are changing the volume for is in the note bank.
+                        // todo: eventually, maybe changing the volume of any note in the note bank should change the volume of all notes
+                        // in the note bank, such that you can adjust the default volume of all new notes that will be pulled from the note bank.
+                        self.noteBankNoteVolumesTracker[self.circleSelectionTracker.circleBeingMoved.guiData.sampleName].volume = newVolume;
+                        self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
+                        self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = self.convertWebAudioVolumeIntoMidiVelocity(newVolume);
+                    } else { // the note we are changing the volume for is on an actual sequencer row (i.e. it's not in the note bank).
+                        self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
+                        self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = self.convertWebAudioVolumeIntoMidiVelocity(newVolume)
+                        // replace the node in the sequencer data structure with an identical note that has the new volume we have set the note to.
+                        // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
+                        let node = self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
+                        node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
+                        node.data.midiVelocity = self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity
+                        self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
+                        // we will save the sequencer state to the URL in the 'mouse up' event instead of here, for performance reasons
                     }
                 }
             } else {
-                // new secondary trash bin logic: if the note is far enough away from the sequencer, we will throw it out
-                let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - self.configurations.mouseEvents.throwNoteAwaySidesPadding) || (mouseX >= sequencerRightBoundary + self.configurations.mouseEvents.throwNoteAwaySidesPadding)
-                let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - self.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + self.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding)
-                if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
-                    self.circleSelectionTracker.circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
+                if (self.circleSelectionTracker.mostRecentMovementWasVolumeChange) {
+                    self.sequencer.playDrumSampleNow(self.circleSelectionTracker.circleBeingMoved.guiData.sampleName, self.circleSelectionTracker.circleBeingMoved.guiData.volume, self.circleSelectionTracker.circleBeingMoved.guiData.midiNote, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
+                }
+                self.circleSelectionTracker.mostRecentMovementWasVolumeChange = false;
+                // start with default note movement behavior, for when the note doesn't fall within range of the trash bin, a sequencer line, etc.
+                self.circleSelectionTracker.circleBeingMoved.translation.x = mouseX
+                self.circleSelectionTracker.circleBeingMoved.translation.y = mouseY
+                self.circleSelectionTracker.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW // start with "it's not colliding with anything", and update the value from there if we find a collision
+                self.circleSelectionTracker.circleBeingMoved.stroke = "black"
+                self.components.domElements.images.trashClosedIcon.style.display = 'block'
+                self.components.domElements.images.trashOpenIcon.style.display = 'none'
+                /**
+                 * adding stuff here for new 'snap to grid on move' behavior.
+                 * this will be the first part of making it so that notes being moved 'snap' into place when they are close to the trash bin or a sequencer line.
+                 * this will also be used for 'snapping' notes to subdivision lines (i.e. quantizing them) during placement onto quantized sequencer rows.
+                 * todo: add 'update sequence on move' behavior, so that the sequence will be constantly updated as notes are removed / moved around 
+                 * (i.e. the sequence will update in real time even before the note being moved is released).
+                 */
+                // check if the note is within range to be placed in the trash bin. if so, move the circle to the center of the trash bin.
+                let centerOfTrashBinX = self.configurations.noteTrashBin.left + (self.configurations.noteTrashBin.width / 2)
+                let centerOfTrashBinY = self.configurations.noteTrashBin.top + (self.configurations.noteTrashBin.height / 2)
+                let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= self.configurations.noteTrashBin.left - self.configurations.mouseEvents.notePlacementPadding) && (mouseX <= self.configurations.noteTrashBin.left + self.configurations.noteTrashBin.width + self.configurations.mouseEvents.notePlacementPadding)
+                let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= self.configurations.noteTrashBin.top - self.configurations.mouseEvents.notePlacementPadding) && (mouseY <= self.configurations.noteTrashBin.top + self.configurations.noteTrashBin.height + self.configurations.mouseEvents.notePlacementPadding)
+                if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
+                    self.circleSelectionTracker.circleBeingMoved.translation.x = centerOfTrashBinX
+                    self.circleSelectionTracker.circleBeingMoved.translation.y = centerOfTrashBinY
                     self.circleSelectionTracker.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
+                    self.circleSelectionTracker.circleBeingMoved.stroke = "red"
                     self.components.domElements.images.trashClosedIcon.style.display = 'none'
                     self.components.domElements.images.trashOpenIcon.style.display = 'block'
                     self.components.shapes.noteTrashBinContainer.stroke = 'red'
+                } else {
+                    self.components.shapes.noteTrashBinContainer.stroke = 'transparent'
                 }
+                // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
+                let sequencerLeftBoundary = self.configurations.sequencer.left - self.configurations.mouseEvents.notePlacementPadding
+                let sequencerRightBoundary = (self.configurations.sequencer.left + self.configurations.sequencer.width) + self.configurations.mouseEvents.notePlacementPadding
+                let sequencerTopBoundary = self.configurations.sequencer.top - self.configurations.mouseEvents.notePlacementPadding
+                let sequencerBottomBoundary = self.configurations.sequencer.top + ((self.sequencer.numberOfRows - 1) * self.configurations.sequencer.spaceBetweenRows) + self.configurations.mouseEvents.notePlacementPadding
+                let withinHorizonalBoundaryOfSequencer = (mouseX >= sequencerLeftBoundary) && (mouseX <= sequencerRightBoundary)
+                let withinVerticalBoundaryOfSequencer = (mouseY >= sequencerTopBoundary) && (mouseY <= sequencerBottomBoundary)
+                if (withinHorizonalBoundaryOfSequencer && withinVerticalBoundaryOfSequencer) {
+                    // if we get here, we know the circle is within the vertical and horizontal boundaries of the sequencer.
+                    // next we want to do a more fine-grained calculation, for whether it is in range to be placed onto one of the sequencer lines.
+                    for(let rowIndex = 0; rowIndex < self.sequencer.numberOfRows; rowIndex++) {
+                        let rowActualVerticalLocation = self.configurations.sequencer.top + (rowIndex * self.configurations.sequencer.spaceBetweenRows)
+                        let rowActualLeftBound = self.configurations.sequencer.left
+                        let rowActualRightBound = self.configurations.sequencer.left + self.configurations.sequencer.width
+                        let rowTopLimit = rowActualVerticalLocation - self.configurations.mouseEvents.notePlacementPadding
+                        let rowBottomLimit = rowActualVerticalLocation + self.configurations.mouseEvents.notePlacementPadding
+                        let rowLeftLimit = rowActualLeftBound - self.configurations.mouseEvents.notePlacementPadding
+                        let rowRightLimit = rowActualRightBound + self.configurations.mouseEvents.notePlacementPadding
+                        if (mouseX >= rowLeftLimit && mouseX <= rowRightLimit && mouseY >= rowTopLimit && mouseY <= rowBottomLimit) {
+                            // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
+                            if (self.sequencer.rows[rowIndex].quantized === true) {
+                                // determine which subdivision we are closest to
+                                self.circleSelectionTracker.circleBeingMovedNewBeatNumber = self.getIndexOfClosestSubdivisionLine(mouseX, self.sequencer.rows[rowIndex].getNumberOfSubdivisions(), self.subdivisionLinesShiftInPixelsPerRow[rowIndex])
+                                self.circleSelectionTracker.circleBeingMoved.translation.x = self.getXPositionOfSubdivisionLine(self.circleSelectionTracker.circleBeingMovedNewBeatNumber, self.sequencer.rows[rowIndex].getNumberOfSubdivisions(), self.subdivisionLinesShiftInPixelsPerRow[rowIndex])
+                            } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
+                                self.circleSelectionTracker.circleBeingMoved.translation.x = Util.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
+                                self.circleSelectionTracker.circleBeingMovedNewBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED
+                            }
+                            // quantization has a more complicated effect on x position than y. y position will always just be on line, so always just put it there.
+                            self.circleSelectionTracker.circleBeingMoved.translation.y = rowActualVerticalLocation;
+                            self.circleSelectionTracker.circleBeingMovedNewRow = rowIndex // set 'new row' to whichever row we collided with / 'snapped' to
+                            break; // we found the row that the note will be placed on, so stop iterating thru rows early
+                        }
+                    }
+                } else {
+                    // new secondary trash bin logic: if the note is far enough away from the sequencer, we will throw it out
+                    let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - self.configurations.mouseEvents.throwNoteAwaySidesPadding) || (mouseX >= sequencerRightBoundary + self.configurations.mouseEvents.throwNoteAwaySidesPadding)
+                    let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - self.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + self.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding)
+                    if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
+                        self.circleSelectionTracker.circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
+                        self.circleSelectionTracker.circleBeingMovedNewRow = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
+                        self.components.domElements.images.trashClosedIcon.style.display = 'none'
+                        self.components.domElements.images.trashOpenIcon.style.display = 'block'
+                        self.components.shapes.noteTrashBinContainer.stroke = 'red'
+                    }
+                }   
             }
         }
         if (self.rowVolumeAdjustmentTracker.selectedRowIndex !== null) { // handle mousemove events when adjusting note volumes for a row
