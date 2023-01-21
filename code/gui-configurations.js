@@ -84,20 +84,8 @@ function getGuiConfigurations(hideIcons=false) {
                 leftPadding: 0,
             }
         },
-        restartSequencerButton: {
-            top: 204,
-            left: 30,
-            width: 48,
-            height: 48,
-            icon: {
-                width: 48,
-                height: 48,
-                topPadding: 0,
-                leftPadding: 0,
-            }
-        },
         clearAllNotesButton: {
-            top: 264,
+            top: 204,
             left: 30,
             width: 48,
             height: 48,
