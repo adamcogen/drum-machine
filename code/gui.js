@@ -2231,21 +2231,15 @@ class DrumMachineGui {
             this.circleSelectionTracker.circleBeingMovedStartingPosition.y = this.circleSelectionTracker.circleBeingMoved.translation.y
             this.circleSelectionTracker.firstClickPosition.x = mouseX;
             this.circleSelectionTracker.firstClickPosition.y = mouseY;
-            this.circleSelectionTracker.startingRadius = circle.radius;
+            this.circleSelectionTracker.startingRadius = circle.guiData.radiusWhenUnplayed;
             this.circleSelectionTracker.circleBeingMovedOldRow = this.circleSelectionTracker.circleBeingMoved.guiData.row
             this.circleSelectionTracker.circleBeingMovedNewRow = this.circleSelectionTracker.circleBeingMovedOldRow
             this.circleSelectionTracker.circleBeingMovedOldBeatNumber = this.circleSelectionTracker.circleBeingMoved.guiData.beat
             this.circleSelectionTracker.circleBeingMovedNewBeatNumber = this.circleSelectionTracker.circleBeingMovedOldBeatNumber
             // todo: make notes being moved a little bit transparent (just while they're being moved, so we can see what's behind them)
-            if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE){
-                this.setNoteTrashBinVisibility(true);
-            }
+            this.setNoteTrashBinVisibility(true);
             this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
-            if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
-                this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume, this.circleSelectionTracker.circleBeingMoved.guiData.midiNote, this.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
-            } else if (this.currentGuiMode === DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE) {
-                // do nothing, as in don't play the note's sound now. when changing note volumes, the note's sound will play on mouse up instead of mouse down, so we can hear the end result of our volume adjustment.
-            }
+            this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume, this.circleSelectionTracker.circleBeingMoved.guiData.midiNote, this.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
         });
 
         // add info to the circle object that the gui uses to keep track of things
@@ -2936,12 +2930,12 @@ class DrumMachineGui {
             let mouseY = event.pageY;
             let mouseHasMoved = (mouseX !== this.circleSelectionTracker.firstClickPosition.x || mouseY !== this.circleSelectionTracker.firstClickPosition.y)
             if (mouseHasMoved) { 
+                // play note on 'mouse up' if the volume has changed, so that we can hear the end result of our volume adjustment.
+                this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume, this.circleSelectionTracker.circleBeingMoved.guiData.midiNote, this.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
                 // if the mouse has moved, volume was updated in the mouse move event, since this was a click-drag. so no need to make any other volume change.
                 // just commit those changes to the URL hash. we do that here instead of in the mouse move event to prevent the need to constantly update the hash.
                 self.saveCurrentSequencerStateToUrlHash();
             }
-            // in 'change note volumes' mode, notes won't play their sound on 'mouse down' -- instead, they will play it on 'mouse up', so that we can hear the end result of our volume adjustment.
-            this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume, this.circleSelectionTracker.circleBeingMoved.guiData.midiNote, this.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
             // reset circle selection variables
             self.circleSelectionTracker.circleBeingMoved = null
             self.setNoteTrashBinVisibility(false)
@@ -3078,6 +3072,10 @@ class DrumMachineGui {
         self.rowSelectionTracker.selectedRowIndex = null
         self.rowVolumeAdjustmentTracker.selectedRowIndex = null
         self.shiftToolTracker.selectedRowIndex = null
+    }
+
+    moveNotesAndChangeVolumesMouseUpHandler(self, event) {
+        // ...
     }
 
     rowMovementWindowMouseUpHandler(self, event) {
