@@ -4,6 +4,9 @@
 
 window.onload = () => {
 
+    // set this to 'true' if you want to include your own audio file (audio-clip.wav) to make a transcription of:
+    const INCLUDE_AUDIO_CLIP_FOR_TRANSCRIPTION = false;
+
     // initialize sound file constants
     const SOUND_FILES_PATH = './assets/sounds/';
     const BASS_DRUM = "bass-drum";
@@ -14,10 +17,16 @@ window.onload = () => {
     const WOODBLOCK = 'woodblock';
     const TOM = 'tom'
     const CLAP = 'clap'
+    const AUDIO_CLIP = 'audio-clip'
     const WAV_EXTENSION = '.wav';
 
     // initialize the list of sample names we will use. the order of this list determines the order of sounds on the sound bank
     let sampleNameList = [WOODBLOCK, HI_HAT_CLOSED, HI_HAT_OPEN, CLAP, SNARE, GHOST_NOTE_SNARE, TOM, BASS_DRUM]
+    
+    // include an audio file, audio-clip.wav, in the sample bank, for making transcriptions:
+    if (INCLUDE_AUDIO_CLIP_FOR_TRANSCRIPTION) {
+        sampleNameList.push(AUDIO_CLIP)
+    }
 
     // each drum kit is stored in the ./assets/sounds/ directory, as a folder with the name listed here
     let drumkitNameList = ['Basic Drum Kit', 'Basic Drum Kit 2', 'Underground', 'Basic Drum Kit 3', 'Basic Drum Kit 4']
@@ -42,6 +51,9 @@ window.onload = () => {
         drumkits[drumkitName][GHOST_NOTE_SNARE] = new SequencerNoteType(null, '#27967c', 40) // solidify this color choice, using a placeholder color for now
         drumkits[drumkitName][TOM] = new SequencerNoteType(null, '#1b617a', 42)
         drumkits[drumkitName][BASS_DRUM] = new SequencerNoteType(null, '#5b3787', 36)
+        if (INCLUDE_AUDIO_CLIP_FOR_TRANSCRIPTION) {
+            drumkits[drumkitName][AUDIO_CLIP] = new SequencerNoteType(null, '#FFFFFF', 1)
+        }
         // load all of the drum samples
         for (let sampleName of sampleNameList) {
             loadDrumSample(SOUND_FILES_PATH + "/" + drumkitName + "/", sampleName, WAV_EXTENSION, drumkitName)
