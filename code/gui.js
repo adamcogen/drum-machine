@@ -2941,6 +2941,15 @@ class DrumMachineGui {
             self.setNoteTrashBinVisibility(false)
             // save sequencer state to the URL hash
             self.saveCurrentSequencerStateToUrlHash();
+            /**
+             * next update the volume of the note in the sample bank that has the same sample as the note being moved,
+             * so that it matches the volume of the note being moved. this is meant to give an easy mechanism for 
+             * creating many notes with the same volume.
+             */
+            // update the volume tracker to use the right volume
+            self.noteBankNoteVolumesTracker[self.circleSelectionTracker.circleBeingMoved.guiData.sampleName].volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
+            // update the actual note in the note bank to have that volume
+            self.redrawSequencer(); // todo: this is probably an unnecessarily expensive call to make. we just want to update the note volume in the sample bank. but this seems like  a fast enough way for now. can optimize later if needed.
         }
         if (self.rowSelectionTracker.selectedRowIndex !== null) {
             self.rowMovementWindowMouseUpHandler(self, event);
