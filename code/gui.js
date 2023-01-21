@@ -1306,7 +1306,7 @@ class DrumMachineGui {
                 for (let output of midiAccess.outputs) {
                     let option = document.createElement("option");
                     let midiName = output[1].name
-                    let midiId = " [ID: " + output[0] + "]"
+                    let midiId = output[0];
                     midiName = midiName + " [ID: " + midiId + "]"
                     option.text = midiName;
                     this.midiOutputsMap[option.text] = output[0]
