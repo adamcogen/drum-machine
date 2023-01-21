@@ -161,7 +161,6 @@ class DrumMachineGui {
         this.initializeBeatsPerMinuteTextInputEventListeners();
         this.initializeNumberOfBeatsInLoopInputEventListeners();
         this.addPauseButtonEventListeners();
-        this.addRestartSequencerButtonEventListeners();
         this.addClearAllNotesButtonEventListeners();
         this.addMoveNotesModeButtonEventListeners();
         this.addEditVolumesModeButtonEventListeners();
@@ -306,7 +305,6 @@ class DrumMachineGui {
         shapes.noteBankContainer = this.initializeNoteBankContainer() // a rectangle that goes around the note bank
         shapes.noteTrashBinContainer = this.initializeNoteTrashBinContainer() // a rectangle that acts as a trash can for deleting notes
         shapes.pauseButtonShape = this.initializeRectangleShape(this.configurations.pauseButton.top, this.configurations.pauseButton.left, this.configurations.pauseButton.height, this.configurations.pauseButton.width) // a rectangle that will act as the pause button
-        shapes.restartSequencerButtonShape = this.initializeRectangleShape(this.configurations.restartSequencerButton.top, this.configurations.restartSequencerButton.left, this.configurations.restartSequencerButton.height, this.configurations.restartSequencerButton.width) // a rectangle that will act as the button for restarting the sequencer for now
         shapes.clearAllNotesButtonShape = this.initializeRectangleShape(this.configurations.clearAllNotesButton.top, this.configurations.clearAllNotesButton.left, this.configurations.clearAllNotesButton.height, this.configurations.clearAllNotesButton.width) // a rectangle that will act as the button for clearing all notes on the sequencer
         shapes.addRowButtonShape = this.initializeRectangleShape(this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * (this.sequencer.rows.length - 1)) + this.configurations.addRowButton.topPadding, this.configurations.addRowButton.left, this.configurations.addRowButton.height, this.configurations.addRowButton.width) // clicking this button will add a new empty row to the sequencer
         shapes.clearNotesForRowButtonShapes = this.initializeButtonPerSequencerRow(this.configurations.clearRowButtons.topPaddingPerRow, this.configurations.clearRowButtons.leftPaddingPerRow, this.configurations.clearRowButtons.height, this.configurations.clearRowButtons.width) // this is a list of button rectangles, one per row, to clear the notes on that row
@@ -362,7 +360,6 @@ class DrumMachineGui {
                 pauseIcon: document.getElementById('pause-icon'),
                 playIcon: document.getElementById('play-icon'),
                 clearAllIcon: document.getElementById('clear-all-icon'),
-                restartIcon: document.getElementById('restart-icon'),
                 trashClosedIcon: document.getElementById('trash-closed-icon'),
                 trashOpenIcon: document.getElementById('trash-open-icon'),
                 addIcon: document.getElementById('add-icon'),
@@ -417,10 +414,6 @@ class DrumMachineGui {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
                 shape: this.components.shapes.pauseButtonShape,
             },
-            restartSequencer: {
-                lastClickTime: Number.MIN_SAFE_INTEGER,
-                shape: this.components.shapes.restartSequencerButtonShape,
-            },
             clearAllNotes: {
                 lastClickTime: Number.MIN_SAFE_INTEGER,
                 shape: this.components.shapes.clearAllNotesButtonShape,
@@ -455,7 +448,10 @@ class DrumMachineGui {
         let eventHandlersHash = {
             "keydown": (event) => {
                 if (event.key === " ") { // hitting the space bar should pause or unpause the sequencer
-                    this.pauseButtonClickHandler(this)
+                    let audioContextIsRunning = this.sequencer.audioDrivers[0].webAudioContext.state === "running"
+                    if (audioContextIsRunning) {
+                        this.pauseButtonClickHandler(this);
+                    }
                 }
             }
         }
@@ -1517,6 +1513,7 @@ class DrumMachineGui {
     pauseButtonClickHandler(self) {
         self.lastButtonClickTimeTrackers.pause.lastClickTime = self.sequencer.currentTime
         self.components.shapes.pauseButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
+        self.sequencer.restart();
         self.togglePaused()
     }
 
@@ -1773,32 +1770,6 @@ class DrumMachineGui {
         this.sequencer.rows[newRowIndex].setNumberOfReferenceLines(4);
         this.sequencer.rows[newRowIndex].setNumberOfSubdivisions(16);
         this.sequencer.rows[newRowIndex].setQuantization(true);
-    }
-
-    /**
-     * 'restart sequencer' logic
-     */
-
-    restartSequencer() {
-        this.sequencer.restart();
-    }
-
-    addRestartSequencerButtonEventListeners() {
-        let shapesToAddEventListenersTo = [this.components.shapes.restartSequencerButtonShape._renderer.elem, this.components.domElements.images.restartIcon]
-        let eventHandlersHash = {
-            "click": () => this.restartSequencerButtonClickHandler(this),
-            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.restartSequencerButtonShape),
-            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.restartSequencerButtonShape),
-        }
-        this.addEventListenersWithoutDuplicates("restartSequencer", shapesToAddEventListenersTo, eventHandlersHash);
-    }
-
-    // search for comment "a general note about the 'self' paramater" within this file for info on its use here
-    restartSequencerButtonClickHandler(self) {
-        self.lastButtonClickTimeTrackers.restartSequencer.lastClickTime = self.sequencer.currentTime
-        self.components.shapes.restartSequencerButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
-        self.restartSequencer()
-        self.saveCurrentSequencerStateToUrlHash();
     }
 
     /**
@@ -3150,11 +3121,6 @@ class DrumMachineGui {
         this.components.domElements.images.clearAllIcon.style.height = "" + this.configurations.clearAllNotesButton.icon.height + "px"
         this.components.domElements.images.clearAllIcon.style.left = "" + this.configurations.clearAllNotesButton.left + "px"
         this.components.domElements.images.clearAllIcon.style.top = "" + this.configurations.clearAllNotesButton.top + "px"
-        // restart
-        this.components.domElements.images.restartIcon.style.width = "" + this.configurations.restartSequencerButton.icon.width + "px"
-        this.components.domElements.images.restartIcon.style.height = "" + this.configurations.restartSequencerButton.icon.height + "px"
-        this.components.domElements.images.restartIcon.style.left = "" + this.configurations.restartSequencerButton.left + "px"
-        this.components.domElements.images.restartIcon.style.top = "" + this.configurations.restartSequencerButton.top + "px"
         // pause
         this.components.domElements.images.pauseIcon.style.width = "" + this.configurations.pauseButton.icon.width + "px"
         this.components.domElements.images.pauseIcon.style.height = "" + this.configurations.pauseButton.icon.height + "px"
