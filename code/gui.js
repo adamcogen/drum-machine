@@ -2926,12 +2926,10 @@ class DrumMachineGui {
         // based on the position of the time tracking lines. that logic will eventually need to be changed as well.
         if (self.circleSelectionTracker.circleBeingMoved !== null) {
             self.adjustEventCoordinates(event);
-            let mouseX = event.pageX;
-            let mouseY = event.pageY;
-            let mouseHasMoved = (mouseX !== this.circleSelectionTracker.firstClickPosition.x || mouseY !== this.circleSelectionTracker.firstClickPosition.y)
-            if (mouseHasMoved) { 
+            let noteVolumeHasChanged = (self.circleSelectionTracker.startingRadius !== self.circleSelectionTracker.circleBeingMoved.guiData.radiusWhenUnplayed);
+            if (noteVolumeHasChanged) { 
                 // play note on 'mouse up' if the volume has changed, so that we can hear the end result of our volume adjustment.
-                this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume, this.circleSelectionTracker.circleBeingMoved.guiData.midiNote, this.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
+                self.sequencer.playDrumSampleNow(self.circleSelectionTracker.circleBeingMoved.guiData.sampleName, self.circleSelectionTracker.circleBeingMoved.guiData.volume, self.circleSelectionTracker.circleBeingMoved.guiData.midiNote, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
                 // if the mouse has moved, volume was updated in the mouse move event, since this was a click-drag. so no need to make any other volume change.
                 // just commit those changes to the URL hash. we do that here instead of in the mouse move event to prevent the need to constantly update the hash.
                 self.saveCurrentSequencerStateToUrlHash();
@@ -3075,7 +3073,20 @@ class DrumMachineGui {
     }
 
     moveNotesAndChangeVolumesMouseUpHandler(self, event) {
-        // ...
+        if (self.rowSelectionTracker.selectedRowIndex !== null) {
+            self.rowMovementWindowMouseUpHandler(self, event);
+        }
+        if (self.rowVolumeAdjustmentTracker.selectedRowIndex !== null) {
+            self.rowVolumeAdjustmentWindowMouseUpHandler(self, event);
+        }
+        if (self.shiftToolTracker.selectedRowIndex !== null) {
+            self.shiftToolMouseUpEventHandler(self, event);
+        }
+        self.circleSelectionTracker.circleBeingMoved = null
+        self.setNoteTrashBinVisibility(false)
+        self.rowSelectionTracker.selectedRowIndex = null
+        self.rowVolumeAdjustmentTracker.selectedRowIndex = null
+        self.shiftToolTracker.selectedRowIndex = null
     }
 
     rowMovementWindowMouseUpHandler(self, event) {
