@@ -2910,48 +2910,7 @@ class DrumMachineGui {
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
     windowMouseUpEventHandler(self, event) {
-        if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
-            self.moveNotesModeMouseUpEventHandler(self, event);
-        } else if (this.currentGuiMode === DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE) {
-            self.changeNoteVolumesModeMouseUpEventHandler(self, event);
-        }
-    }
-
-    changeNoteVolumesModeMouseUpEventHandler(self, event) {
-        // start putting together basic logic for clicking notes in 'edit-volumes' mode. this will evenetually iterate
-        // through a list of a few predetermined voluesm, such as 25%, 50%, 75%, and 100%, or something like that.
-        // eventually this logic will probably be moved into a 'click' handler rather than mouseup,
-        // because click-dragging in edit-volumes mode will have its own different behavior: fine-tuning volume of the selected note.
-        // this logic also doesn't visually change anything currently, since note radius is currently reset during each sequencer update
-        // based on the position of the time tracking lines. that logic will eventually need to be changed as well.
-        if (self.circleSelectionTracker.circleBeingMoved !== null) {
-            self.adjustEventCoordinates(event);
-            let noteVolumeHasChanged = (self.circleSelectionTracker.startingRadius !== self.circleSelectionTracker.circleBeingMoved.guiData.radiusWhenUnplayed);
-            if (noteVolumeHasChanged) { 
-                // play note on 'mouse up' if the volume has changed, so that we can hear the end result of our volume adjustment.
-                self.sequencer.playDrumSampleNow(self.circleSelectionTracker.circleBeingMoved.guiData.sampleName, self.circleSelectionTracker.circleBeingMoved.guiData.volume, self.circleSelectionTracker.circleBeingMoved.guiData.midiNote, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
-                // if the mouse has moved, volume was updated in the mouse move event, since this was a click-drag. so no need to make any other volume change.
-                // just commit those changes to the URL hash. we do that here instead of in the mouse move event to prevent the need to constantly update the hash.
-                self.saveCurrentSequencerStateToUrlHash();
-            }
-            // reset circle selection variables
-            self.circleSelectionTracker.circleBeingMoved = null
-            self.setNoteTrashBinVisibility(false)
-        }
-        if (self.rowSelectionTracker.selectedRowIndex !== null) {
-            self.rowMovementWindowMouseUpHandler(self, event);
-        }
-        if (self.rowVolumeAdjustmentTracker.selectedRowIndex !== null) {
-            self.rowVolumeAdjustmentWindowMouseUpHandler(self, event);
-        }
-        if (self.shiftToolTracker.selectedRowIndex !== null) {
-            self.shiftToolMouseUpEventHandler(self, event);
-        }
-        self.circleSelectionTracker.circleBeingMoved = null
-        self.setNoteTrashBinVisibility(false)
-        self.rowSelectionTracker.selectedRowIndex = null
-        self.rowVolumeAdjustmentTracker.selectedRowIndex = null
-        self.shiftToolTracker.selectedRowIndex = null
+        self.moveNotesAndChangeVolumesMouseUpHandler(self, event);
     }
 
     rowVolumeAdjustmentWindowMouseUpHandler(self, event) {
@@ -2960,9 +2919,10 @@ class DrumMachineGui {
         self.saveCurrentSequencerStateToUrlHash();
     }
 
-    moveNotesModeMouseUpEventHandler(self, event) {
+    moveNotesAndChangeVolumesMouseUpHandler(self, event) {
         // handle letting go of notes. lifting your mouse anywhere means you're no longer click-dragging
         if (self.circleSelectionTracker.circleBeingMoved !== null) {
+            // deal with moving notes
             /**
              * this is the workflow for determining where to put a circle that we were click-dragging once we release the mouse.
              * how this workflow works (todo: double check that this is all correct):
@@ -3000,8 +2960,6 @@ class DrumMachineGui {
             let circleNewYPosition = self.circleSelectionTracker.circleBeingMovedStartingPosition.y // if the circle is not colliding with a row etc., it will be put back to its old place, so start with the 'old place' values.
             let circleNewBeatNumber = self.circleSelectionTracker.circleBeingMovedOldBeatNumber
             self.adjustEventCoordinates(event)
-            let mouseX = event.pageX
-            let mouseY = event.pageY
             // check for collisions with things (sequencer rows, the trash bin, etc.)and make adjustments accordingly, so that everything will be handled as explained in the block comment above
             if (self.circleSelectionTracker.circleBeingMovedNewRow >= 0) { // this means the note is being put onto a new sequencer row
                 circleNewXPosition = self.circleSelectionTracker.circleBeingMoved.translation.x // the note should have already been 'snapped' to its new row in the 'mousemove' event, so just commit to that new location
@@ -3054,25 +3012,18 @@ class DrumMachineGui {
                 self.circleSelectionTracker.circleBeingMoved.guiData.beat = circleNewBeatNumber
                 self.refreshNoteDependentButtonsForRow(self.circleSelectionTracker.circleBeingMovedNewRow) // show any buttons that should now be shown for the row
             }
+            /**
+             * next deal with changing note volume 
+             */
+            let noteVolumeHasChanged = (self.circleSelectionTracker.startingRadius !== self.circleSelectionTracker.circleBeingMoved.guiData.radiusWhenUnplayed);
+            if (noteVolumeHasChanged) { 
+                // play note on 'mouse up' if the volume has changed, so that we can hear the end result of our volume adjustment.
+                self.sequencer.playDrumSampleNow(self.circleSelectionTracker.circleBeingMoved.guiData.sampleName, self.circleSelectionTracker.circleBeingMoved.guiData.volume, self.circleSelectionTracker.circleBeingMoved.guiData.midiNote, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
+            }
+            self.setNoteTrashBinVisibility(false)
+            // save sequencer state to the URL hash
             self.saveCurrentSequencerStateToUrlHash();
         }
-        if (self.rowSelectionTracker.selectedRowIndex !== null) {
-            self.rowMovementWindowMouseUpHandler(self, event);
-        }
-        if (self.rowVolumeAdjustmentTracker.selectedRowIndex !== null) {
-            self.rowVolumeAdjustmentWindowMouseUpHandler(self, event);
-        }
-        if (self.shiftToolTracker.selectedRowIndex !== null) {
-            self.shiftToolMouseUpEventHandler(self, event);
-        }
-        self.circleSelectionTracker.circleBeingMoved = null
-        self.setNoteTrashBinVisibility(false)
-        self.rowSelectionTracker.selectedRowIndex = null
-        self.rowVolumeAdjustmentTracker.selectedRowIndex = null
-        self.shiftToolTracker.selectedRowIndex = null
-    }
-
-    moveNotesAndChangeVolumesMouseUpHandler(self, event) {
         if (self.rowSelectionTracker.selectedRowIndex !== null) {
             self.rowMovementWindowMouseUpHandler(self, event);
         }
