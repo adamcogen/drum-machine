@@ -7,9 +7,6 @@ class DrumMachineGui {
     static get NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW() { return -1 }
     static get NOTE_ROW_NUMBER_FOR_NOTE_BANK() { return -2 }
     static get NOTE_ROW_NUMBER_FOR_TRASH_BIN() { return -3 }
-    // create constants that will be used to denote sequencer modes
-    static get MOVE_NOTES_MODE() { return "MOVE_NOTES_MODE" }
-    static get CHANGE_NOTE_VOLUMES_MODE() { return "CHANGE_NOTE_VOLUMES_MODE" }
     // create constants relating to exporting sequencer patterns to MIDI files
     static get MIDI_FILE_EXPORT_NUMBER_OF_TICKS_PER_BEAT() { return 128 };
 
@@ -44,8 +41,6 @@ class DrumMachineGui {
 
         this.configureMidiFileWriterLibrary();
 
-        this.currentGuiMode = DrumMachineGui.MOVE_NOTES_MODE; // start the GUI in 'move notes' mode
-
         this.referenceLinesShiftInPixelsPerRow = []; // save us some calculation time later by keeping track of the shift value for reference lines in pixels (they're stored everywhere else as milliseconds only)
         this.initializeReferenceLinesShiftPixelsTracker();
         this.initializeSubdivisionLinesShiftPixelsTracker();
@@ -63,7 +58,6 @@ class DrumMachineGui {
         this.initializeMidiOutputSelectorValuesAndStyles();
         this.initializeDrumKitSelectorValuesAndStyles();
         this.initializeExamplePatternSelectorValuesAndStyles()
-        this.initializeModeSelectionButtonStyles();
         this.initializeTempoBpmTextLabelsStyles();
         this.initializeTempoMillisecondsTextLabelsStyles();
         this.setNoteTrashBinVisibility(false) // trash bin only gets shown when we're moving a note or a sequencer row, so make sure it starts out as not visible
@@ -162,8 +156,6 @@ class DrumMachineGui {
         this.initializeNumberOfBeatsInLoopInputEventListeners();
         this.addPauseButtonEventListeners();
         this.addClearAllNotesButtonEventListeners();
-        this.addMoveNotesModeButtonEventListeners();
-        this.addEditVolumesModeButtonEventListeners();
         this.addTempoInputModeSelectionButtonsEventListeners();
         this.addTapTempoButtonEventListeners();
         this.refreshWindowMouseMoveEvent();
@@ -252,9 +244,6 @@ class DrumMachineGui {
     initializeGuiShapes() {
         let shapes = {};
         // add shapes for menu outlines
-        // edit mode buttons outline
-        shapes.editModeSelectionButtonsOutline = this.initializeRectangleShape(this.configurations.moveNotesModeButton.top, this.configurations.moveNotesModeButton.left, this.configurations.moveNotesModeButton.height + (this.configurations.editVolumesModeButton.top - this.configurations.moveNotesModeButton.top), this.configurations.moveNotesModeButton.width)
-        shapes.editModeSelectionButtonsOutline.stroke = this.configurations.subdivisionLines.color;
         // loop length mode buttons outline
         shapes.loopLengthModeSelectionButtonsOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top, this.configurations.tempoInputModeSelectionBpmButton.left, this.configurations.tempoInputModeSelectionBpmButton.height, this.configurations.tempoInputModeSelectionBpmButton.width + (this.configurations.tempoInputModeSelectionMillisecondsButton.left - this.configurations.tempoInputModeSelectionBpmButton.left))
         shapes.loopLengthModeSelectionButtonsOutline.stroke = this.configurations.subdivisionLines.color;
@@ -311,8 +300,6 @@ class DrumMachineGui {
         shapes.sequencerRowHandles = this.initializeCirclesPerSequencerRow(this.configurations.sequencerRowHandles.leftPadding, this.configurations.sequencerRowHandles.topPadding, this.configurations.sequencerRowHandles.radius, this.configurations.sequencerRowHandles.unselectedColor)
         shapes.volumeAdjusterRowHandles = this.initializeCirclesPerSequencerRow(this.configurations.volumeAdjusterRowHandles.leftPadding, this.configurations.volumeAdjusterRowHandles.topPadding, this.configurations.volumeAdjusterRowHandles.radius, this.configurations.volumeAdjusterRowHandles.unselectedColor)
         shapes.shiftToolRowHandles = this.initializeCirclesPerSequencerRow(this.configurations.shiftToolRowHandles.leftPadding, this.configurations.shiftToolRowHandles.topPadding, this.configurations.shiftToolRowHandles.radius, this.configurations.shiftToolRowHandles.unselectedColor)
-        shapes.moveNotesModeButton = this.initializeRectangleShape(this.configurations.moveNotesModeButton.top, this.configurations.moveNotesModeButton.left, this.configurations.moveNotesModeButton.height, this.configurations.moveNotesModeButton.width) // a rectangle that will eventually be used to select between different modes of the sequencer (move notes, edit note volumes, select notes, etc.)
-        shapes.editVolumesModeButton = this.initializeRectangleShape(this.configurations.editVolumesModeButton.top, this.configurations.editVolumesModeButton.left, this.configurations.editVolumesModeButton.height, this.configurations.editVolumesModeButton.width);
         shapes.tempoInputModeSelectionBpmButton = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top, this.configurations.tempoInputModeSelectionBpmButton.left, this.configurations.tempoInputModeSelectionBpmButton.height, this.configurations.tempoInputModeSelectionBpmButton.width) // button for toggling between different modes of inputting tempo. this one is to select 'beats per minute' input mode.
         shapes.tempoInputModeSelectionMillisecondsButton = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionMillisecondsButton.top, this.configurations.tempoInputModeSelectionMillisecondsButton.left, this.configurations.tempoInputModeSelectionMillisecondsButton.height, this.configurations.tempoInputModeSelectionMillisecondsButton.width) // button for toggling between different modes of inputting tempo. this one is to select 'loop length in milliseconds' input mode.
         shapes.tapTempoButton = this.initializeRectangleShape(this.configurations.tapTempoButton.top, this.configurations.tapTempoButton.left, this.configurations.tapTempoButton.height, this.configurations.tapTempoButton.width)
@@ -366,8 +353,6 @@ class DrumMachineGui {
                 clearRowIcon: document.getElementById('clear-row-icon'),
                 lockedIcon: document.getElementById('locked-icon'),
                 unlockedIcon: document.getElementById('unlocked-icon'),
-                moveNotesModeIcon: document.getElementById('edit-mode-move-notes-icon'),
-                changeVolumesModeIcon: document.getElementById('edit-mode-change-note-volumes-icon'),
                 bpmLoopLengthModeIcon: document.getElementById('loop-length-bpm-mode-icon'),
                 millisecondsLoopLengthModeIcon: document.getElementById('loop-length-milliseconds-mode-icon'), 
                 tapTempoIcon: document.getElementById('tap-tempo-icon'),
@@ -1953,62 +1938,6 @@ class DrumMachineGui {
         }
     }
 
-    initializeModeSelectionButtonStyles() {
-        if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
-            this.components.shapes.moveNotesModeButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
-            this.components.shapes.editVolumesModeButton.fill = 'transparent';
-        } else if (this.currentGuiMode === DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE) {
-            this.components.shapes.moveNotesModeButton.fill = 'transparent';
-            this.components.shapes.editVolumesModeButton.fill = this.configurations.buttonBehavior.clickedButtonColor;
-        }
-    }
-
-    addMoveNotesModeButtonEventListeners() {
-        let shapesToAddEventListenersTo = [this.components.shapes.moveNotesModeButton._renderer.elem, this.components.domElements.images.moveNotesModeIcon]
-        let eventHandlersHash = {
-            "click": () => this.moveNotesModeButtonClickHandler(this),
-            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.moveNotesModeButton),
-            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.moveNotesModeButton),
-        }
-        this.addEventListenersWithoutDuplicates("moveNotesModeButton", shapesToAddEventListenersTo, eventHandlersHash);
-    }
-
-    addEditVolumesModeButtonEventListeners() {
-        let shapesToAddEventListenersTo = [this.components.shapes.editVolumesModeButton._renderer.elem, this.components.domElements.images.changeVolumesModeIcon]
-        let eventHandlersHash = {
-            "click": () => this.editVolumesModeButtonClickHandler(this),
-            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.editVolumesModeButton),
-            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.editVolumesModeButton),
-        }
-        this.addEventListenersWithoutDuplicates("editVolumesModeButton", shapesToAddEventListenersTo, eventHandlersHash);
-    }
-
-    // search for comment "a general note about the 'self' paramater" within this file for info on its use here
-    moveNotesModeButtonClickHandler(self) {
-        if (this.currentGuiMode === DrumMachineGui.MOVE_NOTES_MODE) {
-            return;
-        }
-        this.currentGuiMode = DrumMachineGui.MOVE_NOTES_MODE;
-        self.components.shapes.moveNotesModeButton.fill = self.configurations.buttonBehavior.clickedButtonColor
-        self.components.shapes.editVolumesModeButton.fill = 'transparent'
-        // reset circle selection variables
-        self.circleSelectionTracker.circleBeingMoved = null
-        self.setNoteTrashBinVisibility(false)
-    }
-
-    // search for comment "a general note about the 'self' paramater" within this file for info on its use here
-    editVolumesModeButtonClickHandler(self) {
-        if(this.currentGuiMode === DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE) {
-            return;
-        }
-        this.currentGuiMode = DrumMachineGui.CHANGE_NOTE_VOLUMES_MODE;
-        self.components.shapes.moveNotesModeButton.fill = 'transparent'
-        self.components.shapes.editVolumesModeButton.fill = self.configurations.buttonBehavior.clickedButtonColor
-        // reset circle selection variables
-        self.circleSelectionTracker.circleBeingMoved = null
-        self.setNoteTrashBinVisibility(false)
-    }
-
     addTempoInputModeSelectionButtonsEventListeners() {
         this.addTempoInputModeSelectionBpmButtonEventListener();
         this.addTempoInputModeSelectionMillisecondsButtonEventListener();
@@ -3089,16 +3018,6 @@ class DrumMachineGui {
         this.components.domElements.images.playIcon.style.height = "" + this.configurations.pauseButton.icon.height + "px"
         this.components.domElements.images.playIcon.style.left = "" + this.configurations.pauseButton.left + "px"
         this.components.domElements.images.playIcon.style.top = "" + this.configurations.pauseButton.top + "px"
-        // edit mode: move notes
-        this.components.domElements.images.moveNotesModeIcon.style.width = "" + this.configurations.moveNotesModeButton.icon.width + "px"
-        this.components.domElements.images.moveNotesModeIcon.style.height = "" + this.configurations.moveNotesModeButton.icon.height + "px"
-        this.components.domElements.images.moveNotesModeIcon.style.left = "" + this.configurations.moveNotesModeButton.left + "px"
-        this.components.domElements.images.moveNotesModeIcon.style.top = "" + this.configurations.moveNotesModeButton.top + "px"
-        // edit mode: change note volumes
-        this.components.domElements.images.changeVolumesModeIcon.style.width = "" + this.configurations.editVolumesModeButton.icon.width + "px"
-        this.components.domElements.images.changeVolumesModeIcon.style.height = "" + this.configurations.editVolumesModeButton.icon.height + "px"
-        this.components.domElements.images.changeVolumesModeIcon.style.left = "" + this.configurations.editVolumesModeButton.left + "px"
-        this.components.domElements.images.changeVolumesModeIcon.style.top = "" + this.configurations.editVolumesModeButton.top + "px"
         // loop length input mode: bpm
         this.components.domElements.images.bpmLoopLengthModeIcon.style.width = "" + this.configurations.tempoInputModeSelectionBpmButton.icon.width + "px"
         this.components.domElements.images.bpmLoopLengthModeIcon.style.height = "" + this.configurations.tempoInputModeSelectionBpmButton.icon.height + "px"
