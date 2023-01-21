@@ -1928,6 +1928,8 @@ class DrumMachineGui {
         self.initializeNoteBankVolumesTrackerValues();
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
+        self.components.domElements.selectors.examplePatterns.options[0].innerHTML = "";
+        self.components.domElements.selectors.examplePatterns.options[0].selected = true;
     }
 
     initializeNoteBankVolumesTrackerValues() {
