@@ -1327,6 +1327,9 @@ class DrumMachineGui {
                 midiAudioDriver.setMidiOutput(midiOutput); // update the MIDI driver we created earlier to use the MIDI port we just retrieved. 
             })
         });
+        this.components.domElements.selectors.midiOutput.addEventListener('keydown', (event) => {
+            event.preventDefault();
+        });
     }
 
     initializeDrumKitSelectorValuesAndStyles() {
@@ -1355,6 +1358,9 @@ class DrumMachineGui {
                 this.sequencer.audioDrivers[0].muted = false;
                 this.sequencer.samples = this.allDrumKitsHash[this.components.domElements.selectors.drumkit.value];
             }
+        });
+        this.components.domElements.selectors.drumkit.addEventListener('keydown', (event) => {
+            event.preventDefault();
         });
     }
 
@@ -1396,6 +1402,9 @@ class DrumMachineGui {
             } else {
                 // 
             }
+        });
+        this.components.domElements.selectors.examplePatterns.addEventListener('keydown', (event) => {
+            event.preventDefault();
         });
     }
 
