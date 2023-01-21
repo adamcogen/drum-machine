@@ -96,30 +96,6 @@ function getGuiConfigurations(hideIcons=false) {
                 leftPadding: 0,
             }
         },
-        moveNotesModeButton: {
-            top: 324,
-            left: 30,
-            width: 48,
-            height: 48,
-            icon: {
-                height: 48,
-                width: 48,
-                topPadding: 0,
-                leftPadding: 0,
-            },
-        },
-        editVolumesModeButton: {
-            top: 384,
-            left: 30,
-            width: 48,
-            height: 48,
-            icon: {
-                height: 48,
-                width: 48,
-                topPadding: 0,
-                leftPadding: 0,
-            },
-        },
         mouseEvents: {
             notePlacementPadding: 20, // give this many pixels of padding on either side of things when we're placing, so we don't have to place them _precisely_ on the line, the trash bin, etc.
             throwNoteAwaySidesPadding: 50, // 90, // throw notes away if they are this far from the left or right side of the sequencer
