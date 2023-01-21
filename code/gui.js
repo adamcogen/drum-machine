@@ -2517,9 +2517,9 @@ class DrumMachineGui {
             self.adjustEventCoordinates(event);
             let mouseX = event.pageX;
             let mouseY = event.pageY;
-            let mouseHasMoved = (mouseX !== self.circleSelectionTracker.firstClickPosition.x || mouseY !== self.circleSelectionTracker.firstClickPosition.y)
+            let mouseHasMoved = (mouseX !== self.circleSelectionTracker.circleBeingMoved.translation.x || mouseY !== self.circleSelectionTracker.circleBeingMoved.translation.x)
             if (mouseHasMoved) {
-                let mouseMoveDistance = self.circleSelectionTracker.firstClickPosition.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
+                let mouseMoveDistance = self.circleSelectionTracker.circleBeingMoved.translation.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
                 let volumeAdjustmentAmount = mouseMoveDistance / self.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
                 // set the note being changed to have the right new radius on the GUI. confine the new radius to the minimum and maximum radius allowed.
                 self.circleSelectionTracker.circleBeingMoved.radius = Util.confineNumberToBounds(self.circleSelectionTracker.startingRadius + volumeAdjustmentAmount, self.configurations.notes.volumes.minimumCircleRadius, self.configurations.notes.volumes.maximumCircleRadius);
