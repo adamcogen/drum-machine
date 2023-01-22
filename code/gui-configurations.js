@@ -416,6 +416,9 @@ function getGuiConfigurations(hideIcons=false) {
             left: 1073,
             top: 90,
             lines: ["load some example sequencer", " patterns to see what the drum", "machine can do."],
+        },
+        helpText: {
+            moveNote: "click and drag to move note. ctrl+click and drag to change note volume."
         }
     }
 }

@@ -339,6 +339,8 @@ class DrumMachineGui {
                 midiOutputSelector: document.getElementById('midi-output-selector-div'),
                 drumkitSelector: document.getElementById('drum-kit-selector-div'),
                 examplePatternSelector: document.getElementById('example-pattern-selector-div'),
+                bottomBar: document.getElementById('bottom-bar'),
+                bottomBarText: document.getElementById('bottom-bar-text-div'),
             },
             textInputs: {
                 loopLengthMillis: document.getElementById('text-input-loop-length-millis'),
@@ -2152,10 +2154,12 @@ class DrumMachineGui {
         circle._renderer.elem.addEventListener('mouseenter', (event) => {
             circle.stroke = 'black'
             circle.linewidth = 2
+            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveNote
         });
         // remove border from circle when mouse is no longer over it
         circle._renderer.elem.addEventListener('mouseleave', (event) => {
             circle.stroke = 'transparent'
+            this.components.domElements.divs.bottomBarText.innerHTML = ""
         });
         // select circle (for moving) if we click it
         circle._renderer.elem.addEventListener('mousedown', (event) => {
@@ -2722,6 +2726,7 @@ class DrumMachineGui {
                     }
                 }   
             }
+            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveNote
         }
         if (self.rowVolumeAdjustmentTracker.selectedRowIndex !== null) { // handle mousemove events when adjusting note volumes for a row
             self.rowVolumeAdjustmentWindowMouseMoveHandler(self, event)
@@ -2967,6 +2972,7 @@ class DrumMachineGui {
         if (self.shiftToolTracker.selectedRowIndex !== null) {
             self.shiftToolMouseUpEventHandler(self, event);
         }
+        self.components.domElements.divs.bottomBarText.innerHTML = ""
         self.circleSelectionTracker.circleBeingMoved = null
         self.setNoteTrashBinVisibility(false)
         self.rowSelectionTracker.selectedRowIndex = null
