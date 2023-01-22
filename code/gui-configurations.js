@@ -418,7 +418,24 @@ function getGuiConfigurations(hideIcons=false) {
             lines: ["load some example sequencer", " patterns to see what the drum", "machine can do."],
         },
         helpText: {
-            moveNote: "click and drag to move note. ctrl+click and drag to change note volume."
+            moveNote: "click and drag to move note. ctrl+click and drag to change note volume.",
+            addRow: "add another row to the sequencer.",
+            play: "play the sequencer.",
+            stop: "stop the sequencer.",
+            deletePattern: "Delete the sequencer pattern.",
+            quantized: "",
+            unquantized: "",
+            moveRow: "",
+            changeRowVolume: "",
+            setNumberOfSubdivisionLines: "",
+            setNumberOfRefernceLines: "",
+            deleteAllNotesForRow: "",
+            resetSubdivisionLineShift: "",
+            resetRefernceLineShift: "",
+            shiftRow: "",
+            shiftNotes: "",
+            shiftSubdivisionLines: "",
+            shiftRefernceLines: "",
         }
     }
 }

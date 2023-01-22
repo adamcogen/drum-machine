@@ -1741,8 +1741,14 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = [this.components.shapes.addRowButtonShape._renderer.elem, this.components.domElements.images.addIcon]
         let eventHandlersHash = {
             "click": () => this.addRowClickHandler(this),
-            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.addRowButtonShape),
-            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.addRowButtonShape),
+            "mouseenter": () => {
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.addRow
+                this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.addRowButtonShape)
+            },
+            "mouseleave": () => {
+                this.components.domElements.divs.bottomBarText.innerHTML = ""
+                this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.addRowButtonShape)
+            },
         }
         this.addEventListenersWithoutDuplicates("addRowButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
