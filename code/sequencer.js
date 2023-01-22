@@ -712,6 +712,10 @@ class SequencerRow {
     }
 
     setLoopLengthInMillis(newLoopLengthInMillis) {
+        // scale the 'shift' amount (milliseconds) for subdivision lines and reference lines to match the new time length
+        this.subdivisionLineShiftInMilliseconds *= (newLoopLengthInMillis / this.loopLengthInMillis)
+        this.referenceLineShiftInMilliseconds *= (newLoopLengthInMillis / this.loopLengthInMillis)
+        // iterate through all nodes so we can adjust their priorities etc. as needed
         let currentNode = this._notesList.head
         while (currentNode) {
             // todo: consider using the 'beat number' variable stored in each node when scaling, if it's available
