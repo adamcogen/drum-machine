@@ -98,6 +98,22 @@
             #example-pattern-selector {
                 max-width: 178px;
             }
+            #bottom-bar {
+                background-color: #ababab;
+                overflow: hidden;
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                font-size: 15px;
+                font-family: "Courier New";
+                height: 30px;
+                padding-top: 10px;
+                padding-left: 320px;
+                border-top: solid black 1px;
+            }
+            #bottom-bar-text {
+                left: 40%;
+            }
         </style>
 
     </head>
@@ -156,5 +172,8 @@
         <img src="./assets/icons/png/move-row.png" id="move-row-icon" draggable="false" title="Move row around"/>
         <img src="./assets/icons/png/shift-row.png" id="shift-row-icon" draggable="false" title="Use shifter tool for row"/>
         <img src="./assets/icons/png/change-row-volumes.png" id="change-row-volumes-icon" draggable="false" title="Change all note volumes for row"/>
+        <div id="bottom-bar">
+            <div id="bottom-bar-text"></div>
+        </div>
     </body>
 </html>
