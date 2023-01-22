@@ -339,6 +339,7 @@ class DrumMachineGui {
                 midiOutputSelector: document.getElementById('midi-output-selector-div'),
                 drumkitSelector: document.getElementById('drum-kit-selector-div'),
                 examplePatternSelector: document.getElementById('example-pattern-selector-div'),
+                newIcons: document.getElementById('new-icons'),
                 bottomBar: document.getElementById('bottom-bar'),
                 bottomBarText: document.getElementById('bottom-bar-text-div'),
             },
