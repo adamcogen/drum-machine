@@ -1343,6 +1343,11 @@ class DrumMachineGui {
                 option.selected = true;
             }
         }
+        // select the 'no live audio output' option if necessary
+        if (this.components.domElements.selectors.drumkit.value === this.configurations.drumkitSelector.noWebAudioOutputOptionText) {
+            this.sequencer.audioDrivers[0].muted = true;
+            this.components.domElements.selectors.drumkit.options[0].selected = true;
+        }
     }
 
     initializeDrumKitSelectorEventListeners() {
@@ -1353,6 +1358,8 @@ class DrumMachineGui {
                 this.sequencer.audioDrivers[0].muted = false;
                 this.sequencer.samples = this.allDrumKitsHash[this.components.domElements.selectors.drumkit.value];
             }
+            this.selectedDrumKitName = this.components.domElements.selectors.drumkit.value;
+            this.sequencer.sampleListName = this.selectedDrumKitName
         });
         this.components.domElements.selectors.drumkit.addEventListener('keydown', (event) => {
             event.preventDefault();
@@ -3673,6 +3680,13 @@ class DrumMachineGui {
         this.sequencer.deserialize(atob(base64String), this.sampleBankNodeGenerator);
         this.initializeTempoTextInputValuesAndStyles();
         this.refreshTempoMenuState();
+        // to do: check what the sample name list is in the sequencer after deserializing. 
+        // if the sample list name matches an existing drum kit,
+        // - select that drum kit from the dropdown.
+        // - set the sequencer to use the samples from the selected drum kit
+        // if the drum kit name wasn't found in the drum kit list, do nothing.
+        // then save the currently-loaded drum kit to the 'selectedDrumKit' variable.
+        console.log(this.sequencer.sampleListName);
         this.sequencer.restart();
         this.saveCurrentSequencerStateToUrlHash();
         this.redrawSequencer();

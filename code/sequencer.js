@@ -11,7 +11,7 @@ class Sequencer {
     // create constants to denote special 'lastPlayedOnIteration' values
     static get NOTE_HAS_NEVER_BEEN_PLAYED() { return -1 }
 
-    constructor(audioDrivers, numberOfRows = 4, loopLengthInMillis = 1000, lookAheadMillis = 50, samples = []) {
+    constructor(audioDrivers, numberOfRows = 4, loopLengthInMillis = 1000, lookAheadMillis = 50, samples = [], sampleListName) {
         this.audioDrivers = audioDrivers
         this.numberOfRows = numberOfRows
         this.loopLengthInMillis = loopLengthInMillis
@@ -27,6 +27,7 @@ class Sequencer {
             isInBpmMode: false, // if true, the sequencer GUI will display BPM instead of raw loop length in millliseconds.
         }
         this.samples = samples
+        this.sampleListName = sampleListName // this is the name of the drum kit or sample list that the sequencer is using, so that we can serialize and deserialize it
         /**
          * set up time-keeping / pause-related variables.
          * we will probably eventually need to manage multiple timekeepers 
@@ -374,7 +375,8 @@ class Sequencer {
             "rows": this.rows.map( (row) => row._serialize() ),
             "bpm": this.tempoRepresentation.beatsPerMinute,
             "numberOfBeats": this.tempoRepresentation.numberOfBeatsPerLoop,
-            "isInBpmMode": this.tempoRepresentation.isInBpmMode
+            "isInBpmMode": this.tempoRepresentation.isInBpmMode,
+            "sampleListName:": this.sampleListName,
         })
     }
 
@@ -389,6 +391,9 @@ class Sequencer {
         this.tempoRepresentation.numberOfBeatsPerLoop = deserializedObject.numberOfBeats ? deserializedObject.numberOfBeats : 4 // when loading tempo representation, populate or calculate default values if the fields are missing, for backwards compatability with old URLs.
         this.tempoRepresentation.beatsPerMinute = deserializedObject.bpm ? deserializedObject.bpm : Util.convertLoopLengthInMillisToBeatsPerMinute(this.loopLengthInMillis, this.tempoRepresentation.numberOfBeatsPerLoop)
         this.tempoRepresentation.isInBpmMode = deserializedObject.isInBpmMode
+        if (deserializedObject.sampleListName !== null && deserializedObject.sampleListName !== undefined) {
+            this.sampleListName = deserializedObject.sampleListName;
+        }
         for (let rowIndex = 0; rowIndex < this.numberOfRows; rowIndex++) {
             let deserializedRowObject = JSON.parse(deserializedObject.rows[rowIndex])
             let numberOfSubdivisionsForRow = deserializedRowObject.subdivisions;
