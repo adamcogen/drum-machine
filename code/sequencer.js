@@ -376,7 +376,7 @@ class Sequencer {
             "bpm": this.tempoRepresentation.beatsPerMinute,
             "numberOfBeats": this.tempoRepresentation.numberOfBeatsPerLoop,
             "isInBpmMode": this.tempoRepresentation.isInBpmMode,
-            "sampleListName:": this.sampleListName,
+            "sampleListName": this.sampleListName,
         })
     }
 
@@ -391,9 +391,7 @@ class Sequencer {
         this.tempoRepresentation.numberOfBeatsPerLoop = deserializedObject.numberOfBeats ? deserializedObject.numberOfBeats : 4 // when loading tempo representation, populate or calculate default values if the fields are missing, for backwards compatability with old URLs.
         this.tempoRepresentation.beatsPerMinute = deserializedObject.bpm ? deserializedObject.bpm : Util.convertLoopLengthInMillisToBeatsPerMinute(this.loopLengthInMillis, this.tempoRepresentation.numberOfBeatsPerLoop)
         this.tempoRepresentation.isInBpmMode = deserializedObject.isInBpmMode
-        if (deserializedObject.sampleListName !== null && deserializedObject.sampleListName !== undefined) {
-            this.sampleListName = deserializedObject.sampleListName;
-        }
+        this.sampleListName = deserializedObject.sampleListName ? deserializedObject.sampleListName : this.sampleListName
         for (let rowIndex = 0; rowIndex < this.numberOfRows; rowIndex++) {
             let deserializedRowObject = JSON.parse(deserializedObject.rows[rowIndex])
             let numberOfSubdivisionsForRow = deserializedRowObject.subdivisions;

@@ -10,12 +10,12 @@ class DrumMachineGui {
     // create constants relating to exporting sequencer patterns to MIDI files
     static get MIDI_FILE_EXPORT_NUMBER_OF_TICKS_PER_BEAT() { return 128 };
 
-    constructor(sequencer, sampleNameList, sampleBankNodeGenerator, allDrumKitsHash, selectedDrumKitName) {
+    constructor(sequencer, sampleNameList, sampleBankNodeGenerator, allDrumKitsHash) {
         this.sequencer = sequencer
         this.two = this.initializeTwoJs(document.getElementById('draw-shapes')) // Initialize Two.js library
         this.sampleNameList = sampleNameList
-        this.samples = allDrumKitsHash[selectedDrumKitName];
-        this.selectedDrumKitName = selectedDrumKitName;
+        this.selectedDrumKitName = this.sequencer.sampleListName;
+        this.samples = allDrumKitsHash[this.selectedDrumKitName];
         this.allDrumKitsHash = allDrumKitsHash;
         this.sampleBankNodeGenerator = sampleBankNodeGenerator;
         this.configurations = getGuiConfigurations()
@@ -168,6 +168,12 @@ class DrumMachineGui {
         this.refreshWindowKeyDownEvent();
         this.refreshWindowContextMenuEvent();
         this.initializeExportPatternToMidiFileButtonEventListener();
+
+        // if there is a sequencer state included in the URL, load it. 
+        if (window.location.hash !== "") { // window.location.hash is text in a URL after the actual address, which starts with a "#" character and can contain whatever text we want.
+            // btoa(plaintext) converts a plaintext string to a base64 string, so that it is URL-safe. we can decode the base64 string back to plaintext later using atob(base64).
+            this.loadSequencerPatternFromBase64String(window.location.hash.substring(1)) // the url hash will start with a '#' character, so remove that before decoding it
+        }
 
         this.pause(); // start the sequencer paused
         this.redrawSequencer(); // redraw the display
@@ -1357,9 +1363,16 @@ class DrumMachineGui {
             } else {
                 this.sequencer.audioDrivers[0].muted = false;
                 this.sequencer.samples = this.allDrumKitsHash[this.components.domElements.selectors.drumkit.value];
+                // we serialize selected drum kit info here because we don't want to serialize 'no live audio output'.
+                // this is a user experience choice, because refreshing the sequencer and having no audio could be
+                // confusing.
+                // in order to start serializing 'no live audio output', all you'd need to do should be to move
+                // the following two lines out of this 'if/else' block. i've tried to make sure all the other logic,
+                // including for deserializing, still works as is for that case. 
+                this.selectedDrumKitName = this.components.domElements.selectors.drumkit.value;
+                this.sequencer.sampleListName = this.selectedDrumKitName
             }
-            this.selectedDrumKitName = this.components.domElements.selectors.drumkit.value;
-            this.sequencer.sampleListName = this.selectedDrumKitName
+            this.saveCurrentSequencerStateToUrlHash();
         });
         this.components.domElements.selectors.drumkit.addEventListener('keydown', (event) => {
             event.preventDefault();
@@ -3681,12 +3694,22 @@ class DrumMachineGui {
         this.initializeTempoTextInputValuesAndStyles();
         this.refreshTempoMenuState();
         // to do: check what the sample name list is in the sequencer after deserializing. 
-        // if the sample list name matches an existing drum kit,
-        // - select that drum kit from the dropdown.
-        // - set the sequencer to use the samples from the selected drum kit
-        // if the drum kit name wasn't found in the drum kit list, do nothing.
-        // then save the currently-loaded drum kit to the 'selectedDrumKit' variable.
-        console.log(this.sequencer.sampleListName);
+        if (this.allDrumKitsHash[this.sequencer.sampleListName]) {
+            // if the sample list name matches an existing drum kit,
+            // - select that drum kit from the dropdown.
+            this.components.domElements.selectors.drumkit.value = this.sequencer.sampleListName;
+            // - set the sequencer to use the samples from the selected drum kit
+            this.sequencer.samples = this.allDrumKitsHash[this.sequencer.sampleListName];
+            // if the drum kit name wasn't found in the drum kit list, do nothing.
+            this.sequencer.audioDrivers[0].muted = false;
+        }
+        if (this.sequencer.sampleListName === this.configurations.drumkitSelector.noWebAudioOutputOptionText) {
+            // if 'no live audio output' is serialized drum kit, configure the sequencer for that
+            this.components.domElements.selectors.drumkit.value = this.sequencer.sampleListName;
+            this.sequencer.audioDrivers[0].muted = true;
+        }
+        // then save the currently-loaded drum kit to the 'selectedDrumKitName' variable.
+        this.selectedDrumKitName = this.sequencer.sampleListName
         this.sequencer.restart();
         this.saveCurrentSequencerStateToUrlHash();
         this.redrawSequencer();

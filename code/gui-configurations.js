@@ -346,12 +346,12 @@ function getGuiConfigurations(hideIcons=false) {
         shiftModeLabelMenuTitle: {
             left: 490,
             top: 30,
-            text: "shifter tool"
+            text: "row shifting"
         },
         shiftModeLabelMenuExplanation: {
             left: 493,
-            top: 55,
-            lines: ["select what will get", "moved when using", "the row shifter tool."],
+            top: 48,
+            lines: ["row shifters let you", "shift the timing of all", "notes or beats on a", "row, to sound early", "or late. select what will get", "moved when shifting a row."],
         },
         shiftModeMenuIcon: {
             left: 522,
