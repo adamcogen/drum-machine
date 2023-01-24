@@ -2574,7 +2574,17 @@ class DrumMachineGui {
                             // that way we can guarantee that all notes will be shifted to a new beat number at the same time, even if there are irregularities in how floating
                             // point precisision / rounding is handled between different beat numbers.
                             let numberOfSubdivisionsInRow = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].getNumberOfSubdivisions();
-                            let widthOfEachBeatInPixels = self.configurations.sequencer.width / numberOfSubdivisionsInRow
+                            let widthOfEachBeatInPixels;
+                            if (!self.shiftToolTracker.resourcesToShift.subdivisionLines && !self.shiftToolTracker.resourcesToShift.referenceLines) {
+                                // if we get here, we know we're ONLY moving _quantized notes_. in that case, move to the next beat after some
+                                // constant mouse move distance, rather than relying on the actual width of each beat. this creates a more
+                                // responsive user experience.
+                                widthOfEachBeatInPixels = 50; //todo: move this into gui configurations file
+                            } else {
+                                // at least one other resource type is being moved, so move everything together -- that is, rely on the actual
+                                // width of each beat to determine how far to move notes.
+                                widthOfEachBeatInPixels = self.configurations.sequencer.width / numberOfSubdivisionsInRow
+                            }
                             let shiftInPixels = self.subdivisionLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex]
                             let beatsMoved = -1 * (Math.round(mouseMoveDistance / widthOfEachBeatInPixels) % numberOfSubdivisionsInRow);
                             let circleStartingBeat = self.shiftToolTracker.noteCirclesStartingBeats[noteCircleIndex]
