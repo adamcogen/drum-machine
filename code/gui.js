@@ -2649,6 +2649,37 @@ class DrumMachineGui {
         rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.selectedColor
     }
 
+    adjustNoteVolumeMouseMoveLogic(self, mouseX, mouseY) {
+        let mouseHasMoved = (mouseX !== self.circleSelectionTracker.circleBeingMoved.translation.x || mouseY !== self.circleSelectionTracker.circleBeingMoved.translation.x)
+        if (mouseHasMoved) {
+            self.circleSelectionTracker.mostRecentMovementWasVolumeChange = true;
+            let mouseMoveDistance = self.circleSelectionTracker.circleBeingMoved.translation.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
+            let volumeAdjustmentAmount = mouseMoveDistance / self.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
+            // set the note being changed to have the right new radius on the GUI. confine the new radius to the minimum and maximum radius allowed.
+            self.circleSelectionTracker.circleBeingMoved.radius = Util.confineNumberToBounds(self.circleSelectionTracker.startingRadius + volumeAdjustmentAmount, self.configurations.notes.volumes.minimumCircleRadius, self.configurations.notes.volumes.maximumCircleRadius);
+            self.circleSelectionTracker.circleBeingMoved.guiData.radiusWhenUnplayed = self.circleSelectionTracker.circleBeingMoved.radius;
+            // convert the circle radius into a proportionate note volume.
+            let newVolume = self.calculateVolumeForCircleRadius(self.circleSelectionTracker.circleBeingMoved.radius);
+            if (self.circleSelectionTracker.circleBeingMovedOldRow < 0) { // the note we are changing the volume for is in the note bank.
+                // todo: eventually, maybe changing the volume of any note in the note bank should change the volume of all notes
+                // in the note bank, such that you can adjust the default volume of all new notes that will be pulled from the note bank.
+                self.noteBankNoteVolumesTracker[self.circleSelectionTracker.circleBeingMoved.guiData.sampleName].volume = newVolume;
+                self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
+                self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = self.convertWebAudioVolumeIntoMidiVelocity(newVolume);
+            } else { // the note we are changing the volume for is on an actual sequencer row (i.e. it's not in the note bank).
+                self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
+                self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = self.convertWebAudioVolumeIntoMidiVelocity(newVolume)
+                // replace the node in the sequencer data structure with an identical note that has the new volume we have set the note to.
+                // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
+                let node = self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
+                node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
+                node.data.midiVelocity = self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity
+                self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
+                // we will save the sequencer state to the URL in the 'mouse up' event instead of here, for performance reasons
+            }
+        }
+    }
+
     moveNotesAndChangeVolumesMouseMoveHandler(self, event){
         // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
         if (self.circleSelectionTracker.circleBeingMoved !== null) { // handle mousemove events when a note is selected
@@ -2657,34 +2688,7 @@ class DrumMachineGui {
             let mouseY = event.pageY
             if (event.ctrlKey) {
                 // when the 'ctrl' key is being held while moving a note, change its volume instead of moving it.
-                let mouseHasMoved = (mouseX !== self.circleSelectionTracker.circleBeingMoved.translation.x || mouseY !== self.circleSelectionTracker.circleBeingMoved.translation.x)
-                if (mouseHasMoved) {
-                    self.circleSelectionTracker.mostRecentMovementWasVolumeChange = true;
-                    let mouseMoveDistance = self.circleSelectionTracker.circleBeingMoved.translation.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
-                    let volumeAdjustmentAmount = mouseMoveDistance / self.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
-                    // set the note being changed to have the right new radius on the GUI. confine the new radius to the minimum and maximum radius allowed.
-                    self.circleSelectionTracker.circleBeingMoved.radius = Util.confineNumberToBounds(self.circleSelectionTracker.startingRadius + volumeAdjustmentAmount, self.configurations.notes.volumes.minimumCircleRadius, self.configurations.notes.volumes.maximumCircleRadius);
-                    self.circleSelectionTracker.circleBeingMoved.guiData.radiusWhenUnplayed = self.circleSelectionTracker.circleBeingMoved.radius;
-                    // convert the circle radius into a proportionate note volume.
-                    let newVolume = self.calculateVolumeForCircleRadius(self.circleSelectionTracker.circleBeingMoved.radius);
-                    if (self.circleSelectionTracker.circleBeingMovedOldRow < 0) { // the note we are changing the volume for is in the note bank.
-                        // todo: eventually, maybe changing the volume of any note in the note bank should change the volume of all notes
-                        // in the note bank, such that you can adjust the default volume of all new notes that will be pulled from the note bank.
-                        self.noteBankNoteVolumesTracker[self.circleSelectionTracker.circleBeingMoved.guiData.sampleName].volume = newVolume;
-                        self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
-                        self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = self.convertWebAudioVolumeIntoMidiVelocity(newVolume);
-                    } else { // the note we are changing the volume for is on an actual sequencer row (i.e. it's not in the note bank).
-                        self.circleSelectionTracker.circleBeingMoved.guiData.volume = newVolume;
-                        self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity = self.convertWebAudioVolumeIntoMidiVelocity(newVolume)
-                        // replace the node in the sequencer data structure with an identical note that has the new volume we have set the note to.
-                        // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
-                        let node = self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
-                        node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
-                        node.data.midiVelocity = self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity
-                        self.sequencer.rows[self.circleSelectionTracker.circleBeingMovedOldRow].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
-                        // we will save the sequencer state to the URL in the 'mouse up' event instead of here, for performance reasons
-                    }
-                }
+                this.adjustNoteVolumeMouseMoveLogic(self, mouseX, mouseY)
             } else {
                 if (self.circleSelectionTracker.mostRecentMovementWasVolumeChange) {
                     self.sequencer.playDrumSampleNow(self.circleSelectionTracker.circleBeingMoved.guiData.sampleName, self.circleSelectionTracker.circleBeingMoved.guiData.volume, self.circleSelectionTracker.circleBeingMoved.guiData.midiNote, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
@@ -2709,6 +2713,7 @@ class DrumMachineGui {
                 let centerOfTrashBinY = self.configurations.noteTrashBin.top + (self.configurations.noteTrashBin.height / 2)
                 let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= self.configurations.noteTrashBin.left - self.configurations.mouseEvents.notePlacementPadding) && (mouseX <= self.configurations.noteTrashBin.left + self.configurations.noteTrashBin.width + self.configurations.mouseEvents.notePlacementPadding)
                 let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= self.configurations.noteTrashBin.top - self.configurations.mouseEvents.notePlacementPadding) && (mouseY <= self.configurations.noteTrashBin.top + self.configurations.noteTrashBin.height + self.configurations.mouseEvents.notePlacementPadding)
+                self.components.shapes.noteTrashBinContainer.stroke = 'transparent'
                 if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
                     self.circleSelectionTracker.circleBeingMoved.translation.x = centerOfTrashBinX
                     self.circleSelectionTracker.circleBeingMoved.translation.y = centerOfTrashBinY
@@ -2717,8 +2722,6 @@ class DrumMachineGui {
                     self.components.domElements.images.trashClosedIcon.style.display = 'none'
                     self.components.domElements.images.trashOpenIcon.style.display = 'block'
                     self.components.shapes.noteTrashBinContainer.stroke = 'red'
-                } else {
-                    self.components.shapes.noteTrashBinContainer.stroke = 'transparent'
                 }
                 // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
                 let sequencerLeftBoundary = self.configurations.sequencer.left - self.configurations.mouseEvents.notePlacementPadding
@@ -3141,7 +3144,7 @@ class DrumMachineGui {
             this.addEventListenersWithoutDuplicates("clearNotesForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add the copy to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.clearRowIcons.push(clearRowIcon)
-            document.body.appendChild(clearRowIcon)
+            this.components.domElements.divs.newIcons.appendChild(clearRowIcon)
         }
         this.components.domElements.images.clearRowIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         // lock / unlock (quantize / unquantize) row buttons -- need one per row
@@ -3199,8 +3202,8 @@ class DrumMachineGui {
             // add the icons to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.lockedIcons.push(lockedIcon)
             this.components.domElements.iconLists.unlockedIcons.push(unlockedIcon)
-            document.body.appendChild(lockedIcon)
-            document.body.appendChild(unlockedIcon)
+            this.components.domElements.divs.newIcons.appendChild(lockedIcon)
+            this.components.domElements.divs.newIcons.appendChild(unlockedIcon)
         }
         this.components.domElements.images.unlockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         this.components.domElements.images.lockedIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
@@ -3229,7 +3232,7 @@ class DrumMachineGui {
             this.addEventListenersWithoutDuplicates("resetSubdvisionsLinesShiftForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add the copy to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.resetSubdivisionLinesShiftIcons.push(resetSubdivisionsShiftIcon)
-            document.body.appendChild(resetSubdivisionsShiftIcon)
+            this.components.domElements.divs.newIcons.appendChild(resetSubdivisionsShiftIcon)
         }
         this.components.domElements.images.resetSubdvisionsLinesShiftForRowIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         // add reset reference lines shift for row icons (one per row)
@@ -3257,7 +3260,7 @@ class DrumMachineGui {
             this.addEventListenersWithoutDuplicates("resetReferenceLinesShiftForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add the copy to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.resetReferenceLinesShiftIcons.push(resetReferenceLinesShiftIcon)
-            document.body.appendChild(resetReferenceLinesShiftIcon)
+            this.components.domElements.divs.newIcons.appendChild(resetReferenceLinesShiftIcon)
         }
         this.components.domElements.images.resetReferenceLinesShiftForRowIcon.style.display = 'none'; // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         // set up 'shift row' icons.
@@ -3300,7 +3303,7 @@ class DrumMachineGui {
                 shiftIcon.addEventListener('mouseup', this.eventHandlerFunctions["shiftRowIcon" + rowIndex]['mouseup']);
                 // add the icons to the dom and to our list that tracks these icons
                 this.components.domElements.iconLists.shiftRowIcons.push(shiftIcon)
-                document.body.appendChild(shiftIcon)
+                this.components.domElements.divs.newIcons.appendChild(shiftIcon)
                 // hide the icons for now until they have event listeners and we adjust the layout to include them, etc.
                 shiftIcon.style.display = 'block';
             }
@@ -3348,7 +3351,7 @@ class DrumMachineGui {
             moveIcon.addEventListener('mouseup', this.eventHandlerFunctions["moveRowIcon" + rowIndex]['mouseup']);
             // add the icons to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.moveRowIcons.push(moveIcon)
-            document.body.appendChild(moveIcon)
+            this.components.domElements.divs.newIcons.appendChild(moveIcon)
             // hide the icons for now until they have event listeners and we adjust the layout to include them, etc.
             moveIcon.style.display = 'block';
         }
@@ -3391,7 +3394,7 @@ class DrumMachineGui {
             changeRowVolumeIcon.addEventListener('mouseup', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mouseup']);
             // add the icons to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.changeRowVolumesIcons.push(changeRowVolumeIcon)
-            document.body.appendChild(changeRowVolumeIcon)
+            this.components.domElements.divs.newIcons.appendChild(changeRowVolumeIcon)
             changeRowVolumeIcon.style.display = 'block';
         }
         // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
