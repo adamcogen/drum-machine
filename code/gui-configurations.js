@@ -418,7 +418,7 @@ function getGuiConfigurations(hideIcons=false) {
             lines: ["load some example sequencer", " patterns to see what the drum", "machine can do."],
         },
         helpText: {
-            defaultText: "",
+            defaultText: "share this beat by copying and pasting the URL from the address bar. undo and redo changes using your browser's back and forward buttons.",
             moveNote: "click and drag to move note. ctrl+click and drag to change note volume.",
             addRow: "add another row to the sequencer.",
             play: "play the sequencer.",
