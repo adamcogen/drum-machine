@@ -181,6 +181,7 @@ class DrumMachineGui {
         this.pause(); // start the sequencer paused
         this.redrawSequencer(); // redraw the display
 
+        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         this.mostRecentSavedUrlHash = window.location.hash.substring(1); // track the most recently saved URL hash (without its first character '#')
     }
 
@@ -1769,7 +1770,7 @@ class DrumMachineGui {
                 this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.addRowButtonShape)
             },
             "mouseleave": () => {
-                this.components.domElements.divs.bottomBarText.innerHTML = ""
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
                 this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.addRowButtonShape)
             },
         }
@@ -2189,7 +2190,7 @@ class DrumMachineGui {
         // remove border from circle when mouse is no longer over it
         circle._renderer.elem.addEventListener('mouseleave', (event) => {
             circle.stroke = 'transparent'
-            this.components.domElements.divs.bottomBarText.innerHTML = ""
+            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         });
         // select circle (for moving) if we click it
         circle._renderer.elem.addEventListener('mousedown', (event) => {
@@ -2826,7 +2827,6 @@ class DrumMachineGui {
                     node.priority = newNodeTimestampMillis
                     // add the moved note to its new sequencer row
                     self.sequencer.rows[currentRowMouseIsOn].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
-                    // node.data.lastScheduledOnIteration = Sequencer.NOTE_HAS_NEVER_BEEN_PLAYED // mark note as 'not played yet on current iteration'
                     node.data.beat = currentBeatMouseIsOn
                     node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
                     node.data.midiVelocity = self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity;
@@ -3050,7 +3050,7 @@ class DrumMachineGui {
         if (self.shiftToolTracker.selectedRowIndex !== null) {
             self.shiftToolMouseUpEventHandler(self, event);
         }
-        self.components.domElements.divs.bottomBarText.innerHTML = ""
+        self.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         self.circleSelectionTracker.circleBeingMoved = null
         self.setNoteTrashBinVisibility(false)
         self.rowSelectionTracker.selectedRowIndex = null

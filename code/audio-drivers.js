@@ -97,6 +97,8 @@ class WebAudioDriver extends BaseAudioDriver {
         super(true);
         this.webAudioContext = webAudioContext;
         this.muted = false;
+        this.useCompressor = false;
+        this.compressor = this.initializeCompressor();
     }
 
     // schedule a sound to play at the specified time in milliseconds
@@ -130,7 +132,20 @@ class WebAudioDriver extends BaseAudioDriver {
         // set gain (volume). 1 is default, .1 is 10 percent
         let gainNode = this.webAudioContext.createGain();
         gainNode.gain.value = soundData.gain;
-        gainNode.connect(this.webAudioContext.destination);
+        // check whether we're supposed to use a compressor, and make sure it exists in the browser
+        if (this.useCompressor && DynamicsCompressorNode) {
+            // connect output with compressor
+            // note: if we make the compressor toggle-able, we will need to add a way to disconnect 
+            // the previous output configuration if it had already been set up without a compressor.
+            gainNode.connect(this.compressor);
+            this.compressor.connect(this.webAudioContext.destination)
+        } else {
+            // connect output
+            // note: if we make the compressor toggle-able, we will need to add a way to disconnect 
+            // the compressor if it had previously been set up.
+            gainNode.connect(this.webAudioContext.destination)
+            sound.connect(gainNode); // connect the sound to the context's destination (the speakers)
+        }
         sound.connect(gainNode); // connect the sound to the context's destination (the speakers)
 
         return sound
@@ -149,6 +164,18 @@ class WebAudioDriver extends BaseAudioDriver {
 
     getSchedulingTimeOffsetInMilliseconds() {
         return 0; // this audio driver will act as the main timer that we use as a timing reference, so no need to include an offset.
+    }
+
+    initializeCompressor() {
+        // the settings for this compressor were chosen mostly based on trial and error
+        let compressor = new DynamicsCompressorNode(this.webAudioContext, {
+            threshold: -10,
+            knee: 10,
+            ratio: 10,
+            attack: 0,
+            release: .1,
+        })
+        return compressor;
     }
 }
 
