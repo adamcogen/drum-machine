@@ -1523,8 +1523,18 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = [this.components.shapes.pauseButtonShape._renderer.elem, this.components.domElements.images.playIcon, this.components.domElements.images.pauseIcon]
         let eventHandlersHash = {
             "click": () => this.pauseButtonClickHandler(this),
-            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.pauseButtonShape),
-            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.pauseButtonShape),
+            "mouseenter": () => {
+                if (this.sequencer.paused) {
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.play
+                } else {
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.stop
+                }
+                this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.pauseButtonShape)
+            },
+            "mouseleave": () => {
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+                this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.pauseButtonShape)
+            },
         }
         this.addEventListenersWithoutDuplicates("pauseButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
@@ -1952,8 +1962,14 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = [this.components.shapes.clearAllNotesButtonShape._renderer.elem, this.components.domElements.images.clearAllIcon]
         let eventHandlersHash = {
             "click": () => this.clearAllNotesButtonClickHandler(this),
-            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearAllNotesButtonShape, "red"),
-            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearAllNotesButtonShape),
+            "mouseenter": () => {
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.deletePattern
+                this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearAllNotesButtonShape, "red")
+            },
+            "mouseleave": () => {
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+                this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearAllNotesButtonShape)
+            },
         }
         this.addEventListenersWithoutDuplicates("clearAllNotes", shapesToAddEventListenersTo, eventHandlersHash);
     }
@@ -3221,16 +3237,28 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [lockedIcon] // we don't include the button shape here, only the icon, to keep things simpler for now
             let eventHandlersHash = {
                 "click": () => this.setQuantizationButtonClickHandler(this, rowIndex, false),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex]),
-                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex]),
+                "mouseenter": () => {
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.quantized
+                    this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex])
+                },
+                "mouseleave": () => {
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+                    this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex])
+                },
             }
             this.addEventListenersWithoutDuplicates("turnOffQuantizationForRow" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add event listeners for 'unlocked icon'
             shapesToAddEventListenersTo = [unlockedIcon] // we don't include the button shape here, only the icon, to keep things simpler for now
             eventHandlersHash = {
                 "click": () => this.setQuantizationButtonClickHandler(this, rowIndex, true),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex]),
-                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex]),
+                "mouseenter": () => {
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.unquantized
+                    this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex])
+                },
+                "mouseleave": () => {
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+                    this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex])
+                },
             }
             this.addEventListenersWithoutDuplicates("turnOnQuantizationForRow" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add the icons to the dom and to our list that tracks these icons
