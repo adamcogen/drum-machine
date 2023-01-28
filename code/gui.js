@@ -1361,19 +1361,23 @@ class DrumMachineGui {
     }
 
     initializeMidiOutputSelectorEventListeners() {
-        this.components.domElements.selectors.midiOutput.addEventListener('change', () => {
-            navigator.requestMIDIAccess().then((midiAccess) => {
-                let midiAudioDriver = this.sequencer.audioDrivers[1]; // index 1 is just a hard-coded to always be the index of the MIDI audio driver. and index 0 is the WebAudio driver.
-                let selectedMidiPortId = this.midiOutputsMap[this.components.domElements.selectors.midiOutput.value];
-                // now that the asynchronous request for MIDI access has been completed, retrieve the particular port we want to use.
-                // just use null if no MIDI output was specified. the MIDI audio driver is set up to nit play audio if its MIDI port is null.
-                let midiOutput = (selectedMidiPortId === null ? null : midiAccess.outputs.get(selectedMidiPortId));
-                midiAudioDriver.setMidiOutput(midiOutput); // update the MIDI driver we created earlier to use the MIDI port we just retrieved. 
-            })
-        });
-        this.components.domElements.selectors.midiOutput.addEventListener('keydown', (event) => {
-            event.preventDefault();
-        });
+        let shapesToAddEventListenersTo = [this.components.domElements.selectors.midiOutput]
+        let eventHandlersHash = {
+            "change": () => {
+                navigator.requestMIDIAccess().then((midiAccess) => {
+                    let midiAudioDriver = this.sequencer.audioDrivers[1]; // index 1 is just a hard-coded to always be the index of the MIDI audio driver. and index 0 is the WebAudio driver.
+                    let selectedMidiPortId = this.midiOutputsMap[this.components.domElements.selectors.midiOutput.value];
+                    // now that the asynchronous request for MIDI access has been completed, retrieve the particular port we want to use.
+                    // just use null if no MIDI output was specified. the MIDI audio driver is set up to nit play audio if its MIDI port is null.
+                    let midiOutput = (selectedMidiPortId === null ? null : midiAccess.outputs.get(selectedMidiPortId));
+                    midiAudioDriver.setMidiOutput(midiOutput); // update the MIDI driver we created earlier to use the MIDI port we just retrieved. 
+                })
+            },
+            "keydown": (event) => {event.preventDefault()},
+            "mouseenter": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.selectLiveMidiOutputPort},
+            "mouseleave": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText},
+        };
+        this.addEventListenersWithoutDuplicates("midiOutputSelector", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     initializeDrumKitSelectorValuesAndStyles() {
@@ -1400,26 +1404,30 @@ class DrumMachineGui {
     }
 
     initializeDrumKitSelectorEventListeners() {
-        this.components.domElements.selectors.drumkit.addEventListener('change', () => {
-            if (this.components.domElements.selectors.drumkit.value === this.configurations.drumkitSelector.noWebAudioOutputOptionText) { // if the 'no live audio' option is seleted
-                this.sequencer.audioDrivers[0].muted = true;
-            } else {
-                this.sequencer.audioDrivers[0].muted = false;
-                this.sequencer.samples = this.allDrumKitsHash[this.components.domElements.selectors.drumkit.value];
-                // we serialize selected drum kit info here because we don't want to serialize 'no live audio output'.
-                // this is a user experience choice, because refreshing the sequencer and having no audio could be
-                // confusing.
-                // in order to start serializing 'no live audio output', all you'd need to do should be to move
-                // the following two lines out of this 'if/else' block. i've tried to make sure all the other logic,
-                // including for deserializing, still works as is for that case. 
-                this.selectedDrumKitName = this.components.domElements.selectors.drumkit.value;
-                this.sequencer.sampleListName = this.selectedDrumKitName
-            }
-            this.saveCurrentSequencerStateToUrlHash();
-        });
-        this.components.domElements.selectors.drumkit.addEventListener('keydown', (event) => {
-            event.preventDefault();
-        });
+        let shapesToAddEventListenersTo = [this.components.domElements.selectors.drumkit]
+        let eventHandlersHash = {
+            "change": () => {
+                if (this.components.domElements.selectors.drumkit.value === this.configurations.drumkitSelector.noWebAudioOutputOptionText) { // if the 'no live audio' option is seleted
+                    this.sequencer.audioDrivers[0].muted = true;
+                } else {
+                    this.sequencer.audioDrivers[0].muted = false;
+                    this.sequencer.samples = this.allDrumKitsHash[this.components.domElements.selectors.drumkit.value];
+                    // we serialize selected drum kit info here because we don't want to serialize 'no live audio output'.
+                    // this is a user experience choice, because refreshing the sequencer and having no audio could be
+                    // confusing.
+                    // in order to start serializing 'no live audio output', all you'd need to do should be to move
+                    // the following two lines out of this 'if/else' block. i've tried to make sure all the other logic,
+                    // including for deserializing, still works as is for that case. 
+                    this.selectedDrumKitName = this.components.domElements.selectors.drumkit.value;
+                    this.sequencer.sampleListName = this.selectedDrumKitName
+                }
+                this.saveCurrentSequencerStateToUrlHash();
+            },
+            "keydown": (event) => {event.preventDefault()},
+            "mouseenter": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.selectDrumKit},
+            "mouseleave": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText},
+        }
+        this.addEventListenersWithoutDuplicates("drumKitSelector", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     initializeExamplePatternSelectorValuesAndStyles() {
@@ -1449,19 +1457,23 @@ class DrumMachineGui {
     }
 
     initializeExamplePatternSelectorEventListeners() {
-        this.components.domElements.selectors.examplePatterns.addEventListener('change', () => {
-            let selectedValue = this.components.domElements.selectors.examplePatterns.value;
-            if (this.flattenedExampleSequencerPatternsHash[selectedValue]) {
-                // if an example pattern was selected, here we will want to load it. we will do that be deserializing it from the serialized sequencer string we stored in our 'example patterns' hash.
-                this.loadSequencerPatternFromBase64String(this.flattenedExampleSequencerPatternsHash[selectedValue]);
-                // change the selected value back to 'no selection' right away. that way we allow re-selecting the same option over and over to reload the same example pattern
-                this.components.domElements.selectors.examplePatterns.options[0].innerHTML = "*" + selectedValue
-                this.components.domElements.selectors.examplePatterns.options[0].selected = true;
-            }
-        });
-        this.components.domElements.selectors.examplePatterns.addEventListener('keydown', (event) => {
-            event.preventDefault();
-        });
+        let shapesToAddEventListenersTo = [this.components.domElements.selectors.examplePatterns]
+        let eventHandlersHash = {
+            "change": () => {
+                let selectedValue = this.components.domElements.selectors.examplePatterns.value;
+                if (this.flattenedExampleSequencerPatternsHash[selectedValue]) {
+                    // if an example pattern was selected, here we will want to load it. we will do that be deserializing it from the serialized sequencer string we stored in our 'example patterns' hash.
+                    this.loadSequencerPatternFromBase64String(this.flattenedExampleSequencerPatternsHash[selectedValue]);
+                    // change the selected value back to 'no selection' right away. that way we allow re-selecting the same option over and over to reload the same example pattern
+                    this.components.domElements.selectors.examplePatterns.options[0].innerHTML = "*" + selectedValue
+                    this.components.domElements.selectors.examplePatterns.options[0].selected = true;
+                }
+            },
+            "keydown": (event) => {event.preventDefault()},
+            "mouseenter": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.selectExampleSequencerPattern},
+            "mouseleave": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText},
+        }
+        this.addEventListenersWithoutDuplicates("examplePatternSelector", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     // add event listeners to the buttons that let you select which resources will be moved by the shift tool.

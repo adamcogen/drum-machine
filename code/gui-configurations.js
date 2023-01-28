@@ -445,9 +445,9 @@ function getGuiConfigurations(hideIcons=false) {
             setBeatsPerMinute: "set tempo in beats per minute (BPM)",
             setBeatsPerLoop: "set number of beats in loop (used to calculate the loop's length based on its tempo in beats per minute)",
             setMillisecondsPerLoop: "set loop length in milliseconds",
-            selectLiveMidiOutputPort: "",
-            selectDrumKit: "",
-            selectExampleSequencerPattern: "",
+            selectLiveMidiOutputPort: "select live MIDI output port",
+            selectDrumKit: "select drum kit to use for live audio output",
+            selectExampleSequencerPattern: "load an example sequencer pattern",
         }
     }
 }
