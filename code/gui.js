@@ -33,6 +33,7 @@ class DrumMachineGui {
                 "Funk Mess": "eyJsb29wTGVuZ3RoIjoyNDAwLCJyb3dzIjpbIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjo4LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjowLFwibm90ZXNcIjpbe1wic2FtcGxlXCI6XCJ3b29kYmxvY2tcIixcImJlYXRcIjowLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozOSxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwiYmVhdFwiOjQsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjM5LFwibWlkaVZlbG9jaXR5XCI6MzB9XX0iLCJ7XCJxdWFudGl6ZWRcIjpmYWxzZSxcInN1YmRpdmlzaW9uc1wiOjgsXCJyZWZlcmVuY2VMaW5lc1wiOjgsXCJyZWZlcmVuY2VMaW5lc1NoaWZ0XCI6MCxcInN1YmRpdmlzaW9uTGluZXNTaGlmdFwiOjAsXCJub3Rlc1wiOlt7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwicHJpb3JpdHlcIjozNDIuODU3MTQyODU3MTQyODMsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjM5LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwid29vZGJsb2NrXCIsXCJwcmlvcml0eVwiOjkzNixcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6MzksXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJ3b29kYmxvY2tcIixcInByaW9yaXR5XCI6MTU0Mi44NTcxNDI4NTcxNDMsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjM5LFwibWlkaVZlbG9jaXR5XCI6MzB9XX0iLCJ7XCJxdWFudGl6ZWRcIjpmYWxzZSxcInN1YmRpdmlzaW9uc1wiOjgsXCJyZWZlcmVuY2VMaW5lc1wiOjQsXCJyZWZlcmVuY2VMaW5lc1NoaWZ0XCI6MCxcInN1YmRpdmlzaW9uTGluZXNTaGlmdFwiOjAsXCJub3Rlc1wiOlt7XCJzYW1wbGVcIjpcImhpLWhhdC1jbG9zZWRcIixcInByaW9yaXR5XCI6MCxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6NDMsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJoaS1oYXQtY2xvc2VkXCIsXCJwcmlvcml0eVwiOjM0Ni4yODU3MTQyODU3MTQzMyxcInZvbHVtZVwiOjAuMTEwMDAwMDAwMDAwMDAwMTQsXCJtaWRpTm90ZVwiOjQzLFwibWlkaVZlbG9jaXR5XCI6NH0se1wic2FtcGxlXCI6XCJoaS1oYXQtY2xvc2VkXCIsXCJwcmlvcml0eVwiOjYyNy40Mjg1NzE0Mjg1NzE0LFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjo0MyxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcImhpLWhhdC1jbG9zZWRcIixcInByaW9yaXR5XCI6OTM5LjQyODU3MTQyODU3MTMsXCJ2b2x1bWVcIjowLjA4NTYyNTAwMDAwMDAwMDE1LFwibWlkaU5vdGVcIjo0MyxcIm1pZGlWZWxvY2l0eVwiOjN9LHtcInNhbXBsZVwiOlwiaGktaGF0LWNsb3NlZFwiLFwicHJpb3JpdHlcIjoxMTA0LFwidm9sdW1lXCI6MC4xMjMxMjUsXCJtaWRpTm90ZVwiOjQzLFwibWlkaVZlbG9jaXR5XCI6NX0se1wic2FtcGxlXCI6XCJoaS1oYXQtY2xvc2VkXCIsXCJwcmlvcml0eVwiOjEyMjAuNTcxNDI4NTcxNDI4NCxcInZvbHVtZVwiOjAuNTI0Mzc1MDAwMDAwMDAwMSxcIm1pZGlOb3RlXCI6NDMsXCJtaWRpVmVsb2NpdHlcIjozMX0se1wic2FtcGxlXCI6XCJoaS1oYXQtY2xvc2VkXCIsXCJwcmlvcml0eVwiOjE1NDIuODU3MTQyODU3MTQzLFwidm9sdW1lXCI6MC4xMTAwMDAwMDAwMDAwMDAxNCxcIm1pZGlOb3RlXCI6NDMsXCJtaWRpVmVsb2NpdHlcIjo0fSx7XCJzYW1wbGVcIjpcImhpLWhhdC1jbG9zZWRcIixcInByaW9yaXR5XCI6MTgzNC4yODU3MTQyODU3MTQyLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjo0MyxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcImhpLWhhdC1jbG9zZWRcIixcInByaW9yaXR5XCI6MjEyOS4xNDI4NTcxNDI4NTcsXCJ2b2x1bWVcIjowLjI1NjI1MDAwMDAwMDAwMDE0LFwibWlkaU5vdGVcIjo0MyxcIm1pZGlWZWxvY2l0eVwiOjE0fV19Iiwie1wicXVhbnRpemVkXCI6dHJ1ZSxcInN1YmRpdmlzaW9uc1wiOjQsXCJyZWZlcmVuY2VMaW5lc1wiOjQsXCJyZWZlcmVuY2VMaW5lc1NoaWZ0XCI6MCxcInN1YmRpdmlzaW9uTGluZXNTaGlmdFwiOjAsXCJub3Rlc1wiOlt7XCJzYW1wbGVcIjpcInNuYXJlXCIsXCJiZWF0XCI6MSxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6MzcsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJzbmFyZVwiLFwiYmVhdFwiOjMsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjM3LFwibWlkaVZlbG9jaXR5XCI6MzB9XX0iLCJ7XCJxdWFudGl6ZWRcIjpmYWxzZSxcInN1YmRpdmlzaW9uc1wiOjgsXCJyZWZlcmVuY2VMaW5lc1wiOjQsXCJyZWZlcmVuY2VMaW5lc1NoaWZ0XCI6MCxcInN1YmRpdmlzaW9uTGluZXNTaGlmdFwiOjAsXCJub3Rlc1wiOlt7XCJzYW1wbGVcIjpcInRvbVwiLFwicHJpb3JpdHlcIjo1MTQuMjg1NzE0Mjg1NzE0MixcInZvbHVtZVwiOjAuMzA1MDAwMDAwMDAwMDAwMSxcIm1pZGlOb3RlXCI6NDIsXCJtaWRpVmVsb2NpdHlcIjoxN30se1wic2FtcGxlXCI6XCJ0b21cIixcInByaW9yaXR5XCI6MTcwNy40Mjg1NzE0Mjg1NzEzLFwidm9sdW1lXCI6MC4zMDUwMDAwMDAwMDAwMDAxLFwibWlkaU5vdGVcIjo0MixcIm1pZGlWZWxvY2l0eVwiOjE3fV19Iiwie1wicXVhbnRpemVkXCI6ZmFsc2UsXCJzdWJkaXZpc2lvbnNcIjoxNixcInJlZmVyZW5jZUxpbmVzXCI6NCxcInJlZmVyZW5jZUxpbmVzU2hpZnRcIjowLFwic3ViZGl2aXNpb25MaW5lc1NoaWZ0XCI6MCxcIm5vdGVzXCI6W3tcInNhbXBsZVwiOlwiYmFzcy1kcnVtXCIsXCJwcmlvcml0eVwiOjE4OC41NzE0Mjg1NzE0Mjg1NixcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6MzYsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJiYXNzLWRydW1cIixcInByaW9yaXR5XCI6OTM5LjQyODU3MTQyODU3MTMsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjM2LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwiYmFzcy1kcnVtXCIsXCJwcmlvcml0eVwiOjEwOTAuMjg1NzE0Mjg1NzE0MixcInZvbHVtZVwiOjAuNjgzNzUwMDAwMDAwMDAwMSxcIm1pZGlOb3RlXCI6MzYsXCJtaWRpVmVsb2NpdHlcIjo0MX0se1wic2FtcGxlXCI6XCJiYXNzLWRydW1cIixcInByaW9yaXR5XCI6MTM5NS40Mjg1NzE0Mjg1NzEzLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozNixcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcImJhc3MtZHJ1bVwiLFwicHJpb3JpdHlcIjoyMTUzLjE0Mjg1NzE0Mjg1NzMsXCJ2b2x1bWVcIjowLjIwNzUwMDAwMDAwMDAwMDEzLFwibWlkaU5vdGVcIjozNixcIm1pZGlWZWxvY2l0eVwiOjExfV19Iiwie1wicXVhbnRpemVkXCI6dHJ1ZSxcInN1YmRpdmlzaW9uc1wiOjgsXCJyZWZlcmVuY2VMaW5lc1wiOjQsXCJyZWZlcmVuY2VMaW5lc1NoaWZ0XCI6MCxcInN1YmRpdmlzaW9uTGluZXNTaGlmdFwiOjAsXCJub3Rlc1wiOlt7XCJzYW1wbGVcIjpcImJhc3MtZHJ1bVwiLFwiYmVhdFwiOjAsXCJ2b2x1bWVcIjoxLjI2ODc1LFwibWlkaU5vdGVcIjozNixcIm1pZGlWZWxvY2l0eVwiOjc5fSx7XCJzYW1wbGVcIjpcImJhc3MtZHJ1bVwiLFwiYmVhdFwiOjIsXCJ2b2x1bWVcIjoxLjI2ODc1LFwibWlkaU5vdGVcIjozNixcIm1pZGlWZWxvY2l0eVwiOjc5fSx7XCJzYW1wbGVcIjpcImJhc3MtZHJ1bVwiLFwiYmVhdFwiOjQsXCJ2b2x1bWVcIjoxLjI2ODc1LFwibWlkaU5vdGVcIjozNixcIm1pZGlWZWxvY2l0eVwiOjc5fSx7XCJzYW1wbGVcIjpcImJhc3MtZHJ1bVwiLFwiYmVhdFwiOjYsXCJ2b2x1bWVcIjoxLjI2ODc1LFwibWlkaU5vdGVcIjozNixcIm1pZGlWZWxvY2l0eVwiOjc5fV19Il0sImJwbSI6MTAwLCJudW1iZXJPZkJlYXRzIjo0LCJpc0luQnBtTW9kZSI6dHJ1ZX0=",
                 "Hi Hat": "eyJsb29wTGVuZ3RoIjoyMzMwLjA5NzA4NzM3ODY0MSwicm93cyI6WyJ7XCJxdWFudGl6ZWRcIjpmYWxzZSxcInN1YmRpdmlzaW9uc1wiOjE2LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjowLFwibm90ZXNcIjpbe1wic2FtcGxlXCI6XCJnaG9zdC1ub3RlLXNuYXJlXCIsXCJwcmlvcml0eVwiOjE2My4xMDY3OTYxMTY1MDQ4OCxcInZvbHVtZVwiOjAuNDAyNTAwMDAwMDAwMDAwMTQsXCJtaWRpTm90ZVwiOjQwLFwibWlkaVZlbG9jaXR5XCI6MjN9LHtcInNhbXBsZVwiOlwid29vZGJsb2NrXCIsXCJwcmlvcml0eVwiOjMxOS41NTYxNzE5ODMzNTY1LFwidm9sdW1lXCI6MC4zNzgxMjUwMDAwMDAwMDAxNixcIm1pZGlOb3RlXCI6MzksXCJtaWRpVmVsb2NpdHlcIjoyMn0se1wic2FtcGxlXCI6XCJ3b29kYmxvY2tcIixcInByaW9yaXR5XCI6NzU4Ljk0NTkwODQ2MDQ3MTYsXCJ2b2x1bWVcIjowLjM3ODEyNTAwMDAwMDAwMDE2LFwibWlkaU5vdGVcIjozOSxcIm1pZGlWZWxvY2l0eVwiOjIyfSx7XCJzYW1wbGVcIjpcImdob3N0LW5vdGUtc25hcmVcIixcInByaW9yaXR5XCI6ODgyLjEwODE4MzA3OTA1NjksXCJ2b2x1bWVcIjowLjM3ODEyNTAwMDAwMDAwMDE2LFwibWlkaU5vdGVcIjo0MCxcIm1pZGlWZWxvY2l0eVwiOjIyfSx7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwicHJpb3JpdHlcIjoxMDQxLjg4NjI2OTA3MDczNTEsXCJ2b2x1bWVcIjowLjM3ODEyNTAwMDAwMDAwMDE2LFwibWlkaU5vdGVcIjozOSxcIm1pZGlWZWxvY2l0eVwiOjIyfSx7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwicHJpb3JpdHlcIjoxMTkxLjY3ODIyNDY4NzkzMzYsXCJ2b2x1bWVcIjowLjM3ODEyNTAwMDAwMDAwMDE2LFwibWlkaU5vdGVcIjozOSxcIm1pZGlWZWxvY2l0eVwiOjIyfSx7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwicHJpb3JpdHlcIjoxNjI0LjQxMDU0MDkxNTM5NTQsXCJ2b2x1bWVcIjowLjM3ODEyNTAwMDAwMDAwMDE2LFwibWlkaU5vdGVcIjozOSxcIm1pZGlWZWxvY2l0eVwiOjIyfSx7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwicHJpb3JpdHlcIjoyMDYzLjgwMDI3NzM5MjUxMDUsXCJ2b2x1bWVcIjowLjM3ODEyNTAwMDAwMDAwMDE2LFwibWlkaU5vdGVcIjozOSxcIm1pZGlWZWxvY2l0eVwiOjIyfSx7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwicHJpb3JpdHlcIjoyMjIwLjI0OTY1MzI1OTM2MjMsXCJ2b2x1bWVcIjowLjM3ODEyNTAwMDAwMDAwMDE2LFwibWlkaU5vdGVcIjozOSxcIm1pZGlWZWxvY2l0eVwiOjIyfV19Iiwie1wicXVhbnRpemVkXCI6dHJ1ZSxcInN1YmRpdmlzaW9uc1wiOjgsXCJyZWZlcmVuY2VMaW5lc1wiOjQsXCJyZWZlcmVuY2VMaW5lc1NoaWZ0XCI6MCxcInN1YmRpdmlzaW9uTGluZXNTaGlmdFwiOjAsXCJub3Rlc1wiOlt7XCJzYW1wbGVcIjpcImhpLWhhdC1vcGVuXCIsXCJiZWF0XCI6MCxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6NDQsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJoaS1oYXQtb3BlblwiLFwiYmVhdFwiOjIsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjQ0LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwiaGktaGF0LW9wZW5cIixcImJlYXRcIjo0LFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjo0NCxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcImhpLWhhdC1vcGVuXCIsXCJiZWF0XCI6NixcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6NDQsXCJtaWRpVmVsb2NpdHlcIjozMH1dfSIsIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjo4LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOi05Ljk4NjEzMDM3NDQ3OTg5LFwic3ViZGl2aXNpb25MaW5lc1NoaWZ0XCI6My4zMjg3MTAxMjQ4MjY2MyxcIm5vdGVzXCI6W3tcInNhbXBsZVwiOlwiaGktaGF0LW9wZW5cIixcImJlYXRcIjoxLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjo0NCxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcImhpLWhhdC1vcGVuXCIsXCJiZWF0XCI6MyxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6NDQsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJoaS1oYXQtb3BlblwiLFwiYmVhdFwiOjUsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjQ0LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwiaGktaGF0LW9wZW5cIixcImJlYXRcIjo3LFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjo0NCxcIm1pZGlWZWxvY2l0eVwiOjMwfV19Iiwie1wicXVhbnRpemVkXCI6dHJ1ZSxcInN1YmRpdmlzaW9uc1wiOjQsXCJyZWZlcmVuY2VMaW5lc1wiOjQsXCJyZWZlcmVuY2VMaW5lc1NoaWZ0XCI6MCxcInN1YmRpdmlzaW9uTGluZXNTaGlmdFwiOjAsXCJub3Rlc1wiOlt7XCJzYW1wbGVcIjpcImJhc3MtZHJ1bVwiLFwiYmVhdFwiOjAsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjM2LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwiYmFzcy1kcnVtXCIsXCJiZWF0XCI6MixcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6MzYsXCJtaWRpVmVsb2NpdHlcIjozMH1dfSIsIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjo4LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjowLFwibm90ZXNcIjpbe1wic2FtcGxlXCI6XCJzbmFyZVwiLFwiYmVhdFwiOjIsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjM3LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwic25hcmVcIixcImJlYXRcIjo2LFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozNyxcIm1pZGlWZWxvY2l0eVwiOjMwfV19Iiwie1wicXVhbnRpemVkXCI6dHJ1ZSxcInN1YmRpdmlzaW9uc1wiOjE2LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjowLFwibm90ZXNcIjpbe1wic2FtcGxlXCI6XCJiYXNzLWRydW1cIixcImJlYXRcIjozLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozNixcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcImJhc3MtZHJ1bVwiLFwiYmVhdFwiOjYsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjM2LFwibWlkaVZlbG9jaXR5XCI6MzB9XX0iXSwiYnBtIjoxMDMsIm51bWJlck9mQmVhdHMiOjQsImlzSW5CcG1Nb2RlIjp0cnVlfQ==",
                 "11s and 7s": "eyJsb29wTGVuZ3RoIjoyODAwLCJyb3dzIjpbIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjo4LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjowLFwibm90ZXNcIjpbe1wic2FtcGxlXCI6XCJiYXNzLWRydW1cIixcImJlYXRcIjowLFwibWlkaU5vdGVcIjozNn0se1wic2FtcGxlXCI6XCJiYXNzLWRydW1cIixcImJlYXRcIjoxLFwibWlkaU5vdGVcIjozNn1dfSIsIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjo0NCxcInJlZmVyZW5jZUxpbmVzXCI6OCxcInJlZmVyZW5jZUxpbmVzU2hpZnRcIjowLFwic3ViZGl2aXNpb25MaW5lc1NoaWZ0XCI6MCxcIm5vdGVzXCI6W3tcInNhbXBsZVwiOlwiYmFzcy1kcnVtXCIsXCJiZWF0XCI6MjYsXCJtaWRpTm90ZVwiOjM2fSx7XCJzYW1wbGVcIjpcImJhc3MtZHJ1bVwiLFwiYmVhdFwiOjI4LFwibWlkaU5vdGVcIjozNn0se1wic2FtcGxlXCI6XCJiYXNzLWRydW1cIixcImJlYXRcIjo0MixcIm1pZGlOb3RlXCI6MzZ9XX0iLCJ7XCJxdWFudGl6ZWRcIjp0cnVlLFwic3ViZGl2aXNpb25zXCI6NTYsXCJyZWZlcmVuY2VMaW5lc1wiOjgsXCJyZWZlcmVuY2VMaW5lc1NoaWZ0XCI6MCxcInN1YmRpdmlzaW9uTGluZXNTaGlmdFwiOjAsXCJub3Rlc1wiOlt7XCJzYW1wbGVcIjpcInNuYXJlXCIsXCJiZWF0XCI6MTMsXCJtaWRpTm90ZVwiOjM3fSx7XCJzYW1wbGVcIjpcInNuYXJlXCIsXCJiZWF0XCI6NDEsXCJtaWRpTm90ZVwiOjM3fV19Iiwie1wicXVhbnRpemVkXCI6dHJ1ZSxcInN1YmRpdmlzaW9uc1wiOjQ0LFwicmVmZXJlbmNlTGluZXNcIjo4LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjowLFwibm90ZXNcIjpbe1wic2FtcGxlXCI6XCJoaS1oYXQtb3BlblwiLFwiYmVhdFwiOjAsXCJtaWRpTm90ZVwiOjQ0fSx7XCJzYW1wbGVcIjpcImhpLWhhdC1vcGVuXCIsXCJiZWF0XCI6NixcIm1pZGlOb3RlXCI6NDR9LHtcInNhbXBsZVwiOlwiaGktaGF0LW9wZW5cIixcImJlYXRcIjoxNyxcIm1pZGlOb3RlXCI6NDR9LHtcInNhbXBsZVwiOlwiaGktaGF0LW9wZW5cIixcImJlYXRcIjoyMixcIm1pZGlOb3RlXCI6NDR9LHtcInNhbXBsZVwiOlwiaGktaGF0LW9wZW5cIixcImJlYXRcIjoyOCxcIm1pZGlOb3RlXCI6NDR9LHtcInNhbXBsZVwiOlwiaGktaGF0LW9wZW5cIixcImJlYXRcIjozOSxcIm1pZGlOb3RlXCI6NDR9XX0iLCJ7XCJxdWFudGl6ZWRcIjp0cnVlLFwic3ViZGl2aXNpb25zXCI6NTYsXCJyZWZlcmVuY2VMaW5lc1wiOjQsXCJyZWZlcmVuY2VMaW5lc1NoaWZ0XCI6MCxcInN1YmRpdmlzaW9uTGluZXNTaGlmdFwiOjAsXCJub3Rlc1wiOlt7XCJzYW1wbGVcIjpcImhpLWhhdC1vcGVuXCIsXCJiZWF0XCI6MTMsXCJtaWRpTm90ZVwiOjQ0fSx7XCJzYW1wbGVcIjpcImhpLWhhdC1vcGVuXCIsXCJiZWF0XCI6NDEsXCJtaWRpTm90ZVwiOjQ0fV19Il0sImJwbSI6ODUuNzE0Mjg1NzE0Mjg1NzEsIm51bWJlck9mQmVhdHMiOjR9",
+                "Shifted Funk": "eyJsb29wTGVuZ3RoIjoyODIzLjUyOTQxMTc2NDcwNiwicm93cyI6WyJ7XCJxdWFudGl6ZWRcIjp0cnVlLFwic3ViZGl2aXNpb25zXCI6MTYsXCJyZWZlcmVuY2VMaW5lc1wiOjQsXCJyZWZlcmVuY2VMaW5lc1NoaWZ0XCI6MCxcInN1YmRpdmlzaW9uTGluZXNTaGlmdFwiOjAsXCJub3Rlc1wiOlt7XCJzYW1wbGVcIjpcImhpLWhhdC1vcGVuXCIsXCJiZWF0XCI6MCxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6NDQsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJoaS1oYXQtb3BlblwiLFwiYmVhdFwiOjQsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjQ0LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwiaGktaGF0LW9wZW5cIixcImJlYXRcIjo4LFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjo0NCxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcImhpLWhhdC1vcGVuXCIsXCJiZWF0XCI6MTIsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjQ0LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwiaGktaGF0LW9wZW5cIixcImJlYXRcIjoxNCxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6NDQsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJoaS1oYXQtb3BlblwiLFwiYmVhdFwiOjE1LFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjo0NCxcIm1pZGlWZWxvY2l0eVwiOjMwfV19Iiwie1wicXVhbnRpemVkXCI6dHJ1ZSxcInN1YmRpdmlzaW9uc1wiOjE2LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjozNi4zMDI1MjEwMDg0MDMzNixcIm5vdGVzXCI6W3tcInNhbXBsZVwiOlwiaGktaGF0LW9wZW5cIixcImJlYXRcIjoyLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjo0NCxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcImhpLWhhdC1vcGVuXCIsXCJiZWF0XCI6NixcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6NDQsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJoaS1oYXQtb3BlblwiLFwiYmVhdFwiOjEwLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjo0NCxcIm1pZGlWZWxvY2l0eVwiOjMwfV19Iiwie1wicXVhbnRpemVkXCI6dHJ1ZSxcInN1YmRpdmlzaW9uc1wiOjE2LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjozMi4yNjg5MDc1NjMwMjUyMSxcIm5vdGVzXCI6W3tcInNhbXBsZVwiOlwid29vZGJsb2NrXCIsXCJiZWF0XCI6MixcInZvbHVtZVwiOjAuMTgzMTI1MDAwMDAwMDAwMTUsXCJtaWRpTm90ZVwiOjM5LFwibWlkaVZlbG9jaXR5XCI6OX0se1wic2FtcGxlXCI6XCJ3b29kYmxvY2tcIixcImJlYXRcIjo2LFwidm9sdW1lXCI6MC4xODMxMjUwMDAwMDAwMDAxNSxcIm1pZGlOb3RlXCI6MzksXCJtaWRpVmVsb2NpdHlcIjo5fSx7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwiYmVhdFwiOjEwLFwidm9sdW1lXCI6MC4xODMxMjUwMDAwMDAwMDAxNSxcIm1pZGlOb3RlXCI6MzksXCJtaWRpVmVsb2NpdHlcIjo5fSx7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwiYmVhdFwiOjE0LFwidm9sdW1lXCI6MC4xODMxMjUwMDAwMDAwMDAxNSxcIm1pZGlOb3RlXCI6MzksXCJtaWRpVmVsb2NpdHlcIjo5fV19Iiwie1wicXVhbnRpemVkXCI6dHJ1ZSxcInN1YmRpdmlzaW9uc1wiOjE2LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjoyNzg3LjIyNjg5MDc1NjMwMjUsXCJub3Rlc1wiOlt7XCJzYW1wbGVcIjpcInNuYXJlXCIsXCJiZWF0XCI6MyxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6MzcsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJzbmFyZVwiLFwiYmVhdFwiOjExLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozNyxcIm1pZGlWZWxvY2l0eVwiOjMwfV19Iiwie1wicXVhbnRpemVkXCI6dHJ1ZSxcInN1YmRpdmlzaW9uc1wiOjE2LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjo0MC4zMzYxMzQ0NTM3ODE1MSxcIm5vdGVzXCI6W3tcInNhbXBsZVwiOlwiY2xhcFwiLFwiYmVhdFwiOjMsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjM4LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwiY2xhcFwiLFwiYmVhdFwiOjEyLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozOCxcIm1pZGlWZWxvY2l0eVwiOjMwfV19Iiwie1wicXVhbnRpemVkXCI6dHJ1ZSxcInN1YmRpdmlzaW9uc1wiOjE2LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjowLFwibm90ZXNcIjpbe1wic2FtcGxlXCI6XCJiYXNzLWRydW1cIixcImJlYXRcIjowLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozNixcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcImJhc3MtZHJ1bVwiLFwiYmVhdFwiOjgsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjM2LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwidG9tXCIsXCJiZWF0XCI6MTQsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjQyLFwibWlkaVZlbG9jaXR5XCI6MzB9XX0iLCJ7XCJxdWFudGl6ZWRcIjp0cnVlLFwic3ViZGl2aXNpb25zXCI6MTYsXCJyZWZlcmVuY2VMaW5lc1wiOjQsXCJyZWZlcmVuY2VMaW5lc1NoaWZ0XCI6MCxcInN1YmRpdmlzaW9uTGluZXNTaGlmdFwiOjI0LjIwMTY4MDY3MjI2ODkwNyxcIm5vdGVzXCI6W3tcInNhbXBsZVwiOlwiYmFzcy1kcnVtXCIsXCJiZWF0XCI6MSxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6MzYsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJiYXNzLWRydW1cIixcImJlYXRcIjo0LFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozNixcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcImJhc3MtZHJ1bVwiLFwiYmVhdFwiOjUsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjM2LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwiYmFzcy1kcnVtXCIsXCJiZWF0XCI6OSxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6MzYsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJiYXNzLWRydW1cIixcImJlYXRcIjoxMCxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6MzYsXCJtaWRpVmVsb2NpdHlcIjozMH1dfSJdLCJicG0iOjg1LCJudW1iZXJPZkJlYXRzIjo0LCJpc0luQnBtTW9kZSI6dHJ1ZSwic2FtcGxlTGlzdE5hbWUiOiJCYXNpYyBEcnVtIEtpdCAzIn0="
             },
             "Out There": {
                 "5-7-9": "eyJsb29wTGVuZ3RoIjoyNjAwLCJyb3dzIjpbIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjo4LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjowLFwibm90ZXNcIjpbe1wic2FtcGxlXCI6XCJzbmFyZVwiLFwiYmVhdFwiOjIsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjM3LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwic25hcmVcIixcImJlYXRcIjo2LFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozNyxcIm1pZGlWZWxvY2l0eVwiOjMwfV19Iiwie1wicXVhbnRpemVkXCI6dHJ1ZSxcInN1YmRpdmlzaW9uc1wiOjE2LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjowLFwibm90ZXNcIjpbe1wic2FtcGxlXCI6XCJzbmFyZVwiLFwiYmVhdFwiOjE1LFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozNyxcIm1pZGlWZWxvY2l0eVwiOjMwfV19Iiwie1wicXVhbnRpemVkXCI6dHJ1ZSxcInN1YmRpdmlzaW9uc1wiOjIwLFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjowLFwibm90ZXNcIjpbe1wic2FtcGxlXCI6XCJiYXNzLWRydW1cIixcImJlYXRcIjowLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozNixcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcImJhc3MtZHJ1bVwiLFwiYmVhdFwiOjQsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjM2LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwiYmFzcy1kcnVtXCIsXCJiZWF0XCI6NyxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6MzYsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJiYXNzLWRydW1cIixcImJlYXRcIjoxMixcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6MzYsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJiYXNzLWRydW1cIixcImJlYXRcIjoxNCxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6MzYsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJiYXNzLWRydW1cIixcImJlYXRcIjoxNyxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6MzYsXCJtaWRpVmVsb2NpdHlcIjozMH1dfSIsIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjoyOCxcInJlZmVyZW5jZUxpbmVzXCI6NCxcInJlZmVyZW5jZUxpbmVzU2hpZnRcIjowLFwic3ViZGl2aXNpb25MaW5lc1NoaWZ0XCI6MCxcIm5vdGVzXCI6W3tcInNhbXBsZVwiOlwiaGktaGF0LW9wZW5cIixcImJlYXRcIjozLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjo0NCxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcImhpLWhhdC1vcGVuXCIsXCJiZWF0XCI6NixcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6NDQsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJoaS1oYXQtb3BlblwiLFwiYmVhdFwiOjEwLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjo0NCxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcImhpLWhhdC1vcGVuXCIsXCJiZWF0XCI6MTMsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjQ0LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwiaGktaGF0LW9wZW5cIixcImJlYXRcIjoxNyxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6NDQsXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJoaS1oYXQtb3BlblwiLFwiYmVhdFwiOjIwLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjo0NCxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcImhpLWhhdC1vcGVuXCIsXCJiZWF0XCI6MjQsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjQ0LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwiYmFzcy1kcnVtXCIsXCJiZWF0XCI6MjYsXCJ2b2x1bWVcIjowLjUsXCJtaWRpTm90ZVwiOjM2LFwibWlkaVZlbG9jaXR5XCI6MzB9LHtcInNhbXBsZVwiOlwiaGktaGF0LW9wZW5cIixcImJlYXRcIjoyNyxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6NDQsXCJtaWRpVmVsb2NpdHlcIjozMH1dfSIsIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjozNixcInJlZmVyZW5jZUxpbmVzXCI6NCxcInJlZmVyZW5jZUxpbmVzU2hpZnRcIjowLFwic3ViZGl2aXNpb25MaW5lc1NoaWZ0XCI6MCxcIm5vdGVzXCI6W3tcInNhbXBsZVwiOlwid29vZGJsb2NrXCIsXCJiZWF0XCI6NCxcInZvbHVtZVwiOjAuNSxcIm1pZGlOb3RlXCI6MzksXCJtaWRpVmVsb2NpdHlcIjozMH0se1wic2FtcGxlXCI6XCJ3b29kYmxvY2tcIixcImJlYXRcIjo4LFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozOSxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwiYmVhdFwiOjEzLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozOSxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwiYmVhdFwiOjE3LFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozOSxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwiYmVhdFwiOjIyLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozOSxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwiYmVhdFwiOjI2LFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozOSxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwiYmVhdFwiOjMxLFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozOSxcIm1pZGlWZWxvY2l0eVwiOjMwfSx7XCJzYW1wbGVcIjpcIndvb2RibG9ja1wiLFwiYmVhdFwiOjM1LFwidm9sdW1lXCI6MC41LFwibWlkaU5vdGVcIjozOSxcIm1pZGlWZWxvY2l0eVwiOjMwfV19Il0sImJwbSI6OTIuMzA3NjkyMzA3NjkyMywibnVtYmVyT2ZCZWF0cyI6NH0=",
@@ -360,9 +361,6 @@ class DrumMachineGui {
                 subdivisionTextInputs: [],
                 referenceLineTextInputs: [],
             },
-            checkboxes: {
-                quantizationCheckboxes: [],
-            },
             images: {
                 pauseIcon: document.getElementById('pause-icon'),
                 playIcon: document.getElementById('play-icon'),
@@ -493,6 +491,7 @@ class DrumMachineGui {
 
     // todo: clean this up a bit once we're sure we want to keep separate row handles for 'move rows' and 'change row volumes'
     initializeRowMovementVariablesAndVisuals(rowIndex) {
+        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveRow
         this.setNoteTrashBinVisibility(true);
         this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
         // save relevant info about whichever row is selected
@@ -534,20 +533,16 @@ class DrumMachineGui {
         this.rowSelectionTracker.domElements = [];
         this.rowSelectionTracker.domElements.push(this.components.domElements.textInputs.subdivisionTextInputs[rowIndex])
         this.rowSelectionTracker.domElements.push(this.components.domElements.textInputs.referenceLineTextInputs[rowIndex])
-        if (this.configurations.hideIcons) {
-            this.rowSelectionTracker.domElements.push(this.components.domElements.checkboxes.quantizationCheckboxes[rowIndex])
-        } else {
-            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.lockedIcons[rowIndex]);
-            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.unlockedIcons[rowIndex]);
-            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.clearRowIcons[rowIndex]);
-            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.resetSubdivisionLinesShiftIcons[rowIndex]);
-            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.resetReferenceLinesShiftIcons[rowIndex]);
-            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.moveRowIcons[rowIndex]);
-            if (this.components.domElements.iconLists.shiftRowIcons[rowIndex] !== null && this.components.domElements.iconLists.shiftRowIcons[rowIndex] !== undefined) {
-                this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.shiftRowIcons[rowIndex]);
-            }
-            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.changeRowVolumesIcons[rowIndex]);
+        this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.lockedIcons[rowIndex]);
+        this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.unlockedIcons[rowIndex]);
+        this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.clearRowIcons[rowIndex]);
+        this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.resetSubdivisionLinesShiftIcons[rowIndex]);
+        this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.resetReferenceLinesShiftIcons[rowIndex]);
+        this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.moveRowIcons[rowIndex]);
+        if (this.components.domElements.iconLists.shiftRowIcons[rowIndex] !== null && this.components.domElements.iconLists.shiftRowIcons[rowIndex] !== undefined) {
+            this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.shiftRowIcons[rowIndex]);
         }
+        this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.changeRowVolumesIcons[rowIndex]);
         this.rowSelectionTracker.domElementsOriginalPositions = [];
         for (let domElement of this.rowSelectionTracker.domElements) {
             this.rowSelectionTracker.domElementsOriginalPositions.push({
@@ -933,10 +928,12 @@ class DrumMachineGui {
             let circle = this.components.shapes.sequencerRowHandles[rowIndex];
             // add border to circle on mouseover
             circle._renderer.elem.addEventListener('mouseenter', () => {
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveRow
                 this.moveRowMouseEnterEventHandler(this, rowIndex);
             });
             // remove border from circle when mouse is no longer over it
             circle._renderer.elem.addEventListener('mouseleave', () => {
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
                 this.moveRowMouseLeaveEventHandler(this, rowIndex);
             });
             // when you hold your mouse down on the row handle circle, select that row.
@@ -980,6 +977,7 @@ class DrumMachineGui {
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
         circle.fill = self.configurations.sequencerRowHandles.unselectedColor
         rowSelectionRectangle.stroke = self.configurations.sequencerRowHandles.unselectedColor
+        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
     }
 
     // 'adjust row volumes' row handles event listener initializations
@@ -1583,9 +1581,6 @@ class DrumMachineGui {
     updateNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex) {
         // update quantization toggle checkbox, quantization settings: you can't quantize a row if it has 0 subdivisions.
         if (newNumberOfSubdivisions === 0) {
-            if (this.configurations.hideIcons) {
-                this.components.domElements.checkboxes.quantizationCheckboxes[rowIndex].checked = false
-            }
             this.sequencer.rows[rowIndex].quantized = false
         }
         // update the sequencer data structure to reflect the new number of subdivisions.
@@ -1634,42 +1629,6 @@ class DrumMachineGui {
     /**
      * 'toggle quantization for row' logic
      */
-
-    initializeQuantizationCheckboxes() {
-        if (!this.configurations.hideIcons) {
-            this.components.domElements.checkboxes.quantizationCheckboxes = [];
-            return 
-        }
-        for (let existingCheckbox of this.components.domElements.checkboxes.quantizationCheckboxes) {
-            this.components.domElements.divs.subdivisionTextInputs.removeChild(existingCheckbox)
-        }
-        this.components.domElements.checkboxes.quantizationCheckboxes = []
-        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
-            let verticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + this.configurations.subdivisionLineTextInputs.topPaddingPerRow + 4
-            let horizontalPosition = this.configurations.sequencer.left + this.configurations.sequencer.width + 73
-            let checkbox = this.initializeCheckbox(verticalPosition, horizontalPosition)
-            if (this.sequencer.rows[rowIndex].quantized) {
-                checkbox.checked = true;
-            }
-            this.components.domElements.checkboxes.quantizationCheckboxes.push(checkbox)
-        }
-    }
-
-    initializeQuantizationCheckboxEventListeners() {
-        if (!this.configurations.hideIcons) {
-            return 
-        }
-        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
-            let checkbox = this.components.domElements.checkboxes.quantizationCheckboxes[rowIndex]
-            if (this.eventHandlerFunctions["quantizationCheckbox" + rowIndex] !== null && this.eventHandlerFunctions["quantizationCheckbox" + rowIndex] !== undefined) {
-                // remove event listeners if they've already been added to avoid duplicates
-                checkbox.removeEventListener('click', this.eventHandlerFunctions["quantizationCheckbox" + rowIndex])
-            }
-            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
-            this.eventHandlerFunctions["quantizationCheckbox" + rowIndex] = () => this.setQuantizationButtonClickHandler(this, rowIndex, checkbox.checked);
-            checkbox.addEventListener('click', this.eventHandlerFunctions["quantizationCheckbox" + rowIndex])
-        }
-    }
 
     // search for comment "a general note about the 'self' paramater" within this file for info on its use here
     setQuantizationButtonClickHandler(self, rowIndex, quantize) {
@@ -2424,7 +2383,6 @@ class DrumMachineGui {
         // redraw html inputs, such as subdivision and reference line text areas, quantization checkboxes
         this.initializeSubdivisionTextInputsValuesAndStyles();
         this.initializeReferenceLineTextInputsValuesAndStyles();
-        this.initializeQuantizationCheckboxes(); // add checkboxes for toggling quantization on each row. these might be replaced with hand-drawn buttons of some sort later for better UI
         // redraw two.js shapes, such as 'add row' and 'clear notes for row' button shapes
         // todo: make methods for these so we don't have to pass in the GUI configurations twice when initializing.
         // todo: clean up first GUI initialization so that we can just call a 'redraw' method the first time as well, 
@@ -2466,7 +2424,6 @@ class DrumMachineGui {
         this.addQuantizationButtonShapeEventListeners();
         this.addShiftToolResetReferenceLinesButtonsEventListeners();
         this.addShiftToolResetSubdivisionLinesButtonsEventListeners();
-        this.initializeQuantizationCheckboxEventListeners();
         this.initializeAddRowButtonEventListener();
         this.initializeSequencerRowHandlesEventListeners();
         this.initializeVolumeAdjusterRowHandlesEventListeners();
@@ -3402,8 +3359,14 @@ class DrumMachineGui {
             }
             // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
             this.eventHandlerFunctions["moveRowIcon" + rowIndex] = {
-                mouseenter: () => this.moveRowMouseEnterEventHandler(this, rowIndex),
-                mouseleave: () => this.moveRowMouseLeaveEventHandler(this, rowIndex),
+                mouseenter: () => {
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveRow
+                    this.moveRowMouseEnterEventHandler(this, rowIndex)
+                },
+                mouseleave: () => {
+                    this.moveRowMouseLeaveEventHandler(this, rowIndex)
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+                },
                 mousedown: () => this.moveRowMouseDownEventHandler(this, rowIndex),
                 mouseup: () => this.moveRowMouseUpEventHandler(this, rowIndex),
             };

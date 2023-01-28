@@ -418,7 +418,7 @@ function getGuiConfigurations(hideIcons=false) {
             lines: ["load some example sequencer", " patterns to see what the drum", "machine can do."],
         },
         helpText: {
-            defaultText: "share this beat by copying and pasting the URL from the address bar. undo and redo changes using your browser's back and forward buttons.",
+            defaultText: "", // "share this beat by copying and pasting the URL from the address bar. undo and redo changes using your browser's back and forward buttons.",
             moveNote: "click and drag to move note. ctrl+click and drag to change note volume.",
             addRow: "add another row to the sequencer.",
             play: "play the sequencer.",
@@ -426,7 +426,7 @@ function getGuiConfigurations(hideIcons=false) {
             deletePattern: "delete the sequencer pattern.",
             quantized: "notes will snap to beats for this row. turn off snapping notes to beats (turn off quantization).",
             unquantized: "notes will not snap to beats for this row. turn on snapping notes to beats (turn on quantization).",
-            moveRow: "",
+            moveRow: "move sequencer row around, or throw it away.",
             changeRowVolume: "",
             setNumberOfSubdivisionLines: "",
             setNumberOfReferenceLines: "",
@@ -437,6 +437,7 @@ function getGuiConfigurations(hideIcons=false) {
             shiftNotes: "",
             shiftSubdivisionLines: "",
             shiftRefernceLines: "",
+            saveMidi: "",
         }
     }
 }
