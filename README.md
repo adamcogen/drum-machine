@@ -21,10 +21,9 @@ Try it [here](https://adamcogen.github.io/drum-machine/).
 ### Other Nice Stuff: 
 
 - Choose from multiple drum kits for live audio output
-  - Run locally to easily add your own drum kits
+  - Run locally to add your own drum kits
 - Live MIDI output 
-  - Must be running site locally to use this (required by most browsers for security reasons)
-  - MIDI note pitches for each drum type can be easily changed by modifying source code
+  - Run locally to change MIDI note pitches by modifying source code
 - Export patterns to a MIDI file
 - Specify tempo as BPM (beats per minute), or as a loop length in milliseconds
   - BPM input mode also supports 'tap tempo' functionality
