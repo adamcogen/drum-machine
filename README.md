@@ -37,7 +37,7 @@ Try it [here](https://adamcogen.github.io/drum-machine/).
 - Add more sounds to each drum kit
 - Improve user experience for timing shift functionality
 
-## How To Run Locally:
+## How To Run Locally
 
 Local HTTP server is needed to avoid Cross Origin Request issues when loading drum samples (at least in Chrome browser).
 
@@ -72,10 +72,11 @@ For Windows, you should be able to just run the commands that are in these .sh f
   * `sequencer.js` higher-level implementation of the sequencer, including the note scheduling algorithm and logic for reconfiguring the sequencer
   * `gui.js` implementation of the GUI, including all buttons, event listeners, etc.
   * `audio-drivers.js` interface and implementations of different audio drivers (WebAudio and MIDI) to standardize how the sequencer interacts with different audio output libraries
+  * `gui-configurations.js` definitions of constants used to define GUI display and behavior, formatted as a JSON object
   * `lib/` contains all third-party libraries used in the project
 * `assets/` contains icons, sound files, and any other assets used by the drum machine
 
-## Acknowledgements:
+## Acknowledgements
 
  - The colorful and interactive click-and-drag user interface for placing notes was inspired by the amazing [Cync](https://github.com/tiburzi/cync) drum machine.
  - Precise audio timing was implemented by using the WebAudio API to schedule audio ahead-of-time. This was informed and inspired by the projects and articles of Chris Wilson, including: the [MIDIDrums](https://github.com/cwilso/MIDIDrums) repo, the [Web Audio Metronome](https://github.com/cwilso/metronome) repo, and especially the article [A Tale Of Two Clocks](https://www.html5rocks.com/en/tutorials/audio/scheduling/), which is specifically about scheduling precisely-timed audio using the WebAudio API.

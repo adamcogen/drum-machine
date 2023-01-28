@@ -690,24 +690,30 @@ class DrumMachineGui {
     initializeReferenceLineTextInputsEventListeners() {
         for (let rowIndex = 0; rowIndex < this.sequencer.numberOfRows; rowIndex++) {
             let referenceLineTextInput = this.components.domElements.textInputs.referenceLineTextInputs[rowIndex]
-            referenceLineTextInput.addEventListener('blur', () => {
-                let newTextInputValue = referenceLineTextInput.value.trim() // remove whitespace from beginning and end of input then store it
-                if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
-                    newTextInputValue = this.sequencer.rows[rowIndex].getNumberOfReferenceLines()
+            let shapesToAddEventListenersTo = [referenceLineTextInput]
+            let eventHandlersHash = {
+                "mouseenter": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.setNumberOfReferenceLines},
+                "mouseleave": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText},
+                "keypress": (event) => this.defaultKeypressEventListenerForTextInput(event, referenceLineTextInput, false),
+                "blur": () => {
+                    let newTextInputValue = referenceLineTextInput.value.trim() // remove whitespace from beginning and end of input then store it
+                    if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
+                        newTextInputValue = this.sequencer.rows[rowIndex].getNumberOfReferenceLines()
+                    }
+                    newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
+                    newTextInputValue = Util.confineNumberToBounds(newTextInputValue, 0, this.configurations.referenceLineTextInputs.maximumValue)
+                    if (newTextInputValue === 0) {
+                        referenceLineTextInput.style.color = this.configurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
+                    } else {
+                        referenceLineTextInput.style.color = this.configurations.defaultFont.color // set font color
+                    }
+                    referenceLineTextInput.value = newTextInputValue
+                    this.updateNumberOfReferenceLinesForRow(newTextInputValue, rowIndex)
+                    this.resetNotesAndLinesDisplayForRow(rowIndex)
+                    this.saveCurrentSequencerStateToUrlHash();
                 }
-                newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
-                newTextInputValue = Util.confineNumberToBounds(newTextInputValue, 0, this.configurations.referenceLineTextInputs.maximumValue)
-                if (newTextInputValue === 0) {
-                    referenceLineTextInput.style.color = this.configurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
-                } else {
-                    referenceLineTextInput.style.color = this.configurations.defaultFont.color // set font color
-                }
-                referenceLineTextInput.value = newTextInputValue
-                this.updateNumberOfReferenceLinesForRow(newTextInputValue, rowIndex)
-                this.resetNotesAndLinesDisplayForRow(rowIndex)
-                this.saveCurrentSequencerStateToUrlHash();
-            })
-            this.addDefaultKeypressEventListenerToTextInput(referenceLineTextInput, false)
+            }
+            this.addEventListenersWithoutDuplicates("referenceLineTextInput" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
         }
     }
 
@@ -826,19 +832,25 @@ class DrumMachineGui {
     initializeSubdivisionTextInputsEventListeners() {
         for (let rowIndex = 0; rowIndex < this.sequencer.numberOfRows; rowIndex++) {
             let subdivisionTextInput = this.components.domElements.textInputs.subdivisionTextInputs[rowIndex]
-            subdivisionTextInput.addEventListener('blur', () => {
-                let newTextInputValue = subdivisionTextInput.value.trim() // remove whitespace from beginning and end of input then store it
-                if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
-                    newTextInputValue = this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
+            let shapesToAddEventListenersTo = [subdivisionTextInput]
+            let eventHandlersHash = {
+                "mouseenter": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.setNumberOfSubdivisionLines},
+                "mouseleave": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText},
+                "keypress": (event) => this.defaultKeypressEventListenerForTextInput(event, subdivisionTextInput, false),
+                "blur": () => {
+                    let newTextInputValue = subdivisionTextInput.value.trim() // remove whitespace from beginning and end of input then store it
+                    if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
+                        newTextInputValue = this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
+                    }
+                    newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
+                    newTextInputValue = Util.confineNumberToBounds(newTextInputValue, 0, this.configurations.subdivisionLineTextInputs.maximumValue)
+                    subdivisionTextInput.value = newTextInputValue
+                    this.updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
+                    this.redrawSequencer();
+                    this.saveCurrentSequencerStateToUrlHash();
                 }
-                newTextInputValue = parseInt(newTextInputValue) // we should only allow ints here for now, since that is what the existing logic is designed to handle
-                newTextInputValue = Util.confineNumberToBounds(newTextInputValue, 0, this.configurations.subdivisionLineTextInputs.maximumValue)
-                subdivisionTextInput.value = newTextInputValue
-                this.updateNumberOfSubdivisionsForRow(newTextInputValue, rowIndex)
-                this.redrawSequencer();
-                this.saveCurrentSequencerStateToUrlHash();
-            })
-            this.addDefaultKeypressEventListenerToTextInput(subdivisionTextInput, false)
+            }
+            this.addEventListenersWithoutDuplicates("subdivisionLineTextInput" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
         }
     }
 
