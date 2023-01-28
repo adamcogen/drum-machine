@@ -1192,23 +1192,29 @@ class DrumMachineGui {
          * number. if something besides a valid number is entered, the value will just go back
          * to whatever it was before, and not make any change to the sequencer.
          */
-        this.components.domElements.textInputs.loopLengthMillis.addEventListener('blur', () => {
-            let newTextInputValue = this.components.domElements.textInputs.loopLengthMillis.value.trim() // remove whitespace from beginning and end of input then store it
-            if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
-                newTextInputValue = this.sequencer.loopLengthInMillis
+        let shapesToAddEventListenersTo = [this.components.domElements.textInputs.loopLengthMillis]
+        let eventHandlersHash = {
+            "mouseenter": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.setMillisecondsPerLoop},
+            "mouseleave": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText},
+            "keypress": (event) => this.defaultKeypressEventListenerForTextInput(event, this.components.domElements.textInputs.loopLengthMillis, true),
+            "blur": () => {
+                let newTextInputValue = this.components.domElements.textInputs.loopLengthMillis.value.trim() // remove whitespace from beginning and end of input then store it
+                if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
+                    newTextInputValue = this.sequencer.loopLengthInMillis
+                }
+                newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
+                // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
+                newTextInputValue = Util.confineNumberToBounds(newTextInputValue, this.sequencer.lookAheadMillis, this.configurations.tempoTextInputMilliseconds.maximumValue)
+                this.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
+                if (newTextInputValue !== this.sequencer.loopLengthInMillis) { // only update things if the value in the text box has changed
+                    this.updateSequencerLoopLength(newTextInputValue)
+                    this.sequencer.tempoRepresentation.beatsPerMinute = Util.convertLoopLengthInMillisToBeatsPerMinute(newTextInputValue, this.sequencer.tempoRepresentation.numberOfBeatsPerLoop);
+                    this.components.domElements.textInputs.loopLengthBpm.value = this.sequencer.tempoRepresentation.beatsPerMinute;
+                    this.saveCurrentSequencerStateToUrlHash();
+                }
             }
-            newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
-            // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input
-            newTextInputValue = Util.confineNumberToBounds(newTextInputValue, this.sequencer.lookAheadMillis, this.configurations.tempoTextInputMilliseconds.maximumValue)
-            this.components.domElements.textInputs.loopLengthMillis.value = newTextInputValue
-            if (newTextInputValue !== this.sequencer.loopLengthInMillis) { // only update things if the value in the text box has changed
-                this.updateSequencerLoopLength(newTextInputValue)
-                this.sequencer.tempoRepresentation.beatsPerMinute = Util.convertLoopLengthInMillisToBeatsPerMinute(newTextInputValue, this.sequencer.tempoRepresentation.numberOfBeatsPerLoop);
-                this.components.domElements.textInputs.loopLengthBpm.value = this.sequencer.tempoRepresentation.beatsPerMinute;
-                this.saveCurrentSequencerStateToUrlHash();
-            }
-        })
-        this.addDefaultKeypressEventListenerToTextInput(this.components.domElements.textInputs.loopLengthMillis, true)
+        }
+        this.addEventListenersWithoutDuplicates("loopLengthMillisTextInput", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     // return the minimum beats per minute value the user can currently set the sequencer to, based on a couple other values.
@@ -1711,16 +1717,18 @@ class DrumMachineGui {
      */
 
     addDefaultKeypressEventListenerToTextInput(textarea, allowPeriods) {
-        textarea.addEventListener('keypress', (event) => {
-            if (event.key === "Enter") {
-                event.preventDefault()
-                textarea.blur() // apply the change to the text area if the user presses "enter"
-            }
-            let periodCheckPassed = (event.key === "." && allowPeriods) // if the character is a period, make this value 'true' if periods are allowed. otherwise false.
-            if (isNaN(Number.parseInt(event.key)) && !periodCheckPassed) { // don't allow the user to enter things that aren't numbers (but allow periods if they're allowed)
-                event.preventDefault()
-            }
-        })
+        textarea.addEventListener('keypress', (event) => this.defaultKeypressEventListenerForTextInput(event, textarea, allowPeriods))
+    }
+
+    defaultKeypressEventListenerForTextInput(event, textarea, allowPeriods) {
+        if (event.key === "Enter") {
+            event.preventDefault()
+            textarea.blur() // apply the change to the text area if the user presses "enter"
+        }
+        let periodCheckPassed = (event.key === "." && allowPeriods) // if the character is a period, make this value 'true' if periods are allowed. otherwise false.
+        if (isNaN(Number.parseInt(event.key)) && !periodCheckPassed) { // don't allow the user to enter things that aren't numbers (but allow periods if they're allowed)
+            event.preventDefault()
+        }
     }
 
     /**
