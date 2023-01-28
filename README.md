@@ -6,6 +6,8 @@
 
 This project is a client-side in-browser drum machine that supports the creation of unusual beat subdivisions and time feels.
 
+Try it [here](https://adamcogen.github.io/drum-machine/).
+
 ### Key Features:
 
 - Sequencer rows can be subdivided and quantized into any whole number of beats, including prime numbers 
