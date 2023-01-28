@@ -6,7 +6,7 @@ This drum machine will be an improved version of my old project [Polyrhythmic Dr
 
 > Most drum machines I've encountered only let you quantize beats to powers of two (quarter note, 8th note, 16th, 32nd, etc.) and triplets. This drum machine lets you quantize beats to any integer subdivision you want (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, ...)
 
-![Polyrhythmic Drum Machine (August 3rd, 2022)](assets/images/screenshot-8_3_2022.png "Polyrhythmic Drum Machine (August 3rd, 2022)")
+![Polyrhythmic Drum Machine (August 3rd, 2022)](assets/images/screenshot-1_28_2023-thin.png "Polyrhythmic Drum Machine (August 3rd, 2022)")
 
  Changes to the old project's functionality that will be included in this new version:
 

@@ -1529,17 +1529,10 @@ class DrumMachineGui {
         let eventHandlersHash = {
             "click": () => this.pauseButtonClickHandler(this),
             "mouseenter": () => {
-                if (this.sequencer.paused) {
-                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.play
-                } else {
-                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.stop
-                }
-                this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.pauseButtonShape)
+                let helpText = this.sequencer.paused ? this.configurations.helpText.play : this.configurations.helpText.stop;
+                this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.pauseButtonShape, helpText)
             },
-            "mouseleave": () => {
-                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
-                this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.pauseButtonShape)
-            },
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.pauseButtonShape),
         }
         this.addEventListenersWithoutDuplicates("pauseButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
@@ -1741,14 +1734,8 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = [this.components.shapes.addRowButtonShape._renderer.elem, this.components.domElements.images.addIcon]
         let eventHandlersHash = {
             "click": () => this.addRowClickHandler(this),
-            "mouseenter": () => {
-                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.addRow
-                this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.addRowButtonShape)
-            },
-            "mouseleave": () => {
-                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
-                this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.addRowButtonShape)
-            },
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.addRowButtonShape, this.configurations.helpText.addRow),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.addRowButtonShape),
         }
         this.addEventListenersWithoutDuplicates("addRowButton", shapesToAddEventListenersTo, eventHandlersHash);
     }
@@ -1757,6 +1744,7 @@ class DrumMachineGui {
     addRowClickHandler(self) {
         self.lastButtonClickTimeTrackers.addRow.lastClickTime = self.sequencer.currentTime
         self.components.shapes.addRowButtonShape.fill = self.configurations.buttonBehavior.clickedButtonColor
+        self.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         self.addEmptySequencerRow();
         if (self.sequencer.rows.length > 1) {
             // set the number of subdivisions and reference lines and the 
@@ -1789,14 +1777,8 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [this.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem]
             let eventHandlersHash = {
                 "click": () => this.clearRowButtonClickHandler(this, rowIndex),
-                "mouseenter": () => {
-                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.deleteAllNotesForRow
-                    this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex], "red")
-                },
-                "mouseleave": () => {
-                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
-                    this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex])
-                },
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex], this.configurations.helpText.deleteAllNotesForRow, "red"),
+                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex]),
             }
             this.addEventListenersWithoutDuplicates("clearNotesForRowShape" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
         }
@@ -1843,14 +1825,8 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = [this.components.shapes.exportPatternToMidiFileButton._renderer.elem, this.components.domElements.images.exportPatternAsMidiFileIcon]
         let eventHandlersHash = {
             "click": () => this.exportPatternToMidiFileButtonClickHandler(this),
-            "mouseenter": () => {
-                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.saveMidi
-                this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.exportPatternToMidiFileButton)
-            },
-            "mouseleave": () => {
-                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
-                this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.exportPatternToMidiFileButton)
-            },
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.exportPatternToMidiFileButton, this.configurations.helpText.saveMidi),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.exportPatternToMidiFileButton),
         }
         this.addEventListenersWithoutDuplicates("exportPatternToMidiFile", shapesToAddEventListenersTo, eventHandlersHash);
     }
@@ -1870,7 +1846,7 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]._renderer.elem]
             let eventHandlersHash = {
                 "click": () => this.resetReferenceLinesShiftClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex], "red"),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex], this.configurations.helpText.resetRefernceLineShift, "red"),
                 "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]),
             }
             this.addEventListenersWithoutDuplicates("resetReferenceLinesShiftShape" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
@@ -1902,7 +1878,7 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]._renderer.elem]
             let eventHandlersHash = {
                 "click": () => this.resetSubdivisionLinesShiftClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex], "red"),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex], this.configurations.helpText.resetSubdivisionLineShift, "red"),
                 "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]),
             }
             this.addEventListenersWithoutDuplicates("resetSubdivisionLinesShiftShape" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
@@ -1940,14 +1916,8 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = [this.components.shapes.clearAllNotesButtonShape._renderer.elem, this.components.domElements.images.clearAllIcon]
         let eventHandlersHash = {
             "click": () => this.clearAllNotesButtonClickHandler(this),
-            "mouseenter": () => {
-                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.deletePattern
-                this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearAllNotesButtonShape, "red")
-            },
-            "mouseleave": () => {
-                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
-                this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearAllNotesButtonShape)
-            },
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearAllNotesButtonShape, this.configurations.helpText.deletePattern, "red"),
+            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearAllNotesButtonShape),
         }
         this.addEventListenersWithoutDuplicates("clearAllNotes", shapesToAddEventListenersTo, eventHandlersHash);
     }
@@ -1981,7 +1951,7 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = [this.components.shapes.tempoInputModeSelectionBpmButton._renderer.elem, this.components.domElements.images.bpmLoopLengthModeIcon, this.components.shapes.tempoLabelMenuTitleTempoWord._renderer.elem]
         let eventHandlersHash = {
             "click": () => this.tempoInputModeSelectionBpmClickHandler(this),
-            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.tempoInputModeSelectionBpmButton),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.tempoInputModeSelectionBpmButton, this.configurations.helpText.loopLengthBpmMode),
             "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.tempoInputModeSelectionBpmButton),
         }
         this.addEventListenersWithoutDuplicates("tempoInputModeSelectionBpmButton", shapesToAddEventListenersTo, eventHandlersHash);
@@ -2038,7 +2008,7 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = [this.components.shapes.tempoInputModeSelectionMillisecondsButton._renderer.elem, this.components.domElements.images.millisecondsLoopLengthModeIcon, this.components.shapes.tempoLabelMenuTitleTimeWord._renderer.elem]
         let eventHandlersHash = {
             "click": () => this.tempoInputModeSelectionMillisecondsClickHandler(this),
-            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.tempoInputModeSelectionMillisecondsButton),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.tempoInputModeSelectionMillisecondsButton, this.configurations.helpText.loopLengthMillisecondsMode),
             "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.tempoInputModeSelectionMillisecondsButton),
         }
         this.addEventListenersWithoutDuplicates("tempoInputModeSelectionMillisecondsButton", shapesToAddEventListenersTo, eventHandlersHash);
@@ -2079,7 +2049,7 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = [this.components.shapes.tapTempoButton._renderer.elem, this.components.domElements.images.tapTempoIcon]
         let eventHandlersHash = {
             "click": () => this.tapTempoClickHandler(this),
-            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.tapTempoButton),
+            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.tapTempoButton, this.configurations.helpText.tapTempo),
             "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.tapTempoButton),
         }
         this.addEventListenersWithoutDuplicates("tapTempoButton", shapesToAddEventListenersTo, eventHandlersHash);
@@ -2950,8 +2920,8 @@ class DrumMachineGui {
     }
 
     rowVolumeAdjustmentWindowMouseUpHandler(self, event) {
+        self.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         self.rowVolumeAdjustmentTracker.selectedRowIndex = null
-        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
     }
@@ -3035,6 +3005,7 @@ class DrumMachineGui {
             self.noteBankNoteVolumesTracker[self.circleSelectionTracker.circleBeingMoved.guiData.sampleName].volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
             // update the actual note in the note bank to have that volume
             self.redrawSequencer(); // todo: this is probably an unnecessarily expensive call to make. we just want to update the note volume in the sample bank. but this seems like  a fast enough way for now. can optimize later if needed.
+            self.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         }
         self.adjustEventCoordinates(event)
         if (self.rowSelectionTracker.selectedRowIndex !== null) {
@@ -3046,7 +3017,6 @@ class DrumMachineGui {
         if (self.shiftToolTracker.selectedRowIndex !== null) {
             self.shiftToolMouseUpEventHandler(self, event);
         }
-        self.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         self.circleSelectionTracker.circleBeingMoved = null
         self.setNoteTrashBinVisibility(false)
         self.rowSelectionTracker.selectedRowIndex = null
@@ -3059,12 +3029,14 @@ class DrumMachineGui {
         if (self.rowSelectionTracker.removeRow) {
             self.sequencer.removeRowAtIndex(self.rowSelectionTracker.selectedRowIndex);
         }
+        self.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         self.rowSelectionTracker.selectedRowIndex = null
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
     }
 
     shiftToolMouseUpEventHandler(self, event) {
+        self.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         self.shiftToolTracker.selectedRowIndex = null
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
@@ -3168,14 +3140,8 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [clearRowIcon] // we don't include the button shape here, only the icon, because the shape event listeners are set up elsewhere
             let eventHandlersHash = {
                 "click": () => this.clearRowButtonClickHandler(this, rowIndex),
-                "mouseenter": () => {
-                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.deleteAllNotesForRow
-                    this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex], "red")
-                },
-                "mouseleave": () => {
-                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
-                    this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex])
-                },
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex], this.configurations.helpText.deleteAllNotesForRow, "red"),
+                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex]),
             }
             this.addEventListenersWithoutDuplicates("clearNotesForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add the copy to the dom and to our list that tracks these icons
@@ -3223,28 +3189,16 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [lockedIcon] // we don't include the button shape here, only the icon, to keep things simpler for now
             let eventHandlersHash = {
                 "click": () => this.setQuantizationButtonClickHandler(this, rowIndex, false),
-                "mouseenter": () => {
-                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.quantized
-                    this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex])
-                },
-                "mouseleave": () => {
-                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
-                    this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex])
-                },
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex], this.configurations.helpText.quantized),
+                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex]),
             }
             this.addEventListenersWithoutDuplicates("turnOffQuantizationForRow" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add event listeners for 'unlocked icon'
             shapesToAddEventListenersTo = [unlockedIcon] // we don't include the button shape here, only the icon, to keep things simpler for now
             eventHandlersHash = {
                 "click": () => this.setQuantizationButtonClickHandler(this, rowIndex, true),
-                "mouseenter": () => {
-                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.unquantized
-                    this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex])
-                },
-                "mouseleave": () => {
-                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
-                    this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex])
-                },
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex], this.configurations.helpText.unquantized),
+                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.toggleQuantizationButtonsRectangles[rowIndex]),
             }
             this.addEventListenersWithoutDuplicates("turnOnQuantizationForRow" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add the icons to the dom and to our list that tracks these icons
@@ -3274,7 +3228,7 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [resetSubdivisionsShiftIcon] // we don't include the button shape here, only the icon, because the shape event listeners are set up elsewhere
             let eventHandlersHash = {
                 "click": () => this.resetSubdivisionLinesShiftClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex], "red"),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex], this.configurations.helpText.resetSubdivisionLineShift, "red"),
                 "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]),
             }
             this.addEventListenersWithoutDuplicates("resetSubdvisionsLinesShiftForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
@@ -3302,7 +3256,7 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [resetReferenceLinesShiftIcon] // we don't include the button shape here, only the icon, because the shape event listeners are set up elsewhere
             let eventHandlersHash = {
                 "click": () => this.resetReferenceLinesShiftClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex], "red"),
+                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex], this.configurations.helpText.resetRefernceLineShift, "red"),
                 "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex]),
             }
             this.addEventListenersWithoutDuplicates("resetReferenceLinesShiftForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
@@ -3598,19 +3552,25 @@ class DrumMachineGui {
         }
     }
 
-    simpleButtonHoverMouseEnterLogic(self, buttonShape, strokeColor="black", fillColor=self.configurations.buttonBehavior.buttonHoverColor) {
-        if (buttonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor && buttonShape.guiData.respondToEvents) {
-            // don't change to hover color if we are still waiting for a 'click' color change to complete
-            buttonShape.fill = fillColor
-            buttonShape.stroke = strokeColor
+    simpleButtonHoverMouseEnterLogic(self, buttonShape, helpText=this.configurations.helpText.defaultText, strokeColor="black", fillColor=self.configurations.buttonBehavior.buttonHoverColor) {
+        if (buttonShape.guiData.respondToEvents) {
+            self.components.domElements.divs.bottomBarText.innerHTML = helpText
+            if (buttonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor) {
+                // don't change to hover color if we are still waiting for a 'click' color change to complete
+                buttonShape.fill = fillColor
+                buttonShape.stroke = strokeColor
+            }
         }
     }
 
     simpleButtonHoverMouseLeaveLogic(self, buttonShape, strokeColor="black", fillColor='transparent') {
-        if (buttonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor && buttonShape.guiData.respondToEvents) {
-            // don't change to hover color if we are still waiting for a 'click' color change to complete
-            buttonShape.fill = fillColor
-            buttonShape.stroke = strokeColor
+        if (buttonShape.guiData.respondToEvents) {
+            self.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+            if (buttonShape.fill !== self.configurations.buttonBehavior.clickedButtonColor) {
+                // don't change to hover color if we are still waiting for a 'click' color change to complete
+                buttonShape.fill = fillColor
+                buttonShape.stroke = strokeColor
+            }
         }
     }
 
