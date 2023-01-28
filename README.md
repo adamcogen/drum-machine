@@ -67,7 +67,7 @@ For Windows, you should be able to just run the commands that are in these .sh f
 * `index.html` main HTML webpage for the drum machine
 * `code/` contains all JavaScript source code
   * `drum-machine.js` main source code file from which everything else is instantiated
-  * `priority-linked-list.js` implementation of a special linked list data structure, created to be used as the backend datastore for sequencer rows
+  * `priority-linked-list.js` implementation of a special linked list data structure, created to be used as the backend datastore for sequencer rows. This file also contains unit tests for the data structure.
   * `sequencer.js` higher-level implementation of the sequencer, including the note scheduling algorithm and logic for reconfiguring the sequencer
   * `gui.js` implementation of the GUI, including all buttons, event listeners, etc.
   * `audio-drivers.js` interface and implementations of different audio drivers (WebAudio and MIDI) to standardize how the sequencer interacts with different audio output libraries

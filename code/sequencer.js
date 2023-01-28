@@ -691,6 +691,7 @@ class SequencerRow {
         let lengthOfEachBeatInMilliseconds = integerLoopLengthInMillis / this.getNumberOfSubdivisions();
         let priorityOfBeatZero = this.getSubdivisionLineShiftInMilliseconds() % lengthOfEachBeatInMilliseconds;
         let unshiftedNotePriority = priority - priorityOfBeatZero;
+        unshiftedNotePriority = unshiftedNotePriority < 0 ? integerLoopLengthInMillis + unshiftedNotePriority : unshiftedNotePriority // this lets us be sure we don't end up doing modular math on a negative number
         let numberOfBeatsBeforeNote = Math.floor(unshiftedNotePriority / lengthOfEachBeatInMilliseconds);
         let noteIsCloserToRightBeatThanLeft = (unshiftedNotePriority % lengthOfEachBeatInMilliseconds) > (lengthOfEachBeatInMilliseconds / 2);
         let closestBeat = numberOfBeatsBeforeNote;
