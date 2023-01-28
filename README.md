@@ -4,14 +4,16 @@
 
 ## About
 
-This project is a client-side in-browser drum machine that supports the creation of unusual beat subdivisions and time feels.
+This project is a drum machine that supports the creation of unusual beat subdivisions and time feels.
+
+It is browser-based, and runs completely client-side. It has primarily been tested in Chrome browser on Mac.
 
 Try it [here](https://adamcogen.github.io/drum-machine/).
 
 ### Key Features:
 
 - Sequencer rows can be subdivided and quantized into any whole number of beats, including prime numbers 
-   - Use this flexibility to program odd time signatures, complex polyrhythms, or fractional time offsets (such as pentuplet and suptuplet swing, 11s, 13s, and so on) that would be difficult or impossible to create in conventional DAWs, which often only support quantizing beats to powers of two (8th, 16th, and 32nd notes, etc.) and triplets.
+   - Use this flexibility to program odd time signatures, complex polyrhythms, and odd time divisions (such as pentuplet and suptuplet swing, 11s, 13s, and so on) that would be difficult or impossible to create in conventional DAWs, which often only support quantizing beats to powers of two (8th, 16th, and 32nd notes, etc.) and triplets.
 - Each sequencer row's beat lines can be shifted forwards or backwards in time as much as you like, so that notes sound ahead of or behind the beat.
   - Use this to create precisely-tuned experimental time feels, swing amounts, and note timing offsets.
 - Snap-to-grid (quantization) can be toggle on and off for each sequencer row
