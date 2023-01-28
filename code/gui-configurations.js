@@ -16,7 +16,8 @@ function getGuiConfigurations(hideIcons=false) {
             color: defaultSequencerLineColor,
             lineWidth: 3,
             // the following serialized (base64) sequencer pattern string will be loaded when we click the 'delete sequencer pattern' button:
-            clearedPatternBase64String: "eyJsb29wTGVuZ3RoIjoyMDAwLCJyb3dzIjpbIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjoxNixcInJlZmVyZW5jZUxpbmVzXCI6NCxcInJlZmVyZW5jZUxpbmVzU2hpZnRcIjowLFwic3ViZGl2aXNpb25MaW5lc1NoaWZ0XCI6MCxcIm5vdGVzXCI6W119Il0sImJwbSI6MTIwLCJudW1iZXJPZkJlYXRzIjo0LCJpc0luQnBtTW9kZSI6dHJ1ZX0="
+            clearedPatternBase64String: "eyJsb29wTGVuZ3RoIjoyMDAwLCJyb3dzIjpbIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjoxNixcInJlZmVyZW5jZUxpbmVzXCI6NCxcInJlZmVyZW5jZUxpbmVzU2hpZnRcIjowLFwic3ViZGl2aXNpb25MaW5lc1NoaWZ0XCI6MCxcIm5vdGVzXCI6W119Il0sImJwbSI6MTIwLCJudW1iZXJPZkJlYXRzIjo0LCJpc0luQnBtTW9kZSI6dHJ1ZX0=",
+            startingPatternBase64String: "eyJsb29wTGVuZ3RoIjoyMDAwLCJyb3dzIjpbIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjoxNixcInJlZmVyZW5jZUxpbmVzXCI6NCxcInJlZmVyZW5jZUxpbmVzU2hpZnRcIjowLFwic3ViZGl2aXNpb25MaW5lc1NoaWZ0XCI6MCxcIm5vdGVzXCI6W119Iiwie1wicXVhbnRpemVkXCI6dHJ1ZSxcInN1YmRpdmlzaW9uc1wiOjE2LFwicmVmZXJlbmNlTGluZXNcIjo0LFwicmVmZXJlbmNlTGluZXNTaGlmdFwiOjAsXCJzdWJkaXZpc2lvbkxpbmVzU2hpZnRcIjowLFwibm90ZXNcIjpbXX0iLCJ7XCJxdWFudGl6ZWRcIjp0cnVlLFwic3ViZGl2aXNpb25zXCI6MTYsXCJyZWZlcmVuY2VMaW5lc1wiOjQsXCJyZWZlcmVuY2VMaW5lc1NoaWZ0XCI6MCxcInN1YmRpdmlzaW9uTGluZXNTaGlmdFwiOjAsXCJub3Rlc1wiOltdfSIsIntcInF1YW50aXplZFwiOnRydWUsXCJzdWJkaXZpc2lvbnNcIjoxNixcInJlZmVyZW5jZUxpbmVzXCI6NCxcInJlZmVyZW5jZUxpbmVzU2hpZnRcIjowLFwic3ViZGl2aXNpb25MaW5lc1NoaWZ0XCI6MCxcIm5vdGVzXCI6W119Iiwie1wicXVhbnRpemVkXCI6ZmFsc2UsXCJzdWJkaXZpc2lvbnNcIjoxNixcInJlZmVyZW5jZUxpbmVzXCI6NCxcInJlZmVyZW5jZUxpbmVzU2hpZnRcIjowLFwic3ViZGl2aXNpb25MaW5lc1NoaWZ0XCI6MCxcIm5vdGVzXCI6W119Il0sImJwbSI6MTIwLCJudW1iZXJPZkJlYXRzIjo0LCJpc0luQnBtTW9kZSI6dHJ1ZSwic2FtcGxlTGlzdE5hbWUiOiJCYXNpYyBEcnVtIEtpdCAzIn0="
         },
         defaultFont: {
             color: 'black' // "#575757",
@@ -437,12 +438,12 @@ function getGuiConfigurations(hideIcons=false) {
             shiftNotes: "",
             shiftSubdivisionLines: "",
             shiftRefernceLines: "",
-            saveMidi: "export sequencer pattern to MIDI a file",
+            saveMidi: "export sequencer pattern to a MIDI file",
             tapTempo: "tap tempo: click this button at the tempo you'd like to use",
             loopLengthBpmMode: "display tempo in beats per minute",
             loopLengthMillisecondsMode: "display loop length in milliseconds",
-            setBeatsPerMinute: "",
-            setBeatsPerLoop: "",
+            setBeatsPerMinute: "set tempo in beats per minute (BPM)",
+            setBeatsPerLoop: "set number of beats in loop (used to calculate the loop's length based on its tempo in beats per minute)",
             setMillisecondsPerLoop: "set loop length in milliseconds",
             selectLiveMidiOutputPort: "",
             selectDrumKit: "",

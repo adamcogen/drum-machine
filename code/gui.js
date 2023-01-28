@@ -250,6 +250,9 @@ class DrumMachineGui {
         // by doing this we will be able to use the browser back and forward buttons as undo and redo buttons.
         let currentUrlHash = window.location.hash.substring(1); // first trim the '#' character from the start of the URL hash
         if (currentUrlHash !== this.mostRecentSavedUrlHash) { // if the URL hash has changed from what we last saved, load it
+            if (currentUrlHash === "") { // if there's nothing serialized, use the default starting pattern
+                currentUrlHash = this.configurations.sequencer.startingPatternBase64String;
+            }
             this.loadSequencerPatternFromBase64String(currentUrlHash)
             this.components.domElements.selectors.examplePatterns.options[0].innerHTML = ""
             this.components.domElements.selectors.examplePatterns.options[0].selected = true;
@@ -1247,24 +1250,30 @@ class DrumMachineGui {
          * number. if something besides a valid number is entered, the value will just go back
          * to whatever it was before, and not make any change to the sequencer.
          */
-         this.components.domElements.textInputs.loopLengthBpm.addEventListener('blur', () => {
-            let newTextInputValue = this.components.domElements.textInputs.loopLengthBpm.value.trim() // remove whitespace from beginning and end of input then store it
-            if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
-                newTextInputValue = this.sequencer.tempoRepresentation.beatsPerMinute
+        let shapesToAddEventListenersTo = [this.components.domElements.textInputs.loopLengthBpm]
+        let eventHandlersHash = {
+            "mouseenter": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.setBeatsPerMinute},
+            "mouseleave": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText},
+            "keypress": (event) => this.defaultKeypressEventListenerForTextInput(event, this.components.domElements.textInputs.loopLengthBpm, true),
+            "blur" : () => {
+                let newTextInputValue = this.components.domElements.textInputs.loopLengthBpm.value.trim() // remove whitespace from beginning and end of input then store it
+                if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
+                    newTextInputValue = this.sequencer.tempoRepresentation.beatsPerMinute
+                }
+                newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
+                // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input (when converted to milliseconds)
+                let numberOfBeatsPerLoop = this.sequencer.tempoRepresentation.numberOfBeatsPerLoop
+                newTextInputValue = Util.confineNumberToBounds(newTextInputValue, this.getMinimumAllowedSequencerBeatsPerMinute(), this.getMaximumAllowedSequencerBeatsPerMinute())
+                this.components.domElements.textInputs.loopLengthBpm.value = newTextInputValue
+                if (newTextInputValue !== this.sequencer.tempoRepresentation.beatsPerMinute) { // only update things if the value in the text box has changed
+                    this.sequencer.tempoRepresentation.beatsPerMinute = newTextInputValue
+                    this.updateSequencerLoopLength(Util.convertBeatsPerMinuteToLoopLengthInMillis(newTextInputValue, numberOfBeatsPerLoop));
+                    this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.loopLengthInMillis;
+                    this.saveCurrentSequencerStateToUrlHash();
+                }
             }
-            newTextInputValue = parseFloat(newTextInputValue) // do we allow floats rather than ints?? i think we could. it probably barely makes a difference though
-            // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input (when converted to milliseconds)
-            let numberOfBeatsPerLoop = this.sequencer.tempoRepresentation.numberOfBeatsPerLoop
-            newTextInputValue = Util.confineNumberToBounds(newTextInputValue, this.getMinimumAllowedSequencerBeatsPerMinute(), this.getMaximumAllowedSequencerBeatsPerMinute())
-            this.components.domElements.textInputs.loopLengthBpm.value = newTextInputValue
-            if (newTextInputValue !== this.sequencer.tempoRepresentation.beatsPerMinute) { // only update things if the value in the text box has changed
-                this.sequencer.tempoRepresentation.beatsPerMinute = newTextInputValue
-                this.updateSequencerLoopLength(Util.convertBeatsPerMinuteToLoopLengthInMillis(newTextInputValue, numberOfBeatsPerLoop));
-                this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.loopLengthInMillis;
-                this.saveCurrentSequencerStateToUrlHash();
-            }
-        })
-        this.addDefaultKeypressEventListenerToTextInput(this.components.domElements.textInputs.loopLengthBpm, true)
+        }
+        this.addEventListenersWithoutDuplicates("loopLengthBeatsPerMinuteTextInput", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     initializeNumberOfBeatsInLoopInputEventListeners() {
@@ -1275,29 +1284,36 @@ class DrumMachineGui {
          * number. if something besides a valid number is entered, the value will just go back
          * to whatever it was before, and not make any change to the sequencer.
          */
-        this.components.domElements.textInputs.numberOfBeatsInLoop.addEventListener('blur', () => {
-            if (this.sequencer.tempoRepresentation.isInBpmMode) {
-                let newTextInputValue = this.components.domElements.textInputs.numberOfBeatsInLoop.value.trim() // remove whitespace from beginning and end of input then store it
-                if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
-                    newTextInputValue = this.sequencer.tempoRepresentation.numberOfBeatsPerLoop
-                }
-                let newNumberOfBeatsPerLoop = parseInt(newTextInputValue) // do we allow floats rather than ints?? not here, since we also don't allow fractional subdivisisions of rows
-                newNumberOfBeatsPerLoop = (newNumberOfBeatsPerLoop === 0 ? 1 : newNumberOfBeatsPerLoop);
-                // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input (when converted to milliseconds).
-                // make sure that (current BPM * number of beats) is less than maximum loop length
-                let minimumNumberOfBeatsAtCurrentBpm = this.sequencer.lookAheadMillis / this.sequencer.tempoRepresentation.beatsPerMinute;
-                let maximumNumberOfBeatsAtCurrentBpm = this.configurations.tempoTextInputBeatsPerLoop.maximumValue / this.sequencer.tempoRepresentation.beatsPerMinute;
-                newNumberOfBeatsPerLoop = Util.confineNumberToBounds(newNumberOfBeatsPerLoop, minimumNumberOfBeatsAtCurrentBpm, maximumNumberOfBeatsAtCurrentBpm)
-                this.components.domElements.textInputs.numberOfBeatsInLoop.value = newNumberOfBeatsPerLoop;
-                if (newNumberOfBeatsPerLoop !== this.sequencer.tempoRepresentation.numberOfBeatsPerLoop) { // only update things if the value in the text box has changed
-                    this.sequencer.tempoRepresentation.numberOfBeatsPerLoop = newNumberOfBeatsPerLoop
-                    this.updateSequencerLoopLength(Util.convertBeatsPerMinuteToLoopLengthInMillis(this.sequencer.tempoRepresentation.beatsPerMinute, newNumberOfBeatsPerLoop));
-                    this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.loopLengthInMillis;
-                    this.saveCurrentSequencerStateToUrlHash();
+
+        let shapesToAddEventListenersTo = [this.components.domElements.textInputs.numberOfBeatsInLoop]
+        let eventHandlersHash = {
+            "mouseenter": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.setBeatsPerLoop},
+            "mouseleave": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText},
+            "keypress": (event) => this.defaultKeypressEventListenerForTextInput(event, this.components.domElements.textInputs.numberOfBeatsInLoop, true),
+            "blur" : () => {
+                if (this.sequencer.tempoRepresentation.isInBpmMode) {
+                    let newTextInputValue = this.components.domElements.textInputs.numberOfBeatsInLoop.value.trim() // remove whitespace from beginning and end of input then store it
+                    if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
+                        newTextInputValue = this.sequencer.tempoRepresentation.numberOfBeatsPerLoop
+                    }
+                    let newNumberOfBeatsPerLoop = parseInt(newTextInputValue) // do we allow floats rather than ints?? not here, since we also don't allow fractional subdivisisions of rows
+                    newNumberOfBeatsPerLoop = (newNumberOfBeatsPerLoop === 0 ? 1 : newNumberOfBeatsPerLoop);
+                    // don't allow setting loop length shorter than the look-ahead length or longer than the width of the text input (when converted to milliseconds).
+                    // make sure that (current BPM * number of beats) is less than maximum loop length
+                    let minimumNumberOfBeatsAtCurrentBpm = this.sequencer.lookAheadMillis / this.sequencer.tempoRepresentation.beatsPerMinute;
+                    let maximumNumberOfBeatsAtCurrentBpm = this.configurations.tempoTextInputBeatsPerLoop.maximumValue / this.sequencer.tempoRepresentation.beatsPerMinute;
+                    newNumberOfBeatsPerLoop = Util.confineNumberToBounds(newNumberOfBeatsPerLoop, minimumNumberOfBeatsAtCurrentBpm, maximumNumberOfBeatsAtCurrentBpm)
+                    this.components.domElements.textInputs.numberOfBeatsInLoop.value = newNumberOfBeatsPerLoop;
+                    if (newNumberOfBeatsPerLoop !== this.sequencer.tempoRepresentation.numberOfBeatsPerLoop) { // only update things if the value in the text box has changed
+                        this.sequencer.tempoRepresentation.numberOfBeatsPerLoop = newNumberOfBeatsPerLoop
+                        this.updateSequencerLoopLength(Util.convertBeatsPerMinuteToLoopLengthInMillis(this.sequencer.tempoRepresentation.beatsPerMinute, newNumberOfBeatsPerLoop));
+                        this.components.domElements.textInputs.loopLengthMillis.value = this.sequencer.loopLengthInMillis;
+                        this.saveCurrentSequencerStateToUrlHash();
+                    }
                 }
             }
-        })
-        this.addDefaultKeypressEventListenerToTextInput(this.components.domElements.textInputs.numberOfBeatsInLoop, true)
+        }
+        this.addEventListenersWithoutDuplicates("loopLengthBeatsPerLoopTextInput", shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     updateSequencerLoopLength(newLoopLengthInMillis) {
