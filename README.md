@@ -1,22 +1,42 @@
-### About
-
-This project is a work in progress, I am still currently working towards the minimum viable product.
-
-This drum machine will be an improved version of my old project [Polyrhythmic Drum Machine](https://github.com/adamcogen/drum-machine-py-poc), rewritten from scratch. Summary of the old project:
-
-> Most drum machines I've encountered only let you quantize beats to powers of two (quarter note, 8th note, 16th, 32nd, etc.) and triplets. This drum machine lets you quantize beats to any integer subdivision you want (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, ...)
+# Polyrhythmic Drum Machine
 
 ![Polyrhythmic Drum Machine (August 3rd, 2022)](assets/images/screenshot-1_28_2023-2-thin.png "Polyrhythmic Drum Machine (August 3rd, 2022)")
 
- Changes to the old project's functionality that will be included in this new version:
+## About
 
- - Switched from using Python to JavaScript, for better compatability (drum machine now runs client-side in browser, no command line or installations needed), and now supports live audio (this version isn't MIDI-only) and fast GUI updates
- - Interactive click-and-drag user interface, inspired by the amazing [Cync](https://github.com/tiburzi/cync), for editing drum sequences
- - Precise audio timing, by using the WebAudio API to schedule audio ahead-of-time, inspired and informed by [MIDIDrums](https://github.com/cwilso/MIDIDrums), [Web Audio Metronome](https://github.com/cwilso/metronome), and by a fantastic [article](https://www.html5rocks.com/en/tutorials/audio/scheduling/) about scheduling precisely-timed audio with the WebAudio API, written by the creator of MIDIDrums and Web Audio Metronome, Chris Wilson
- - New drum sequencer features, including the option to turn quantization on or off for each row of the sequencer, and some other new features.
- - I'm currently prioritizing live sound instead of MIDI output (unlike the previous iteration of this drum machine), but tentatively planning to eventually include MIDI support as well.
+This project is a client-side in-browser drum machine that supports the creation of unusual beat subdivisions and time feels.
 
-### Run locally:
+### Key Features:
+
+- Sequencer rows can be subdivided and quantized into any whole number of beats, including prime numbers 
+   - Use this flexibility to program odd time signatures, complex polyrhythms, or fractional time offsets (such as pentuplet and suptuplet swing, 11s, 13s, and so on) that would be difficult or impossible to create in conventional DAWs, which often only support quantizing beats to powers of two (8th, 16th, and 32nd notes, etc.) and triplets.
+- Each sequencer row's beat lines can be shifted forwards or backwards in time as much as you like, so that notes sound ahead of or behind the beat.
+  - Use this to create precisely-tuned experimental time feels, swing amounts, and note timing offsets.
+- Snap-to-grid (quantization) can be toggle on and off for each sequencer row
+- Save and share sequencer patterns by copying the site's URL, which is automatically updated any time a change is made to the sequencer
+  - Browser 'back' and 'forward' buttons can also be used as 'undo' and 'redo' buttons
+
+### Other Nice Stuff: 
+
+- Choose from multiple drum kits for live audio output
+  - Run locally to easily add your own drum kits
+- Live MIDI output 
+  - Must be running site locally to use this (required by most browsers for security reasons)
+  - MIDI note pitches for each drum type can be easily changed by modifying source code
+- Export patterns to a MIDI file
+- Specify tempo as BPM (beats per minute), or as a loop length in milliseconds
+  - BPM input mode also supports 'tap tempo' functionality
+- Adjust the volume of each note
+- Try out example patterns by loading them from a dropdown
+
+### Work Still In Progress:
+
+- Add more drum kits
+- Add more example sequencer patterns
+- Add more sounds to each drum kit
+- Improve user experience for timing shift functionality
+
+## How To Run Locally:
 
 Local HTTP server is needed to avoid Cross Origin Request issues when loading drum samples (at least in Chrome browser).
 
@@ -42,11 +62,21 @@ and replace 8000 with whatever port number the server says it's running on.
 
 For Windows, you should be able to just run the commands that are in these .sh files from the command line to start the HTTP server.
 
-### Project Structure
+## Project Structure
 
 * `index.html` main HTML webpage for the drum machine
 * `code/` contains all JavaScript source code
   * `drum-machine.js` main source code file from which everything else is instantiated
+  * `priority-linked-list.js` implementation of a special linked list data structure, created to be used as the backend datastore for sequencer rows
+  * `sequencer.js` higher-level implementation of the sequencer, including the note scheduling algorithm and logic for reconfiguring the sequencer
+  * `gui.js` implementation of the GUI, including all buttons, event listeners, etc.
+  * `audio-drivers.js` interface and implementations of different audio drivers (WebAudio and MIDI) to standardize how the sequencer interacts with different audio output libraries
   * `lib/` contains all third-party libraries used in the project
-* `assets/` contains icon set created for the drum machine GUI
-* `sounds/` contains sound files used by the drum machine
+* `assets/` contains icons, sound files, and any other assets used by the drum machine
+
+## Acknowledgements:
+
+ - The colorful and interactive click-and-drag user interface for placing notes was inspired by the amazing [Cync](https://github.com/tiburzi/cync) drum machine.
+ - Precise audio timing was implemented by using the WebAudio API to schedule audio ahead-of-time. This was informed and inspired by the projects and articles of Chris Wilson, including: the [MIDIDrums](https://github.com/cwilso/MIDIDrums) repo, the [Web Audio Metronome](https://github.com/cwilso/metronome) repo, and especially the article [A Tale Of Two Clocks](https://www.html5rocks.com/en/tutorials/audio/scheduling/), which is specifically about scheduling precisely-timed audio using the WebAudio API.
+ - A huge thank you to Jon for user testing each prototype, and for helping to brainstorm solutions to many tough GUI design problems
+ - For an early (and much simpler) MIDI-only Python prototype of this drum machine, see my old repo [Python Polyrhythmic Drum Machine Proof Of Concept](https://github.com/adamcogen/drum-machine-py-poc).
