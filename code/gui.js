@@ -559,6 +559,7 @@ class DrumMachineGui {
     }
 
     initializeRowVolumeAdjustmentVariablesAndVisuals(rowIndex) {
+        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.changeRowVolume
         // save relevant info about whichever row is selected
         this.rowVolumeAdjustmentTracker.selectedRowIndex = rowIndex;
         // save a list of all the note circles that are associated with the selected row. we are saving this list so that we can 
@@ -928,12 +929,10 @@ class DrumMachineGui {
             let circle = this.components.shapes.sequencerRowHandles[rowIndex];
             // add border to circle on mouseover
             circle._renderer.elem.addEventListener('mouseenter', () => {
-                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveRow
                 this.moveRowMouseEnterEventHandler(this, rowIndex);
             });
             // remove border from circle when mouse is no longer over it
             circle._renderer.elem.addEventListener('mouseleave', () => {
-                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
                 this.moveRowMouseLeaveEventHandler(this, rowIndex);
             });
             // when you hold your mouse down on the row handle circle, select that row.
@@ -952,6 +951,7 @@ class DrumMachineGui {
     }
 
     moveRowMouseEnterEventHandler(self, rowIndex) {
+        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveRow
         let circle = self.components.shapes.sequencerRowHandles[rowIndex];
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
         if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
@@ -961,6 +961,7 @@ class DrumMachineGui {
     }
 
     moveRowMouseLeaveEventHandler(self, rowIndex) {
+        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         let circle = self.components.shapes.sequencerRowHandles[rowIndex];
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
         circle.fill = self.configurations.sequencerRowHandles.unselectedColor
@@ -1011,6 +1012,7 @@ class DrumMachineGui {
 
     changeRowVolumesMouseEnterEventHandler(self, rowIndex) {
         if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.respondToEvents) {
+            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.changeRowVolume
             let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
@@ -1022,6 +1024,7 @@ class DrumMachineGui {
 
     changeRowVolumesMouseLeaveEventHandler(self, rowIndex) {
         if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.respondToEvents) {
+            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
             let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
@@ -1038,6 +1041,7 @@ class DrumMachineGui {
 
     changeRowVolumesMouseUpEventHandler(self, rowIndex) {
         if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.respondToEvents) {
+            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
             let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
@@ -1057,6 +1061,7 @@ class DrumMachineGui {
             });
             // remove border from circle when mouse is no longer over it
             circle._renderer.elem.addEventListener('mouseleave', () => {
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
                 this.shiftRowMouseLeaveEventHandler(this, rowIndex);
             });
             // when you hold your mouse down on the row handle circle, select that row.
@@ -1076,6 +1081,7 @@ class DrumMachineGui {
 
     shiftRowMouseEnterEventHandler(self, rowIndex) {
         if (self.components.shapes.shiftToolRowHandles[rowIndex].guiData.respondToEvents) {
+            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.shiftRow
             let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
@@ -1103,6 +1109,7 @@ class DrumMachineGui {
 
     shiftRowMouseUpEventHandler(self, rowIndex) {
         if (self.components.shapes.shiftToolRowHandles[rowIndex].guiData.respondToEvents) {
+            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
             let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
@@ -1782,8 +1789,14 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [this.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem]
             let eventHandlersHash = {
                 "click": () => this.clearRowButtonClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex], "red"),
-                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex]),
+                "mouseenter": () => {
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.deleteAllNotesForRow
+                    this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex], "red")
+                },
+                "mouseleave": () => {
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+                    this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex])
+                },
             }
             this.addEventListenersWithoutDuplicates("clearNotesForRowShape" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
         }
@@ -1830,8 +1843,14 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = [this.components.shapes.exportPatternToMidiFileButton._renderer.elem, this.components.domElements.images.exportPatternAsMidiFileIcon]
         let eventHandlersHash = {
             "click": () => this.exportPatternToMidiFileButtonClickHandler(this),
-            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.exportPatternToMidiFileButton),
-            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.exportPatternToMidiFileButton),
+            "mouseenter": () => {
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.saveMidi
+                this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.exportPatternToMidiFileButton)
+            },
+            "mouseleave": () => {
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+                this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.exportPatternToMidiFileButton)
+            },
         }
         this.addEventListenersWithoutDuplicates("exportPatternToMidiFile", shapesToAddEventListenersTo, eventHandlersHash);
     }
@@ -2488,6 +2507,7 @@ class DrumMachineGui {
         circle.fill = self.configurations.volumeAdjusterRowHandles.selectedColor
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.rowVolumeAdjustmentTracker.selectedRowIndex]
         rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.selectedColor
+        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.changeRowVolume
     }
 
     // this method is very messy. my top priority was to get it working, and not worry about duplicated code or using the most perfect straightforward logic flow.
@@ -2620,6 +2640,7 @@ class DrumMachineGui {
         circle.fill = self.configurations.shiftToolRowHandles.selectedColor
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.shiftToolTracker.selectedRowIndex]
         rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.selectedColor
+        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.shiftRow
     }
 
     adjustNoteVolumeMouseMoveLogic(self, mouseX, mouseY) {
@@ -2906,6 +2927,7 @@ class DrumMachineGui {
                 break; // we found the row that the note will be placed on, so stop iterating thru rows early
             }
         }
+        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveRow
     }
 
     /**
@@ -2929,6 +2951,7 @@ class DrumMachineGui {
 
     rowVolumeAdjustmentWindowMouseUpHandler(self, event) {
         self.rowVolumeAdjustmentTracker.selectedRowIndex = null
+        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
     }
@@ -3145,8 +3168,14 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [clearRowIcon] // we don't include the button shape here, only the icon, because the shape event listeners are set up elsewhere
             let eventHandlersHash = {
                 "click": () => this.clearRowButtonClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex], "red"),
-                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex]),
+                "mouseenter": () => {
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.deleteAllNotesForRow
+                    this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex], "red")
+                },
+                "mouseleave": () => {
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+                    this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex])
+                },
             }
             this.addEventListenersWithoutDuplicates("clearNotesForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add the copy to the dom and to our list that tracks these icons
@@ -3311,8 +3340,14 @@ class DrumMachineGui {
                 }
                 // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
                 this.eventHandlerFunctions["shiftRowIcon" + rowIndex] = {
-                    mouseenter: () => this.shiftRowMouseEnterEventHandler(this, rowIndex),
-                    mouseleave: () => this.shiftRowMouseLeaveEventHandler(this, rowIndex),
+                    mouseenter: () => {
+                        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.shiftRow
+                        this.shiftRowMouseEnterEventHandler(this, rowIndex)
+                    },
+                    mouseleave: () => {
+                        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+                        this.shiftRowMouseLeaveEventHandler(this, rowIndex)
+                    },
                     mousedown: () => this.shiftRowMouseDownEventHandler(this, rowIndex),
                     mouseup: () => this.shiftRowMouseUpEventHandler(this, rowIndex),
                 };
@@ -3359,14 +3394,8 @@ class DrumMachineGui {
             }
             // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
             this.eventHandlerFunctions["moveRowIcon" + rowIndex] = {
-                mouseenter: () => {
-                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveRow
-                    this.moveRowMouseEnterEventHandler(this, rowIndex)
-                },
-                mouseleave: () => {
-                    this.moveRowMouseLeaveEventHandler(this, rowIndex)
-                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
-                },
+                mouseenter: () => this.moveRowMouseEnterEventHandler(this, rowIndex),
+                mouseleave: () => this.moveRowMouseLeaveEventHandler(this, rowIndex),
                 mousedown: () => this.moveRowMouseDownEventHandler(this, rowIndex),
                 mouseup: () => this.moveRowMouseUpEventHandler(this, rowIndex),
             };
