@@ -31,6 +31,7 @@ Try it [here](https://adamcogen.github.io/drum-machine/).
   - BPM input mode also supports 'tap tempo' functionality
 - Adjust the volume of each note
 - Try out example patterns by loading them from a dropdown
+- All interactive GUI elements are labelled with help text on mouse-over, which appears on the bar at the bottom of the screen
 
 ### Work Still In Progress:
 
