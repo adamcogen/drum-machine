@@ -124,6 +124,11 @@ class DrumMachineGui {
                 subdivisionLines: false,
                 referenceLines: false,
             },
+            resourcesToShiftButtonStates: { // this object will keep track of which resource shift toggle buttons (out of notes, reference lines, and subdivision lines) are currently clicked.
+                notes: false,
+                subdivisionLines: false,
+                referenceLines: false,
+            },
             selectedRowIndex: null,
             noteCircles: [],
             noteCirclesStartingPositions: [],
@@ -588,11 +593,14 @@ class DrumMachineGui {
         rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.selectedColor
     }
 
-    initializeRowShiftToolVariablesAndVisuals(rowIndex) {
+    initializeRowShiftToolVariablesAndVisuals(rowIndex, updateShiftRowButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines) {
         this.shiftToolTracker.selectedRowIndex = rowIndex;
         this.shiftToolTracker.noteCircles = [];
         this.shiftToolTracker.noteCirclesStartingPositions = [];
         this.shiftToolTracker.noteCirclesStartingBeats = []
+        this.shiftToolTracker.resourcesToShift.notes = shiftNotes;
+        this.shiftToolTracker.resourcesToShift.subdivisionLines = shiftSubdivisionLines;
+        this.shiftToolTracker.resourcesToShift.referenceLines = shiftReferenceLines;
         for (let circle of this.allDrawnCircles) {
             if (circle.guiData.row === rowIndex) {
                 this.shiftToolTracker.noteCircles.push(circle)
@@ -612,15 +620,18 @@ class DrumMachineGui {
             this.shiftToolTracker.subdivisionLinesStartingPositions.push(line.translation.x);
         }
         this.shiftToolTracker.subdivisionLinesStartingShiftInPixels = this.subdivisionLinesShiftInPixelsPerRow[rowIndex];
-        // row handle posisitions
-        this.shiftToolTracker.rowHandleStartingPosition.x = this.components.shapes.shiftToolRowHandles[rowIndex].translation.x
-        this.shiftToolTracker.rowHandleStartingPosition.y = this.components.shapes.shiftToolRowHandles[rowIndex].translation.y
-        // update visuals
-        let circle = this.components.shapes.shiftToolRowHandles[rowIndex]
-        circle.fill = this.configurations.shiftToolRowHandles.selectedColor
-        circle.stroke = this.configurations.subdivisionLines.color
-        let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
-        rowSelectionRectangle.stroke = this.configurations.shiftToolRowHandles.selectedColor
+        this.shiftToolTracker.updateShiftRowButtonVisuals = updateShiftRowButtonVisuals;
+        if (updateShiftRowButtonVisuals) {
+            // row handle posisitions
+            this.shiftToolTracker.rowHandleStartingPosition.x = this.components.shapes.shiftToolRowHandles[rowIndex].translation.x
+            this.shiftToolTracker.rowHandleStartingPosition.y = this.components.shapes.shiftToolRowHandles[rowIndex].translation.y
+            // update visuals
+            let circle = this.components.shapes.shiftToolRowHandles[rowIndex]
+            circle.fill = this.configurations.shiftToolRowHandles.selectedColor
+            circle.stroke = this.configurations.subdivisionLines.color
+            let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
+            rowSelectionRectangle.stroke = this.configurations.shiftToolRowHandles.selectedColor
+        }
     }
 
     /**
@@ -708,7 +719,12 @@ class DrumMachineGui {
                 // console.log("leave reference lines for row " + rowIndex)
             },
             "mousedown": () => {
-                // console.log("down on reference lines for row " + rowIndex)
+                let updateShiftRowToolButtonVisuals = false;
+                let shiftNotes = false;
+                let shiftSubdivisionLines = false;
+                let shiftReferenceLines = true;
+                this.initializeRowShiftToolVariablesAndVisuals(rowIndex, updateShiftRowToolButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+
             },
             "mouseup": () => {
                 // console.log("up on reference lines for row " + rowIndex)
@@ -1170,7 +1186,11 @@ class DrumMachineGui {
     shiftRowMouseDownEventHandler(self, rowIndex) {
         if (self.components.shapes.shiftToolRowHandles[rowIndex].guiData.respondToEvents) {
             // save relevant info about whichever row is selected
-            self.initializeRowShiftToolVariablesAndVisuals(rowIndex);
+            let updateShiftRowToolButtonVisuals = true;
+            let shiftNotes = self.shiftToolTracker.resourcesToShiftButtonStates.notes;
+            let shiftSubdivisionLines = self.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines
+            let shiftReferenceLines = self.shiftToolTracker.resourcesToShiftButtonStates.referenceLines
+            self.initializeRowShiftToolVariablesAndVisuals(rowIndex, updateShiftRowToolButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
         }
     }
 
@@ -1558,8 +1578,8 @@ class DrumMachineGui {
     }
 
     shiftModeMoveNotesClickHandler(self) {
-        self.shiftToolTracker.resourcesToShift.notes = !self.shiftToolTracker.resourcesToShift.notes
-        if (self.shiftToolTracker.resourcesToShift.notes) {
+        self.shiftToolTracker.resourcesToShiftButtonStates.notes = !self.shiftToolTracker.resourcesToShiftButtonStates.notes
+        if (self.shiftToolTracker.resourcesToShiftButtonStates.notes) {
             // move notes
             self.components.shapes.shiftModeMoveNotesButton.fill = self.configurations.buttonBehavior.clickedButtonColor
         } else {
@@ -1570,8 +1590,8 @@ class DrumMachineGui {
     }
 
     shiftModeMoveSubdivisionLinesClickHandler(self) {
-        self.shiftToolTracker.resourcesToShift.subdivisionLines = !self.shiftToolTracker.resourcesToShift.subdivisionLines
-        if (self.shiftToolTracker.resourcesToShift.subdivisionLines) {
+        self.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines = !self.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines
+        if (self.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines) {
             // move subdivision lines
             self.components.shapes.shiftModeMoveSubdivisionLinesButton.fill = self.configurations.buttonBehavior.clickedButtonColor
         } else {
@@ -1582,8 +1602,8 @@ class DrumMachineGui {
     }
 
     shiftModeMoveReferenceLinesClickHandler(self) {
-        self.shiftToolTracker.resourcesToShift.referenceLines = !self.shiftToolTracker.resourcesToShift.referenceLines
-        if (self.shiftToolTracker.resourcesToShift.referenceLines) {
+        self.shiftToolTracker.resourcesToShiftButtonStates.referenceLines = !self.shiftToolTracker.resourcesToShiftButtonStates.referenceLines
+        if (self.shiftToolTracker.resourcesToShiftButtonStates.referenceLines) {
             // move reference lines
             self.components.shapes.shiftModeMoveReferenceLinesButton.fill = self.configurations.buttonBehavior.clickedButtonColor
         } else {
@@ -2460,7 +2480,7 @@ class DrumMachineGui {
         this.drawAllNoteBankCircles();
         this.drawNotesToReflectSequencerCurrentState();
         // only draw shift tool row handles if the shift tool is active (as in, if any resources are selected for use with the shift tool)
-        let shiftToolIsActivated = this.shiftToolTracker.resourcesToShift.notes || this.shiftToolTracker.resourcesToShift.referenceLines || this.shiftToolTracker.resourcesToShift.subdivisionLines
+        let shiftToolIsActivated = this.shiftToolTracker.resourcesToShiftButtonStates.notes || this.shiftToolTracker.resourcesToShiftButtonStates.referenceLines || this.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines
         if (shiftToolIsActivated) {
             this.components.shapes.shiftToolRowHandles = this.initializeCirclesPerSequencerRow(this.configurations.shiftToolRowHandles.leftPadding, this.configurations.shiftToolRowHandles.topPadding, this.configurations.shiftToolRowHandles.radius, this.configurations.shiftToolRowHandles.unselectedColor)
         }
@@ -2608,12 +2628,14 @@ class DrumMachineGui {
                 this.shiftReferenceLinesLogic(self, mouseMoveDistance);
             }
         }
-        let circle = self.components.shapes.shiftToolRowHandles[self.shiftToolTracker.selectedRowIndex]
-        circle.stroke = self.configurations.subdivisionLines.color
-        circle.linewidth = 3
-        circle.fill = self.configurations.shiftToolRowHandles.selectedColor
-        let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.shiftToolTracker.selectedRowIndex]
-        rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.selectedColor
+        if (self.shiftToolTracker.updateShiftRowButtonVisuals) {
+            let circle = self.components.shapes.shiftToolRowHandles[self.shiftToolTracker.selectedRowIndex]
+            circle.stroke = self.configurations.subdivisionLines.color
+            circle.linewidth = 3
+            circle.fill = self.configurations.shiftToolRowHandles.selectedColor
+            let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.shiftToolTracker.selectedRowIndex]
+            rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.selectedColor
+        }
         this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.shiftRow
     }
 
@@ -3390,7 +3412,7 @@ class DrumMachineGui {
         }
         this.components.domElements.iconLists.shiftRowIcons = [];
         // only redraw shift tool icons if the shift tool is active (as in, if any resources are selected for use with the shift tool)
-        let shiftToolIsActivated = this.shiftToolTracker.resourcesToShift.notes || this.shiftToolTracker.resourcesToShift.referenceLines || this.shiftToolTracker.resourcesToShift.subdivisionLines
+        let shiftToolIsActivated = this.shiftToolTracker.resourcesToShiftButtonStates.notes || this.shiftToolTracker.resourcesToShiftButtonStates.referenceLines || this.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines
         if (shiftToolIsActivated) {
             for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
                 // make copies of the original image so that we can freely throw them away or add more
@@ -3556,7 +3578,7 @@ class DrumMachineGui {
             // 'delete all notes for row' button icon
             this.components.domElements.iconLists.clearRowIcons[rowIndex].style.display = 'none'
             // if shift mode is active and we are only shifting notes but there aren't any notes present, don't show the shift button
-            if (this.shiftToolTracker.resourcesToShift.notes && !this.shiftToolTracker.resourcesToShift.subdivisionLines && !this.shiftToolTracker.resourcesToShift.referenceLines) {
+            if (this.shiftToolTracker.resourcesToShiftButtonStates.notes && !this.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines && !this.shiftToolTracker.resourcesToShiftButtonStates.referenceLines) {
                 // start with the button shape
                 this.components.shapes.shiftToolRowHandles[rowIndex].guiData.respondToEvents = false;
                 this.components.shapes.shiftToolRowHandles[rowIndex].stroke = 'transparent'
@@ -3576,7 +3598,7 @@ class DrumMachineGui {
             // 'delete all notes for row' button icon
             this.components.domElements.iconLists.clearRowIcons[rowIndex].style.display = 'block'
             // if shift mode is active and we are only shifting notes and there are notes present, show the shift button
-            if (this.shiftToolTracker.resourcesToShift.notes && !this.shiftToolTracker.resourcesToShift.subdivisionLines && !this.shiftToolTracker.resourcesToShift.referenceLines) {
+            if (this.shiftToolTracker.resourcesToShiftButtonStates.notes && !this.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines && !this.shiftToolTracker.resourcesToShiftButtonStates.referenceLines) {
                 // start with the button shape
                 this.components.shapes.shiftToolRowHandles[rowIndex].guiData.respondToEvents = true;
                 this.components.shapes.shiftToolRowHandles[rowIndex].stroke = this.configurations.shiftToolRowHandles.selectedColor;
