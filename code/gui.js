@@ -717,7 +717,10 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = this.components.shapes.referenceLineLists[rowIndex].map((shape) => shape._renderer.elem)
         let eventHandlersHash = {
             "mouseenter": () => {
-                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.directlyShiftReferenceLinesByGrabbingThem
+                let shiftNotes = false;
+                let shiftSubdivisionLines = false;
+                let shiftReferenceLines = true;
+                this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
             },
             "mouseleave": () => {
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
@@ -879,7 +882,10 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = this.components.shapes.subdivisionLineLists[rowIndex].map((shape) => shape._renderer.elem)
         let eventHandlersHash = {
             "mouseenter": () => {
-                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.directlyShiftSubdivisionLinesByGrabbingThem
+                let shiftNotes = false;
+                let shiftSubdivisionLines = true;
+                let shiftReferenceLines = false;
+                this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
             },
             "mouseleave": () => {
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
@@ -1172,7 +1178,10 @@ class DrumMachineGui {
 
     shiftRowMouseEnterEventHandler(self, rowIndex) {
         if (self.components.shapes.shiftToolRowHandles[rowIndex].guiData.respondToEvents) {
-            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.shiftRow
+            let shiftNotes = this.shiftToolTracker.resourcesToShiftButtonStates.notes;
+            let shiftSubdivisionLines = this.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines;
+            let shiftReferenceLines = this.shiftToolTracker.resourcesToShiftButtonStates.referenceLines;
+            this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
             let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
@@ -1180,6 +1189,28 @@ class DrumMachineGui {
                 rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
             }
         }
+    }
+
+    setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines) {
+        let helpText;
+        if (shiftReferenceLines && !shiftNotes && !shiftSubdivisionLines) {
+            helpText = this.configurations.helpText.shiftRow.referenceLinesOnly;
+        } else {
+            helpText = this.configurations.helpText.shiftRow.prefix;
+            let resourcesToShiftList = []
+            if (shiftNotes) {
+                resourcesToShiftList.push(this.configurations.helpText.shiftRow.notesName)
+            }
+            if (shiftSubdivisionLines) {
+                resourcesToShiftList.push(this.configurations.helpText.shiftRow.subdivisionLinesName)
+            }
+            if (shiftReferenceLines) {
+                resourcesToShiftList.push(this.configurations.helpText.shiftRow.referenceLinesName)
+            }
+            helpText += resourcesToShiftList.join(", ")
+            helpText += this.configurations.helpText.shiftRow.postfix
+        }
+        this.components.domElements.divs.bottomBarText.innerHTML = helpText;
     }
 
     shiftRowMouseLeaveEventHandler(self, rowIndex) {
@@ -2644,7 +2675,10 @@ class DrumMachineGui {
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.shiftToolTracker.selectedRowIndex]
             rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.selectedColor
         }
-        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.shiftRow
+        let shiftNotes = this.shiftToolTracker.resourcesToShift.notes;
+        let shiftSubdivisionLines = this.shiftToolTracker.resourcesToShift.subdivisionLines;
+        let shiftReferenceLines = this.shiftToolTracker.resourcesToShift.referenceLines;
+        this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
     }
 
     shiftSubdivisionsLogic(self, mouseMoveDistance) {
@@ -3444,7 +3478,10 @@ class DrumMachineGui {
                 // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
                 this.eventHandlerFunctions["shiftRowIcon" + rowIndex] = {
                     mouseenter: () => {
-                        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.shiftRow
+                        let shiftNotes = this.shiftToolTracker.resourcesToShiftButtonStates.notes;
+                        let shiftSubdivisionLines = this.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines;
+                        let shiftReferenceLines = this.shiftToolTracker.resourcesToShiftButtonStates.referenceLines;
+                        this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
                         this.shiftRowMouseEnterEventHandler(this, rowIndex)
                     },
                     mouseleave: () => {
@@ -3851,6 +3888,7 @@ class DrumMachineGui {
         let svgScale = $(this.two.renderer.domElement).height() / this.two.height;
         let svgOrigin = $('#draw-shapes')[0].getBoundingClientRect();
         return {
+            ctrlKey: event.ctrlKey,
             pageX: (event.pageX - svgOrigin.left) / svgScale,
             pageY: (event.pageY - svgOrigin.top) / svgScale
         }

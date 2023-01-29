@@ -434,7 +434,14 @@ function getGuiConfigurations(hideIcons=false) {
             deleteAllNotesForRow: "delete all notes from row",
             resetSubdivisionLineShift: "realign beat lines to default position (reset timing shift)",
             resetRefernceLineShift: "realign visual reference lines to default position (reset timing shift)",
-            shiftRow: "shift timing of row",
+            shiftRow: {
+                prefix: "shift timing of ",
+                postfix: " for row",
+                subdivisionLinesName: "beat lines",
+                referenceLinesName: "visual reference lines",
+                notesName: "notes",
+                referenceLinesOnly: "shift visual reference lines for row"
+            },
             shiftNotes: "",
             shiftSubdivisionLines: "",
             shiftRefernceLines: "",
@@ -448,8 +455,6 @@ function getGuiConfigurations(hideIcons=false) {
             selectLiveMidiOutputPort: "select live MIDI output port",
             selectDrumKit: "select drum kit to use for live audio output",
             selectExampleSequencerPattern: "load an example sequencer pattern",
-            directlyShiftSubdivisionLinesByGrabbingThem: "shift timing of beat lines for row",
-            directlyShiftReferenceLinesByGrabbingThem: "shift visual reference lines for row",
         }
     }
 }
