@@ -53,8 +53,13 @@ function getGuiConfigurations(hideIcons=false) {
             color: 'black', // defaultSequencerLineColor,
         },
         subdivisionLines: {
-            height: 20,
+            height: 18,
             color: defaultSequencerLineColor,
+        },
+        subdivisionHighlightLines: {
+            height: 19,
+            color: 'black',
+            lineWidth: 5,
         },
         referenceLines: {
             height: 20,
@@ -435,7 +440,7 @@ function getGuiConfigurations(hideIcons=false) {
             resetSubdivisionLineShift: "realign beat lines to default position (reset timing shift)",
             resetRefernceLineShift: "realign visual reference lines to default position (reset timing shift)",
             shiftRow: {
-                prefix: "shift timing of ",
+                prefix: "shift the timing of ",
                 postfix: " for row",
                 subdivisionLinesName: "beat lines",
                 referenceLinesName: "visual reference lines",

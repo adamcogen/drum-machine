@@ -318,6 +318,7 @@ class DrumMachineGui {
         this.initializeMultiLineText(this.configurations.examplePatternMenuExplanation.lines, this.configurations.examplePatternMenuExplanation.left, this.configurations.examplePatternMenuExplanation.top, 13, 15, this.configurations.subdivisionLines.color, "left") // i'm not saving these shapes anywhere right now, since they never change after being initiailized
         // add button and sequencer shapes etc.
         shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
+        shapes.subdivisionHighlightLineLists = this.initializeAllSubdivisionHighlightLines();
         shapes.referenceLineLists = this.initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
         shapes.sequencerRowLines = this.initializeAllSequencerRowLines() // list of sequencer row lines
         shapes.subdivisionLineLists = this.initializeAllSubdivisionLines() // list of lists, storing subdivison lines for each sequencer row (one list of subdivision lines per row)
@@ -519,6 +520,7 @@ class DrumMachineGui {
             }
         }
         this.rowSelectionTracker.shapes.push(...this.components.shapes.subdivisionLineLists[rowIndex])
+        this.rowSelectionTracker.shapes.push(...this.components.shapes.subdivisionHighlightLineLists[rowIndex])
         this.rowSelectionTracker.shapes.push(...this.components.shapes.referenceLineLists[rowIndex])
         this.rowSelectionTracker.shapes.push(this.components.shapes.sequencerRowLines[rowIndex])
         this.rowSelectionTracker.shapes.push(this.components.shapes.sequencerRowSelectionRectangles[rowIndex])
@@ -624,6 +626,9 @@ class DrumMachineGui {
         }
         this.shiftToolTracker.subdivisionLinesStartingShiftInPixels = this.subdivisionLinesShiftInPixelsPerRow[rowIndex];
         this.shiftToolTracker.updateShiftRowButtonVisuals = updateShiftRowButtonVisuals;
+        for (let shape of this.components.shapes.subdivisionHighlightLineLists[rowIndex]) {
+            shape.stroke = this.configurations.subdivisionHighlightLines.color
+        }
         // row handle posisitions
         event = this.adjustEventCoordinates(event)
         this.shiftToolTracker.mouseStartingPosition.x = event.pageX
@@ -829,7 +834,7 @@ class DrumMachineGui {
         let allSubdivisionLineLists = []
         let subdivisionLinesForRow = []
         for (let rowsDrawn = 0; rowsDrawn < this.sequencer.numberOfRows; rowsDrawn++) {
-            subdivisionLinesForRow = this.initializeSubdivisionLinesForRow(rowsDrawn)
+            subdivisionLinesForRow = this.initializeSubdivisionLinesForRow(rowsDrawn, this.configurations.subdivisionLines.height, this.configurations.sequencer.lineWidth, this.configurations.subdivisionLines.color)
             allSubdivisionLineLists.push(subdivisionLinesForRow) // keep a list of all rows' subdivision line lists
         }
         return allSubdivisionLineLists
@@ -837,40 +842,59 @@ class DrumMachineGui {
 
     // draw subdivision lines for a single sequencer row, with the given row index.
     // return a list of two.js 'path' objects representing each subdivision line for the sequncer row with the given index.
-    initializeSubdivisionLinesForRow(rowIndex) {
-        let subdivisionLinesForRow = []
+    initializeSubdivisionLinesForRow(rowIndex, height, linewidth, color) {
+        let linesForRow = []
         if (this.sequencer.rows[rowIndex].getNumberOfSubdivisions() <= 0) {
             return [] // don't draw subdivisions for this row if it has 0 or fewer subdivisions
         }
-        let xIncrementBetweenSubdivisions = this.configurations.sequencer.width / this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
-        for (let subdivisionsDrawnForRow = 0; subdivisionsDrawnForRow < this.sequencer.rows[rowIndex].getNumberOfSubdivisions(); subdivisionsDrawnForRow++) {
-            let sequencerLineCenterY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows)
-            let halfOfLineWidth = Math.floor(this.configurations.sequencer.lineWidth / 2)
+        let xIncrementBetweenLines = this.configurations.sequencer.width / this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
+        for (let linesDrawnForRow = 0; linesDrawnForRow < this.sequencer.rows[rowIndex].getNumberOfSubdivisions(); linesDrawnForRow++) {
+            let trialAndErrorAlignmentOffset = .5 // looks like Two.js graphics library draws shapes on .5 boundaries, so if we don't add a .5 offset here, things won't line up quite right
+            let sequencerLineCenterY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + (this.configurations.sequencer.lineWidth / 2) + trialAndErrorAlignmentOffset
+            let halfOfLineWidth = Math.floor(linewidth / 2)
             // calculate the x position of this row line. incorporate the 'subdivision line shift' value for the row.
-            let shiftInPixelsForRow = this.subdivisionLinesShiftInPixelsPerRow[rowIndex] % xIncrementBetweenSubdivisions;
-            let subdivisionLineXPosition = (xIncrementBetweenSubdivisions * subdivisionsDrawnForRow) // start with basic subdivision line position based on width of each beat and which beat we're on
-            subdivisionLineXPosition += shiftInPixelsForRow; // add offset to account for 'shift' tool changes made to subdivision lines for row
-            if (subdivisionLineXPosition < 0) { // if the x position of the subdivision line is past the left edge of the sequencer, wrap it to the other side
-                subdivisionLineXPosition = this.configurations.sequencer.width + subdivisionLineXPosition
+            let shiftInPixelsForRow = this.subdivisionLinesShiftInPixelsPerRow[rowIndex] % xIncrementBetweenLines;
+            let lineXPosition = (xIncrementBetweenLines * linesDrawnForRow) // start with basic subdivision line position based on width of each beat and which beat we're on
+            lineXPosition += shiftInPixelsForRow; // add offset to account for 'shift' tool changes made to subdivision lines for row
+            if (lineXPosition < 0) { // if the x position of the subdivision line is past the left edge of the sequencer, wrap it to the other side
+                lineXPosition = this.configurations.sequencer.width + lineXPosition
             } else { // if the x position of the subdivision line is past the right edge of the sequencer, wrap it to the other side
-                subdivisionLineXPosition = subdivisionLineXPosition % this.configurations.sequencer.width
+                lineXPosition = lineXPosition % this.configurations.sequencer.width
             }
-            subdivisionLineXPosition += this.configurations.sequencer.left // move the subdivision line position to account for the left position of the whole sequencer
+            lineXPosition += this.configurations.sequencer.left // move the subdivision line position to account for the left position of the whole sequencer
             // draw the actual line
             let lineStart = {
-                x: subdivisionLineXPosition,
+                x: lineXPosition,
                 y: sequencerLineCenterY - halfOfLineWidth // make sure to account for 'line width' when trying to make subdivision lines reach the top of the sequencer line. that's why we subtract the value here
             }
             let lineEnd = {
                 x: lineStart.x,
-                y: sequencerLineCenterY + this.configurations.subdivisionLines.height
+                y: sequencerLineCenterY + height
             }
-            let subdivisionLine = this.initializeLine(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y, this.configurations.sequencer.lineWidth, this.configurations.subdivisionLines.color);
+            let subdivisionLine = this.initializeLine(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y, linewidth, color);
 
-            subdivisionLinesForRow.push(subdivisionLine) // keep a list of all subdivision lines for the current row
+            linesForRow.push(subdivisionLine) // keep a list of all subdivision lines for the current row
         }
-        return subdivisionLinesForRow
+        return linesForRow
     }
+
+    /**
+     * subdivision highlight line shapes
+     */
+
+    initializeAllSubdivisionHighlightLines() {
+        let allSubdivisionHighlightLineLists = []
+        let subdivisionHightlightLinesForRow = []
+        for (let rowsDrawn = 0; rowsDrawn < this.sequencer.numberOfRows; rowsDrawn++) {
+            subdivisionHightlightLinesForRow = this.initializeSubdivisionLinesForRow(rowsDrawn, this.configurations.subdivisionHighlightLines.height, this.configurations.subdivisionHighlightLines.lineWidth, 'transparent')
+            allSubdivisionHighlightLineLists.push(subdivisionHightlightLinesForRow) // keep a list of all rows' subdivision highlight line lists
+        }
+        return allSubdivisionHighlightLineLists
+    }
+
+    /**
+     * subdivision line and subdivision highlight line event listeners
+     */
 
     addAllSubdivisionLinesEventListeners(){
         for (let rowIndex = 0; rowIndex < this.sequencer.numberOfRows; rowIndex++){
@@ -879,16 +903,26 @@ class DrumMachineGui {
     }
 
     addSubdivisionLinesEventListenersForRow(rowIndex) {
-        let shapesToAddEventListenersTo = this.components.shapes.subdivisionLineLists[rowIndex].map((shape) => shape._renderer.elem)
+        let shapesToAddEventListenersTo = []
+        shapesToAddEventListenersTo.push(...this.components.shapes.subdivisionLineLists[rowIndex].map((shape) => shape._renderer.elem))
+        shapesToAddEventListenersTo.push(...this.components.shapes.subdivisionHighlightLineLists[rowIndex].map((shape) => shape._renderer.elem))
         let eventHandlersHash = {
             "mouseenter": () => {
                 let shiftNotes = false;
                 let shiftSubdivisionLines = true;
                 let shiftReferenceLines = false;
                 this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+                for (let shape of this.components.shapes.subdivisionHighlightLineLists[rowIndex]) {
+                    shape.stroke = this.configurations.subdivisionHighlightLines.color
+                }
             },
             "mouseleave": () => {
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+                if (this.shiftToolTracker.selectedRowIndex === null) {
+                    for (let shape of this.components.shapes.subdivisionHighlightLineLists[rowIndex]) {
+                        shape.stroke = 'transparent'
+                    }
+                }
             },
             "mousedown": (event) => {
                 let updateShiftRowToolButtonVisuals = false;
@@ -912,6 +946,16 @@ class DrumMachineGui {
             line.remove()
         }
         this.components.shapes.subdivisionLineLists[rowIndex] = []
+    }
+
+    // given the index of a sequencer row, remove all subdivision lines from the display for that row.
+    // the current intent of this is to delete them all so that they can be re-drawn afterwards (such as
+    // when the number of subdivisions in a particular row is changed).
+    removeSubdivisionHighlightLinesForRow(rowIndex) {
+        for (let line of this.components.shapes.subdivisionHighlightLineLists[rowIndex]) {
+            line.remove()
+        }
+        this.components.shapes.subdivisionHighlightLineLists[rowIndex] = []
     }
 
     initializeSubdivisionTextInputsEventListeners() {
@@ -2451,13 +2495,15 @@ class DrumMachineGui {
         // redrawing now.
         this.removeAllCirclesFromDisplay()
         // next we will delete all lines for the changed row
+        this.removeSubdivisionHighlightLinesForRow(rowIndex)
         this.removeSubdivisionLinesForRow(rowIndex)
         this.removeReferenceLinesForRow(rowIndex)
         this.removeSequencerRowLine(rowIndex)
         this.removeTimeTrackingLine(rowIndex)
         // then we will draw all the lines for the changed row, starting with reference lines since they need to be the bottom layer
+        this.components.shapes.subdivisionHighlightLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex, this.configurations.subdivisionHighlightLines.height, this.configurations.subdivisionHighlightLines.lineWidth, 'transparent')
         this.components.shapes.referenceLineLists[rowIndex] = this.initializeReferenceLinesForRow(rowIndex)
-        this.components.shapes.subdivisionLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex)
+        this.components.shapes.subdivisionLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex, this.configurations.subdivisionLines.height, this.configurations.sequencer.lineWidth, this.configurations.subdivisionLines.color)
         this.components.shapes.sequencerRowLines[rowIndex] = this.initializeSequencerRowLine(rowIndex)
         this.components.shapes.timeTrackingLines[rowIndex] = this.initializeTimeTrackingLineForRow(rowIndex)
         // add event listeners to subdivision lines and reference lines
@@ -2478,6 +2524,13 @@ class DrumMachineGui {
             list = [];
         }
         this.components.shapes.subdivisionLineLists = []
+        for (let list of this.components.shapes.subdivisionHighlightLineLists) {
+            for (let line of list) {
+                line.remove();
+            }
+            list = [];
+        }
+        this.components.shapes.subdivisionHighlightLineLists = []
         for (let list of this.components.shapes.referenceLineLists) {
             for (let line of list) {
                 line.remove();
@@ -2510,6 +2563,7 @@ class DrumMachineGui {
         }
         this.components.shapes.shiftToolRowHandles = []
         this.components.shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
+        this.components.shapes.subdivisionHighlightLineLists = this.initializeAllSubdivisionHighlightLines();
         this.components.shapes.referenceLineLists = this.initializeAllReferenceLines();
         this.components.shapes.subdivisionLineLists = this.initializeAllSubdivisionLines();
         this.components.shapes.sequencerRowLines = this.initializeAllSequencerRowLines();
@@ -2685,6 +2739,7 @@ class DrumMachineGui {
         // this logic will always be the same regardless of whether the row is quantized or not, since subdivision lines _are_ the grid things get snapped to
         for (let lineIndex = 0; lineIndex < self.components.shapes.subdivisionLineLists[self.shiftToolTracker.selectedRowIndex].length; lineIndex++) {
             let line = self.components.shapes.subdivisionLineLists[self.shiftToolTracker.selectedRowIndex][lineIndex];
+            let hightlightLine = self.components.shapes.subdivisionHighlightLineLists[self.shiftToolTracker.selectedRowIndex][lineIndex];
             let lineXPositionAdjustedForSequencerLeftEdge = (self.shiftToolTracker.subdivisionLinesStartingPositions[lineIndex] - mouseMoveDistance) - self.configurations.sequencer.left;
             if (lineXPositionAdjustedForSequencerLeftEdge < 0) {
                 lineXPositionAdjustedForSequencerLeftEdge = self.configurations.sequencer.width + lineXPositionAdjustedForSequencerLeftEdge
@@ -2693,6 +2748,7 @@ class DrumMachineGui {
             }
             let newLineXPosition = self.configurations.sequencer.left + lineXPositionAdjustedForSequencerLeftEdge
             line.translation.x = newLineXPosition
+            hightlightLine.translation.x = newLineXPosition;
         }
         // store values in relevant places
         let shiftInPixels = self.shiftToolTracker.subdivisionLinesStartingShiftInPixels - mouseMoveDistance; 
