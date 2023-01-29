@@ -172,6 +172,8 @@ class DrumMachineGui {
         this.refreshWindowKeyDownEvent();
         this.refreshWindowContextMenuEvent();
         this.initializeExportPatternToMidiFileButtonEventListener();
+        this.addAllSubdivisionLinesEventListeners();
+        this.addAllReferenceLinesEventListeners();
 
         // if there is a sequencer state included in the URL, load it. 
         if (window.location.hash !== "") { // window.location.hash is text in a URL after the actual address, which starts with a "#" character and can contain whatever text we want.
@@ -690,6 +692,31 @@ class DrumMachineGui {
         return referenceLinesForRow
     }
 
+    addAllReferenceLinesEventListeners(){
+        for (let rowIndex = 0; rowIndex < this.sequencer.numberOfRows; rowIndex++){
+            this.addReferenceLinesEventListenersForRow(rowIndex);
+        }
+    }
+
+    addReferenceLinesEventListenersForRow(rowIndex) {
+        let shapesToAddEventListenersTo = this.components.shapes.referenceLineLists[rowIndex].map((shape) => shape._renderer.elem)
+        let eventHandlersHash = {
+            "mouseenter": () => {
+                // console.log("enter reference lines for row " + rowIndex)
+            },
+            "mouseleave": () => {
+                // console.log("leave reference lines for row " + rowIndex)
+            },
+            "mousedown": () => {
+                // console.log("down on reference lines for row " + rowIndex)
+            },
+            "mouseup": () => {
+                // console.log("up on reference lines for row " + rowIndex)
+            }
+        }
+        this.addEventListenersWithoutDuplicates("referenceLines" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
+    }
+
     initializeReferenceLineTextInputsEventListeners() {
         for (let rowIndex = 0; rowIndex < this.sequencer.numberOfRows; rowIndex++) {
             let referenceLineTextInput = this.components.domElements.textInputs.referenceLineTextInputs[rowIndex]
@@ -820,6 +847,31 @@ class DrumMachineGui {
             subdivisionLinesForRow.push(subdivisionLine) // keep a list of all subdivision lines for the current row
         }
         return subdivisionLinesForRow
+    }
+
+    addAllSubdivisionLinesEventListeners(){
+        for (let rowIndex = 0; rowIndex < this.sequencer.numberOfRows; rowIndex++){
+            this.addSubdivisionLinesEventListenersForRow(rowIndex);
+        }
+    }
+
+    addSubdivisionLinesEventListenersForRow(rowIndex) {
+        let shapesToAddEventListenersTo = this.components.shapes.subdivisionLineLists[rowIndex].map((shape) => shape._renderer.elem)
+        let eventHandlersHash = {
+            "mouseenter": () => {
+                // console.log("enter subdivision lines for row " + rowIndex)
+            },
+            "mouseleave": () => {
+                // console.log("leave subdivision lines for row " + rowIndex)
+            },
+            "mousedown": () => {
+                // console.log("down subdivision lines for row " + rowIndex)
+            },
+            "mouseup": () => {
+                // console.log("up subdivision lines for row " + rowIndex)
+            }
+        }
+        this.addEventListenersWithoutDuplicates("subdivisionLines" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     // given the index of a sequencer row, remove all subdivision lines from the display for that row.
@@ -2349,6 +2401,10 @@ class DrumMachineGui {
         this.components.shapes.subdivisionLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex)
         this.components.shapes.sequencerRowLines[rowIndex] = this.initializeSequencerRowLine(rowIndex)
         this.components.shapes.timeTrackingLines[rowIndex] = this.initializeTimeTrackingLineForRow(rowIndex)
+        // add event listeners to subdivision lines and reference lines
+        this.two.update(); // this update needs to happen here so that SVG renders get initialized for subdivision and reference lines, so that we can add event listeners to them
+        this.addSubdivisionLinesEventListenersForRow(rowIndex);
+        this.addReferenceLinesEventListenersForRow(rowIndex);
         // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
         this.drawAllNoteBankCircles();
         this.drawNotesToReflectSequencerCurrentState();
@@ -2408,6 +2464,9 @@ class DrumMachineGui {
         if (shiftToolIsActivated) {
             this.components.shapes.shiftToolRowHandles = this.initializeCirclesPerSequencerRow(this.configurations.shiftToolRowHandles.leftPadding, this.configurations.shiftToolRowHandles.topPadding, this.configurations.shiftToolRowHandles.radius, this.configurations.shiftToolRowHandles.unselectedColor)
         }
+        this.two.update(); // needs to go here so we can add event listeners to subdivision and reference lines next
+        this.addAllSubdivisionLinesEventListeners();
+        this.addAllReferenceLinesEventListeners();
     }
 
     redrawSequencer() {
