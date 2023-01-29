@@ -137,7 +137,7 @@ class DrumMachineGui {
             referenceLinesStartingPositions: [],
             subdivisionLinesStartingShiftInPixels: 0,
             subdivisionLinesStartingPositions: [],
-            rowHandleStartingPosition: {
+            mouseStartingPosition: {
                 x: null,
                 y: null,
             }
@@ -593,7 +593,7 @@ class DrumMachineGui {
         rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.selectedColor
     }
 
-    initializeRowShiftToolVariablesAndVisuals(rowIndex, updateShiftRowButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines) {
+    initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines) {
         this.shiftToolTracker.selectedRowIndex = rowIndex;
         this.shiftToolTracker.noteCircles = [];
         this.shiftToolTracker.noteCirclesStartingPositions = [];
@@ -621,10 +621,11 @@ class DrumMachineGui {
         }
         this.shiftToolTracker.subdivisionLinesStartingShiftInPixels = this.subdivisionLinesShiftInPixelsPerRow[rowIndex];
         this.shiftToolTracker.updateShiftRowButtonVisuals = updateShiftRowButtonVisuals;
+        // row handle posisitions
+        event = this.adjustEventCoordinates(event)
+        this.shiftToolTracker.mouseStartingPosition.x = event.pageX
+        this.shiftToolTracker.mouseStartingPosition.y = event.pageY
         if (updateShiftRowButtonVisuals) {
-            // row handle posisitions
-            this.shiftToolTracker.rowHandleStartingPosition.x = this.components.shapes.shiftToolRowHandles[rowIndex].translation.x
-            this.shiftToolTracker.rowHandleStartingPosition.y = this.components.shapes.shiftToolRowHandles[rowIndex].translation.y
             // update visuals
             let circle = this.components.shapes.shiftToolRowHandles[rowIndex]
             circle.fill = this.configurations.shiftToolRowHandles.selectedColor
@@ -718,12 +719,12 @@ class DrumMachineGui {
             "mouseleave": () => {
                 // console.log("leave reference lines for row " + rowIndex)
             },
-            "mousedown": () => {
+            "mousedown": (event) => {
                 let updateShiftRowToolButtonVisuals = false;
                 let shiftNotes = false;
                 let shiftSubdivisionLines = false;
                 let shiftReferenceLines = true;
-                this.initializeRowShiftToolVariablesAndVisuals(rowIndex, updateShiftRowToolButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+                this.initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowToolButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
 
             },
             "mouseup": () => {
@@ -1149,8 +1150,8 @@ class DrumMachineGui {
             });
             // when you hold your mouse down on the row handle circle, select that row.
             // we will de-select it later whenever you lift your mouse.
-            circle._renderer.elem.addEventListener('mousedown', () => {
-                this.shiftRowMouseDownEventHandler(this, rowIndex);
+            circle._renderer.elem.addEventListener('mousedown', (event) => {
+                this.shiftRowMouseDownEventHandler(this, event, rowIndex);
             });
             // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
             // because if we implement snap-into-place for sequencer rows, the row handle may not actually
@@ -1183,14 +1184,14 @@ class DrumMachineGui {
         }
     }
 
-    shiftRowMouseDownEventHandler(self, rowIndex) {
+    shiftRowMouseDownEventHandler(self, event, rowIndex) {
         if (self.components.shapes.shiftToolRowHandles[rowIndex].guiData.respondToEvents) {
             // save relevant info about whichever row is selected
             let updateShiftRowToolButtonVisuals = true;
             let shiftNotes = self.shiftToolTracker.resourcesToShiftButtonStates.notes;
             let shiftSubdivisionLines = self.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines
             let shiftReferenceLines = self.shiftToolTracker.resourcesToShiftButtonStates.referenceLines
-            self.initializeRowShiftToolVariablesAndVisuals(rowIndex, updateShiftRowToolButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+            self.initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowToolButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
         }
     }
 
@@ -2613,9 +2614,9 @@ class DrumMachineGui {
         self.adjustEventCoordinates(event)
         let mouseX = event.pageX
         let mouseY = event.pageY
-        let mouseHasMoved = (mouseX !== self.shiftToolTracker.rowHandleStartingPosition.x || mouseY !== self.shiftToolTracker.rowHandleStartingPosition.y)
+        let mouseHasMoved = (mouseX !== self.shiftToolTracker.mouseStartingPosition.x || mouseY !== self.shiftToolTracker.mouseStartingPosition.y)
         if (mouseHasMoved) {
-            let mouseMoveDistance = self.shiftToolTracker.rowHandleStartingPosition.x - mouseX; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
+            let mouseMoveDistance = self.shiftToolTracker.mouseStartingPosition.x - mouseX; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
             if (self.shiftToolTracker.resourcesToShift.subdivisionLines) { // adjust subdivision lines first, because if we move those, the way we move quantized notes also need to change.
                 this.shiftSubdivisionsLogic(self, mouseMoveDistance);
             }
@@ -3443,7 +3444,7 @@ class DrumMachineGui {
                         this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
                         this.shiftRowMouseLeaveEventHandler(this, rowIndex)
                     },
-                    mousedown: () => this.shiftRowMouseDownEventHandler(this, rowIndex),
+                    mousedown: (event) => this.shiftRowMouseDownEventHandler(this, event, rowIndex),
                     mouseup: () => this.shiftRowMouseUpEventHandler(this, rowIndex),
                 };
                 shiftIcon.addEventListener('mouseenter', this.eventHandlerFunctions["shiftRowIcon" + rowIndex]['mouseenter']);
