@@ -621,8 +621,10 @@ class DrumMachineGui {
             this.shiftToolTracker.referenceLinesStartingPositions.push(line.translation.x);
         }
         this.shiftToolTracker.referenceLinesStartingShiftInPixels = this.referenceLinesShiftInPixelsPerRow[rowIndex];
-        for (let shape of this.components.shapes.referenceHighlightLineLists[rowIndex]) {
-            shape.stroke = this.configurations.referenceHighlightLines.color
+        if (shiftReferenceLines) {
+            for (let shape of this.components.shapes.referenceHighlightLineLists[rowIndex]) {
+                shape.stroke = this.configurations.referenceHighlightLines.color
+            }   
         }
         // subdivision lines
         this.shiftToolTracker.subdivisionLinesStartingPositions = [];
@@ -631,8 +633,10 @@ class DrumMachineGui {
         }
         this.shiftToolTracker.subdivisionLinesStartingShiftInPixels = this.subdivisionLinesShiftInPixelsPerRow[rowIndex];
         this.shiftToolTracker.updateShiftRowButtonVisuals = updateShiftRowButtonVisuals;
-        for (let shape of this.components.shapes.subdivisionHighlightLineLists[rowIndex]) {
+        if (shiftSubdivisionLines) {
+            for (let shape of this.components.shapes.subdivisionHighlightLineLists[rowIndex]) {
             shape.stroke = this.configurations.subdivisionHighlightLines.color
+        }
         }
         // row handle posisitions
         event = this.adjustEventCoordinates(event)
