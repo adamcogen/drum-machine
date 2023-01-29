@@ -49,7 +49,7 @@ function getGuiConfigurations(hideIcons=false) {
             borderPadding: 20
         },
         timeTrackingLines: {
-            height: 20,
+            height: 18,
             color: 'black', // defaultSequencerLineColor,
         },
         subdivisionLines: {
