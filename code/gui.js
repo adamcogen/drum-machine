@@ -672,44 +672,45 @@ class DrumMachineGui {
         let allReferenceLineLists = []
         let referenceLinesForRow = []
         for (let rowsDrawn = 0; rowsDrawn < this.sequencer.numberOfRows; rowsDrawn++) {
-            referenceLinesForRow = this.initializeReferenceLinesForRow(rowsDrawn)
+            referenceLinesForRow = this.initializeReferenceLinesForRow(rowsDrawn, this.configurations.referenceLines.height, this.configurations.sequencer.lineWidth, this.configurations.referenceLines.color)
             allReferenceLineLists.push(referenceLinesForRow) // keep a list of all rows' reference line lists
         }
         return allReferenceLineLists
     }
 
-    initializeReferenceLinesForRow(rowIndex) {
+    initializeReferenceLinesForRow(rowIndex, height, linewidth, color) {
         let shiftInPixelsForRow = this.referenceLinesShiftInPixelsPerRow[rowIndex];
-        let referenceLinesForRow = []
+        let linesForRow = []
         if (this.sequencer.rows[rowIndex].getNumberOfReferenceLines() <= 0) {
             return [] // don't draw reference lines for this row if it has 0 or fewer
         }
         let xIncrementBetweenLines = this.configurations.sequencer.width / this.sequencer.rows[rowIndex].getNumberOfReferenceLines()
         for (let linesDrawnForRow = 0; linesDrawnForRow < this.sequencer.rows[rowIndex].getNumberOfReferenceLines(); linesDrawnForRow++) {
-            let sequencerLineCenterY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows)
-            let halfOfLineWidth = Math.floor(this.configurations.sequencer.lineWidth / 2)
+            let trialAndErrorAlignmentOffset = .5 // looks like Two.js graphics library draws shapes on .5 boundaries, so if we don't add a .5 offset here, things won't line up quite right
+            let sequencerLineCenterY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) - trialAndErrorAlignmentOffset
+            let halfOfLineWidth = Math.floor(linewidth / 2)
             // calculate the x position of this row line. incorporate the 'reference line shift' value for the row.
-            let referenceLineXPosition = (xIncrementBetweenLines * linesDrawnForRow); // start with basic reference line position based on width of each beat and which beat we're on
-            referenceLineXPosition += shiftInPixelsForRow // add offset to account for 'shift' tool changes made to reference lines for row
-            if (referenceLineXPosition < 0) { // if the x position of the reference line is past the left edge of the sequencer, wrap it to the other side
-                referenceLineXPosition = this.configurations.sequencer.width + referenceLineXPosition
+            let lineXPosition = (xIncrementBetweenLines * linesDrawnForRow); // start with basic reference line position based on width of each beat and which beat we're on
+            lineXPosition += shiftInPixelsForRow // add offset to account for 'shift' tool changes made to reference lines for row
+            if (lineXPosition < 0) { // if the x position of the reference line is past the left edge of the sequencer, wrap it to the other side
+                lineXPosition = this.configurations.sequencer.width + lineXPosition
             } else { // if the x position of the reference line is past the right edge of the sequencer, wrap it to the other side
-                referenceLineXPosition = referenceLineXPosition % this.configurations.sequencer.width
+                lineXPosition = lineXPosition % this.configurations.sequencer.width
             }
-            referenceLineXPosition += this.configurations.sequencer.left // move the reference line position to account for the left position of the whole sequencer
+            lineXPosition += this.configurations.sequencer.left // move the reference line position to account for the left position of the whole sequencer
             // draw the actual line
             let lineStart = {
-                x: referenceLineXPosition,
+                x: lineXPosition,
                 y: sequencerLineCenterY - halfOfLineWidth // make sure to account for 'line width' when trying to make these lines reach the top of the sequencer line. that's why we subtract the value here
             }
             let lineEnd = {
                 x: lineStart.x,
-                y: sequencerLineCenterY - this.configurations.subdivisionLines.height
+                y: sequencerLineCenterY - height
             }
-            let referenceLine = this.initializeLine(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y, this.configurations.sequencer.lineWidth, this.configurations.referenceLines.color);
-            referenceLinesForRow.push(referenceLine) // keep a list of all reference lines for the current row
+            let referenceLine = this.initializeLine(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y, linewidth, color);
+            linesForRow.push(referenceLine) // keep a list of all reference lines for the current row
         }
-        return referenceLinesForRow
+        return linesForRow
     }
 
     addAllReferenceLinesEventListeners(){
@@ -872,7 +873,6 @@ class DrumMachineGui {
                 y: sequencerLineCenterY + height
             }
             let subdivisionLine = this.initializeLine(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y, linewidth, color);
-
             linesForRow.push(subdivisionLine) // keep a list of all subdivision lines for the current row
         }
         return linesForRow
@@ -2502,7 +2502,7 @@ class DrumMachineGui {
         this.removeTimeTrackingLine(rowIndex)
         // then we will draw all the lines for the changed row, starting with reference lines since they need to be the bottom layer
         this.components.shapes.subdivisionHighlightLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex, this.configurations.subdivisionHighlightLines.height, this.configurations.subdivisionHighlightLines.lineWidth, 'transparent')
-        this.components.shapes.referenceLineLists[rowIndex] = this.initializeReferenceLinesForRow(rowIndex)
+        this.components.shapes.referenceLineLists[rowIndex] = this.initializeReferenceLinesForRow(rowIndex, this.configurations.referenceLines.height, this.configurations.sequencer.lineWidth, this.configurations.referenceLines.color)
         this.components.shapes.subdivisionLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex, this.configurations.subdivisionLines.height, this.configurations.sequencer.lineWidth, this.configurations.subdivisionLines.color)
         this.components.shapes.sequencerRowLines[rowIndex] = this.initializeSequencerRowLine(rowIndex)
         this.components.shapes.timeTrackingLines[rowIndex] = this.initializeTimeTrackingLineForRow(rowIndex)
