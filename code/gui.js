@@ -2543,7 +2543,7 @@ class DrumMachineGui {
             // if the row is quantized and we are moving subdivision lines, move notes too regardless of whether 'shift' is turned on for notes, since the notes have to stay quantized to the subdivision lines
             let notesNeedToBeMovedWithSubdivisionLines = self.shiftToolTracker.resourcesToShift.subdivisionLines && self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized;
             if (self.shiftToolTracker.resourcesToShift.notes || notesNeedToBeMovedWithSubdivisionLines) { // adjust note positions
-                this.shiftNotesLogic(self, mouseMoveDistance)
+                this.shiftNotesLogic(self, mouseMoveDistance, self.shiftToolTracker.resourcesToShift.subdivisionLines, self.shiftToolTracker.resourcesToShift.referenceLines)
             }
             if (self.shiftToolTracker.resourcesToShift.referenceLines) { // next deal with adjusting reference row positions
                 this.shiftReferenceLinesLogic(self, mouseMoveDistance);
@@ -2584,14 +2584,14 @@ class DrumMachineGui {
         self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].setSubdivisionLineShiftMilliseconds(shiftInMilliseconds)
     }
 
-    shiftNotesLogic(self, mouseMoveDistance) {
+    shiftNotesLogic(self, mouseMoveDistance, subdivisionLinesAreBeingShiftedToo, referenceLinesAreBeingShiftedToo) {
         // we need to have some different logic here depending on whether the row is quantized or not.
         for (let noteCircleIndex = 0; noteCircleIndex < self.shiftToolTracker.noteCircles.length; noteCircleIndex++) {
             let currentNoteCircle = self.shiftToolTracker.noteCircles[noteCircleIndex];
             let newNoteXPosition;
             let newNoteBeatNumber;
             if (self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized) { // handle note shifting for when the row is quantized)
-                if (self.shiftToolTracker.resourcesToShift.subdivisionLines) { 
+                if (subdivisionLinesAreBeingShiftedToo) { 
                     // if subdivision lines are being moved along with the notes, just move the notes along with those then figure out new beat numbers afterwards.
                     let shiftInPixels = self.subdivisionLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex]
                     let noteXPositionAdjustedForSequencerLeftEdge = (self.shiftToolTracker.noteCirclesStartingPositions[noteCircleIndex] - self.configurations.sequencer.left - mouseMoveDistance);
@@ -2609,7 +2609,7 @@ class DrumMachineGui {
                     // point precisision / rounding is handled between different beat numbers.
                     let numberOfSubdivisionsInRow = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].getNumberOfSubdivisions();
                     let widthOfEachBeatInPixels = self.configurations.sequencer.width / numberOfSubdivisionsInRow
-                    if (!self.shiftToolTracker.resourcesToShift.subdivisionLines && !self.shiftToolTracker.resourcesToShift.referenceLines) {
+                    if (!referenceLinesAreBeingShiftedToo) {
                         // if we get here, we know we're ONLY moving _quantized notes_. in that case, we can set a maximum mouse move distance
                         // required to shift to the next beat, rather than always only relying on the actual width of each beat. this creates
                         // a more responsive user experience if the beats are very wide.
