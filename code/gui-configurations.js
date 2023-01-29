@@ -448,6 +448,8 @@ function getGuiConfigurations(hideIcons=false) {
             selectLiveMidiOutputPort: "select live MIDI output port",
             selectDrumKit: "select drum kit to use for live audio output",
             selectExampleSequencerPattern: "load an example sequencer pattern",
+            directlyShiftSubdivisionLinesByGrabbingThem: "shift timing of beat lines for row",
+            directlyShiftReferenceLinesByGrabbingThem: "shift visual reference lines for row",
         }
     }
 }

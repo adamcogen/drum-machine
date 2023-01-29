@@ -180,6 +180,9 @@ class DrumMachineGui {
         this.addAllSubdivisionLinesEventListeners();
         this.addAllReferenceLinesEventListeners();
 
+        // initialize starting state of shift mode menu
+        this.shiftModeMoveNotesClickHandler(this)
+
         // if there is a sequencer state included in the URL, load it. 
         if (window.location.hash !== "") { // window.location.hash is text in a URL after the actual address, which starts with a "#" character and can contain whatever text we want.
             // btoa(plaintext) converts a plaintext string to a base64 string, so that it is URL-safe. we can decode the base64 string back to plaintext later using atob(base64).
@@ -714,10 +717,10 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = this.components.shapes.referenceLineLists[rowIndex].map((shape) => shape._renderer.elem)
         let eventHandlersHash = {
             "mouseenter": () => {
-                // console.log("enter reference lines for row " + rowIndex)
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.directlyShiftReferenceLinesByGrabbingThem
             },
             "mouseleave": () => {
-                // console.log("leave reference lines for row " + rowIndex)
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
             },
             "mousedown": (event) => {
                 let updateShiftRowToolButtonVisuals = false;
@@ -876,13 +879,17 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = this.components.shapes.subdivisionLineLists[rowIndex].map((shape) => shape._renderer.elem)
         let eventHandlersHash = {
             "mouseenter": () => {
-                // console.log("enter subdivision lines for row " + rowIndex)
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.directlyShiftSubdivisionLinesByGrabbingThem
             },
             "mouseleave": () => {
-                // console.log("leave subdivision lines for row " + rowIndex)
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
             },
-            "mousedown": () => {
-                // console.log("down subdivision lines for row " + rowIndex)
+            "mousedown": (event) => {
+                let updateShiftRowToolButtonVisuals = false;
+                let shiftNotes = false;
+                let shiftSubdivisionLines = true;
+                let shiftReferenceLines = false;
+                this.initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowToolButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
             },
             "mouseup": () => {
                 // console.log("up subdivision lines for row " + rowIndex)
