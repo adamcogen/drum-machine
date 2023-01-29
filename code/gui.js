@@ -318,6 +318,7 @@ class DrumMachineGui {
         this.initializeMultiLineText(this.configurations.examplePatternMenuExplanation.lines, this.configurations.examplePatternMenuExplanation.left, this.configurations.examplePatternMenuExplanation.top, 13, 15, this.configurations.subdivisionLines.color, "left") // i'm not saving these shapes anywhere right now, since they never change after being initiailized
         // add button and sequencer shapes etc.
         shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
+        shapes.referenceHighlightLineLists = this.initializeAllReferenceHighlightLines()
         shapes.subdivisionHighlightLineLists = this.initializeAllSubdivisionHighlightLines();
         shapes.referenceLineLists = this.initializeAllReferenceLines() // list of lists, storing 'reference' lines for each sequencer row (one list of reference lines per row)
         shapes.sequencerRowLines = this.initializeAllSequencerRowLines() // list of sequencer row lines
@@ -522,6 +523,7 @@ class DrumMachineGui {
         this.rowSelectionTracker.shapes.push(...this.components.shapes.subdivisionLineLists[rowIndex])
         this.rowSelectionTracker.shapes.push(...this.components.shapes.subdivisionHighlightLineLists[rowIndex])
         this.rowSelectionTracker.shapes.push(...this.components.shapes.referenceLineLists[rowIndex])
+        this.rowSelectionTracker.shapes.push(...this.components.shapes.referenceHighlightLineLists[rowIndex])
         this.rowSelectionTracker.shapes.push(this.components.shapes.sequencerRowLines[rowIndex])
         this.rowSelectionTracker.shapes.push(this.components.shapes.sequencerRowSelectionRectangles[rowIndex])
         this.rowSelectionTracker.shapes.push(this.components.shapes.clearNotesForRowButtonShapes[rowIndex])
@@ -619,6 +621,9 @@ class DrumMachineGui {
             this.shiftToolTracker.referenceLinesStartingPositions.push(line.translation.x);
         }
         this.shiftToolTracker.referenceLinesStartingShiftInPixels = this.referenceLinesShiftInPixelsPerRow[rowIndex];
+        for (let shape of this.components.shapes.referenceHighlightLineLists[rowIndex]) {
+            shape.stroke = this.configurations.referenceHighlightLines.color
+        }
         // subdivision lines
         this.shiftToolTracker.subdivisionLinesStartingPositions = [];
         for (let line of this.components.shapes.subdivisionLineLists[rowIndex]) {
@@ -713,6 +718,31 @@ class DrumMachineGui {
         return linesForRow
     }
 
+    /**
+     * reference highlight lines
+     */
+
+    removeReferenceHighlightLinesForRow(rowIndex) {
+        for (let line of this.components.shapes.referenceHighlightLineLists[rowIndex]) {
+            line.remove()
+        }
+        this.components.shapes.referenceHighlightLineLists[rowIndex] = []
+    }
+
+    initializeAllReferenceHighlightLines() {
+        let allReferenceHighlightLineLists = []
+        let referenceHighlightLinesForRow = []
+        for (let rowsDrawn = 0; rowsDrawn < this.sequencer.numberOfRows; rowsDrawn++) {
+            referenceHighlightLinesForRow = this.initializeReferenceLinesForRow(rowsDrawn, this.configurations.referenceHighlightLines.height, this.configurations.referenceHighlightLines.lineWidth, 'transparent')
+            allReferenceHighlightLineLists.push(referenceHighlightLinesForRow) // keep a list of all rows' reference line lists
+        }
+        return allReferenceHighlightLineLists
+    }
+
+    /**
+     * reference line and reference highlight line event listeners
+     */
+
     addAllReferenceLinesEventListeners(){
         for (let rowIndex = 0; rowIndex < this.sequencer.numberOfRows; rowIndex++){
             this.addReferenceLinesEventListenersForRow(rowIndex);
@@ -720,16 +750,26 @@ class DrumMachineGui {
     }
 
     addReferenceLinesEventListenersForRow(rowIndex) {
-        let shapesToAddEventListenersTo = this.components.shapes.referenceLineLists[rowIndex].map((shape) => shape._renderer.elem)
+        let shapesToAddEventListenersTo = []
+        shapesToAddEventListenersTo.push(...this.components.shapes.referenceLineLists[rowIndex].map((shape) => shape._renderer.elem))
+        shapesToAddEventListenersTo.push(...this.components.shapes.referenceHighlightLineLists[rowIndex].map((shape) => shape._renderer.elem))
         let eventHandlersHash = {
             "mouseenter": () => {
                 let shiftNotes = false;
                 let shiftSubdivisionLines = false;
                 let shiftReferenceLines = true;
                 this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+                for (let shape of this.components.shapes.referenceHighlightLineLists[rowIndex]) {
+                    shape.stroke = this.configurations.referenceHighlightLines.color
+                }
             },
             "mouseleave": () => {
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+                if (this.shiftToolTracker.selectedRowIndex === null) {
+                    for (let shape of this.components.shapes.referenceHighlightLineLists[rowIndex]) {
+                        shape.stroke = 'transparent'
+                    }
+                }
             },
             "mousedown": (event) => {
                 let updateShiftRowToolButtonVisuals = false;
@@ -2496,11 +2536,13 @@ class DrumMachineGui {
         this.removeAllCirclesFromDisplay()
         // next we will delete all lines for the changed row
         this.removeSubdivisionHighlightLinesForRow(rowIndex)
+        this.removeReferenceHighlightLinesForRow(rowIndex)
         this.removeSubdivisionLinesForRow(rowIndex)
         this.removeReferenceLinesForRow(rowIndex)
         this.removeSequencerRowLine(rowIndex)
         this.removeTimeTrackingLine(rowIndex)
         // then we will draw all the lines for the changed row, starting with reference lines since they need to be the bottom layer
+        this.components.shapes.referenceHighlightLineLists[rowIndex] = this.initializeReferenceLinesForRow(rowIndex, this.configurations.referenceHighlightLines.height, this.configurations.referenceHighlightLines.lineWidth, 'transparent')
         this.components.shapes.subdivisionHighlightLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex, this.configurations.subdivisionHighlightLines.height, this.configurations.subdivisionHighlightLines.lineWidth, 'transparent')
         this.components.shapes.referenceLineLists[rowIndex] = this.initializeReferenceLinesForRow(rowIndex, this.configurations.referenceLines.height, this.configurations.sequencer.lineWidth, this.configurations.referenceLines.color)
         this.components.shapes.subdivisionLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex, this.configurations.subdivisionLines.height, this.configurations.sequencer.lineWidth, this.configurations.subdivisionLines.color)
@@ -2538,6 +2580,13 @@ class DrumMachineGui {
             list = [];
         }
         this.components.shapes.referenceLineLists = []
+        for (let list of this.components.shapes.referenceHighlightLineLists) {
+            for (let line of list) {
+                line.remove();
+            }
+            list = [];
+        }
+        this.components.shapes.referenceHighlightLineLists = []
         for (let line of this.components.shapes.sequencerRowLines) {
             line.remove();
         }
@@ -2563,6 +2612,7 @@ class DrumMachineGui {
         }
         this.components.shapes.shiftToolRowHandles = []
         this.components.shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
+        this.components.shapes.referenceHighlightLineLists = this.initializeAllReferenceHighlightLines();
         this.components.shapes.subdivisionHighlightLineLists = this.initializeAllSubdivisionHighlightLines();
         this.components.shapes.referenceLineLists = this.initializeAllReferenceLines();
         this.components.shapes.subdivisionLineLists = this.initializeAllSubdivisionLines();
@@ -2833,6 +2883,7 @@ class DrumMachineGui {
         // this logic will always be the same regardless of whether the row is quantized or not, since reference lines can't be snapped to grid.
         for (let lineIndex = 0; lineIndex < self.components.shapes.referenceLineLists[self.shiftToolTracker.selectedRowIndex].length; lineIndex++) {
             let line = self.components.shapes.referenceLineLists[self.shiftToolTracker.selectedRowIndex][lineIndex];
+            let hightlightLine = self.components.shapes.referenceHighlightLineLists[self.shiftToolTracker.selectedRowIndex][lineIndex];
             let lineXPositionAdjustedForSequencerLeftEdge = (self.shiftToolTracker.referenceLinesStartingPositions[lineIndex] - mouseMoveDistance) - self.configurations.sequencer.left;
             if (lineXPositionAdjustedForSequencerLeftEdge < 0) {
                 lineXPositionAdjustedForSequencerLeftEdge = self.configurations.sequencer.width + lineXPositionAdjustedForSequencerLeftEdge
@@ -2841,6 +2892,7 @@ class DrumMachineGui {
             }
             let newLineXPosition = self.configurations.sequencer.left + lineXPositionAdjustedForSequencerLeftEdge
             line.translation.x = newLineXPosition
+            hightlightLine.translation.x = newLineXPosition
         }
         // store values in relevant places
         let shiftInPixels = self.shiftToolTracker.referenceLinesStartingShiftInPixels - mouseMoveDistance; 

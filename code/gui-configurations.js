@@ -66,7 +66,7 @@ function getGuiConfigurations(hideIcons=false) {
             color: lighterSequencerColor, // meant to be slightly lighter than the subdivision line color
         },
         referenceHighlightLines: {
-            height: 19,
+            height: 20,
             color: 'black',
             lineWidth: 5,
         },
