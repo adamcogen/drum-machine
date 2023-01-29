@@ -2279,7 +2279,7 @@ class DrumMachineGui {
         });
         // select circle (for moving) if we click it
         circle._renderer.elem.addEventListener('mousedown', (event) => {
-            this.adjustEventCoordinates(event);
+            event = this.adjustEventCoordinates(event)
 
             // selection tracking variables
             this.circleSelectionTracker.circleBeingMoved = circle
@@ -2574,7 +2574,7 @@ class DrumMachineGui {
     }
 
     rowVolumeAdjustmentWindowMouseMoveHandler(self, event) {
-        self.adjustEventCoordinates(event)
+        event = self.adjustEventCoordinates(event)
         let mouseX = event.pageX
         let mouseY = event.pageY
         let mouseHasMoved = (mouseX !== self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.x || mouseY !== self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y)
@@ -2611,7 +2611,7 @@ class DrumMachineGui {
     // this method is very messy. my top priority was to get it working, and not worry about duplicated code or using the most perfect straightforward logic flow.
     // this will definitely need to be refactored later, but that will be easier once we know exactly how everything will work / what the logic needs to do.
     shiftToolMouseMoveEventHandler(self, event){
-        self.adjustEventCoordinates(event)
+        event = self.adjustEventCoordinates(event)
         let mouseX = event.pageX
         let mouseY = event.pageY
         let mouseHasMoved = (mouseX !== self.shiftToolTracker.mouseStartingPosition.x || mouseY !== self.shiftToolTracker.mouseStartingPosition.y)
@@ -2789,7 +2789,7 @@ class DrumMachineGui {
     moveNotesAndChangeVolumesMouseMoveHandler(self, event){
         // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
         if (self.circleSelectionTracker.circleBeingMoved !== null) { // handle mousemove events when a note is selected
-            self.adjustEventCoordinates(event)
+            event = self.adjustEventCoordinates(event)
             let mouseX = event.pageX
             let mouseY = event.pageY
             if (event.ctrlKey) {
@@ -2957,7 +2957,7 @@ class DrumMachineGui {
     }
 
     rowMovementWindowMouseMoveHandler(self, event) {
-        self.adjustEventCoordinates(event)
+        event = self.adjustEventCoordinates(event)
         let mouseX = event.pageX
         let mouseY = event.pageY
 
@@ -3149,7 +3149,7 @@ class DrumMachineGui {
             self.redrawSequencer(); // todo: this is probably an unnecessarily expensive call to make. we just want to update the note volume in the sample bank. but this seems like  a fast enough way for now. can optimize later if needed.
             self.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         }
-        self.adjustEventCoordinates(event)
+        event = self.adjustEventCoordinates(event)
         if (self.rowSelectionTracker.selectedRowIndex !== null) {
             self.rowMovementWindowMouseUpHandler(self, event);
         }
