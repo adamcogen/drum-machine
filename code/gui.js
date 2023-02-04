@@ -317,6 +317,7 @@ class DrumMachineGui {
         shapes.examplePatternsMenuOutline.stroke = "#bfbfbf";
         this.initializeMultiLineText(this.configurations.examplePatternMenuExplanation.lines, this.configurations.examplePatternMenuExplanation.left, this.configurations.examplePatternMenuExplanation.top, 13, 15, this.configurations.subdivisionLines.color, "left") // i'm not saving these shapes anywhere right now, since they never change after being initiailized
         // add button and sequencer shapes etc.
+        shapes.sequencerRowHighlightLines = this.initializeAllSequencerRowHighlightLines();
         shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
         shapes.referenceHighlightLineLists = this.initializeAllReferenceHighlightLines()
         shapes.subdivisionHighlightLineLists = this.initializeAllSubdivisionHighlightLines();
@@ -525,6 +526,7 @@ class DrumMachineGui {
         this.rowSelectionTracker.shapes.push(...this.components.shapes.referenceLineLists[rowIndex])
         this.rowSelectionTracker.shapes.push(...this.components.shapes.referenceHighlightLineLists[rowIndex])
         this.rowSelectionTracker.shapes.push(this.components.shapes.sequencerRowLines[rowIndex])
+        this.rowSelectionTracker.shapes.push(this.components.shapes.sequencerRowHighlightLines[rowIndex])
         this.rowSelectionTracker.shapes.push(this.components.shapes.sequencerRowSelectionRectangles[rowIndex])
         this.rowSelectionTracker.shapes.push(this.components.shapes.clearNotesForRowButtonShapes[rowIndex])
         this.rowSelectionTracker.shapes.push(this.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex])
@@ -913,6 +915,22 @@ class DrumMachineGui {
     removeSequencerRowLine(rowIndex) {
         this.components.shapes.sequencerRowLines[rowIndex].remove();
         this.components.shapes.sequencerRowLines[rowIndex] = null;
+    }
+
+    // sequencer row highlight lines
+
+    initializeAllSequencerRowHighlightLines() {
+        let sequencerRowLines = []
+        for (let rowsDrawn = 0; rowsDrawn < this.sequencer.numberOfRows; rowsDrawn++) {
+            let sequencerRowLine = this.initializeSequencerRowLine(rowsDrawn)
+            sequencerRowLines.push(sequencerRowLine)
+        }
+        return sequencerRowLines
+    }
+
+    removeSequencerRowHighlightLine(rowIndex) {
+        this.components.shapes.sequencerRowHighlightLines[rowIndex].remove();
+        this.components.shapes.sequencerRowHighlightLines[rowIndex] = null;
     }
 
     /**
@@ -2607,11 +2625,13 @@ class DrumMachineGui {
         // next we will delete all lines for the changed row
         this.removeSubdivisionHighlightLinesForRow(rowIndex)
         this.removeReferenceHighlightLinesForRow(rowIndex)
+        this.removeSequencerRowHighlightLine(rowIndex)
         this.removeSubdivisionLinesForRow(rowIndex)
         this.removeReferenceLinesForRow(rowIndex)
         this.removeSequencerRowLine(rowIndex)
         this.removeTimeTrackingLine(rowIndex)
         // then we will draw all the lines for the changed row, starting with reference lines since they need to be the bottom layer
+        this.components.shapes.sequencerRowHighlightLines[rowIndex] = this.initializeSequencerRowLine(rowIndex);
         this.components.shapes.referenceHighlightLineLists[rowIndex] = this.initializeReferenceLinesForRow(rowIndex, this.configurations.referenceHighlightLines.height, this.configurations.referenceHighlightLines.lineWidth, 'transparent')
         this.components.shapes.subdivisionHighlightLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex, this.configurations.subdivisionHighlightLines.height, this.configurations.subdivisionHighlightLines.lineWidth, 'transparent')
         this.components.shapes.referenceLineLists[rowIndex] = this.initializeReferenceLinesForRow(rowIndex, this.configurations.referenceLines.height, this.configurations.sequencer.lineWidth, this.configurations.referenceLines.color)
@@ -2657,6 +2677,10 @@ class DrumMachineGui {
             list = [];
         }
         this.components.shapes.referenceHighlightLineLists = []
+        for (let line of this.components.shapes.sequencerRowHighlightLines) {
+            line.remove();
+        }
+        this.components.shapes.sequencerRowHighlightLines = [];
         for (let line of this.components.shapes.sequencerRowLines) {
             line.remove();
         }
@@ -2682,6 +2706,7 @@ class DrumMachineGui {
         }
         this.components.shapes.shiftToolRowHandles = []
         this.components.shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
+        this.components.shapes.sequencerRowHighlightLines = this.initializeAllSequencerRowLines();
         this.components.shapes.referenceHighlightLineLists = this.initializeAllReferenceHighlightLines();
         this.components.shapes.subdivisionHighlightLineLists = this.initializeAllSubdivisionHighlightLines();
         this.components.shapes.referenceLineLists = this.initializeAllReferenceLines();
