@@ -327,6 +327,7 @@ class DrumMachineGui {
         shapes.examplePatternsMenuOutline.stroke = "#bfbfbf";
         this.initializeMultiLineText(this.configurations.examplePatternMenuExplanation.lines, this.configurations.examplePatternMenuExplanation.left, this.configurations.examplePatternMenuExplanation.top, 13, 15, this.configurations.subdivisionLines.color, "left") // i'm not saving these shapes anywhere right now, since they never change after being initiailized
         // add button and sequencer shapes etc.
+        shapes.sequencerBorder = this.initializeSequencerBorder();
         shapes.sequencerRowHighlightLines = this.initializeAllSequencerRowHighlightLines();
         shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
         shapes.referenceHighlightLineLists = this.initializeAllReferenceHighlightLines()
@@ -561,6 +562,16 @@ class DrumMachineGui {
             "contextmenu": (event) => { event.preventDefault() }
         }
         this.addEventListenersWithoutDuplicates("contextmenu", [window], eventHandlersHash)
+    }
+
+    initializeSequencerBorder() {
+        let top = this.configurations.sequencer.top + this.configurations.sequencerRowSelections.topPadding
+        let left = this.configurations.sequencer.left + this.configurations.sequencerRowSelections.leftPadding
+        let width = this.configurations.sequencer.width + this.configurations.sequencerRowSelections.width
+        let height = this.configurations.sequencerRowSelections.height * this.sequencer.numberOfRows
+        let shape = this.initializeRectangleShape(top, left, height, width);
+        shape.stroke = 'transparent';
+        return shape;
     }
 
     /**
@@ -893,7 +904,7 @@ class DrumMachineGui {
         shapesToAddEventListenersTo.push(...this.components.shapes.referenceHighlightLineLists[rowIndex].map((shape) => shape._renderer.elem))
         let eventHandlersHash = {
             "mouseenter": () => {
-                if (this.shiftToolTracker.selectedRowIndex === null && this.circleSelectionTracker.circleBeingMoved === null && this.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
+                if (this.noObjectsAreBeingMoved()) {
                     let shiftNotes = false;
                     let shiftSubdivisionLines = false;
                     let shiftReferenceLines = true;
@@ -1034,7 +1045,7 @@ class DrumMachineGui {
         let eventHandlersHash = {
             "mouseenter": (event) => {
                 this.multiShiftTracker.withinRow = rowIndex;
-                if (this.shiftToolTracker.selectedRowIndex === null && this.circleSelectionTracker.circleBeingMoved === null && this.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
+                if (this.noObjectsAreBeingMoved()) {
                     // calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
                     this.multiShiftTracker.highlightedRow = rowIndex;
                     let highlightSubdivisionLines = event.altKey || this.multiShiftTracker.shiftSubdivisionLines
@@ -1155,7 +1166,7 @@ class DrumMachineGui {
         shapesToAddEventListenersTo.push(...this.components.shapes.subdivisionHighlightLineLists[rowIndex].map((shape) => shape._renderer.elem))
         let eventHandlersHash = {
             "mouseenter": () => {
-                if (this.shiftToolTracker.selectedRowIndex === null && this.circleSelectionTracker.circleBeingMoved === null && this.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
+                if (this.noObjectsAreBeingMoved()) {
                     let rowIsQuantized = this.sequencer.rows[rowIndex].quantized
                     let shiftNotes = rowIsQuantized
                     let shiftSubdivisionLines = true;
@@ -2279,19 +2290,23 @@ class DrumMachineGui {
 
     clearRowButtonMouseEnterHandler(self, rowIndex) {
         self.simpleButtonHoverMouseEnterLogic(self, self.components.shapes.clearNotesForRowButtonShapes[rowIndex], self.configurations.helpText.deleteAllNotesForRow, "red")
-        for (let circle of self.allDrawnCircles) {
-            if (circle.guiData.row === rowIndex) {
-                circle.linewidth = 2
-                circle.stroke = 'red'
+        if (self.noObjectsAreBeingMoved()) {
+            for (let circle of self.allDrawnCircles) {
+                if (circle.guiData.row === rowIndex) {
+                    circle.linewidth = 2
+                    circle.stroke = 'red'
+                }
             }
         }
     }
 
     clearRowButtonMouseLeaveHandler(self, rowIndex) {
         self.simpleButtonHoverMouseLeaveLogic(self, self.components.shapes.clearNotesForRowButtonShapes[rowIndex])
-        for (let circle of self.allDrawnCircles) {
-            if (circle.guiData.row === rowIndex) {
-                circle.stroke = 'transparent'
+        if (self.noObjectsAreBeingMoved()) {
+            for (let circle of self.allDrawnCircles) {
+                if (circle.guiData.row === rowIndex) {
+                    circle.stroke = 'transparent'
+                }
             }
         }
     }
@@ -2299,6 +2314,13 @@ class DrumMachineGui {
     clearNotesForRow(rowIndex) { 
         this.sequencer.clearRow(rowIndex)
         this.refreshNoteDependentButtonsForRow(rowIndex)
+    }
+
+    // return whether anything in the sequencer is currently being moved or having its volume changed. 
+    // this includes moving a row, changing a row's volume, shifting a row, moving a note, or changing a note's volume.
+    // if any of those are currently happening, this will return 'false'.
+    noObjectsAreBeingMoved() {
+        return this.shiftToolTracker.selectedRowIndex === null && this.circleSelectionTracker.circleBeingMoved === null && this.rowVolumeAdjustmentTracker.selectedRowIndex === null
     }
 
     /**
@@ -2418,8 +2440,8 @@ class DrumMachineGui {
         let shapesToAddEventListenersTo = [this.components.shapes.clearAllNotesButtonShape._renderer.elem, this.components.domElements.images.clearAllIcon]
         let eventHandlersHash = {
             "click": () => this.clearAllNotesButtonClickHandler(this),
-            "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearAllNotesButtonShape, this.configurations.helpText.deletePattern, "red"),
-            "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearAllNotesButtonShape),
+            "mouseenter": () => this.clearAllNotesMouseEnterHandler(this),
+            "mouseleave": () => this.clearAllNotesMouseLeaveHandler(this),
         }
         this.addEventListenersWithoutDuplicates("clearAllNotes", shapesToAddEventListenersTo, eventHandlersHash);
     }
@@ -2434,6 +2456,27 @@ class DrumMachineGui {
         self.saveCurrentSequencerStateToUrlHash();
         self.components.domElements.selectors.examplePatterns.options[0].innerHTML = "";
         self.components.domElements.selectors.examplePatterns.options[0].selected = true;
+    }
+
+    clearAllNotesMouseEnterHandler(self) {
+        self.simpleButtonHoverMouseEnterLogic(self, self.components.shapes.clearAllNotesButtonShape, self.configurations.helpText.deletePattern, "red");
+        if (self.noObjectsAreBeingMoved()) {
+            for (let circle of self.allDrawnCircles) {
+                circle.linewidth = 2
+                circle.stroke = 'red'
+            }
+            this.components.shapes.sequencerBorder.stroke = 'red';
+        }
+    }
+
+    clearAllNotesMouseLeaveHandler(self) {
+        self.simpleButtonHoverMouseLeaveLogic(self, self.components.shapes.clearAllNotesButtonShape)
+        if (self.noObjectsAreBeingMoved()) {
+            for (let circle of self.allDrawnCircles) {
+                circle.stroke = 'transparent'
+            }
+            this.components.shapes.sequencerBorder.stroke = 'transparent';
+        }
     }
 
     initializeNoteBankVolumesTrackerValues() {
@@ -2945,7 +2988,9 @@ class DrumMachineGui {
         }
         this.components.shapes.toggleQuantizationButtonsRectangles = []
         this.components.shapes.toggleQuantizationButtonsRectangles = this.initializeButtonPerSequencerRow(this.configurations.quantizationButtons.topPaddingPerRow, this.configurations.quantizationButtons.leftPaddingPerRow, this.configurations.quantizationButtons.height, this.configurations.quantizationButtons.width)
-
+        // sequencer border
+        this.components.shapes.sequencerBorder.remove();
+        this.components.shapes.sequencerBorder = this.initializeSequencerBorder();
         // update two.js so we can add event listeners to shapes
         this.two.update()
         // initialize event listeners
