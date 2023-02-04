@@ -26,7 +26,7 @@ function getGuiConfigurations(hideIcons=false) {
             lineWidth: 8,
             color: 'black',
             hoverColor: "#b8b8b8",
-            hoverLineWidth: 8,
+            hoverLineWidth: 7,
         },
         defaultFont: {
             color: 'black' // "#575757",
