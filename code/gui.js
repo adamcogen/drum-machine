@@ -284,6 +284,8 @@ class DrumMachineGui {
     // is drawn first.
     initializeGuiShapes() {
         let shapes = {};
+        // sequencer border
+        shapes.sequencerBorder = this.initializeSequencerBorder();
         // add shapes for menu outlines
         // loop length mode buttons outline
         shapes.loopLengthModeSelectionButtonsOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top, this.configurations.tempoInputModeSelectionBpmButton.left, this.configurations.tempoInputModeSelectionBpmButton.height, this.configurations.tempoInputModeSelectionBpmButton.width + (this.configurations.tempoInputModeSelectionMillisecondsButton.left - this.configurations.tempoInputModeSelectionBpmButton.left))
@@ -327,7 +329,6 @@ class DrumMachineGui {
         shapes.examplePatternsMenuOutline.stroke = "#bfbfbf";
         this.initializeMultiLineText(this.configurations.examplePatternMenuExplanation.lines, this.configurations.examplePatternMenuExplanation.left, this.configurations.examplePatternMenuExplanation.top, 13, 15, this.configurations.subdivisionLines.color, "left") // i'm not saving these shapes anywhere right now, since they never change after being initiailized
         // add button and sequencer shapes etc.
-        shapes.sequencerBorder = this.initializeSequencerBorder();
         shapes.sequencerRowHighlightLines = this.initializeAllSequencerRowHighlightLines();
         shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
         shapes.referenceHighlightLineLists = this.initializeAllReferenceHighlightLines()
@@ -2948,6 +2949,9 @@ class DrumMachineGui {
     }
 
     redrawSequencer() {
+        // sequencer border
+        this.components.shapes.sequencerBorder.remove();
+        this.components.shapes.sequencerBorder = this.initializeSequencerBorder();
         // update mouse event listeners to reflect current state of sequencer (number of rows, etc.)
         this.refreshWindowMouseMoveEvent();
         this.initializeReferenceLinesShiftPixelsTracker(); // set up variables for handling reference line 'shift' values
@@ -2988,9 +2992,6 @@ class DrumMachineGui {
         }
         this.components.shapes.toggleQuantizationButtonsRectangles = []
         this.components.shapes.toggleQuantizationButtonsRectangles = this.initializeButtonPerSequencerRow(this.configurations.quantizationButtons.topPaddingPerRow, this.configurations.quantizationButtons.leftPaddingPerRow, this.configurations.quantizationButtons.height, this.configurations.quantizationButtons.width)
-        // sequencer border
-        this.components.shapes.sequencerBorder.remove();
-        this.components.shapes.sequencerBorder = this.initializeSequencerBorder();
         // update two.js so we can add event listeners to shapes
         this.two.update()
         // initialize event listeners
