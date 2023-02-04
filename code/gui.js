@@ -689,10 +689,16 @@ class DrumMachineGui {
             }
         }
         // sequener row line
-        if (highlightSequencerRowLine && (highlightReferenceLines || highlightSubdivisionLines || highlightNotes)) {
-            // this will be used for the multi-shift tool: when you mouse over a sequencer row line, you will have the option
-            // to shift any combination of resources at the same time, by holding down different keys (alt, ctrl, and shift).
-            this.components.shapes.sequencerRowHighlightLines[rowIndex].stroke = this.configurations.sequencerRowHighlightLines.color
+        if (highlightSequencerRowLine) {
+            if (highlightReferenceLines || highlightSubdivisionLines || highlightNotes) {
+                // this will be used for the multi-shift tool: when you mouse over a sequencer row line, you will have the option
+                // to shift any combination of resources at the same time, by holding down different keys (alt, ctrl, and shift).
+                this.components.shapes.sequencerRowHighlightLines[rowIndex].stroke = this.configurations.sequencerRowHighlightLines.color
+                this.components.shapes.sequencerRowHighlightLines[rowIndex].linewidth = this.configurations.sequencerRowHighlightLines.lineWidth
+            } else {
+                this.components.shapes.sequencerRowHighlightLines[rowIndex].stroke = this.configurations.sequencerRowHighlightLines.hoverColor
+                this.components.shapes.sequencerRowHighlightLines[rowIndex].linewidth = this.configurations.sequencerRowHighlightLines.hoverLineWidth;
+            }
         }
     }
 
@@ -3804,7 +3810,7 @@ class DrumMachineGui {
                             let shiftNotes = this.shiftToolTracker.resourcesToShiftButtonStates.notes;
                             let shiftSubdivisionLines = this.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines;
                             let shiftReferenceLines = this.shiftToolTracker.resourcesToShiftButtonStates.referenceLines;
-                            let rowIsQuantized = this.sequencer.rows[this.shiftToolTracker.selectedRowIndex].quantized
+                            let rowIsQuantized = this.sequencer.rows[rowIndex].quantized
                             this.setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
                             this.shiftRowMouseEnterEventHandler(this, rowIndex)
                         }

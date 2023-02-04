@@ -22,6 +22,8 @@ function getGuiConfigurations(hideIcons=false) {
         sequencerRowHighlightLines: {
             lineWidth: 6,
             color: 'black',
+            hoverColor: "#b8b8b8",
+            hoverLineWidth: 8,
         },
         defaultFont: {
             color: 'black' // "#575757",
@@ -64,6 +66,7 @@ function getGuiConfigurations(hideIcons=false) {
             height: 20,
             color: 'black',
             lineWidth: 6,
+            hoverColor: 'blue',
         },
         referenceLines: {
             height: 22,
@@ -470,7 +473,7 @@ function getGuiConfigurations(hideIcons=false) {
             selectLiveMidiOutputPort: "select live MIDI output port",
             selectDrumKit: "select drum kit to use for live audio output",
             selectExampleSequencerPattern: "load an example sequencer pattern",
-            multiShift: "multi-shift tool: click+drag to shift multiple objects at the same time. +ctrl for notes; +alt for beats; +cmd for visual reference lines."
+            multiShift: "multi-shift tool: click+drag to shift multiple types of objects at the same time. +ctrl for notes; +alt for beats; +cmd for visual reference lines."
         }
     }
 }
