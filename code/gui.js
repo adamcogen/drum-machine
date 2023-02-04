@@ -891,15 +891,15 @@ class DrumMachineGui {
     initializeAllSequencerRowLines() {
         let sequencerRowLines = []
         for (let rowsDrawn = 0; rowsDrawn < this.sequencer.numberOfRows; rowsDrawn++) {
-            let sequencerRowLine = this.initializeSequencerRowLine(rowsDrawn)
+            let sequencerRowLine = this.initializeSequencerRowLine(rowsDrawn, this.configurations.sequencer.lineWidth, this.configurations.sequencer.color)
             sequencerRowLines.push(sequencerRowLine)
         }
         return sequencerRowLines
     }
 
-    initializeSequencerRowLine(rowIndex) {
+    initializeSequencerRowLine(rowIndex, lineWidth, color) {
         let sequencerLineCenterY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows)
-        let halfOfLineWidth = Math.floor(this.configurations.sequencer.lineWidth / 2)
+        let halfOfLineWidth = Math.floor(lineWidth / 2)
         let lineStart = {
             x: this.configurations.sequencer.left - halfOfLineWidth, // make sure to account for 'line width' when trying to make these lines reach the top of the sequencer line. that's why we subtract the value here
             y: sequencerLineCenterY
@@ -908,7 +908,7 @@ class DrumMachineGui {
             x: this.configurations.sequencer.left + this.configurations.sequencer.width + halfOfLineWidth,
             y: sequencerLineCenterY
         }
-        let sequencerRowLine = this.initializeLine(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y, this.configurations.sequencer.lineWidth, this.configurations.sequencer.color);
+        let sequencerRowLine = this.initializeLine(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y, lineWidth, color);
         return sequencerRowLine
     }
 
@@ -922,7 +922,7 @@ class DrumMachineGui {
     initializeAllSequencerRowHighlightLines() {
         let sequencerRowLines = []
         for (let rowsDrawn = 0; rowsDrawn < this.sequencer.numberOfRows; rowsDrawn++) {
-            let sequencerRowLine = this.initializeSequencerRowLine(rowsDrawn)
+            let sequencerRowLine = this.initializeSequencerRowLine(rowsDrawn, this.configurations.sequencerRowHighlightLines.lineWidth, 'transparent')
             sequencerRowLines.push(sequencerRowLine)
         }
         return sequencerRowLines
@@ -2631,12 +2631,12 @@ class DrumMachineGui {
         this.removeSequencerRowLine(rowIndex)
         this.removeTimeTrackingLine(rowIndex)
         // then we will draw all the lines for the changed row, starting with reference lines since they need to be the bottom layer
-        this.components.shapes.sequencerRowHighlightLines[rowIndex] = this.initializeSequencerRowLine(rowIndex);
+        this.components.shapes.sequencerRowHighlightLines[rowIndex] = this.initializeSequencerRowLine(rowIndex, this.configurations.sequencerRowHighlightLines.lineWidth, 'transparent');
         this.components.shapes.referenceHighlightLineLists[rowIndex] = this.initializeReferenceLinesForRow(rowIndex, this.configurations.referenceHighlightLines.height, this.configurations.referenceHighlightLines.lineWidth, 'transparent')
         this.components.shapes.subdivisionHighlightLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex, this.configurations.subdivisionHighlightLines.height, this.configurations.subdivisionHighlightLines.lineWidth, 'transparent')
         this.components.shapes.referenceLineLists[rowIndex] = this.initializeReferenceLinesForRow(rowIndex, this.configurations.referenceLines.height, this.configurations.sequencer.lineWidth, this.configurations.referenceLines.color)
         this.components.shapes.subdivisionLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex, this.configurations.subdivisionLines.height, this.configurations.sequencer.lineWidth, this.configurations.subdivisionLines.color)
-        this.components.shapes.sequencerRowLines[rowIndex] = this.initializeSequencerRowLine(rowIndex)
+        this.components.shapes.sequencerRowLines[rowIndex] = this.initializeSequencerRowLine(rowIndex, this.configurations.sequencer.lineWidth, this.configurations.sequencer.color)
         this.components.shapes.timeTrackingLines[rowIndex] = this.initializeTimeTrackingLineForRow(rowIndex)
         // add event listeners to subdivision lines and reference lines
         this.two.update(); // this update needs to happen here so that SVG renders get initialized for subdivision and reference lines, so that we can add event listeners to them
@@ -2706,7 +2706,7 @@ class DrumMachineGui {
         }
         this.components.shapes.shiftToolRowHandles = []
         this.components.shapes.sequencerRowSelectionRectangles = this.initializeSequencerRowSelectionRectangles();
-        this.components.shapes.sequencerRowHighlightLines = this.initializeAllSequencerRowLines();
+        this.components.shapes.sequencerRowHighlightLines = this.initializeAllSequencerRowHighlightLines();
         this.components.shapes.referenceHighlightLineLists = this.initializeAllReferenceHighlightLines();
         this.components.shapes.subdivisionHighlightLineLists = this.initializeAllSubdivisionHighlightLines();
         this.components.shapes.referenceLineLists = this.initializeAllReferenceLines();
