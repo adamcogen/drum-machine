@@ -600,20 +600,52 @@ class DrumMachineGui {
         rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.selectedColor
     }
 
-    initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines) {
-        this.shiftToolTracker.selectedRowIndex = rowIndex;
+    // when we hover over a shiftable object, we should highlight it as necessary,
+    // and also store and variables we will need to track if it gets clicked.
+    initializeShiftToolHoverVisualsAndVariables(rowIndex, highlightNotes, highlightSubdivisionLines, highlightReferenceLines, highlightSequencerRowLine=false) {
+        this.shiftToolTracker.highlightedRowIndex = rowIndex;
         this.shiftToolTracker.noteCircles = [];
-        this.shiftToolTracker.noteCirclesStartingPositions = [];
-        this.shiftToolTracker.noteCirclesStartingBeats = []
-        this.shiftToolTracker.resourcesToShift.notes = shiftNotes;
-        this.shiftToolTracker.resourcesToShift.subdivisionLines = shiftSubdivisionLines;
-        this.shiftToolTracker.resourcesToShift.referenceLines = shiftReferenceLines;
         for (let circle of this.allDrawnCircles) {
             if (circle.guiData.row === rowIndex) {
                 this.shiftToolTracker.noteCircles.push(circle)
-                this.shiftToolTracker.noteCirclesStartingPositions.push(circle.translation.x)
-                this.shiftToolTracker.noteCirclesStartingBeats.push(circle.guiData.beat)
+                if (highlightNotes) {
+                    circle.stroke = 'black';
+                    circle.linewidth = 2;
+                }
             }
+        }
+        // reference lines
+        if (highlightReferenceLines) {
+            for (let shape of this.components.shapes.referenceHighlightLineLists[rowIndex]) {
+                shape.stroke = this.configurations.referenceHighlightLines.color
+            }   
+        }
+        // subdivision lines
+        if (highlightSubdivisionLines) {
+            for (let shape of this.components.shapes.subdivisionHighlightLineLists[rowIndex]) {
+                shape.stroke = this.configurations.subdivisionHighlightLines.color
+            }
+        }
+        // sequener row line
+        if (highlightSequencerRowLine) {
+            // todo: add logic to allow for highlighting sequencer row line.
+            // this will be used for the multi-shift tool: when you mouse over a sequencer row line, you will have the option
+            // to shift any combination of resources at the same time, by holding down different keys (alt, ctrl, and shift).
+        }
+    }
+
+    initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines) {
+        this.shiftToolTracker.selectedRowIndex = rowIndex;
+        this.shiftToolTracker.resourcesToShift.notes = shiftNotes;
+        this.shiftToolTracker.resourcesToShift.subdivisionLines = shiftSubdivisionLines;
+        this.shiftToolTracker.resourcesToShift.referenceLines = shiftReferenceLines;
+        this.shiftToolTracker.updateShiftRowButtonVisuals = updateShiftRowButtonVisuals;
+        // notes
+        this.shiftToolTracker.noteCirclesStartingPositions = [];
+        this.shiftToolTracker.noteCirclesStartingBeats = []
+        for (let circle of this.shiftToolTracker.noteCircles) {
+            this.shiftToolTracker.noteCirclesStartingPositions.push(circle.translation.x)
+            this.shiftToolTracker.noteCirclesStartingBeats.push(circle.guiData.beat)
         }
         // reference lines
         this.shiftToolTracker.referenceLinesStartingPositions = [];
@@ -621,23 +653,12 @@ class DrumMachineGui {
             this.shiftToolTracker.referenceLinesStartingPositions.push(line.translation.x);
         }
         this.shiftToolTracker.referenceLinesStartingShiftInPixels = this.referenceLinesShiftInPixelsPerRow[rowIndex];
-        if (shiftReferenceLines) {
-            for (let shape of this.components.shapes.referenceHighlightLineLists[rowIndex]) {
-                shape.stroke = this.configurations.referenceHighlightLines.color
-            }   
-        }
         // subdivision lines
         this.shiftToolTracker.subdivisionLinesStartingPositions = [];
         for (let line of this.components.shapes.subdivisionLineLists[rowIndex]) {
             this.shiftToolTracker.subdivisionLinesStartingPositions.push(line.translation.x);
         }
         this.shiftToolTracker.subdivisionLinesStartingShiftInPixels = this.subdivisionLinesShiftInPixelsPerRow[rowIndex];
-        this.shiftToolTracker.updateShiftRowButtonVisuals = updateShiftRowButtonVisuals;
-        if (shiftSubdivisionLines) {
-            for (let shape of this.components.shapes.subdivisionHighlightLineLists[rowIndex]) {
-            shape.stroke = this.configurations.subdivisionHighlightLines.color
-        }
-        }
         // row handle posisitions
         event = this.adjustEventCoordinates(event)
         this.shiftToolTracker.mouseStartingPosition.x = event.pageX
@@ -650,6 +671,19 @@ class DrumMachineGui {
             let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
             rowSelectionRectangle.stroke = this.configurations.shiftToolRowHandles.selectedColor
         }
+    }
+
+    unhighlightAllShiftableObjects(rowIndex) {
+        for (let circle of this.shiftToolTracker.noteCircles) {
+            circle.stroke = 'transparent'
+        }
+        for (let shape of this.components.shapes.subdivisionHighlightLineLists[rowIndex]) {
+            shape.stroke = 'transparent'
+        }
+        for (let shape of this.components.shapes.referenceHighlightLineLists[rowIndex]) {
+            shape.stroke = 'transparent'
+        }
+        // todo: include sequencer row lines here once they're implemented 
     }
 
     /**
@@ -763,9 +797,7 @@ class DrumMachineGui {
                 let shiftSubdivisionLines = false;
                 let shiftReferenceLines = true;
                 this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
-                for (let shape of this.components.shapes.referenceHighlightLineLists[rowIndex]) {
-                    shape.stroke = this.configurations.referenceHighlightLines.color
-                }
+                this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines)
             },
             "mouseleave": () => {
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
@@ -952,13 +984,11 @@ class DrumMachineGui {
         shapesToAddEventListenersTo.push(...this.components.shapes.subdivisionHighlightLineLists[rowIndex].map((shape) => shape._renderer.elem))
         let eventHandlersHash = {
             "mouseenter": () => {
-                let shiftNotes = false;
+                let shiftNotes = this.sequencer.rows[rowIndex].quantized;
                 let shiftSubdivisionLines = true;
                 let shiftReferenceLines = false;
                 this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
-                for (let shape of this.components.shapes.subdivisionHighlightLineLists[rowIndex]) {
-                    shape.stroke = this.configurations.subdivisionHighlightLines.color
-                }
+                this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines)
             },
             "mouseleave": () => {
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
@@ -966,11 +996,14 @@ class DrumMachineGui {
                     for (let shape of this.components.shapes.subdivisionHighlightLineLists[rowIndex]) {
                         shape.stroke = 'transparent'
                     }
+                    for (let circle of this.shiftToolTracker.noteCircles) {
+                        circle.stroke = 'transparent'
+                    }
                 }
             },
             "mousedown": (event) => {
                 let updateShiftRowToolButtonVisuals = false;
-                let shiftNotes = false;
+                let shiftNotes = this.sequencer.rows[rowIndex].quantized;
                 let shiftSubdivisionLines = true;
                 let shiftReferenceLines = false;
                 this.initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowToolButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
@@ -1275,6 +1308,7 @@ class DrumMachineGui {
             if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
                 circle.fill = self.configurations.buttonBehavior.buttonHoverColor
                 rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
+                self.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines)
             }
         }
     }
@@ -1307,6 +1341,9 @@ class DrumMachineGui {
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
             rowSelectionRectangle.stroke = 'transparent'
+            if (self.shiftToolTracker.selectedRowIndex === null) {
+                self.unhighlightAllShiftableObjects(rowIndex);
+            }
         }
     }
 
@@ -1328,6 +1365,7 @@ class DrumMachineGui {
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
             rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
+            self.unhighlightAllShiftableObjects(rowIndex);
         }
     }
 
@@ -3332,6 +3370,7 @@ class DrumMachineGui {
 
     shiftToolMouseUpEventHandler(self, event) {
         self.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+        self.unhighlightAllShiftableObjects(self.shiftToolTracker.selectedRowIndex);
         self.shiftToolTracker.selectedRowIndex = null
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
