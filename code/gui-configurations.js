@@ -455,7 +455,7 @@ function getGuiConfigurations(hideIcons=false) {
             setNumberOfReferenceLines: "set number of visual reference lines for row",
             deleteAllNotesForRow: "delete all notes from row",
             resetSubdivisionLineShift: "realign beat lines to default position (reset timing shift)",
-            resetRefernceLineShift: "realign visual reference lines to default position (reset timing shift)",
+            resetReferenceLineShift: "realign visual reference lines to default position (reset timing shift)",
             shiftRow: {
                 prefix: "shift the timing of ",
                 postfix: " for row",

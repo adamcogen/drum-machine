@@ -2392,7 +2392,7 @@ class DrumMachineGui {
         if (!self.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex].guiData.respondToEvents) {
             return;
         }
-        self.simpleButtonHoverMouseEnterLogic(self, self.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex], self.configurations.helpText.resetRefernceLineShift, "red")
+        self.simpleButtonHoverMouseEnterLogic(self, self.components.shapes.shiftModeResetReferenceLinesButtons[rowIndex], self.configurations.helpText.resetReferenceLineShift, "red")
         if (self.noObjectsAreBeingMoved()) {
             for (let line of self.components.shapes.referenceHighlightLineLists[rowIndex]) {
                 line.stroke = 'red';
@@ -2427,8 +2427,8 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]._renderer.elem]
             let eventHandlersHash = {
                 "click": () => this.resetSubdivisionLinesShiftClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex], this.configurations.helpText.resetSubdivisionLineShift, "red"),
-                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]),
+                "mouseenter": () => this.resetSubdivisionLinesShiftMouseEnterHandler(this, rowIndex),
+                "mouseleave": () => this.resetSubdivisionLinesShiftMouseLeaveHandler(this, rowIndex),
             }
             this.addEventListenersWithoutDuplicates("resetSubdivisionLinesShiftShape" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
         }
@@ -2441,6 +2441,30 @@ class DrumMachineGui {
             self.subdivisionLinesShiftInPixelsPerRow[rowIndex] = self.sequencer.rows[rowIndex].getSubdivisionLineShiftInMilliseconds();
             self.resetNotesAndLinesDisplayForRow(rowIndex);
             self.saveCurrentSequencerStateToUrlHash();
+        }
+    }
+
+    resetSubdivisionLinesShiftMouseEnterHandler(self, rowIndex) {
+        if (!self.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex].guiData.respondToEvents) {
+            return;
+        }
+        self.simpleButtonHoverMouseEnterLogic(self, self.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex], self.configurations.helpText.resetSubdivisionLineShift, "red")
+        if (self.noObjectsAreBeingMoved()) {
+            for (let line of self.components.shapes.subdivisionHighlightLineLists[rowIndex]) {
+                line.stroke = 'red';
+            }
+        }
+    }
+
+    resetSubdivisionLinesShiftMouseLeaveHandler(self, rowIndex) {
+        if (!self.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex].guiData.respondToEvents) {
+            return;
+        }
+        self.simpleButtonHoverMouseLeaveLogic(self, self.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex])
+        if (self.noObjectsAreBeingMoved()){
+            for (let line of self.components.shapes.subdivisionHighlightLineLists[rowIndex]) {
+                line.stroke = 'transparent';
+            }
         }
     }
 
@@ -3869,8 +3893,8 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [resetSubdivisionsShiftIcon] // we don't include the button shape here, only the icon, because the shape event listeners are set up elsewhere
             let eventHandlersHash = {
                 "click": () => this.resetSubdivisionLinesShiftClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex], this.configurations.helpText.resetSubdivisionLineShift, "red"),
-                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.shiftModeResetSubdivisionLinesButtons[rowIndex]),
+                "mouseenter": () => this.resetSubdivisionLinesShiftMouseEnterHandler(this, rowIndex),
+                "mouseleave": () => this.resetSubdivisionLinesShiftMouseLeaveHandler(this, rowIndex),
             }
             this.addEventListenersWithoutDuplicates("resetSubdvisionsLinesShiftForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add the copy to the dom and to our list that tracks these icons
