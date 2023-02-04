@@ -143,6 +143,14 @@ class DrumMachineGui {
             }
         }
 
+        this.multiShiftTracker = {
+            highlightedRow: null,
+            withinRow: null, // you can be within a row without it actually being highlighted (such as when another tool is already being used)
+            shiftNotes: false,
+            shiftSubdivisionLines: false,
+            shiftReferenceLines: false,
+        }
+
         this.noteBankNoteVolumesTracker = {}
         this.initializeNoteBankVolumesTrackerValues()
 
@@ -473,6 +481,44 @@ class DrumMachineGui {
                         this.pauseButtonClickHandler(this);
                     }
                 }
+                // handle key presses for multi-shift tool
+                if (event.altKey) {
+                    this.multiShiftTracker.shiftSubdivisionLines = true;
+                }
+                if (event.ctrlKey) {
+                    this.multiShiftTracker.shiftNotes = true;
+                }
+                if (event.metaKey) {
+                    this.multiShiftTracker.shiftReferenceLines = true;
+                }
+                if (this.multiShiftTracker.highlightedRow !== null && this.shiftToolTracker.selectedRowIndex === null) {
+                    this.multiShiftTracker.shiftNotes = this.multiShiftTracker.shiftNotes || (this.multiShiftTracker.shiftSubdivisionLines && this.sequencer.rows[this.multiShiftTracker.highlightedRow].quantized)
+                    this.shiftToolTracker.resourcesToShift.notes = this.multiShiftTracker.shiftNotes
+                    this.shiftToolTracker.resourcesToShift.subdivisionLines = this.multiShiftTracker.shiftSubdivisionLines
+                    this.shiftToolTracker.resourcesToShift.referenceLines = this.multiShiftTracker.shiftReferenceLines
+                    this.unhighlightAllShiftableObjects(this.multiShiftTracker.highlightedRow)
+                    this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.highlightedRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, true)
+                }
+            },
+            "keyup": (event) => {
+                // handle key ups for multi-shift tool
+                if (!event.ctrlKey) {
+                    this.multiShiftTracker.shiftNotes = false;
+                }
+                if (!event.altKey) {
+                    this.multiShiftTracker.shiftSubdivisionLines = false;
+                }
+                if (!event.metaKey) {
+                    this.multiShiftTracker.shiftReferenceLines = false;
+                }
+                if (this.multiShiftTracker.highlightedRow !== null && this.shiftToolTracker.selectedRowIndex === null) {
+                    this.multiShiftTracker.shiftNotes = this.multiShiftTracker.shiftNotes || (this.multiShiftTracker.shiftSubdivisionLines && this.sequencer.rows[this.multiShiftTracker.highlightedRow].quantized)
+                    this.shiftToolTracker.resourcesToShift.notes = this.multiShiftTracker.shiftNotes
+                    this.shiftToolTracker.resourcesToShift.subdivisionLines = this.multiShiftTracker.shiftSubdivisionLines
+                    this.shiftToolTracker.resourcesToShift.referenceLines = this.multiShiftTracker.shiftReferenceLines
+                    this.unhighlightAllShiftableObjects(this.multiShiftTracker.highlightedRow)
+                    this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.highlightedRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, true)
+                }
             }
         }
         this.addEventListenersWithoutDuplicates("keydown", [window], eventHandlersHash)
@@ -643,7 +689,7 @@ class DrumMachineGui {
             }
         }
         // sequener row line
-        if (highlightSequencerRowLine) {
+        if (highlightSequencerRowLine && (highlightReferenceLines || highlightSubdivisionLines || highlightNotes)) {
             // this will be used for the multi-shift tool: when you mouse over a sequencer row line, you will have the option
             // to shift any combination of resources at the same time, by holding down different keys (alt, ctrl, and shift).
             this.components.shapes.sequencerRowHighlightLines[rowIndex].stroke = this.configurations.sequencerRowHighlightLines.color
@@ -813,7 +859,8 @@ class DrumMachineGui {
                     let shiftNotes = false;
                     let shiftSubdivisionLines = false;
                     let shiftReferenceLines = true;
-                    this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+                    let rowIsQuantized = this.sequencer.rows[rowIndex].quantized
+                    this.setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
                     this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines)
                 }
             },
@@ -948,30 +995,40 @@ class DrumMachineGui {
         shapesToAddEventListenersTo.push(this.components.shapes.sequencerRowHighlightLines[rowIndex]._renderer.elem)
         let eventHandlersHash = {
             "mouseenter": (event) => {
+                this.multiShiftTracker.withinRow = rowIndex;
                 if (this.shiftToolTracker.selectedRowIndex === null && this.circleSelectionTracker.circleBeingMoved === null && this.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
-                    // todo: calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
-                    let highlightSubdivisionLines = event.altKey;
-                    let highlightNotes = event.ctrlKey || (highlightSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
-                    let highlightReferenceLines = event.shiftKey;
+                    // calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
+                    this.multiShiftTracker.highlightedRow = rowIndex;
+                    let highlightSubdivisionLines = event.altKey || this.multiShiftTracker.shiftSubdivisionLines
+                    let highlightNotes = event.ctrlKey || this.multiShiftTracker.shiftNotes || (highlightSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
+                    let highlightReferenceLines = event.metaKey || this.multiShiftTracker.shiftReferenceLines;
                     let highlightSequencerRowLine = true;
                     this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.multiShift;
+                    this.shiftToolTracker.resourcesToShift.notes = highlightNotes
+                    this.shiftToolTracker.resourcesToShift.subdivisionLines = highlightSubdivisionLines
+                    this.shiftToolTracker.resourcesToShift.referenceLines = highlightReferenceLines
                     this.initializeShiftToolHoverVisualsAndVariables(rowIndex, highlightNotes, highlightSubdivisionLines, highlightReferenceLines, highlightSequencerRowLine)
                 }
             },
             "mouseleave": () => {
+                this.multiShiftTracker.withinRow = null;
                 if (this.shiftToolTracker.selectedRowIndex === null) {
+                    this.multiShiftTracker.highlightedRow = null;
                     this.unhighlightAllShiftableObjects(rowIndex);
                     this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText;
                 }
             },
             "mousedown": (event) => {
-                // todo: calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
+                // calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
                 let updateShiftRowToolButtonVisuals = false;
                 let shiftSubdivisionLines = event.altKey;
                 let shiftNotes = event.ctrlKey || (shiftSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
-                let shiftReferenceLines = event.shiftKey;
+                let shiftReferenceLines = event.metaKey;
                 this.initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowToolButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
             },
+            "mousemove": () => {
+                this.multiShiftTracker.highlightedRow = rowIndex;
+            }
         }
         this.addEventListenersWithoutDuplicates("sequencerRowLines" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
     }
@@ -1061,10 +1118,11 @@ class DrumMachineGui {
         let eventHandlersHash = {
             "mouseenter": () => {
                 if (this.shiftToolTracker.selectedRowIndex === null && this.circleSelectionTracker.circleBeingMoved === null && this.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
-                    let shiftNotes = this.sequencer.rows[rowIndex].quantized;
+                    let rowIsQuantized = this.sequencer.rows[rowIndex].quantized
+                    let shiftNotes = rowIsQuantized
                     let shiftSubdivisionLines = true;
                     let shiftReferenceLines = false;
-                    this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+                    this.setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
                     this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines)
                 }
             },
@@ -1387,7 +1445,8 @@ class DrumMachineGui {
             let shiftNotes = this.shiftToolTracker.resourcesToShiftButtonStates.notes;
             let shiftSubdivisionLines = this.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines;
             let shiftReferenceLines = this.shiftToolTracker.resourcesToShiftButtonStates.referenceLines;
-            this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+            let rowIsQuantized = this.sequencer.rows[rowIndex].quantized
+            this.setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
             let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             if (self.rowSelectionTracker.selectedRowIndex === null && self.circleSelectionTracker.circleBeingMoved === null && self.rowVolumeAdjustmentTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
@@ -1398,7 +1457,7 @@ class DrumMachineGui {
         }
     }
 
-    setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines) {
+    setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines) {
         let helpText;
         if (shiftReferenceLines && !shiftNotes && !shiftSubdivisionLines) {
             helpText = this.configurations.helpText.shiftRow.referenceLinesOnly;
@@ -1406,7 +1465,11 @@ class DrumMachineGui {
             helpText = this.configurations.helpText.shiftRow.prefix;
             let resourcesToShiftList = []
             if (shiftNotes) {
-                resourcesToShiftList.push(this.configurations.helpText.shiftRow.notesName)
+                if (rowIsQuantized) {
+                    resourcesToShiftList.push(this.configurations.helpText.shiftRow.quantizedNotesName)
+                } else {
+                    resourcesToShiftList.push(this.configurations.helpText.shiftRow.unquantizedNotesName)
+                }
             }
             if (shiftSubdivisionLines) {
                 resourcesToShiftList.push(this.configurations.helpText.shiftRow.subdivisionLinesName)
@@ -1451,6 +1514,9 @@ class DrumMachineGui {
             circle.fill = self.configurations.shiftToolRowHandles.unselectedColor
             rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
             self.unhighlightAllShiftableObjects(rowIndex);
+            if (this.multiShiftTracker.withinRow !== null) { // if multi-shift is still highlighted for a row, leave it highlighted
+                this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.withinRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, true)
+            }
         }
     }
 
@@ -2896,6 +2962,10 @@ class DrumMachineGui {
         event = self.adjustEventCoordinates(event)
         let mouseX = event.pageX
         let mouseY = event.pageY
+        let shiftingAnyResource = self.shiftToolTracker.resourcesToShift.notes || self.shiftToolTracker.resourcesToShift.subdivisionLines || self.shiftToolTracker.resourcesToShift.referenceLines
+        if (!shiftingAnyResource) {
+            return;
+        }
         let mouseHasMoved = (mouseX !== self.shiftToolTracker.mouseStartingPosition.x || mouseY !== self.shiftToolTracker.mouseStartingPosition.y)
         if (mouseHasMoved) {
             let mouseMoveDistance = self.shiftToolTracker.mouseStartingPosition.x - mouseX; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
@@ -2922,7 +2992,8 @@ class DrumMachineGui {
         let shiftNotes = this.shiftToolTracker.resourcesToShift.notes;
         let shiftSubdivisionLines = this.shiftToolTracker.resourcesToShift.subdivisionLines;
         let shiftReferenceLines = this.shiftToolTracker.resourcesToShift.referenceLines;
-        this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+        let rowIsQuantized = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized
+        this.setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
     }
 
     shiftSubdivisionsLogic(self, mouseMoveDistance) {
@@ -3733,7 +3804,8 @@ class DrumMachineGui {
                             let shiftNotes = this.shiftToolTracker.resourcesToShiftButtonStates.notes;
                             let shiftSubdivisionLines = this.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines;
                             let shiftReferenceLines = this.shiftToolTracker.resourcesToShiftButtonStates.referenceLines;
-                            this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+                            let rowIsQuantized = this.sequencer.rows[this.shiftToolTracker.selectedRowIndex].quantized
+                            this.setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
                             this.shiftRowMouseEnterEventHandler(this, rowIndex)
                         }
                     },
@@ -4141,7 +4213,10 @@ class DrumMachineGui {
         let svgScale = $(this.two.renderer.domElement).height() / this.two.height;
         let svgOrigin = $('#draw-shapes')[0].getBoundingClientRect();
         return {
-            ctrlKey: event.ctrlKey,
+            ctrlKey: event.ctrlKey, // include any other attributes from the event that we want to be preserved
+            altKey: event.altKey,
+            shiftKey: event.shiftKey,
+            metaKey: event.metaKey,
             pageX: (event.pageX - svgOrigin.left) / svgScale,
             pageY: (event.pageY - svgOrigin.top) / svgScale
         }

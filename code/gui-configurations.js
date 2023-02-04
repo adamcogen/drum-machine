@@ -453,7 +453,8 @@ function getGuiConfigurations(hideIcons=false) {
                 postfix: " for row",
                 subdivisionLinesName: "beat lines",
                 referenceLinesName: "visual reference lines",
-                notesName: "notes",
+                quantizedNotesName: "quantized notes",
+                unquantizedNotesName: "unquantized notes",
                 referenceLinesOnly: "shift visual reference lines for row"
             },
             shiftNotes: "",
@@ -469,7 +470,7 @@ function getGuiConfigurations(hideIcons=false) {
             selectLiveMidiOutputPort: "select live MIDI output port",
             selectDrumKit: "select drum kit to use for live audio output",
             selectExampleSequencerPattern: "load an example sequencer pattern",
-            multiShift: "multi-shift. notes: ctrl key. beats: alt key. visual reference lines: shift key."
+            multiShift: "multi-shift tool: click+drag to shift multiple objects at the same time. +ctrl for notes; +alt for beats; +cmd for visual reference lines."
         }
     }
 }
