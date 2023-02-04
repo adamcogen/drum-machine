@@ -575,6 +575,17 @@ class DrumMachineGui {
         rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.selectedColor
     }
 
+    initializeRowVolumeAdjustmentHoverVariablesAndVisuals(rowIndex) {
+        this.rowVolumeAdjustmentTracker.noteCircles = [];
+        for (let circle of this.allDrawnCircles) {
+            if (circle.guiData.row === rowIndex) {
+                this.rowVolumeAdjustmentTracker.noteCircles.push(circle)
+                circle.stroke = 'black'
+                circle.linewidth = 2
+            }
+        }
+    }
+
     initializeRowVolumeAdjustmentVariablesAndVisuals(rowIndex) {
         this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.changeRowVolume
         // save relevant info about whichever row is selected
@@ -582,13 +593,9 @@ class DrumMachineGui {
         // save a list of all the note circles that are associated with the selected row. we are saving this list so that we can 
         // perform operations on all the notes in a row if we want to (such as changing all of their volumes at the same time).
         // also track the starting radius of each circle on the row. this will also be used in adjusting note volumes for the row.
-        this.rowVolumeAdjustmentTracker.noteCircles = [];
         this.rowVolumeAdjustmentTracker.noteCirclesStartingRadiuses = [];
-        for (let circle of this.allDrawnCircles) {
-            if (circle.guiData.row === rowIndex) {
-                this.rowVolumeAdjustmentTracker.noteCircles.push(circle)
-                this.rowVolumeAdjustmentTracker.noteCirclesStartingRadiuses.push(circle.guiData.radiusWhenUnplayed)
-            }
+        for (let circle of this.rowVolumeAdjustmentTracker.noteCircles) {
+            this.rowVolumeAdjustmentTracker.noteCirclesStartingRadiuses.push(circle.guiData.radiusWhenUnplayed)
         }
         this.rowVolumeAdjustmentTracker.rowHandleStartingPosition.x = this.components.shapes.volumeAdjusterRowHandles[rowIndex].translation.x
         this.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y = this.components.shapes.volumeAdjusterRowHandles[rowIndex].translation.y
@@ -598,6 +605,12 @@ class DrumMachineGui {
         circle.stroke = this.configurations.subdivisionLines.color
         let rowSelectionRectangle = this.components.shapes.sequencerRowSelectionRectangles[rowIndex];
         rowSelectionRectangle.stroke = this.configurations.sequencerRowHandles.selectedColor
+    }
+
+    unhighlightNoteCirclesForRowVolumeAdjustment() {
+        for (let circle of this.rowVolumeAdjustmentTracker.noteCircles) {
+            circle.stroke = 'transparent'
+        }
     }
 
     // when we hover over a shiftable object, we should highlight it as necessary,
@@ -1178,7 +1191,7 @@ class DrumMachineGui {
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
         if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
             circle.fill = self.configurations.buttonBehavior.buttonHoverColor
-            rowSelectionRectangle.stroke = self.configurations.sequencerRowHandles.unselectedColor
+            rowSelectionRectangle.stroke = self.configurations.buttonBehavior.buttonHoverColor
         }
     }
 
@@ -1234,23 +1247,27 @@ class DrumMachineGui {
 
     changeRowVolumesMouseEnterEventHandler(self, rowIndex) {
         if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.respondToEvents) {
-            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.changeRowVolume
+            self.components.domElements.divs.bottomBarText.innerHTML = self.configurations.helpText.changeRowVolume
             let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-            if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
+            if (self.shiftToolTracker.selectedRowIndex === null && self.rowVolumeAdjustmentTracker.selectedRowIndex === null && self.circleSelectionTracker.circleBeingMoved === null) { // if a row is already selected (i.e being moved), don't do any of this
                 circle.fill = self.configurations.buttonBehavior.buttonHoverColor
-                rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.unselectedColor
+                rowSelectionRectangle.stroke = self.configurations.buttonBehavior.buttonHoverColor
+                self.initializeRowVolumeAdjustmentHoverVariablesAndVisuals(rowIndex);
             }
         }
     }
 
     changeRowVolumesMouseLeaveEventHandler(self, rowIndex) {
         if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.respondToEvents) {
-            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+            self.components.domElements.divs.bottomBarText.innerHTML = self.configurations.helpText.defaultText
             let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
             rowSelectionRectangle.stroke = 'transparent'
+            if (self.shiftToolTracker.selectedRowIndex === null && self.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
+                self.unhighlightNoteCirclesForRowVolumeAdjustment();
+            }
         }
     }
 
@@ -1263,11 +1280,12 @@ class DrumMachineGui {
 
     changeRowVolumesMouseUpEventHandler(self, rowIndex) {
         if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.respondToEvents) {
-            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+            self.components.domElements.divs.bottomBarText.innerHTML = self.configurations.helpText.defaultText
             let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
             rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.unselectedColor
+            self.unhighlightNoteCirclesForRowVolumeAdjustment();
         }
     }
 
@@ -1313,7 +1331,7 @@ class DrumMachineGui {
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             if (self.rowSelectionTracker.selectedRowIndex === null && self.circleSelectionTracker.circleBeingMoved === null && self.rowVolumeAdjustmentTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
                 circle.fill = self.configurations.buttonBehavior.buttonHoverColor
-                rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
+                rowSelectionRectangle.stroke = self.configurations.buttonBehavior.buttonHoverColor
                 self.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines)
             }
         }
@@ -2446,8 +2464,10 @@ class DrumMachineGui {
         });
         // remove border from circle when mouse is no longer over it
         circle._renderer.elem.addEventListener('mouseleave', (event) => {
-            circle.stroke = 'transparent'
-            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+            if (this.shiftToolTracker.selectedRowIndex === null && this.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
+                circle.stroke = 'transparent'
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+            }
         });
         // select circle (for moving) if we click it
         circle._renderer.elem.addEventListener('mousedown', (event) => {
@@ -2983,6 +3003,8 @@ class DrumMachineGui {
                 // we will save the sequencer state to the URL in the 'mouse up' event instead of here, for performance reasons
             }
         }
+        self.circleSelectionTracker.circleBeingMoved.stroke = 'black'
+        self.circleSelectionTracker.circleBeingMoved.linewidth = 2
     }
 
     moveNotesAndChangeVolumesMouseMoveHandler(self, event){
