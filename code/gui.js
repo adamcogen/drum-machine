@@ -2260,8 +2260,8 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [this.components.shapes.clearNotesForRowButtonShapes[rowIndex]._renderer.elem]
             let eventHandlersHash = {
                 "click": () => this.clearRowButtonClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex], this.configurations.helpText.deleteAllNotesForRow, "red"),
-                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex]),
+                "mouseenter": () => this.clearRowButtonMouseEnterHandler(this, rowIndex),
+                "mouseleave": () => this.clearRowButtonMouseLeaveHandler(this, rowIndex),
             }
             this.addEventListenersWithoutDuplicates("clearNotesForRowShape" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
         }
@@ -2274,6 +2274,25 @@ class DrumMachineGui {
             self.clearNotesForRow(rowIndex);
             self.resetNotesAndLinesDisplayForRow(rowIndex);
             self.saveCurrentSequencerStateToUrlHash();
+        }
+    }
+
+    clearRowButtonMouseEnterHandler(self, rowIndex) {
+        self.simpleButtonHoverMouseEnterLogic(self, self.components.shapes.clearNotesForRowButtonShapes[rowIndex], self.configurations.helpText.deleteAllNotesForRow, "red")
+        for (let circle of self.allDrawnCircles) {
+            if (circle.guiData.row === rowIndex) {
+                circle.linewidth = 2
+                circle.stroke = 'red'
+            }
+        }
+    }
+
+    clearRowButtonMouseLeaveHandler(self, rowIndex) {
+        self.simpleButtonHoverMouseLeaveLogic(self, self.components.shapes.clearNotesForRowButtonShapes[rowIndex])
+        for (let circle of self.allDrawnCircles) {
+            if (circle.guiData.row === rowIndex) {
+                circle.stroke = 'transparent'
+            }
         }
     }
 
@@ -3692,8 +3711,8 @@ class DrumMachineGui {
             let shapesToAddEventListenersTo = [clearRowIcon] // we don't include the button shape here, only the icon, because the shape event listeners are set up elsewhere
             let eventHandlersHash = {
                 "click": () => this.clearRowButtonClickHandler(this, rowIndex),
-                "mouseenter": () => this.simpleButtonHoverMouseEnterLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex], this.configurations.helpText.deleteAllNotesForRow, "red"),
-                "mouseleave": () => this.simpleButtonHoverMouseLeaveLogic(this, this.components.shapes.clearNotesForRowButtonShapes[rowIndex]),
+                "mouseenter": () => this.clearRowButtonMouseEnterHandler(this, rowIndex),
+                "mouseleave": () => this.clearRowButtonMouseLeaveHandler(this, rowIndex),
             }
             this.addEventListenersWithoutDuplicates("clearNotesForRowIcon" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
             // add the copy to the dom and to our list that tracks these icons
