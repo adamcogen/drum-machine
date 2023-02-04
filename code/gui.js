@@ -519,10 +519,10 @@ class DrumMachineGui {
                     }
                 }
                 // handle key presses for multi-shift tool
-                if (event.altKey) {
+                if (event.ctrlKey) {
                     this.multiShiftTracker.shiftSubdivisionLines = true;
                 }
-                if (event.ctrlKey) {
+                if (event.altKey) {
                     this.multiShiftTracker.shiftNotes = true;
                 }
                 if (event.metaKey) {
@@ -540,10 +540,10 @@ class DrumMachineGui {
             "keyup": (event) => {
                 // handle key ups for multi-shift tool
                 if (!event.ctrlKey) {
-                    this.multiShiftTracker.shiftNotes = false;
+                    this.multiShiftTracker.shiftSubdivisionLines = false;
                 }
                 if (!event.altKey) {
-                    this.multiShiftTracker.shiftSubdivisionLines = false;
+                    this.multiShiftTracker.shiftNotes = false;
                 }
                 if (!event.metaKey) {
                     this.multiShiftTracker.shiftReferenceLines = false;
@@ -737,7 +737,7 @@ class DrumMachineGui {
         }
         // sequener row line
         if (highlightSequencerRowLine) {
-            if (highlightReferenceLines || highlightSubdivisionLines || highlightNotes) {
+            if (highlightNotes && (highlightReferenceLines || highlightSubdivisionLines)) {
                 // this will be used for the multi-shift tool: when you mouse over a sequencer row line, you will have the option
                 // to shift any combination of resources at the same time, by holding down different keys (alt, ctrl, and shift).
                 this.components.shapes.sequencerRowHighlightLines[rowIndex].stroke = this.configurations.sequencerRowHighlightLines.color
@@ -1055,8 +1055,8 @@ class DrumMachineGui {
                 if (this.noObjectsAreBeingMoved()) {
                     // calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
                     this.multiShiftTracker.highlightedRow = rowIndex;
-                    let highlightSubdivisionLines = event.altKey || this.multiShiftTracker.shiftSubdivisionLines
-                    let highlightNotes = event.ctrlKey || this.multiShiftTracker.shiftNotes || (highlightSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
+                    let highlightSubdivisionLines = event.ctrlKey || this.multiShiftTracker.shiftSubdivisionLines
+                    let highlightNotes = event.altKey || this.multiShiftTracker.shiftNotes || (highlightSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
                     let highlightReferenceLines = event.metaKey || this.multiShiftTracker.shiftReferenceLines;
                     let highlightSequencerRowLine = true;
                     this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.multiShift;
@@ -1077,10 +1077,12 @@ class DrumMachineGui {
             "mousedown": (event) => {
                 // calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
                 let updateShiftRowToolButtonVisuals = false;
-                let shiftSubdivisionLines = event.altKey;
-                let shiftNotes = event.ctrlKey || (shiftSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
-                let shiftReferenceLines = event.metaKey;
+                let shiftSubdivisionLines = event.ctrlKey || this.multiShiftTracker.shiftSubdivisionLines
+                let shiftNotes = event.altKey || this.multiShiftTracker.shiftNotes || (shiftSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
+                let shiftReferenceLines = event.metaKey || this.multiShiftTracker.shiftReferenceLines;
                 this.initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowToolButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+                let rowIsQuantized = this.sequencer.rows[this.shiftToolTracker.selectedRowIndex].quantized
+                this.setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
             },
             "mousemove": () => {
                 this.multiShiftTracker.highlightedRow = rowIndex;
@@ -1515,6 +1517,9 @@ class DrumMachineGui {
 
     setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines) {
         let helpText;
+        if (!shiftReferenceLines && !shiftNotes && !shiftSubdivisionLines) {
+            return; // nothing is being shifted, so don't change the help text
+        }
         if (shiftReferenceLines && !shiftNotes && !shiftSubdivisionLines) {
             helpText = this.configurations.helpText.shiftRow.referenceLinesOnly;
         } else {
@@ -1533,6 +1538,10 @@ class DrumMachineGui {
             if (shiftReferenceLines) {
                 resourcesToShiftList.push(this.configurations.helpText.shiftRow.referenceLinesName)
             }
+            if (resourcesToShiftList.length > 1) {
+                resourcesToShiftList[resourcesToShiftList.length - 1] = "and " + resourcesToShiftList[resourcesToShiftList.length - 1];
+            }
+            
             helpText += resourcesToShiftList.join(", ")
             helpText += this.configurations.helpText.shiftRow.postfix
         }
