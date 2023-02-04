@@ -903,6 +903,9 @@ class DrumMachineGui {
     }
 
     addReferenceLinesEventListenersForRow(rowIndex) {
+        if (!this.configurations.generalShiftToolSettings.allowEasyReferenceLinesShift) {
+            return; // give an option to dis-allow the simple click-drag way of shifting reference lines, because it's used rarely and could just be an additional confusing element that's added to the GUI
+        }
         let shapesToAddEventListenersTo = []
         shapesToAddEventListenersTo.push(...this.components.shapes.referenceLineLists[rowIndex].map((shape) => shape._renderer.elem))
         shapesToAddEventListenersTo.push(...this.components.shapes.referenceHighlightLineLists[rowIndex].map((shape) => shape._renderer.elem))

@@ -382,6 +382,9 @@ function getGuiConfigurations(hideIcons=false) {
             height: 35,
             width: 35,
         },
+        generalShiftToolSettings: {
+            allowEasyReferenceLinesShift: false,
+        },
         exportPatternToMidiFileButton: {
             top: 47,
             left: 802,
@@ -461,8 +464,8 @@ function getGuiConfigurations(hideIcons=false) {
                 postfix: " for row",
                 subdivisionLinesName: "beat lines",
                 referenceLinesName: "visual reference lines",
-                quantizedNotesName: "quantized notes",
-                unquantizedNotesName: "unquantized notes",
+                quantizedNotesName: "all notes (quantized)",
+                unquantizedNotesName: "all notes (unquantized)",
                 referenceLinesOnly: "shift visual reference lines for row"
             },
             shiftNotes: "",
