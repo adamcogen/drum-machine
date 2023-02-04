@@ -189,8 +189,9 @@ class DrumMachineGui {
         this.addAllSubdivisionLinesEventListeners();
         this.addAllReferenceLinesEventListeners();
 
-        // initialize starting state of shift mode menu
+        // initialize starting state of shift mode menu buttons (which ones should start out clicked)
         this.shiftModeMoveNotesClickHandler(this)
+        this.adjustShiftToolMenuVisibility()
 
         // if there is a sequencer state included in the URL, load it. 
         if (window.location.hash !== "") { // window.location.hash is text in a URL after the actual address, which starts with a "#" character and can contain whatever text we want.
@@ -299,13 +300,13 @@ class DrumMachineGui {
         shapes.tempoLabelMenuTitleTimeWord = this.initializeLabelText(this.configurations.tempoTextLabelMenuTitleTimeWord.text, this.configurations.tempoTextLabelMenuTitleTimeWord.left, this.configurations.tempoTextLabelMenuTitleTimeWord.top, "left"); // this is the word 'time' in the tempo menu title, so that we can change its color independently from the rest of the title
         shapes.tempoLabelMenuTitleTimeWord.size = 25
         shapes.tempoLabelMenuTitleTimeWord.fill = this.configurations.subdivisionLines.color
-        // shift tool menu
+        // old (deprecated) shift tool menu
         shapes.shiftMenuOutline = this.initializeRectangleShape(this.configurations.tempoInputModeSelectionBpmButton.top - 5, this.configurations.shiftModeLabelMenuTitle.left - 5, 128, 240) // use bpm button as a reference again to keep the top of all the menus aligned
         shapes.shiftMenuOutline.stroke = "#bfbfbf";
         shapes.shiftMenuTitle = this.initializeLabelText(this.configurations.shiftModeLabelMenuTitle.text, this.configurations.shiftModeLabelMenuTitle.left, this.configurations.shiftModeLabelMenuTitle.top, "left");
         shapes.shiftMenuTitle.size = 25
         shapes.shiftMenuTitle.fill = this.configurations.subdivisionLines.color
-        this.initializeMultiLineText(this.configurations.shiftModeLabelMenuExplanation.lines, this.configurations.shiftModeLabelMenuExplanation.left, this.configurations.shiftModeLabelMenuExplanation.top, 13, 15, this.configurations.subdivisionLines.color, "left") // i'm not saving these shapes anywhere right now, since they never change after being initiailized
+        shapes.shiftMenuMultiLineTexts = this.initializeMultiLineText(this.configurations.shiftModeLabelMenuExplanation.lines, this.configurations.shiftModeLabelMenuExplanation.left, this.configurations.shiftModeLabelMenuExplanation.top, 13, 15, this.configurations.subdivisionLines.color, "left")
         // output menu
         shapes.outputMenuTitle = this.initializeLabelText(this.configurations.outputMenuTitle.text, this.configurations.outputMenuTitle.left, this.configurations.outputMenuTitle.top, "left");
         shapes.outputMenuTitle.size = 25
@@ -426,6 +427,37 @@ class DrumMachineGui {
             }
         }
         return domElements;
+    }
+
+    // this is for hiding the old (deprecated) shift tool menu. the menu is hidden by default, since it
+    // was replaced with a better user experience. i am leaving it in the code in case it ends up being
+    // useful later, but it needs to be manually shown by editing a property in the GUI configurations.
+    adjustShiftToolMenuVisibility() {
+        if (!this.configurations.advancedShiftToolMenu.show) {
+            this.components.shapes.shiftMenuOutline.stroke = 'transparent'
+            this.components.shapes.shiftMenuTitle.fill = 'transparent'
+            for (let text of this.components.shapes.shiftMenuMultiLineTexts) {
+                text.fill = 'transparent'
+            }
+            // shift notes button
+            this.components.shapes.shiftModeMoveNotesButton.guiData.respondToEvents = false;
+            this.components.shapes.shiftModeMoveNotesButton.fill = 'transparent';
+            this.components.shapes.shiftModeMoveNotesButton.stroke = 'transparent'
+            this.components.domElements.images.activateShiftNotesIcon.respondToEvents = false;
+            this.components.domElements.images.activateShiftNotesIcon.style.display = 'none'
+            // shift subdivision lines button
+            this.components.shapes.shiftModeMoveSubdivisionLinesButton.guiData.respondToEvents = false;
+            this.components.shapes.shiftModeMoveSubdivisionLinesButton.fill = 'transparent';
+            this.components.shapes.shiftModeMoveSubdivisionLinesButton.stroke = 'transparent'
+            this.components.domElements.images.activateShiftSubdivisionLinesIcon.respondToEvents = false;
+            this.components.domElements.images.activateShiftSubdivisionLinesIcon.style.display = 'none'
+            // shift reference lines button
+            this.components.shapes.shiftModeMoveReferenceLinesButton.guiData.respondToEvents = false;
+            this.components.shapes.shiftModeMoveReferenceLinesButton.fill = 'transparent';
+            this.components.shapes.shiftModeMoveReferenceLinesButton.stroke = 'transparent'
+            this.components.domElements.images.activateShiftReferenceLinesIcon.respondToEvents = false;
+            this.components.domElements.images.activateShiftReferenceLinesIcon.style.display = 'none'
+        }
     }
 
     // initialize a hash that is used to keep track of the last time each button was clicked. for each button it cares about, 
@@ -1900,6 +1932,9 @@ class DrumMachineGui {
     }
 
     shiftModeMoveNotesClickHandler(self) {
+        if (!self.components.shapes.shiftModeMoveNotesButton.guiData.respondToEvents) {
+            return;
+        }
         self.shiftToolTracker.resourcesToShiftButtonStates.notes = !self.shiftToolTracker.resourcesToShiftButtonStates.notes
         if (self.shiftToolTracker.resourcesToShiftButtonStates.notes) {
             // move notes
@@ -1912,6 +1947,9 @@ class DrumMachineGui {
     }
 
     shiftModeMoveSubdivisionLinesClickHandler(self) {
+        if (!self.components.shapes.shiftModeMoveSubdivisionLinesButton.guiData.respondToEvents) {
+            return;
+        }
         self.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines = !self.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines
         if (self.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines) {
             // move subdivision lines
@@ -1924,6 +1962,9 @@ class DrumMachineGui {
     }
 
     shiftModeMoveReferenceLinesClickHandler(self) {
+        if (!self.components.shapes.shiftModeMoveReferenceLinesButton.guiData.respondToEvents) {
+            return;
+        }
         self.shiftToolTracker.resourcesToShiftButtonStates.referenceLines = !self.shiftToolTracker.resourcesToShiftButtonStates.referenceLines
         if (self.shiftToolTracker.resourcesToShiftButtonStates.referenceLines) {
             // move reference lines
