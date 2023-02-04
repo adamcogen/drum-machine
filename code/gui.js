@@ -793,11 +793,13 @@ class DrumMachineGui {
         shapesToAddEventListenersTo.push(...this.components.shapes.referenceHighlightLineLists[rowIndex].map((shape) => shape._renderer.elem))
         let eventHandlersHash = {
             "mouseenter": () => {
-                let shiftNotes = false;
-                let shiftSubdivisionLines = false;
-                let shiftReferenceLines = true;
-                this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
-                this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines)
+                if (this.shiftToolTracker.selectedRowIndex === null && this.circleSelectionTracker.circleBeingMoved === null && this.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
+                    let shiftNotes = false;
+                    let shiftSubdivisionLines = false;
+                    let shiftReferenceLines = true;
+                    this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines)
+                }
             },
             "mouseleave": () => {
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
@@ -984,11 +986,13 @@ class DrumMachineGui {
         shapesToAddEventListenersTo.push(...this.components.shapes.subdivisionHighlightLineLists[rowIndex].map((shape) => shape._renderer.elem))
         let eventHandlersHash = {
             "mouseenter": () => {
-                let shiftNotes = this.sequencer.rows[rowIndex].quantized;
-                let shiftSubdivisionLines = true;
-                let shiftReferenceLines = false;
-                this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
-                this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines)
+                if (this.shiftToolTracker.selectedRowIndex === null && this.circleSelectionTracker.circleBeingMoved === null && this.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
+                    let shiftNotes = this.sequencer.rows[rowIndex].quantized;
+                    let shiftSubdivisionLines = true;
+                    let shiftReferenceLines = false;
+                    this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines)
+                }
             },
             "mouseleave": () => {
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
@@ -1275,7 +1279,9 @@ class DrumMachineGui {
 
             // add border to circle on mouseover
             circle._renderer.elem.addEventListener('mouseenter', () => {
-                this.shiftRowMouseEnterEventHandler(this, rowIndex);
+                if (this.shiftToolTracker.selectedRowIndex === null) {
+                    this.shiftRowMouseEnterEventHandler(this, rowIndex);
+                }
             });
             // remove border from circle when mouse is no longer over it
             circle._renderer.elem.addEventListener('mouseleave', () => {
@@ -1305,7 +1311,7 @@ class DrumMachineGui {
             this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
             let circle = self.components.shapes.shiftToolRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
-            if (self.rowSelectionTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
+            if (self.rowSelectionTracker.selectedRowIndex === null && self.circleSelectionTracker.circleBeingMoved === null && self.rowVolumeAdjustmentTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
                 circle.fill = self.configurations.buttonBehavior.buttonHoverColor
                 rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
                 self.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines)
@@ -2432,9 +2438,11 @@ class DrumMachineGui {
         
         // add border to circle on mouseover
         circle._renderer.elem.addEventListener('mouseenter', (event) => {
-            circle.stroke = 'black'
-            circle.linewidth = 2
-            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveNote
+            if (this.shiftToolTracker.selectedRowIndex === null && this.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
+                circle.stroke = 'black'
+                circle.linewidth = 2
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveNote
+            }
         });
         // remove border from circle when mouse is no longer over it
         circle._renderer.elem.addEventListener('mouseleave', (event) => {
@@ -3629,11 +3637,13 @@ class DrumMachineGui {
                 // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
                 this.eventHandlerFunctions["shiftRowIcon" + rowIndex] = {
                     mouseenter: () => {
-                        let shiftNotes = this.shiftToolTracker.resourcesToShiftButtonStates.notes;
-                        let shiftSubdivisionLines = this.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines;
-                        let shiftReferenceLines = this.shiftToolTracker.resourcesToShiftButtonStates.referenceLines;
-                        this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
-                        this.shiftRowMouseEnterEventHandler(this, rowIndex)
+                        if (this.shiftToolTracker.selectedRowIndex === null) {
+                            let shiftNotes = this.shiftToolTracker.resourcesToShiftButtonStates.notes;
+                            let shiftSubdivisionLines = this.shiftToolTracker.resourcesToShiftButtonStates.subdivisionLines;
+                            let shiftReferenceLines = this.shiftToolTracker.resourcesToShiftButtonStates.referenceLines;
+                            this.setHelpTextForShiftTool(shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+                            this.shiftRowMouseEnterEventHandler(this, rowIndex)
+                        }
                     },
                     mouseleave: () => {
                         this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
