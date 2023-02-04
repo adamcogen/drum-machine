@@ -57,18 +57,18 @@ function getGuiConfigurations(hideIcons=false) {
             color: defaultSequencerLineColor,
         },
         subdivisionHighlightLines: {
-            height: 19,
+            height: 20,
             color: 'black',
-            lineWidth: 5,
+            lineWidth: 6,
         },
         referenceLines: {
-            height: 19,
+            height: 22,
             color: lighterSequencerColor, // meant to be slightly lighter than the subdivision line color
         },
         referenceHighlightLines: {
-            height: 20,
+            height: 24,
             color: 'black',
-            lineWidth: 5,
+            lineWidth: 6,
         },
         noteTrashBin: {
             top: 264,

@@ -687,7 +687,7 @@ class DrumMachineGui {
         return allReferenceLineLists
     }
 
-    initializeReferenceLinesForRow(rowIndex, height, linewidth, color) {
+    initializeReferenceLinesForRow(rowIndex, height, linewidth, color, topOffset=0) {
         let shiftInPixelsForRow = this.referenceLinesShiftInPixelsPerRow[rowIndex];
         let linesForRow = []
         if (this.sequencer.rows[rowIndex].getNumberOfReferenceLines() <= 0) {
@@ -696,7 +696,7 @@ class DrumMachineGui {
         let xIncrementBetweenLines = this.configurations.sequencer.width / this.sequencer.rows[rowIndex].getNumberOfReferenceLines()
         for (let linesDrawnForRow = 0; linesDrawnForRow < this.sequencer.rows[rowIndex].getNumberOfReferenceLines(); linesDrawnForRow++) {
             let trialAndErrorAlignmentOffset = .5 // looks like Two.js graphics library draws shapes on .5 boundaries, so if we don't add a .5 offset here, things won't line up quite right
-            let sequencerLineCenterY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) - trialAndErrorAlignmentOffset
+            let sequencerLineCenterY = this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + (this.configurations.sequencer.lineWidth / 2) + trialAndErrorAlignmentOffset
             let halfOfLineWidth = Math.floor(linewidth / 2)
             // calculate the x position of this row line. incorporate the 'reference line shift' value for the row.
             let lineXPosition = (xIncrementBetweenLines * linesDrawnForRow); // start with basic reference line position based on width of each beat and which beat we're on
@@ -710,11 +710,11 @@ class DrumMachineGui {
             // draw the actual line
             let lineStart = {
                 x: lineXPosition,
-                y: sequencerLineCenterY - halfOfLineWidth // make sure to account for 'line width' when trying to make these lines reach the top of the sequencer line. that's why we subtract the value here
+                y: sequencerLineCenterY - halfOfLineWidth + topOffset // make sure to account for 'line width' when trying to make these lines reach the top of the sequencer line. that's why we subtract the value here
             }
             let lineEnd = {
                 x: lineStart.x,
-                y: sequencerLineCenterY - height
+                y: sequencerLineCenterY - height + topOffset
             }
             let referenceLine = this.initializeLine(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y, linewidth, color);
             linesForRow.push(referenceLine) // keep a list of all reference lines for the current row
@@ -887,7 +887,7 @@ class DrumMachineGui {
 
     // draw subdivision lines for a single sequencer row, with the given row index.
     // return a list of two.js 'path' objects representing each subdivision line for the sequncer row with the given index.
-    initializeSubdivisionLinesForRow(rowIndex, height, linewidth, color) {
+    initializeSubdivisionLinesForRow(rowIndex, height, linewidth, color, topOffset=0) {
         let linesForRow = []
         if (this.sequencer.rows[rowIndex].getNumberOfSubdivisions() <= 0) {
             return [] // don't draw subdivisions for this row if it has 0 or fewer subdivisions
@@ -910,11 +910,11 @@ class DrumMachineGui {
             // draw the actual line
             let lineStart = {
                 x: lineXPosition,
-                y: sequencerLineCenterY - halfOfLineWidth // make sure to account for 'line width' when trying to make subdivision lines reach the top of the sequencer line. that's why we subtract the value here
+                y: sequencerLineCenterY - halfOfLineWidth + topOffset // make sure to account for 'line width' when trying to make subdivision lines reach the top of the sequencer line. that's why we subtract the value here
             }
             let lineEnd = {
                 x: lineStart.x,
-                y: sequencerLineCenterY + height
+                y: sequencerLineCenterY + height + topOffset
             }
             let subdivisionLine = this.initializeLine(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y, linewidth, color);
             linesForRow.push(subdivisionLine) // keep a list of all subdivision lines for the current row
