@@ -469,6 +469,7 @@ function getGuiConfigurations(hideIcons=false) {
             selectLiveMidiOutputPort: "select live MIDI output port",
             selectDrumKit: "select drum kit to use for live audio output",
             selectExampleSequencerPattern: "load an example sequencer pattern",
+            multiShift: "multi-shift. notes: ctrl key. beats: alt key. visual reference lines: shift key."
         }
     }
 }

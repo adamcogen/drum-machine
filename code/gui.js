@@ -177,6 +177,7 @@ class DrumMachineGui {
         this.refreshWindowKeyDownEvent();
         this.refreshWindowContextMenuEvent();
         this.initializeExportPatternToMidiFileButtonEventListener();
+        this.addAllSequencerRowLineEventListeners();
         this.addAllSubdivisionLinesEventListeners();
         this.addAllReferenceLinesEventListeners();
 
@@ -643,9 +644,9 @@ class DrumMachineGui {
         }
         // sequener row line
         if (highlightSequencerRowLine) {
-            // todo: add logic to allow for highlighting sequencer row line.
             // this will be used for the multi-shift tool: when you mouse over a sequencer row line, you will have the option
             // to shift any combination of resources at the same time, by holding down different keys (alt, ctrl, and shift).
+            this.components.shapes.sequencerRowHighlightLines[rowIndex].stroke = this.configurations.sequencerRowHighlightLines.color
         }
     }
 
@@ -698,7 +699,7 @@ class DrumMachineGui {
         for (let shape of this.components.shapes.referenceHighlightLineLists[rowIndex]) {
             shape.stroke = 'transparent'
         }
-        // todo: include sequencer row lines here once they're implemented 
+        this.components.shapes.sequencerRowHighlightLines[rowIndex].stroke = 'transparent'
     }
 
     /**
@@ -931,6 +932,48 @@ class DrumMachineGui {
     removeSequencerRowHighlightLine(rowIndex) {
         this.components.shapes.sequencerRowHighlightLines[rowIndex].remove();
         this.components.shapes.sequencerRowHighlightLines[rowIndex] = null;
+    }
+
+    // sequencer row line event listeners
+
+    addAllSequencerRowLineEventListeners() {
+        for (let rowIndex = 0; rowIndex < this.sequencer.numberOfRows; rowIndex++) {
+            this.addSequencerRowLineEventListenersForRow(rowIndex)
+        }
+    }
+
+    addSequencerRowLineEventListenersForRow(rowIndex) {
+        let shapesToAddEventListenersTo = []
+        shapesToAddEventListenersTo.push(this.components.shapes.sequencerRowLines[rowIndex]._renderer.elem)
+        shapesToAddEventListenersTo.push(this.components.shapes.sequencerRowHighlightLines[rowIndex]._renderer.elem)
+        let eventHandlersHash = {
+            "mouseenter": (event) => {
+                if (this.shiftToolTracker.selectedRowIndex === null && this.circleSelectionTracker.circleBeingMoved === null && this.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
+                    // todo: calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
+                    let highlightSubdivisionLines = event.altKey;
+                    let highlightNotes = event.ctrlKey || (highlightSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
+                    let highlightReferenceLines = event.shiftKey;
+                    let highlightSequencerRowLine = true;
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.multiShift;
+                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, highlightNotes, highlightSubdivisionLines, highlightReferenceLines, highlightSequencerRowLine)
+                }
+            },
+            "mouseleave": () => {
+                if (this.shiftToolTracker.selectedRowIndex === null) {
+                    this.unhighlightAllShiftableObjects(rowIndex);
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText;
+                }
+            },
+            "mousedown": (event) => {
+                // todo: calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
+                let updateShiftRowToolButtonVisuals = false;
+                let shiftSubdivisionLines = event.altKey;
+                let shiftNotes = event.ctrlKey || (shiftSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
+                let shiftReferenceLines = event.shiftKey;
+                this.initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowToolButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+            },
+        }
+        this.addEventListenersWithoutDuplicates("sequencerRowLines" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
     }
 
     /**
@@ -2640,6 +2683,7 @@ class DrumMachineGui {
         this.components.shapes.timeTrackingLines[rowIndex] = this.initializeTimeTrackingLineForRow(rowIndex)
         // add event listeners to subdivision lines and reference lines
         this.two.update(); // this update needs to happen here so that SVG renders get initialized for subdivision and reference lines, so that we can add event listeners to them
+        this.addSequencerRowLineEventListenersForRow(rowIndex)
         this.addSubdivisionLinesEventListenersForRow(rowIndex);
         this.addReferenceLinesEventListenersForRow(rowIndex);
         // then we will add the notes from the sequencer data structure to the display, so the display accurately reflects the current state of the sequencer.
@@ -2723,6 +2767,7 @@ class DrumMachineGui {
             this.components.shapes.shiftToolRowHandles = this.initializeCirclesPerSequencerRow(this.configurations.shiftToolRowHandles.leftPadding, this.configurations.shiftToolRowHandles.topPadding, this.configurations.shiftToolRowHandles.radius, this.configurations.shiftToolRowHandles.unselectedColor)
         }
         this.two.update(); // needs to go here so we can add event listeners to subdivision and reference lines next
+        this.addAllSequencerRowLineEventListeners();
         this.addAllSubdivisionLinesEventListeners();
         this.addAllReferenceLinesEventListeners();
     }
