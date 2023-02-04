@@ -883,7 +883,7 @@ class DrumMachineGui {
         let allReferenceHighlightLineLists = []
         let referenceHighlightLinesForRow = []
         for (let rowsDrawn = 0; rowsDrawn < this.sequencer.numberOfRows; rowsDrawn++) {
-            referenceHighlightLinesForRow = this.initializeReferenceLinesForRow(rowsDrawn, this.configurations.referenceHighlightLines.height, this.configurations.referenceHighlightLines.lineWidth, 'transparent')
+            referenceHighlightLinesForRow = this.initializeReferenceLinesForRow(rowsDrawn, this.configurations.referenceHighlightLines.height, this.configurations.referenceHighlightLines.lineWidth, 'transparent', this.configurations.referenceHighlightLines.topOffset)
             allReferenceHighlightLineLists.push(referenceHighlightLinesForRow) // keep a list of all rows' reference line lists
         }
         return allReferenceHighlightLineLists
@@ -1145,7 +1145,7 @@ class DrumMachineGui {
         let allSubdivisionHighlightLineLists = []
         let subdivisionHightlightLinesForRow = []
         for (let rowsDrawn = 0; rowsDrawn < this.sequencer.numberOfRows; rowsDrawn++) {
-            subdivisionHightlightLinesForRow = this.initializeSubdivisionLinesForRow(rowsDrawn, this.configurations.subdivisionHighlightLines.height, this.configurations.subdivisionHighlightLines.lineWidth, 'transparent')
+            subdivisionHightlightLinesForRow = this.initializeSubdivisionLinesForRow(rowsDrawn, this.configurations.subdivisionHighlightLines.height, this.configurations.subdivisionHighlightLines.lineWidth, 'transparent', this.configurations.subdivisionHighlightLines.topOffset)
             allSubdivisionHighlightLineLists.push(subdivisionHightlightLinesForRow) // keep a list of all rows' subdivision highlight line lists
         }
         return allSubdivisionHighlightLineLists
@@ -2851,8 +2851,8 @@ class DrumMachineGui {
         this.removeTimeTrackingLine(rowIndex)
         // then we will draw all the lines for the changed row, starting with reference lines since they need to be the bottom layer
         this.components.shapes.sequencerRowHighlightLines[rowIndex] = this.initializeSequencerRowLine(rowIndex, this.configurations.sequencerRowHighlightLines.lineWidth, 'transparent');
-        this.components.shapes.referenceHighlightLineLists[rowIndex] = this.initializeReferenceLinesForRow(rowIndex, this.configurations.referenceHighlightLines.height, this.configurations.referenceHighlightLines.lineWidth, 'transparent')
-        this.components.shapes.subdivisionHighlightLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex, this.configurations.subdivisionHighlightLines.height, this.configurations.subdivisionHighlightLines.lineWidth, 'transparent')
+        this.components.shapes.referenceHighlightLineLists[rowIndex] = this.initializeReferenceLinesForRow(rowIndex, this.configurations.referenceHighlightLines.height, this.configurations.referenceHighlightLines.lineWidth, 'transparent', this.configurations.referenceHighlightLines.topOffset)
+        this.components.shapes.subdivisionHighlightLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex, this.configurations.subdivisionHighlightLines.height, this.configurations.subdivisionHighlightLines.lineWidth, 'transparent', this.configurations.subdivisionHighlightLines.topOffset)
         this.components.shapes.referenceLineLists[rowIndex] = this.initializeReferenceLinesForRow(rowIndex, this.configurations.referenceLines.height, this.configurations.sequencer.lineWidth, this.configurations.referenceLines.color)
         this.components.shapes.subdivisionLineLists[rowIndex] = this.initializeSubdivisionLinesForRow(rowIndex, this.configurations.subdivisionLines.height, this.configurations.sequencer.lineWidth, this.configurations.subdivisionLines.color)
         this.components.shapes.sequencerRowLines[rowIndex] = this.initializeSequencerRowLine(rowIndex, this.configurations.sequencer.lineWidth, this.configurations.sequencer.color)

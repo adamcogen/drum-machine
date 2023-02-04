@@ -66,19 +66,21 @@ function getGuiConfigurations(hideIcons=false) {
             color: defaultSequencerLineColor,
         },
         subdivisionHighlightLines: {
-            height: 20,
+            height: 18,
             color: 'black',
-            lineWidth: 6,
+            lineWidth: 8,
             hoverColor: 'blue',
+            topOffset: 2,
         },
         referenceLines: {
             height: 22,
             color: lighterSequencerColor, // meant to be slightly lighter than the subdivision line color
         },
         referenceHighlightLines: {
-            height: 24,
+            height: 26,
             color: 'black',
-            lineWidth: 6,
+            lineWidth: 8,
+            topOffset: 2,
         },
         noteTrashBin: {
             top: 264,
