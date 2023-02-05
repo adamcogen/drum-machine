@@ -29,7 +29,7 @@ window.onload = () => {
     }
 
     // each drum kit is stored in the ./assets/sounds/ directory, as a folder with the name listed here
-    let drumkitNameList = ['Basic Drum Kit', 'Basic Drum Kit 2', 'Underground', 'Basic Drum Kit 3', 'Basic Drum Kit 4']
+    let drumkitNameList = ['Funky Drum Kit', 'Loud Kit', 'Underground Kit', 'Weird Kit', 'Analog Kit', 'Synthesized Electronic Kit']
 
     /**
      * load sound files.
@@ -60,7 +60,7 @@ window.onload = () => {
         }
     }
 
-    let selectedDrumKit = drumkitNameList[3]; // initialize the drum machine with this particular drum kit (set of drum sounds) selected
+    let selectedDrumKit = drumkitNameList[0]; // initialize the drum machine with this particular drum kit (set of drum sounds) selected
 
     // initialize web audio context and audio driver
     _setUpAudioContextCompatabilityShim();
