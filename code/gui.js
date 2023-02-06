@@ -205,6 +205,7 @@ class DrumMachineGui {
         this.refreshWindowMouseMoveEvent();
         this.refreshWindowMouseUpEvent();
         this.refreshWindowKeyDownEvent();
+        this.refreshWindowResizeEvent();
         this.refreshWindowContextMenuEvent();
         this.initializeExportPatternToMidiFileButtonEventListener();
         this.addAllSequencerRowLineEventListeners();
@@ -226,6 +227,8 @@ class DrumMachineGui {
 
         this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         this.mostRecentSavedUrlHash = window.location.hash.substring(1); // track the most recently saved URL hash (without its first character '#')
+
+        this.refreshTwoJsCanvasSize()
     }
 
     // main GUI update logic.
@@ -535,6 +538,7 @@ class DrumMachineGui {
         let eventHandlersHash = {
             "keydown": (event) => {
                 if (event.key === " ") { // hitting the space bar should pause or unpause the sequencer
+                    event.preventDefault();
                     let audioContextIsRunning = this.sequencer.audioDrivers[0].webAudioContext.state === "running"
                     if (audioContextIsRunning) {
                         this.pauseButtonClickHandler(this);
@@ -581,6 +585,15 @@ class DrumMachineGui {
             }
         }
         this.addEventListenersWithoutDuplicates("keydown", [window], eventHandlersHash)
+    }
+
+    refreshWindowResizeEvent() {
+        let eventHandlersHash = {
+            "resize": (event) => {
+                this.refreshTwoJsCanvasSize();
+            },
+        }
+        this.addEventListenersWithoutDuplicates("resize", [window], eventHandlersHash)
     }
 
     refreshWindowContextMenuEvent() {
@@ -3038,6 +3051,7 @@ class DrumMachineGui {
         this.components.shapes.sequencerBorder.remove();
         this.components.shapes.sequencerBorder = this.initializeSequencerBorder();
         // update mouse event listeners to reflect current state of sequencer (number of rows, etc.)
+        this.refreshTwoJsCanvasSize();
         this.refreshWindowMouseMoveEvent();
         this.initializeReferenceLinesShiftPixelsTracker(); // set up variables for handling reference line 'shift' values
         this.initializeSubdivisionLinesShiftPixelsTracker(); // set up variables for handling subdivision line 'shift' values
@@ -4395,7 +4409,7 @@ class DrumMachineGui {
     // initialize Two.js library object and append it to the given DOM element
     initializeTwoJs(twoJsDomElement) {
         return new Two({
-            fullscreen: true,
+            fullscreen: false,
             type: Two.Types.svg
         }).appendTo(twoJsDomElement);
     }
@@ -4409,21 +4423,37 @@ class DrumMachineGui {
     adjustEventCoordinates(event) {
         let svgScale = $(this.two.renderer.domElement).height() / this.two.height;
         let svgOrigin = $('#draw-shapes')[0].getBoundingClientRect();
+        let scrollAmountX = window.pageXOffset;
+        let scrollAmountY = window.pageYOffset
         return {
             ctrlKey: event.ctrlKey, // include any other attributes from the event that we want to be preserved
             altKey: event.altKey,
             shiftKey: event.shiftKey,
             metaKey: event.metaKey,
-            pageX: (event.pageX - svgOrigin.left) / svgScale,
-            pageY: (event.pageY - svgOrigin.top) / svgScale
+            pageX: (event.pageX - svgOrigin.left - scrollAmountX) / svgScale,
+            pageY: (event.pageY - svgOrigin.top - scrollAmountY) / svgScale
         }
+    }
+
+    refreshTwoJsCanvasSize() {
+        // this width calculation is a bit messy, but it's the most accurate way we currently have to calculate the width of the sequencer. 
+        // it is based on the dimensions of row selection rectangles, which are the widest thing in the sequencer.
+        let minimumSequencerWidth = this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.sequencerRowSelections.leftPadding + this.configurations.sequencerRowSelections.width + this.configurations.scroll.extraWidthPadding;
+        let currentWidthOfWindow = document.documentElement.clientWidth;
+        // set the width of the canvas to the width of sequencer, or the width of the window, whichever is bigger, so that we can always scroll to at least the width of the sequencer.
+        this.two.width = Math.max(minimumSequencerWidth, currentWidthOfWindow)
+        // next handle height in a similar way to how we handled width
+        let minimumSequencerHeight = this.configurations.sequencer.top + this.configurations.sequencerRowSelections.topPadding + (this.configurations.sequencerRowSelections.height * this.sequencer.numberOfRows) + this.configurations.addRowButton.topPadding + this.configurations.addRowButton.height + this.configurations.scroll.extraHeightPadding;
+        let currentHeightOfWindow = document.documentElement.clientHeight; 
+        this.two.height = Math.max(minimumSequencerHeight, currentHeightOfWindow)
+        this.two.renderer.setSize(this.two.width, this.two.height);
     }
 
     /**
      * Write sequencer pattern to URL hash
      */
 
-    saveCurrentSequencerStateToUrlHash(){
+    saveCurrentSequencerStateToUrlHash() {
         // encode sequencer pattern to json and add it to url. 
         // 'btoa(plaintext)' converts a plaintext string to a base64 string, so that it is URL-safe. we can decode the base64 string back to plaintext later using 'atob(base64)'.
         this.mostRecentSavedUrlHash = btoa(this.sequencer.serialize());

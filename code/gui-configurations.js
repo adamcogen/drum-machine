@@ -443,6 +443,10 @@ function getGuiConfigurations(hideIcons=false) {
             top: 90,
             lines: ["load some example sequencer", " patterns to see what the drum", "machine can do."],
         },
+        scroll: {
+            extraWidthPadding: 30, // these padding variables are extra space that we allow for scrolling, beyond the width of the sequencer / stuff on the screen, just for convenience
+            extraHeightPadding: 30,
+        },
         helpText: {
             defaultText: "", // "share this beat by copying and pasting the URL from the address bar. undo and redo changes using your browser's back and forward buttons.",
             moveNote: "click and drag to move note. ctrl+click and drag up and down to change note volume",
