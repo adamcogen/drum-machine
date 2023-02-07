@@ -1,6 +1,6 @@
 ![Polyrhythmic Drum Machine](assets/images/sequencer-rows-2_6_2023.png "Polyrhythmic Drum Machine")
 
-A drum machine for creating unique time feels and polyrhythms. Try it [here](https://adamcogen.github.io/drum-machine/).
+A drum machine for creating grooves with unique time feels. Try it [here](https://adamcogen.github.io/drum-machine/).
 
 For best results, use Chrome browser on Mac. Mobile not currently supported.
 
@@ -8,7 +8,7 @@ For best results, use Chrome browser on Mac. Mobile not currently supported.
 
 Most drum machines only let you create rhythms that precisely divide each beat or measure into factors of 2 and 3. This drum machine removes that limitation by allowing for any number of divisions, such as prime and large numbers.
 
-Most drum machines only give two options for where beats can be placed: precisely "on time" (at evenly divided grid lines starting at the beginning of the measure), or completely freely (with no grid lines at all). This drum machine allows for both of these, but it also gives you an in-between option: it allows you to shift the timing of all of a measure's grid lines, so that they all sound as "ahead of" or "behind" the beat as you want them to, while still remaining evenly spaced.
+Most drum machines only give two options for where beats can be placed: precisely "on time" (on even grid lines starting at the beginning of the measure), or completely freely (with no grid lines at all). This drum machine allows for both of these, but also introduces a third option: it allows you to shift the timing of all grid lines, so that they sound "ahead" or "behind," while remaining evenly spaced.
 
 Combining both of these features allows you to easily create unique drum grooves that are difficult or impossible to emulate in a convential sequencer or DAW.
 
@@ -16,7 +16,7 @@ Combining both of these features allows you to easily create unique drum grooves
 
 - Create complex polyrhythms, odd time signatures, and unusual note divisions by setting any whole number of beats for each note lane
 - Create precisely-tuned experimental time feels and swing amounts by shifting each note lane's grid lines forwards or backwards in time as much as you like, so that notes sound ahead of or behind the beat, while remaining evenly spaced.
-- Toggle snap-to-grid (quantization) on and off for each note lane
+- Toggle snap-to-grid (quantization) on and off
 - Runs in your internet browser
   - Save and share sequencer patterns by copying the site's URL, which updates any time you make a change to the sequencer
   - Use browser 'back' and 'forward' buttons to 'undo' and 'redo' any changes you make
@@ -66,10 +66,10 @@ For Windows, you should be able to just run the commands that are in these .sh f
 * `code/` contains all JavaScript source code
   * `drum-machine.js` main source code file from which everything else is instantiated
   * `priority-linked-list.js` implementation of a special linked list data structure, created to be used as the backend datastore for sequencer rows. This file also contains unit tests for the data structure.
-  * `sequencer.js` higher-level implementation of the sequencer, including the note scheduling algorithm and logic for reconfiguring the sequencer
+  * `sequencer.js` higher-level implementation of the sequencer, including the note scheduling algorithm and logic for reconfiguring sequencer patterns
   * `gui.js` implementation of the GUI, including all buttons, event listeners, etc.
-  * `audio-drivers.js` interface and implementations of different audio drivers (WebAudio and MIDI) to standardize how the sequencer interacts with different audio output libraries
-  * `gui-configurations.js` definitions of constants used to define GUI display and behavior, formatted as a JSON object
+  * `audio-drivers.js` interface and implementations for different audio drivers (WebAudio and MIDI) to standardize how the sequencer interacts with different audio output libraries
+  * `gui-configurations.js` definitions of constants used to define GUI display and behavior, formatted as a JSON object for convenience
   * `lib/` contains all third-party libraries used in the project
 * `assets/` contains icons, sound files, and any other assets used by the drum machine
 
