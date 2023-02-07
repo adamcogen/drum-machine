@@ -2,7 +2,7 @@
 
 A drum machine for creating unique time feels and polyrhythms. Try it [here](https://adamcogen.github.io/drum-machine/).
 
-Tested in Chrome browser on Mac. Mobile not currently supported.
+For best results, use Chrome browser on Mac. Mobile not currently supported.
 
 ### About
 
