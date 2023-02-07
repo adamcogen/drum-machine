@@ -1,44 +1,38 @@
-# Polyrhythmic Drum Machine
+![Polyrhythmic Drum Machine](assets/images/sequencer-rows-2_6_2023.png "Polyrhythmic Drum Machine")
 
-![Polyrhythmic Drum Machine (August 3rd, 2022)](assets/images/screenshot-1_28_2023-2-thin.png "Polyrhythmic Drum Machine (August 3rd, 2022)")
+A drum machine for creating unique time feels and polyrhythms. Try it [here](https://adamcogen.github.io/drum-machine/).
 
-## About
+Tested in Chrome browser on Mac. Mobile not currently supported.
 
-This project is a drum machine that supports the creation of unusual beat subdivisions and time feels.
+### About
 
-It is browser-based, and runs completely client-side. It has primarily been tested in Chrome browser on Mac.
+Most drum machines only let you create rhythms that precisely divide each beat or measure into factors of 2 and 3. This drum machine removes that limitation by allowing for any number of divisions, such as prime and large numbers.
 
-Try it [here](https://adamcogen.github.io/drum-machine/).
+Most drum machines only give two options for where beats can be placed: precisely "on time" (at evenly divided grid lines starting at the beginning of the measure), or completely freely (with no grid lines at all). This drum machine allows for both of these, but it also gives you an in-between option: it allows you to shift the timing of all of a measure's grid lines, so that they all sound as "ahead of" or "behind" the beat as you want them to, while still remaining evenly spaced.
+
+Combining both of these features allows you to easily create unique drum grooves that are difficult or impossible to emulate in a convential sequencer or DAW.
 
 ### Key Features:
 
-- Sequencer rows can be subdivided and quantized into any whole number of beats, including prime numbers 
-   - Use this flexibility to program odd time signatures, complex polyrhythms, and odd time divisions (such as pentuplet and suptuplet swing, 11s, 13s, and so on) that would be difficult or impossible to create in conventional DAWs, which often only support quantizing beats to powers of two (8th, 16th, and 32nd notes, etc.) and triplets.
-- Each sequencer row's beat lines can be shifted forwards or backwards in time as much as you like, so that notes sound ahead of or behind the beat.
-  - Use this to create precisely-tuned experimental time feels, swing amounts, and note timing offsets.
-- Snap-to-grid (quantization) can be toggle on and off for each sequencer row
-- Save and share sequencer patterns by copying the site's URL, which is automatically updated any time a change is made to the sequencer
-  - Browser 'back' and 'forward' buttons can also be used as 'undo' and 'redo' buttons
+- Create complex polyrhythms, odd time signatures, and unusual note divisions by setting any whole number of beats for each note lane
+- Create precisely-tuned experimental time feels and swing amounts by shifting each note lane's grid lines forwards or backwards in time as much as you like, so that notes sound ahead of or behind the beat, while remaining evenly spaced.
+- Toggle snap-to-grid (quantization) on and off for each note lane
+- Runs in your internet browser
+  - Save and share sequencer patterns by copying the site's URL, which updates any time you make a change to the sequencer
+  - Use browser 'back' and 'forward' buttons to 'undo' and 'redo' any changes you make
 
 ### Other Nice Stuff: 
 
-- Choose from multiple drum kits for live audio output
+- Choose from a number of drum kits for live audio output
   - Run locally to add your own drum kits
-- Live MIDI output 
+- Supports live MIDI output to any DAW or MIDI device, as well as exporting sequencer patterns to MIDI files
   - Run locally to change MIDI note pitches by modifying source code
-- Export patterns to a MIDI file
 - Specify tempo as BPM (beats per minute), or as a loop length in milliseconds
-  - BPM input mode also supports 'tap tempo' functionality
-- Adjust the volume of each note
-- Try out example patterns by loading them from a dropdown
-- All interactive GUI elements are labelled with help text on mouse-over, which appears on the bar at the bottom of the screen
-
-### Work Still In Progress:
-
-- Add more drum kits
-- Add more example sequencer patterns
-- Add more sounds to each drum kit
-- Improve user experience for timing shift functionality
+  - BPM input mode supports 'tap tempo' functionality
+  - Millisecond loop length is useful for making rhythmic transcriptions from an existing sound file
+- Adjust the volume of each note. The louder the note, the larger its circle will be on-screen.
+- Listen to example patterns by loading them from the 'examples' dropdown.
+- All interactive GUI elements include help text, which appears when you mouse over them, in the bar at the bottom of the screen
 
 ## How To Run Locally
 
