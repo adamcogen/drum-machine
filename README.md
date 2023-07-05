@@ -14,9 +14,9 @@ This is a drum machine that includes two uncommon key features:
     - Most drum machines only allow us to create rhythms that are divisible into groupings of 2 or 3 (such as 8th notes and triplets).
     - This drum machine allows us to create rhythms using any whole number of divisions, including odd, prime, and large numbers (such as 7th notes, 13ths, 56ths, etc).
 
-Changing the number of rhythmic divisions in a note lane:
+Changing the number of rhythmic divisions on a note lane:
 
-[add gif]
+![Changing the number of rhythmic divisions on a note lane](assets/images/set-subdivisions-7_4_2023.gif "Changing the number of rhythmic divisions on a note lane")
 
 2. Shifting rhythmic grid lines
     - Most drum machines only allow us to place notes in two ways: onto an even rhythmic grid that starts at time 0, or anywhere at all (with no grid).
@@ -24,11 +24,11 @@ Changing the number of rhythmic divisions in a note lane:
 
 Shifting (then resetting) rhythmic grid lines to create unique swing feels:
 
-[add gif]
+![Shifting (then resetting) rhythmic grid lines to create unique swing feels](assets/images/shift-row-7_4_2023.gif "Shifting (then resetting) rhythmic grid lines to create unique swing feels")
 
 Toggling whether to snap notes to rhythmic grid lines:
 
-[add gif]
+![Toggling whether to snap notes to rhythmic grid lines](assets/images/quantize-row-7_4_2023.gif "Toggling whether to snap notes to rhythmic grid lines")
 
 Together these features let us create unique rhythms that are difficult (or sometimes impossible) to emulate using most convential sequencers and DAWs.
 

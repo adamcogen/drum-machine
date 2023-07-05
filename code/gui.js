@@ -2121,7 +2121,7 @@ class DrumMachineGui {
             textArea.style.borderColor = this.configurations.sequencer.color
             textArea.value = this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
             textArea.style.color = this.configurations.defaultFont.color // set font color
-            textArea.title = "Number of beats"
+            textArea.title = "Number of rhythmic grid lines"
             this.components.domElements.divs.subdivisionTextInputs.appendChild(textArea);
             // note for later: the opposite of appendChild is removeChild
             this.components.domElements.textInputs.subdivisionTextInputs.push(textArea)
