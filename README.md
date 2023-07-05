@@ -8,29 +8,32 @@ For best results, use Chrome browser on Mac. Touchscreens are not yet supported.
 
 ## Overview
 
-This is a drum machine that includes two uncommon key features:
+This is a drum machine that includes two unusual key features:
 
-1. No limitation on note divisions
+1. **No limitation on note divisions.**
     - Most drum machines only allow us to create rhythms that are divisible into groupings of 2 or 3 (such as 8th notes and triplets).
     - This drum machine allows us to create rhythms using any whole number of divisions, including odd, prime, and large numbers (such as 7th notes, 13ths, 56ths, etc).
 
-![Changing the number of rhythmic divisions on a note lane](assets/images/set-subdivisions-7_4_2023.gif "Changing the number of rhythmic divisions on a note lane")
+      ![Changing the number of rhythmic divisions on a note lane](assets/images/set-subdivisions-7_4_2023.gif "Changing the number of rhythmic divisions on a note lane")
 
-2. Shifting rhythmic grid lines
+2. **Shifting rhythmic grid lines.**
+
     - Most drum machines only allow us to place notes in two ways: onto an even rhythmic grid that starts at time 0, or anywhere at all (with no grid).
+
+      ![Toggling whether to snap notes to rhythmic grid lines](assets/images/quantize-row-7_4_2023.gif "Toggling whether to snap notes to rhythmic grid lines")
+
+
     - This drum machine adds a third option: it lets us shift the rhythmic grid forwards or backwards in time, so that notes uniformly fall "ahead of" or "behind" the beat.
 
-![Shifting (then resetting) rhythmic grid lines to create unique swing feels](assets/images/shift-row-7_4_2023.gif "Shifting (then resetting) rhythmic grid lines to create unique swing feels")
-
-![Toggling whether to snap notes to rhythmic grid lines](assets/images/quantize-row-7_4_2023.gif "Toggling whether to snap notes to rhythmic grid lines")
+      ![Shifting (then resetting) rhythmic grid lines to create unique swing feels](assets/images/shift-row-7_4_2023.gif "Shifting (then resetting) rhythmic grid lines to create unique swing feels")
 
 Together these features let us create unique rhythms that are difficult (or sometimes impossible) to emulate using most convential sequencers and DAWs.
 
 ## High-Level Feature List
 
 - Set each note lane to have any whole number of beats (rhythmic grid lines). This allows us to create complex polyrhythms, odd time signatures, and unusual note divisions.
-- Shift each note lane's rhythmic grid lines forwards or backwards in time, so that notes fall ahead of or behind the beat while remaining evenly spaced. Or, remove rhythmic grid lines entirely. This allows us to experiment with and fine-tune the time feel of our grooves.
-- Share grooves by copying and pasting the browser URL, which automatically updates any time we make changes.
+- Shift each note lane's rhythmic grid lines forwards or backwards in time, so that notes fall ahead of or behind the beat while remaining evenly spaced. Or, remove rhythmic grid lines entirely. This allows us to experiment with and fine-tune the time feels of our grooves.
+- Share grooves by copying and pasting the browser URL, which automatically updates every time we make changes.
 - Use the browser's 'back' and 'forward' buttons to undo and redo changes.
 - All interactive GUI elements show help text on mouse-over. It appears in the gray bar at the bottom of the window.
 - Choose from several built-in drum kits for live audio output.
@@ -40,6 +43,8 @@ Together these features let us create unique rhythms that are difficult (or some
   - Millisecond loop length can be useful for making rhythmic transcriptions from an existing sound file
 - Load example sequencer patterns from the 'examples' dropdown.
 - Adjust the volume of each note using cntrl+click. The louder the note, the larger its circle will be on-screen.
+
+![Drum Machine](assets/images/screenshot-with-help-text-7_5_2023.png "Drum Machine")
 
 ## How To Run Locally
 
