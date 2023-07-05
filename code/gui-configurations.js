@@ -454,19 +454,19 @@ function getGuiConfigurations(hideIcons=false) {
             play: "play the sequencer",
             stop: "stop the sequencer",
             deletePattern: "delete the whole sequencer pattern",
-            quantized: "notes will snap to beat lines for this row. turn off snapping notes to beat lines (turn off quantization)",
-            unquantized: "notes will not snap to beat lines for this row. turn on snapping notes to beat lines (turn on quantization)",
+            quantized: "notes will snap to rhythmic grid lines for this row. turn off snapping notes to rhythmic grid lines (turn off quantization)",
+            unquantized: "notes will not snap to rhythmic grid lines for this row. turn on snapping notes to rhythmic grid lines (turn on quantization)",
             moveRow: "move sequencer row around, or throw it away",
             changeRowVolume: "adjust volume for all notes in row",
-            setNumberOfSubdivisionLines: "set number of beat lines for row",
+            setNumberOfSubdivisionLines: "set number of rhythmic grid lines for row",
             setNumberOfReferenceLines: "set number of visual reference lines for row",
             deleteAllNotesForRow: "delete all notes from row",
-            resetSubdivisionLineShift: "realign beat lines to default position (reset timing shift)",
+            resetSubdivisionLineShift: "realign rhythmic grid lines to default position (reset timing shift)",
             resetReferenceLineShift: "realign visual reference lines to default position (reset timing shift)",
             shiftRow: {
                 prefix: "shift the timing of ",
                 postfix: " for row",
-                subdivisionLinesName: "beat lines",
+                subdivisionLinesName: "rhythmic grid lines",
                 referenceLinesName: "visual reference lines",
                 quantizedNotesName: "all notes (quantized)",
                 unquantizedNotesName: "all notes (unquantized)",
@@ -485,7 +485,7 @@ function getGuiConfigurations(hideIcons=false) {
             selectLiveMidiOutputPort: "select live MIDI output port",
             selectDrumKit: "select drum kit to use for live audio output",
             selectExampleSequencerPattern: "load an example sequencer pattern",
-            multiShift: "click+drag to shift multiple types of objects at the same time. +ctrl for beat lines; +alt for notes; +cmd for visual reference lines."
+            multiShift: "click+drag to shift multiple types of objects at the same time. +ctrl for rhythmic grid lines; +alt for notes; +cmd for visual reference lines."
         }
     }
 }

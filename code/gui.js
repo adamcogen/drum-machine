@@ -494,7 +494,7 @@ class DrumMachineGui {
             this.components.domElements.images.activateShiftReferenceLinesIcon.style.display = 'none'
             // switch 'shift row' and 'shift notes' icons
             this.components.domElements.images.shiftRowIcon = this.components.domElements.images.activateShiftNotesIcon
-            this.components.domElements.images.shiftRowIcon.title = "Shift all notes for row"
+            this.components.domElements.images.shiftRowIcon.title = "Shift all notes"
         }
     }
 

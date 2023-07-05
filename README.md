@@ -10,20 +10,20 @@ For best results, use Chrome browser on Mac. Touchscreens are not yet supported.
 
 This drum machine includes two key uncommon features:
 
-1. No limits on note divisions.
+1. No limit on note divisions
     - Most drum machines only allow us to create rhythms that are divisible into groupings of 2 or 3 (such as 8th notes and triplets).
     - This drum machine allows us to create rhythms using any whole number of divisions, including odd, prime, and large numbers (such as 7th notes, 13ths, 56ths, etc).
 
-2. Shifting grid lines.
-    - Most drum machines only allow us to place notes either onto a rigid grid that starts at time 0, or anywhere at all (with no grid).
-    - This drum machine adds the option to shift the grid that notes are placed onto forwards and backwards in time, so that notes fall ahead of or behind the beat, while remaining evenly spaced.
+2. Shifting rhythmic grid lines
+    - Most drum machines only allow us to place notes in two ways: onto an even rhythmic grid that starts at time 0, or anywhere at all (with no grid).
+    - This drum machine adds a third option: it lets us shift the rhythmic grid forwards or backwards in time, so that notes uniformly fall "ahead of" or "behind" the beat.
 
-Together these features lets us create unique rhythms that are difficult (or sometimes impossible) to emulate using most convential sequencers and DAWs.
+Together these features let us create unique rhythms that are difficult (or sometimes impossible) to emulate using most convential sequencers and DAWs.
 
-## Feature List
+## High-Level Feature List
 
 - Set each note lane to have any whole number of beats. This allows us to create complex polyrhythms, odd time signatures, and unusual note divisions.
-- Shift each note lane's grid lines forward or backwards in time, so that notes fall ahead of or behind the beat while remaining evenly spaced. Or, remove grid lines entirely. This allows us to fine-tune the time feel of our grooves.
+- Shift each note lane's rhythmic grid forwards or backwards in time, so that notes fall ahead of or behind the beat while remaining evenly spaced. Or, remove rhythmic grid lines entirely. This allows us to experiment with and fine-tune the time feel of our grooves.
 - Share grooves by copying and pasting the browser URL, which automatically updates any time we make changes.
 - Use the browser's 'back' and 'forward' buttons to undo and redo changes.
 - All interactive GUI elements have help text on mouse-over, which appears in the gray bar at the bottom of the window.
