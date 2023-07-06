@@ -10,7 +10,7 @@ For best results, use with Chrome browser on Mac. Touchscreens are not yet suppo
 
 This is a drum machine that includes two unusual key features:
 
-1. **No limitation on note divisions.**
+1. **No limitation on rhythmic divisions.**
     - Most drum machines only allow us to create rhythms that are divisible into groupings of 2 or 3 (such as 8th notes and triplets).
     - This drum machine allows us to create rhythms using any whole number of divisions, including odd, prime, and large numbers (such as 7th notes, 13ths, 56ths, etc).
 
@@ -31,7 +31,7 @@ Together these features let us create unique rhythms that are difficult (or some
 
 ## High-Level Feature List
 
-- Set each note lane to have any whole number of beats (rhythmic grid lines). This allows us to create complex polyrhythms, odd time signatures, and unusual note divisions.
+- Set each note lane to have any whole number of beats (rhythmic grid lines). This allows us to create complex polyrhythms, odd time signatures, and unusual rhythmic divisions.
 - Shift each note lane's rhythmic grid lines forwards or backwards in time, so that notes fall ahead of or behind the beat while remaining evenly spaced. Or, remove rhythmic grid lines entirely. This allows us to experiment with and fine-tune the time feels of our grooves.
 - Share grooves by copying and pasting the browser URL, which automatically updates every time we make changes.
 - Use the browser's 'back' and 'forward' buttons to undo and redo changes.
