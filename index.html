@@ -123,6 +123,23 @@
                 font-family: "Courier New";
                 color: black;
             }
+            #analytics-bar {
+                background-color: #cacaca;
+                overflow: hidden;
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                height: 70px;
+                padding-top: 10px;
+                padding-left: 30px; /* alternative padding-left value: 320, aka the left edge of the sequencer */
+                border-top: solid black 1px;
+
+            }
+            #analytics-bar-text-div {
+                font-size: 15px;
+                font-family: "Courier New";
+                color: black;
+            }
         </style>
 
     </head>
@@ -183,6 +200,9 @@
         <img src="./assets/icons/png/shift-row.png" id="shift-row-icon" draggable="false" title="Use shifter tool for row"/>
         <img src="./assets/icons/png/change-row-volumes.png" id="change-row-volumes-icon" draggable="false" title="Change all note volumes"/>
         <div id="new-icons"></div>
+        <div id="analytics-bar">
+            <div id="analytics-bar-text-div"></div>
+        </div>
         <div id="bottom-bar">
             <div id="bottom-bar-text-div"></div>
         </div>

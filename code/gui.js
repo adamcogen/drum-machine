@@ -181,6 +181,10 @@ class DrumMachineGui {
         this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         this.mostRecentSavedUrlHash = window.location.hash.substring(1); // track the most recently saved URL hash (without its first character '#')
 
+        // temporarily hide the analytics bar. we can make it visible once the implementation of analytics is complete
+        this.components.domElements.divs.analyticsBar.style.display = 'none'
+        this.components.domElements.divs.analyticsBarText.style.display = 'none'
+
         this.refreshTwoJsCanvasSize()
     }
 
@@ -359,6 +363,8 @@ class DrumMachineGui {
                 newIcons: document.getElementById('new-icons'),
                 bottomBar: document.getElementById('bottom-bar'),
                 bottomBarText: document.getElementById('bottom-bar-text-div'),
+                analyticsBar: document.getElementById('analytics-bar'),
+                analyticsBarText: document.getElementById('analytics-bar-text-div'),
             },
             textInputs: {
                 loopLengthMillis: document.getElementById('text-input-loop-length-millis'),
