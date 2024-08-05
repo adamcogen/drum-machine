@@ -365,7 +365,7 @@ class DrumMachineGui {
                 bottomBar: document.getElementById('bottom-bar'),
                 bottomBarText: document.getElementById('bottom-bar-text-div'),
                 analyticsBar: document.getElementById('analytics-bar'),
-                analyticsBarText: document.getElementById('analytics-bar-text-div'),
+                analyticsBarText: document.getElementById('analytics-bar-notes-mode-text-div'),
             },
             textInputs: {
                 loopLengthMillis: document.getElementById('text-input-loop-length-millis'),

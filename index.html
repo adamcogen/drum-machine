@@ -107,8 +107,8 @@
                 position: absolute;
             }
             #bottom-bar {
+                white-space: nowrap;
                 background-color: #ababab;
-                overflow: hidden;
                 position: fixed;
                 bottom: 0;
                 width: 100%;
@@ -124,21 +124,53 @@
                 color: black;
             }
             #analytics-bar {
+                white-space: nowrap;
                 background-color: #cacaca;
-                overflow: hidden;
                 position: fixed;
                 bottom: 0;
                 width: 100%;
-                height: 90px;
-                padding-top: 10px;
+                height: 100px; /* original intended height: 90px */
+                padding-top: 0px;
                 padding-left: 30px; /* alternative padding-left value: 320, aka the left edge of the sequencer */
+                line-height: 50%;
                 border-top: solid black 1px;
-
             }
-            #analytics-bar-text-div {
+            #analytics-bar-notes-mode-text-div {
                 font-size: 15px;
                 font-family: "Courier New";
                 color: black;
+            }
+            #analytics-bar-column-1-text {
+                /* border: 1px solid black; */
+                position: fixed;
+            }
+            #analytics-bar-column-2-text {
+                position: fixed;
+                left: 270px;
+            }
+            #analytics-bar-column-3-text {
+                /* the height and padding here are set so that we can use the left edge of this div to draw a black line on the analytics menu */
+                border-left: 1px solid black;
+                height: 100px;
+                position: fixed;
+                left: 410px;
+                padding-left: 50px;
+            }
+            #analytics-bar-column-4-text {
+                position: fixed;
+                left: 670px;
+            }
+            #analytics-bar-column-5-text {
+                position: fixed;
+                left: 780px;
+            }
+            #analytics-bar-column-6-text {
+                position: fixed;
+                left: 970px;
+            }
+            #analytics-bar-column-7-text {
+                position: fixed;
+                left: 1100px;
             }
         </style>
 
@@ -150,9 +182,6 @@
         other button icons belong in the front. -->
         <img src="./assets/icons/png/trash-closed.png" id="trash-closed-icon" draggable="false"/>
         <img src="./assets/icons/png/trash-open.png" id="trash-open-icon" draggable="false"/>
-        <div id="analytics-bar">
-            <div id="analytics-bar-text-div"></div>
-        </div>
         <div id="draw-shapes"></div>
         <!-- Load drum machine source code -->
         <script src='code/util.js'></script>
@@ -203,6 +232,34 @@
         <img src="./assets/icons/png/shift-row.png" id="shift-row-icon" draggable="false" title="Use shifter tool for row"/>
         <img src="./assets/icons/png/change-row-volumes.png" id="change-row-volumes-icon" draggable="false" title="Change all note volumes"/>
         <div id="new-icons"></div>
+        <div id="analytics-bar">
+            <div id="analytics-bar-notes-mode-text-div">
+                <div id="analytics-bar-column-1-text">
+                    <p id="analytics-beat-number-text">beat line: 0 of 0</p>
+                    <p id="analytics-reference-line-number-text">visual line: 0 of 0</p>
+                </div>
+                <div id="analytics-bar-column-2-text">
+                    <p id="analytics-volume-text">volume: 0</p>
+                </div>
+                <div id="analytics-bar-column-3-text">
+                    <p>distance from...</p>
+                </div>
+                <div id="analytics-bar-column-4-text">
+                    <p>beat lines:</p>
+                </div>
+                <div id="analytics-bar-column-5-text">
+                    <p id="analytics-distance-from-beats-percent-text">+0% / -0%</p>
+                    <p id="analytics-distance-from-beats-milliseconds-text">+0ms / -0ms</p>
+                </div>
+                <div id="analytics-bar-column-6-text">
+                    <p>visual lines:</p>
+                </div>
+                <div id="analytics-bar-column-7-text">
+                    <p id="analytics-distance-from-reference-lines-percent-text">+0% / -0%</p>
+                    <p id="analytics-distance-from-reference-lines-milliseconds-text">+0ms / -0ms</p>
+                </div>
+            </div>
+        </div>
         <div id="bottom-bar">
             <div id="bottom-bar-text-div"></div>
         </div>

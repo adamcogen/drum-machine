@@ -448,7 +448,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         scroll: {
             extraWidthPadding: 30, // these padding variables are extra space that we allow for scrolling, beyond the width of the sequencer / stuff on the screen, just for convenience
-            extraHeightPadding: 30,
+            extraHeightPadding: 100,
         },
         helpText: {
             defaultText: "", // "share this beat by copying and pasting the URL from the address bar. undo and redo changes using your browser's back and forward buttons.",
