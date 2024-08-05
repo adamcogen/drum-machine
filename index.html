@@ -129,7 +129,7 @@
                 position: fixed;
                 bottom: 0;
                 width: 100%;
-                height: 70px;
+                height: 90px;
                 padding-top: 10px;
                 padding-left: 30px; /* alternative padding-left value: 320, aka the left edge of the sequencer */
                 border-top: solid black 1px;
@@ -150,6 +150,9 @@
         other button icons belong in the front. -->
         <img src="./assets/icons/png/trash-closed.png" id="trash-closed-icon" draggable="false"/>
         <img src="./assets/icons/png/trash-open.png" id="trash-open-icon" draggable="false"/>
+        <div id="analytics-bar">
+            <div id="analytics-bar-text-div"></div>
+        </div>
         <div id="draw-shapes"></div>
         <!-- Load drum machine source code -->
         <script src='code/util.js'></script>
@@ -200,9 +203,6 @@
         <img src="./assets/icons/png/shift-row.png" id="shift-row-icon" draggable="false" title="Use shifter tool for row"/>
         <img src="./assets/icons/png/change-row-volumes.png" id="change-row-volumes-icon" draggable="false" title="Change all note volumes"/>
         <div id="new-icons"></div>
-        <div id="analytics-bar">
-            <div id="analytics-bar-text-div"></div>
-        </div>
         <div id="bottom-bar">
             <div id="bottom-bar-text-div"></div>
         </div>
