@@ -183,7 +183,6 @@ class DrumMachineGui {
 
         if (!this.configurations.analyticsBar.show) {
             this.components.domElements.divs.analyticsBar.style.display = 'none'
-            this.components.domElements.divs.analyticsBarText.style.display = 'none'
         }
 
         this.refreshTwoJsCanvasSize()
@@ -365,7 +364,9 @@ class DrumMachineGui {
                 bottomBar: document.getElementById('bottom-bar'),
                 bottomBarText: document.getElementById('bottom-bar-text-div'),
                 analyticsBar: document.getElementById('analytics-bar'),
-                analyticsBarText: document.getElementById('analytics-bar-notes-mode-text-div'),
+                analyticsBarNoteModeText: document.getElementById('analytics-bar-notes-mode-text-div'),
+                analyticsBarLinesModeText: document.getElementById('analytics-bar-lines-mode-text-div'),
+
             },
             textInputs: {
                 loopLengthMillis: document.getElementById('text-input-loop-length-millis'),
@@ -411,6 +412,15 @@ class DrumMachineGui {
                 midiOutput: document.getElementById('midi-output-selector'),
                 drumkit: document.getElementById('drum-kit-selector'),
                 examplePatterns: document.getElementById('example-pattern-selector'),
+            },
+            text: {
+                analyticsBarNoteModeBeatNumber: document.getElementById('analytics-beat-number-text'),
+                analyticsBarNoteModeReferenceLineNumber: document.getElementById('analytics-reference-line-number-text'),
+                analyticsBarNoteModeVolume: document.getElementById('analytics-volume-text'),
+                analyticsBarNoteModeDistanceFromBeatsPercent: document.getElementById('analytics-distance-from-beats-percent-text'),
+                analyticsBarNoteModeDistanceFromBeatsMilliseconds: document.getElementById('analytics-distance-from-beats-milliseconds-text'),
+                analyticsBarNoteModeDistanceFromReferenceLinesPercent: document.getElementById('analytics-distance-from-reference-lines-percent-text'),
+                analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds: document.getElementById('analytics-distance-from-reference-lines-milliseconds-text'),
             }
         }
         return domElements;
