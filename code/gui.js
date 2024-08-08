@@ -4184,6 +4184,107 @@ class DrumMachineGui {
     }
 
     /**
+     * Analytics bar logic
+     */
+
+    // show the analytics bar on the GUI
+    showAnalyticsBar(){
+        // todo: add implementation
+    }
+
+    // hide the analytics bar on the GUI
+    hideAnalyticsBar(){
+        // todo: add implementation
+    }
+
+    // set the analytics bar to 'note' mode, where it will show text giving information about a particular note in the drum machine
+    setAnalyticsBarToNoteMode(){
+        // todo: add implementation
+    }
+
+    // set the analytics bar to 'lines' mode, where it will show text giving information about the beat 
+    // lines and reference lines and their shift values for a particular sequencer row on the drum machine 
+    setAnalyticsBarToLinesMode(){
+        // todo: add implementation
+    }
+
+    /**
+     * for the analytics bar when in 'note' mode, set the text that describes the beat number of the note being analyzed. 
+     * 
+     * @param beatNumber: the beat number that the note falls within, or closest beat number, counting from the left and starting on beat 1
+     * @param numberOfTotalBeats: the total number of beats on the row of the sequencer that this note is on
+     * @param hideValues: if this is set to true, the beat number and total number of beats isn't relevant, so won't be shown.
+     *                    for example, notes in the note bank don't have a relevant beat number to show, nor do notes on unquantized sequencer rows.
+     */
+    setAnalyticsBarNotesModeBeatNumberText(beatNumber, numberOfTotalBeats, hideValues=false){
+        // todo: add implementation
+    }
+
+    /**
+     * for the analytics bar when in 'note' mode, set the text that describes the beat number of the note being analyzed. 
+     * 
+     * @param referenceLineNumber: the reference line number that the note falls within, or closest reference line number, counting from the left 
+     *                             and starting on reference line 1
+     * @param numberOfTotalReferenceLines: the total number of reference lines on the row of the sequencer that this note is on
+     * @param hideValues: if this is set to true, the reference line number and total number of reference lines isn't relevant, so won't be shown.
+     *                    for example, notes in the note bank don't have a relevant reference line number to show, nor do notes on sequencer rows 
+     *                    with zero reference lines.
+     */
+    setAnalyticsBarNotesModeReferenceLineNumberText(referenceLineNumber, numberOfTotalReferenceLines, hideValues=false){
+        // todo: add implementation
+    }
+
+    // for the analytics bar when in 'note' mode, set the text that describes the volume of the note being analyzed
+    setAnalyticsBarNotesModeVolumeText(volume){
+        // todo: add implementation
+    }
+
+    /**
+     * for the analytics bar when in 'note' mode, set the text that describes the distance of the note being analyzed from the nearest
+     * beats to its left and right. These values are shown as both percentages of a beat, and as a number of milliseconds.
+     * 
+     * Note that if a note falls directly on a beat (such as when a row is quantized), the distance from left and the distance from right will both be described
+     * as zero, since these values won't really be useful anyway and that seems like the least confusing way to handle that situation.
+     * 
+     * It may later be determined that it's better to pass in some millisecond values only and calculate percentages using only those, we will see as we implement things.
+     * 
+     * @param distanceFromLeftBeatAsPercent: how far the note being analyzed is from the nearest beat to its left, as a percentage of a single beat length. 
+     *                                       if the note being analyzed is directly on the beat, this will be descibed as zero.
+     * @param distanceFromRightBeatAsPercent: how far the note being analyzed is from the nearest beat to its right, as a percentage of a single beat length. 
+     *                                        if the note being analyzed is directly on the beat, this will be descibed as zero.
+     * @param distanceFromLeftBeatInMilliseconds: how far the note being analyzed is from the nearest beat to its left, as a number of milliseconds.
+     *                                            if the note being analyzed is directly on the beat, this will be descibed as zero.
+     * @param distanceFromRightBeatInMilliseconds: how far the note being analyzed is from the nearest beat to its right, as a number of milliseconds.
+     *                                             if the note being analyzed is directly on the beat, this will be descibed as zero.
+     */
+    setAnalyticsBarNotesModeDistanceFromBeatLinesText(distanceFromLeftBeatAsPercent, distanceFromRightBeatAsPercent, distanceFromLeftBeatInMilliseconds, distanceFromRightBeatInMilliseconds){
+        // todo: add implementation
+    }
+
+    /**
+     * for the analytics bar when in 'note' mode, set the text that describes the distance of the note being analyzed from the nearest
+     * reference lines to its left and right. These values are shown as both percentages of the distance between each reference line, 
+     * and as a number of milliseconds.
+     * 
+     * Note that if a note falls directly on a reference line, the distance from left and the distance from right will both be described
+     * as zero, since these values won't really be useful anyway and that seems like the least confusing way to handle that situation.
+     * 
+     * It may later be determined that it's better to pass in some millisecond values only and calculate percentages using only those, we will see as we implement things.
+     * 
+     * @param distanceFromLeftLineAsPercent: how far the note being analyzed is from the nearest refernce line to its left, as a percentage of the distance between two reference lines.
+     *                                       if the note being analyzed is directly on a reference line, this will be descibed as zero.
+     * @param distanceFromRightLineAsPercent: how far the note being analyzed is from the nearest reference line to its right, as a percentage of the distance between two reference lines.
+     *                                        if the note being analyzed is directly on a reference line, this will be descibed as zero.
+     * @param distanceFromLeftLineInMilliseconds: how far the note being analyzed is from the nearest reference line to its left, as a number of milliseconds.
+     *                                            if the note being analyzed is directly on a reference line, this will be descibed as zero.
+     * @param distanceFromRightLineInMilliseconds: how far the note being analyzed is from the nearest reference line to its right, as a number of milliseconds.
+     *                                             if the note being analyzed is directly on a reference line, this will be descibed as zero.
+     */
+    setAnalyticsBarNotesModeDistanceFromReferenceLinesText(distanceFromLeftLineAsPercent, distanceFromRightLineAsPercent, distanceFromLeftLineInMilliseconds, distanceFromRightLineInMilliseconds){
+        // todo: add implementation
+    }
+
+    /**
      * general helper methods
      */
 
