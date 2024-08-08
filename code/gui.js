@@ -182,7 +182,7 @@ class DrumMachineGui {
         this.mostRecentSavedUrlHash = window.location.hash.substring(1); // track the most recently saved URL hash (without its first character '#')
 
         if (!this.configurations.analyticsBar.show) {
-            this.components.domElements.divs.analyticsBar.style.display = 'none'
+            this.hideAnalyticsBar();
         }
 
         this.refreshTwoJsCanvasSize()
@@ -4189,35 +4189,42 @@ class DrumMachineGui {
 
     // show the analytics bar on the GUI
     showAnalyticsBar(){
-        // todo: add implementation
+        this.components.domElements.divs.analyticsBar.style.display = 'block'
     }
 
     // hide the analytics bar on the GUI
     hideAnalyticsBar(){
-        // todo: add implementation
+        this.components.domElements.divs.analyticsBar.style.display = 'none'
     }
 
     // set the analytics bar to 'note' mode, where it will show text giving information about a particular note in the drum machine
     setAnalyticsBarToNoteMode(){
-        // todo: add implementation
+        this.components.domElements.divs.analyticsBarNoteModeText.style.display = 'block'
+        this.components.domElements.divs.analyticsBarLinesModeText.style.display = 'none'
     }
 
     // set the analytics bar to 'lines' mode, where it will show text giving information about the beat 
     // lines and reference lines and their shift values for a particular sequencer row on the drum machine 
     setAnalyticsBarToLinesMode(){
-        // todo: add implementation
+        this.components.domElements.divs.analyticsBarNoteModeText.style.display = 'none'
+        this.components.domElements.divs.analyticsBarLinesModeText.style.display = 'block'
     }
 
     /**
      * for the analytics bar when in 'note' mode, set the text that describes the beat number of the note being analyzed. 
      * 
      * @param beatNumber: the beat number that the note falls within, or closest beat number, counting from the left and starting on beat 1
-     * @param numberOfTotalBeats: the total number of beats on the row of the sequencer that this note is on
+     * @param totalNumberOfBeats: the total number of beats on the row of the sequencer that this note is on
      * @param hideValues: if this is set to true, the beat number and total number of beats isn't relevant, so won't be shown.
      *                    for example, notes in the note bank don't have a relevant beat number to show, nor do notes on unquantized sequencer rows.
+     *                    also hide values if no note is being analyzed currently.
      */
-    setAnalyticsBarNotesModeBeatNumberText(beatNumber, numberOfTotalBeats, hideValues=false){
-        // todo: add implementation
+    setAnalyticsBarNotesModeBeatNumberText(beatNumber, totalNumberOfBeats, hideValues=false){
+        if (hideValues) {
+            this.components.domElements.text.analyticsBarNoteModeBeatNumber.innerHtml = "beat line: -"
+            return;
+        }
+        this.components.domElements.text.analyticsBarNoteModeBeatNumber.innerHtml = "beat line: " + beatNumber + " of " + totalNumberOfBeats
     }
 
     /**
@@ -4228,15 +4235,23 @@ class DrumMachineGui {
      * @param numberOfTotalReferenceLines: the total number of reference lines on the row of the sequencer that this note is on
      * @param hideValues: if this is set to true, the reference line number and total number of reference lines isn't relevant, so won't be shown.
      *                    for example, notes in the note bank don't have a relevant reference line number to show, nor do notes on sequencer rows 
-     *                    with zero reference lines.
+     *                    with zero reference lines. also hide values if no note is being analyzed currently.
      */
-    setAnalyticsBarNotesModeReferenceLineNumberText(referenceLineNumber, numberOfTotalReferenceLines, hideValues=false){
-        // todo: add implementation
+    setAnalyticsBarNotesModeReferenceLineNumberText(referenceLineNumber, totalNumberOfReferenceLines, hideValues=false){
+        if (hideValues) {
+            this.components.domElements.text.analyticsBarNoteModeReferenceLineNumber.innerHtml = "visual line: -"
+            return;
+        }
+        this.components.domElements.text.analyticsBarNoteModeReferenceLineNumber.innerHtml = "visual line: " + referenceLineNumber + " of " + totalNumberOfReferenceLines
     }
 
     // for the analytics bar when in 'note' mode, set the text that describes the volume of the note being analyzed
-    setAnalyticsBarNotesModeVolumeText(volume){
-        // todo: add implementation
+    setAnalyticsBarNotesModeVolumeText(volume, hideValues=false){
+        if (hideValues) {
+            this.components.domElements.text.analyticsBarNoteModeVolume.innerHtml = "volume: -"
+            return;
+        }
+        this.components.domElements.text.analyticsBarNoteModeVolume.innerHtml = "volume: " + volume + " of 127" // 127 is the maximum MIDI note volume, using that unless I think of a better way to express volume
     }
 
     /**
@@ -4256,9 +4271,16 @@ class DrumMachineGui {
      *                                            if the note being analyzed is directly on the beat, this will be descibed as zero.
      * @param distanceFromRightBeatInMilliseconds: how far the note being analyzed is from the nearest beat to its right, as a number of milliseconds.
      *                                             if the note being analyzed is directly on the beat, this will be descibed as zero.
+     * @param hideValues: if set to true, don't show any values. for example if no note is currently being analyzed.
      */
-    setAnalyticsBarNotesModeDistanceFromBeatLinesText(distanceFromLeftBeatAsPercent, distanceFromRightBeatAsPercent, distanceFromLeftBeatInMilliseconds, distanceFromRightBeatInMilliseconds){
-        // todo: add implementation
+    setAnalyticsBarNotesModeDistanceFromBeatLinesText(distanceFromLeftBeatAsPercent, distanceFromRightBeatAsPercent, distanceFromLeftBeatInMilliseconds, distanceFromRightBeatInMilliseconds, hideValues=false){
+        if (hideValues) {
+            this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHtml = "-"
+            this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsMilliseconds.innerHtml = "-"
+            return;
+        }
+        this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHtml = "+" + distanceFromLeftBeatAsPercent + "% / -" + distanceFromRightBeatAsPercent + "%"
+        this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHtml = "+" + distanceFromLeftBeatInMilliseconds + "ms / -" + distanceFromRightBeatInMilliseconds + "ms"
     }
 
     /**
@@ -4279,9 +4301,16 @@ class DrumMachineGui {
      *                                            if the note being analyzed is directly on a reference line, this will be descibed as zero.
      * @param distanceFromRightLineInMilliseconds: how far the note being analyzed is from the nearest reference line to its right, as a number of milliseconds.
      *                                             if the note being analyzed is directly on a reference line, this will be descibed as zero.
+     * @param hideValues: if set to true, don't show any values. for example if no note is currently being analyzed.
      */
-    setAnalyticsBarNotesModeDistanceFromReferenceLinesText(distanceFromLeftLineAsPercent, distanceFromRightLineAsPercent, distanceFromLeftLineInMilliseconds, distanceFromRightLineInMilliseconds){
-        // todo: add implementation
+    setAnalyticsBarNotesModeDistanceFromReferenceLinesText(distanceFromLeftLineAsPercent, distanceFromRightLineAsPercent, distanceFromLeftLineInMilliseconds, distanceFromRightLineInMilliseconds, hideValues=false){
+        if (hideValues) {
+            this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHtml = "-"
+            this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHtml = "-"
+            return;
+        }
+        this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHtml = "+" + distanceFromLeftLineAsPercent + "% / -" + distanceFromRightLineAsPercent + "%"
+        this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHtml = "+" + distanceFromLeftLineInMilliseconds + "ms / -" + distanceFromRightLineInMilliseconds + "ms"
     }
 
     /**
