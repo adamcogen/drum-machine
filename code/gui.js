@@ -37,6 +37,7 @@ class DrumMachineGui {
 
         this.components.shapes = this.initializeGuiShapes();
         this.components.domElements = this.initializeDomElements();
+
         this.eventHandlerFunctions = {}; // make a hash to store references to event handler functions. that way we can remove them from the DOM elements they are attached to later
         this.midiOutputsMap = {} // keep a map of MIDI output names (as the appear in the MIDI outputs selector) to MIDI output ports
 
@@ -2755,6 +2756,8 @@ class DrumMachineGui {
                 circle.stroke = 'black'
                 circle.linewidth = 2
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveNote
+                // adjust analytics bar 'note' mode text 
+                this.setAnalyticsBarNotesModeBeatNumberText(this, circle.guiData.beat, circle.guiData.row)
             }
         });
         // remove border from circle when mouse is no longer over it
@@ -2762,6 +2765,8 @@ class DrumMachineGui {
             if (this.shiftToolTracker.selectedRowIndex === null && this.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
                 circle.stroke = 'transparent'
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+                // adjust analytics bar 'note' mode text 
+                this.setAnalyticsBarNotesModeBeatNumberText(this, -1, -1, true)
             }
         });
         // select circle (for moving) if we click it
@@ -3317,6 +3322,8 @@ class DrumMachineGui {
         }
         self.circleSelectionTracker.circleBeingMoved.stroke = 'black'
         self.circleSelectionTracker.circleBeingMoved.linewidth = 2
+        // adjust analytics bar 'note' mode text 
+        self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.circleBeingMoved.guiData.row)
     }
 
     moveNotesAndChangeVolumesMouseMoveHandler(self, event){
@@ -3327,7 +3334,7 @@ class DrumMachineGui {
             let mouseY = event.pageY
             if (event.ctrlKey) {
                 // when the 'ctrl' key is being held while moving a note, change its volume instead of moving it.
-                this.adjustNoteVolumeMouseMoveLogic(self, mouseX, mouseY)
+                self.adjustNoteVolumeMouseMoveLogic(self, mouseX, mouseY)
             } else {
                 if (self.circleSelectionTracker.mostRecentMovementWasVolumeChange) {
                     self.sequencer.playDrumSampleNow(self.circleSelectionTracker.circleBeingMoved.guiData.sampleName, self.circleSelectionTracker.circleBeingMoved.guiData.volume, self.circleSelectionTracker.circleBeingMoved.guiData.midiNote, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
@@ -3345,6 +3352,8 @@ class DrumMachineGui {
                 self.circleSelectionTracker.circleBeingMoved.stroke = "black"
                 self.components.domElements.images.trashClosedIcon.style.display = 'block'
                 self.components.domElements.images.trashOpenIcon.style.display = 'none'
+                // adjust analytics bar 'note' mode text 
+                self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastRowSnappedTo)
 
                 /**
                  * start by snapping the note into place if it is close to something
@@ -3376,6 +3385,8 @@ class DrumMachineGui {
                     self.components.domElements.images.trashClosedIcon.style.display = 'none'
                     self.components.domElements.images.trashOpenIcon.style.display = 'block'
                     self.components.shapes.noteTrashBinContainer.stroke = 'red'
+                    // adjust analytics bar 'note' mode text 
+                    self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, true)
                 }
                 // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
                 let sequencerLeftBoundary = self.configurations.sequencer.left - self.configurations.mouseEvents.notePlacementPadding
@@ -3415,6 +3426,8 @@ class DrumMachineGui {
                             currentRowMouseIsOn = rowIndex // set 'new row' to whichever row we collided with / 'snapped' to
                             self.circleSelectionTracker.lastRowSnappedTo = currentRowMouseIsOn
                             throwNoteAway = false
+                            // adjust analytics bar 'note' mode text 
+                            self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastRowSnappedTo)
                             break; // we found the row that the note will be placed on, so stop iterating thru rows early
                         }
                     }
@@ -3430,6 +3443,8 @@ class DrumMachineGui {
                         self.components.domElements.images.trashClosedIcon.style.display = 'none'
                         self.components.domElements.images.trashOpenIcon.style.display = 'block'
                         self.components.shapes.noteTrashBinContainer.stroke = 'red'
+                        // adjust analytics bar 'note' mode text 
+                        self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, true)
                     }
                 }
                 self.circleSelectionTracker.throwNoteAway = throwNoteAway;
@@ -3659,6 +3674,8 @@ class DrumMachineGui {
                     }
                 }
             }
+            // adjust analytics bar 'note' mode text 
+            self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, true)
 
             /**
              * next deal with changing note volume 
@@ -4213,18 +4230,21 @@ class DrumMachineGui {
     /**
      * for the analytics bar when in 'note' mode, set the text that describes the beat number of the note being analyzed. 
      * 
-     * @param beatNumber: the beat number that the note falls within, or closest beat number, counting from the left and starting on beat 1
-     * @param totalNumberOfBeats: the total number of beats on the row of the sequencer that this note is on
+     * @param self: search for comment "a general note about the 'self' paramater" within this file for info on its use here
+     * @param beatNumber: the beat number that the note falls within, or closest beat number, counting from the left.
+     * @param sequencerRowIndex: the index of the sequencer row this note is on. will be used to determine that the note is on a legitimate row, 
+     *                           then to determine the total number of beats on that row.
      * @param hideValues: if this is set to true, the beat number and total number of beats isn't relevant, so won't be shown.
      *                    for example, notes in the note bank don't have a relevant beat number to show, nor do notes on unquantized sequencer rows.
      *                    also hide values if no note is being analyzed currently.
      */
-    setAnalyticsBarNotesModeBeatNumberText(beatNumber, totalNumberOfBeats, hideValues=false){
-        if (hideValues) {
-            this.components.domElements.text.analyticsBarNoteModeBeatNumber.innerHtml = "beat line: -"
+    setAnalyticsBarNotesModeBeatNumberText(self, beatNumber, sequencerRowIndex, hideValues=false){
+        if (hideValues || sequencerRowIndex < 0) {
+            self.components.domElements.text.analyticsBarNoteModeBeatNumber.innerHTML = "beat line: -"
             return;
         }
-        this.components.domElements.text.analyticsBarNoteModeBeatNumber.innerHtml = "beat line: " + beatNumber + " of " + totalNumberOfBeats
+        let totalNumberOfBeats = self.sequencer.rows[sequencerRowIndex].getNumberOfSubdivisions()
+        self.components.domElements.text.analyticsBarNoteModeBeatNumber.innerHTML = "beat line: " + (beatNumber + 1) + " of " + totalNumberOfBeats
     }
 
     /**
@@ -4239,19 +4259,19 @@ class DrumMachineGui {
      */
     setAnalyticsBarNotesModeReferenceLineNumberText(referenceLineNumber, totalNumberOfReferenceLines, hideValues=false){
         if (hideValues) {
-            this.components.domElements.text.analyticsBarNoteModeReferenceLineNumber.innerHtml = "visual line: -"
+            this.components.domElements.text.analyticsBarNoteModeReferenceLineNumber.innerHTML = "visual line: -"
             return;
         }
-        this.components.domElements.text.analyticsBarNoteModeReferenceLineNumber.innerHtml = "visual line: " + referenceLineNumber + " of " + totalNumberOfReferenceLines
+        this.components.domElements.text.analyticsBarNoteModeReferenceLineNumber.innerHTML = "visual line: " + referenceLineNumber + " of " + totalNumberOfReferenceLines
     }
 
     // for the analytics bar when in 'note' mode, set the text that describes the volume of the note being analyzed
     setAnalyticsBarNotesModeVolumeText(volume, hideValues=false){
         if (hideValues) {
-            this.components.domElements.text.analyticsBarNoteModeVolume.innerHtml = "volume: -"
+            this.components.domElements.text.analyticsBarNoteModeVolume.innerHTML = "volume: -"
             return;
         }
-        this.components.domElements.text.analyticsBarNoteModeVolume.innerHtml = "volume: " + volume + " of 127" // 127 is the maximum MIDI note volume, using that unless I think of a better way to express volume
+        this.components.domElements.text.analyticsBarNoteModeVolume.innerHTML = "volume: " + volume + " of 127" // 127 is the maximum MIDI note volume, using that unless I think of a better way to express volume
     }
 
     /**
@@ -4275,12 +4295,12 @@ class DrumMachineGui {
      */
     setAnalyticsBarNotesModeDistanceFromBeatLinesText(distanceFromLeftBeatAsPercent, distanceFromRightBeatAsPercent, distanceFromLeftBeatInMilliseconds, distanceFromRightBeatInMilliseconds, hideValues=false){
         if (hideValues) {
-            this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHtml = "-"
-            this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsMilliseconds.innerHtml = "-"
+            this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "-"
+            this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsMilliseconds.innerHTML = "-"
             return;
         }
-        this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHtml = "+" + distanceFromLeftBeatAsPercent + "% / -" + distanceFromRightBeatAsPercent + "%"
-        this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHtml = "+" + distanceFromLeftBeatInMilliseconds + "ms / -" + distanceFromRightBeatInMilliseconds + "ms"
+        this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "+" + distanceFromLeftBeatAsPercent + "% / -" + distanceFromRightBeatAsPercent + "%"
+        this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "+" + distanceFromLeftBeatInMilliseconds + "ms / -" + distanceFromRightBeatInMilliseconds + "ms"
     }
 
     /**
@@ -4305,12 +4325,12 @@ class DrumMachineGui {
      */
     setAnalyticsBarNotesModeDistanceFromReferenceLinesText(distanceFromLeftLineAsPercent, distanceFromRightLineAsPercent, distanceFromLeftLineInMilliseconds, distanceFromRightLineInMilliseconds, hideValues=false){
         if (hideValues) {
-            this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHtml = "-"
-            this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHtml = "-"
+            this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHTML = "-"
+            this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHTML = "-"
             return;
         }
-        this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHtml = "+" + distanceFromLeftLineAsPercent + "% / -" + distanceFromRightLineAsPercent + "%"
-        this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHtml = "+" + distanceFromLeftLineInMilliseconds + "ms / -" + distanceFromRightLineInMilliseconds + "ms"
+        this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHTML = "+" + distanceFromLeftLineAsPercent + "% / -" + distanceFromRightLineAsPercent + "%"
+        this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHTML = "+" + distanceFromLeftLineInMilliseconds + "ms / -" + distanceFromRightLineInMilliseconds + "ms"
     }
 
     /**
