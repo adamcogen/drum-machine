@@ -2784,6 +2784,7 @@ class DrumMachineGui {
                 // adjust analytics bar 'note' mode text 
                 this.setAnalyticsBarNotesModeBeatNumberText(this, circle.guiData.beat, circle.translation.x, circle.guiData.row)
                 this.setAnalyticsBarNotesModeReferenceLineNumberText(this, circle.translation.x, circle.guiData.row)
+                this.setAnalyticsBarNotesModeVolumeText(this, circle.guiData.midiVelocity)
             }
         });
         // remove border from circle when mouse is no longer over it
@@ -2794,6 +2795,7 @@ class DrumMachineGui {
                 // adjust analytics bar 'note' mode text 
                 this.setAnalyticsBarNotesModeBeatNumberText(this, -1, -1, -1, true)
                 this.setAnalyticsBarNotesModeReferenceLineNumberText(this, -1, -1, true)
+                this.setAnalyticsBarNotesModeVolumeText(this, -1, true)
             }
         });
         // select circle (for moving) if we click it
@@ -2906,7 +2908,9 @@ class DrumMachineGui {
     }
 
     convertWebAudioVolumeIntoMidiVelocity(webAudioVolume){
-        return parseInt(Util.calculateLinearConversion(webAudioVolume, this.configurations.notes.volumes.minimumVolume, this.configurations.notes.volumes.maximumVolume, this.configurations.midi.velocity.minimumVelocity, this.configurations.midi.velocity.maximumVelocity));
+        let exactMidiNoteVelocity = Util.calculateLinearConversion(webAudioVolume, this.configurations.notes.volumes.minimumVolume, this.configurations.notes.volumes.maximumVolume, this.configurations.midi.velocity.minimumVelocity, this.configurations.midi.velocity.maximumVelocity)
+        let roundedMidiNoteVelocity = Math.round(exactMidiNoteVelocity)
+        return Util.confineNumberToBounds(roundedMidiNoteVelocity, this.configurations.midi.velocity.minimumVelocity, this.configurations.midi.velocity.maximumVelocity)
     }
 
     /**
@@ -3352,6 +3356,7 @@ class DrumMachineGui {
         // adjust analytics bar 'note' mode text 
         self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.circleBeingMoved.translation.x, self.circleSelectionTracker.circleBeingMoved.guiData.row)
         self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.circleBeingMoved.translation.x, self.circleSelectionTracker.circleBeingMoved.guiData.row)
+        self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
     }
 
     moveNotesAndChangeVolumesMouseMoveHandler(self, event){
@@ -3383,6 +3388,7 @@ class DrumMachineGui {
                 // adjust analytics bar 'note' mode text 
                 self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                 self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
+                self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
 
                 /**
                  * start by snapping the note into place if it is close to something
@@ -3417,6 +3423,7 @@ class DrumMachineGui {
                     // adjust analytics bar 'note' mode text 
                     self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
                     self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
+                    self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
                 }
                 // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
                 let sequencerLeftBoundary = self.configurations.sequencer.left - self.configurations.mouseEvents.notePlacementPadding
@@ -3459,6 +3466,7 @@ class DrumMachineGui {
                             // adjust analytics bar 'note' mode text 
                             self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                             self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
+                            self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
                             break; // we found the row that the note will be placed on, so stop iterating thru rows early
                         }
                     }
@@ -3477,6 +3485,7 @@ class DrumMachineGui {
                         // adjust analytics bar 'note' mode text 
                         self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
                         self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
+                        self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
                     }
                 }
                 self.circleSelectionTracker.throwNoteAway = throwNoteAway;
@@ -3709,6 +3718,7 @@ class DrumMachineGui {
             // adjust analytics bar 'note' mode text 
             self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
             self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
+            self.setAnalyticsBarNotesModeVolumeText(self, -1, true)
 
             /**
              * next deal with changing note volume 
@@ -4313,12 +4323,12 @@ class DrumMachineGui {
     }
 
     // for the analytics bar when in 'note' mode, set the text that describes the volume of the note being analyzed
-    setAnalyticsBarNotesModeVolumeText(volume, hideValues=false){
+    setAnalyticsBarNotesModeVolumeText(self, volume, hideValues=false){
         if (hideValues) {
-            this.components.domElements.text.analyticsBarNoteModeVolume.innerHTML = "volume: -"
+            self.components.domElements.text.analyticsBarNoteModeVolume.innerHTML = "-"
             return;
         }
-        this.components.domElements.text.analyticsBarNoteModeVolume.innerHTML = "volume: " + volume + " of 127" // 127 is the maximum MIDI note volume, using that unless I think of a better way to express volume
+        self.components.domElements.text.analyticsBarNoteModeVolume.innerHTML = "" + volume + " of 127" // 127 is the maximum MIDI note volume, using that unless I think of a better way to express volume
     }
 
     /**

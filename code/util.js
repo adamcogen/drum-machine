@@ -70,6 +70,8 @@ class Util {
         this.assertEquals(4, this.calculateLinearConversion(3, 1, 5, 2, 6), "Calculate a linear conversion for two ranges with a different min, but the same size");
         this.assertEquals(40, this.calculateLinearConversion(3, 1, 5, 20, 60), "Calculate a linear conversion for two ranges with a different min and a different size, scaling up");
         this.assertEquals(3, this.calculateLinearConversion(40, 20, 60, 1, 5), "Calculate a linear conversion for two ranges with a different min and a different size, scaling down");
+        this.assertEquals(20, this.calculateLinearConversion(10, 10, 20, 20, 40), "Calculate a linear conversion where the starting value is the minimum of the original range");
+        this.assertEquals(40, this.calculateLinearConversion(20, 10, 20, 20, 40), "Calculate a linear conversion where the starting value is the maximum of the original range");
     }
 
     /**
