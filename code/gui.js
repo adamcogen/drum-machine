@@ -2211,6 +2211,30 @@ class DrumMachineGui {
     }
 
     /**
+     * This is similar to the function 'getIndexOfClosestSubdivisionLine', but instead of finding the closest subdivion line
+     * to the given mouse X coordinate, this function returns the index of closest subdivision line _to the left_.
+     * 
+     * For example, if you are placing a note on an unquantized sequencer row and the note falls between beat 1 and beat 2,
+     * beat 1 is the closest subdivision line to the left, so this function will return 1.
+     * 
+     * This function is used so that we can display what "beat" number a note is on in the analytics bar, even when that note 
+     * is on an unquantized sequencer row, so doesn't actually have a real beat number stored in the sequencer. 
+     * 
+     * One important detail here is that when a row's subdivision lines are shifted and the mouse position falls before the 
+     * lefmost ("first") subdivision, this function will return the index of the last subdivision in the row. That's just a
+     * choice I made about how I want the analytics bar to handle that scenario.
+     */
+    getIndexOfClosestSubdivisionLineToTheLeft(mouseX, numberOfSubdivisions, shiftOffsetInPixels) {
+        let sequencerLeftEdge = this.configurations.sequencer.left
+        let widthOfEachSubdivision = this.configurations.sequencer.width / numberOfSubdivisions
+        let mouseXWithinSequencer = mouseX - sequencerLeftEdge
+        let xPositionOfLeftmostSubdivisionLineWithinSequencer = (shiftOffsetInPixels % widthOfEachSubdivision)
+        let mouseXWithinSequencerWithShift = mouseXWithinSequencer - xPositionOfLeftmostSubdivisionLineWithinSequencer
+        let subdivisionNumberToLeftOfMouse = Math.floor(mouseXWithinSequencerWithShift / widthOfEachSubdivision)
+        return subdivisionNumberToLeftOfMouse === -1 ? numberOfSubdivisions - 1 : subdivisionNumberToLeftOfMouse;
+    }
+
+    /**
      * General text input event listeners logic
      */
 
@@ -2757,7 +2781,7 @@ class DrumMachineGui {
                 circle.linewidth = 2
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveNote
                 // adjust analytics bar 'note' mode text 
-                this.setAnalyticsBarNotesModeBeatNumberText(this, circle.guiData.beat, circle.guiData.row)
+                this.setAnalyticsBarNotesModeBeatNumberText(this, circle.guiData.beat, circle.translation.x, circle.guiData.row)
             }
         });
         // remove border from circle when mouse is no longer over it
@@ -2766,7 +2790,7 @@ class DrumMachineGui {
                 circle.stroke = 'transparent'
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
                 // adjust analytics bar 'note' mode text 
-                this.setAnalyticsBarNotesModeBeatNumberText(this, -1, -1, true)
+                this.setAnalyticsBarNotesModeBeatNumberText(this, -1, -1, -1, true)
             }
         });
         // select circle (for moving) if we click it
@@ -3323,7 +3347,7 @@ class DrumMachineGui {
         self.circleSelectionTracker.circleBeingMoved.stroke = 'black'
         self.circleSelectionTracker.circleBeingMoved.linewidth = 2
         // adjust analytics bar 'note' mode text 
-        self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.circleBeingMoved.guiData.row)
+        self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.circleBeingMoved.translation.x, self.circleSelectionTracker.circleBeingMoved.guiData.row)
     }
 
     moveNotesAndChangeVolumesMouseMoveHandler(self, event){
@@ -3353,7 +3377,7 @@ class DrumMachineGui {
                 self.components.domElements.images.trashClosedIcon.style.display = 'block'
                 self.components.domElements.images.trashOpenIcon.style.display = 'none'
                 // adjust analytics bar 'note' mode text 
-                self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastRowSnappedTo)
+                self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
 
                 /**
                  * start by snapping the note into place if it is close to something
@@ -3386,7 +3410,7 @@ class DrumMachineGui {
                     self.components.domElements.images.trashOpenIcon.style.display = 'block'
                     self.components.shapes.noteTrashBinContainer.stroke = 'red'
                     // adjust analytics bar 'note' mode text 
-                    self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, true)
+                    self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
                 }
                 // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
                 let sequencerLeftBoundary = self.configurations.sequencer.left - self.configurations.mouseEvents.notePlacementPadding
@@ -3427,7 +3451,7 @@ class DrumMachineGui {
                             self.circleSelectionTracker.lastRowSnappedTo = currentRowMouseIsOn
                             throwNoteAway = false
                             // adjust analytics bar 'note' mode text 
-                            self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastRowSnappedTo)
+                            self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                             break; // we found the row that the note will be placed on, so stop iterating thru rows early
                         }
                     }
@@ -3444,7 +3468,7 @@ class DrumMachineGui {
                         self.components.domElements.images.trashOpenIcon.style.display = 'block'
                         self.components.shapes.noteTrashBinContainer.stroke = 'red'
                         // adjust analytics bar 'note' mode text 
-                        self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, true)
+                        self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
                     }
                 }
                 self.circleSelectionTracker.throwNoteAway = throwNoteAway;
@@ -3675,7 +3699,7 @@ class DrumMachineGui {
                 }
             }
             // adjust analytics bar 'note' mode text 
-            self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, true)
+            self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
 
             /**
              * next deal with changing note volume 
@@ -4238,13 +4262,19 @@ class DrumMachineGui {
      *                    for example, notes in the note bank don't have a relevant beat number to show, nor do notes on unquantized sequencer rows.
      *                    also hide values if no note is being analyzed currently.
      */
-    setAnalyticsBarNotesModeBeatNumberText(self, beatNumber, sequencerRowIndex, hideValues=false){
+    setAnalyticsBarNotesModeBeatNumberText(self, beatNumber, noteXPosition, sequencerRowIndex, hideValues=false){
         if (hideValues || sequencerRowIndex < 0) {
             self.components.domElements.text.analyticsBarNoteModeBeatNumber.innerHTML = "beat line: -"
             return;
         }
         let totalNumberOfBeats = self.sequencer.rows[sequencerRowIndex].getNumberOfSubdivisions()
-        self.components.domElements.text.analyticsBarNoteModeBeatNumber.innerHTML = "beat line: " + (beatNumber + 1) + " of " + totalNumberOfBeats
+        if (self.sequencer.rows[sequencerRowIndex].quantized) {
+            self.components.domElements.text.analyticsBarNoteModeBeatNumber.innerHTML = "beat line: " + (beatNumber + 1) + " of " + totalNumberOfBeats
+        } else {
+            let closestBeatNumberToTheLeft = self.getIndexOfClosestSubdivisionLineToTheLeft(noteXPosition, totalNumberOfBeats, self.subdivisionLinesShiftInPixelsPerRow[sequencerRowIndex])
+            self.components.domElements.text.analyticsBarNoteModeBeatNumber.innerHTML = "beat line: " + (closestBeatNumberToTheLeft + 1) + " of " + totalNumberOfBeats
+        }
+        
     }
 
     /**
