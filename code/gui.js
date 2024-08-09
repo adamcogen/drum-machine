@@ -2220,9 +2220,10 @@ class DrumMachineGui {
      * This function is used so that we can display what "beat" number a note is on in the analytics bar, even when that note 
      * is on an unquantized sequencer row, so doesn't actually have a real beat number stored in the sequencer. 
      * 
-     * One important detail here is that when a row's subdivision lines are shifted and the mouse position falls before the 
+     * One important detail here is that when a row's subdivision lines are shifted and the note position falls before the 
      * lefmost ("first") subdivision, this function will return the index of the last subdivision in the row. That's just a
-     * choice I made about how I want the analytics bar to handle that scenario.
+     * choice I made about how I want the analytics bar to handle that scenario. For example if the subdivision lines on the
+     * row are shifted and note falls before the first subdivision in a row with 4 subdivisions, this function will return 4.
      */
     getIndexOfClosestSubdivisionLineToTheLeft(mouseX, numberOfSubdivisions, shiftOffsetInPixels) {
         let sequencerLeftEdge = this.configurations.sequencer.left
@@ -2782,6 +2783,7 @@ class DrumMachineGui {
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveNote
                 // adjust analytics bar 'note' mode text 
                 this.setAnalyticsBarNotesModeBeatNumberText(this, circle.guiData.beat, circle.translation.x, circle.guiData.row)
+                this.setAnalyticsBarNotesModeReferenceLineNumberText(this, circle.translation.x, circle.guiData.row)
             }
         });
         // remove border from circle when mouse is no longer over it
@@ -2791,6 +2793,7 @@ class DrumMachineGui {
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
                 // adjust analytics bar 'note' mode text 
                 this.setAnalyticsBarNotesModeBeatNumberText(this, -1, -1, -1, true)
+                this.setAnalyticsBarNotesModeReferenceLineNumberText(this, -1, -1, true)
             }
         });
         // select circle (for moving) if we click it
@@ -3348,6 +3351,7 @@ class DrumMachineGui {
         self.circleSelectionTracker.circleBeingMoved.linewidth = 2
         // adjust analytics bar 'note' mode text 
         self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.circleBeingMoved.translation.x, self.circleSelectionTracker.circleBeingMoved.guiData.row)
+        self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.circleBeingMoved.translation.x, self.circleSelectionTracker.circleBeingMoved.guiData.row)
     }
 
     moveNotesAndChangeVolumesMouseMoveHandler(self, event){
@@ -3378,6 +3382,7 @@ class DrumMachineGui {
                 self.components.domElements.images.trashOpenIcon.style.display = 'none'
                 // adjust analytics bar 'note' mode text 
                 self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
+                self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
 
                 /**
                  * start by snapping the note into place if it is close to something
@@ -3411,6 +3416,7 @@ class DrumMachineGui {
                     self.components.shapes.noteTrashBinContainer.stroke = 'red'
                     // adjust analytics bar 'note' mode text 
                     self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
+                    self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
                 }
                 // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
                 let sequencerLeftBoundary = self.configurations.sequencer.left - self.configurations.mouseEvents.notePlacementPadding
@@ -3452,6 +3458,7 @@ class DrumMachineGui {
                             throwNoteAway = false
                             // adjust analytics bar 'note' mode text 
                             self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
+                            self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                             break; // we found the row that the note will be placed on, so stop iterating thru rows early
                         }
                     }
@@ -3469,6 +3476,7 @@ class DrumMachineGui {
                         self.components.shapes.noteTrashBinContainer.stroke = 'red'
                         // adjust analytics bar 'note' mode text 
                         self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
+                        self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
                     }
                 }
                 self.circleSelectionTracker.throwNoteAway = throwNoteAway;
@@ -3700,6 +3708,7 @@ class DrumMachineGui {
             }
             // adjust analytics bar 'note' mode text 
             self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
+            self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
 
             /**
              * next deal with changing note volume 
@@ -4255,7 +4264,11 @@ class DrumMachineGui {
      * for the analytics bar when in 'note' mode, set the text that describes the beat number of the note being analyzed. 
      * 
      * @param self: search for comment "a general note about the 'self' paramater" within this file for info on its use here
-     * @param beatNumber: the beat number that the note falls within, or closest beat number, counting from the left.
+     * @param beatNumber: the beat number that the note falls within, or closest beat number, counting from the left. 
+     *                    this number is only defined for quantized sequencer rows. if a row is not quantized, we will have to
+     *                    calculate what beat the note falls within using the noteXPosition parameter instead.
+     * @param noteXPosition: the x position of the note being moved. this is needed for calculating what 'beat' we fall within
+     *                       on an unquantized sequencer row, since such rows don't actually track beat numbers for notes.
      * @param sequencerRowIndex: the index of the sequencer row this note is on. will be used to determine that the note is on a legitimate row, 
      *                           then to determine the total number of beats on that row.
      * @param hideValues: if this is set to true, the beat number and total number of beats isn't relevant, so won't be shown.
@@ -4280,19 +4293,23 @@ class DrumMachineGui {
     /**
      * for the analytics bar when in 'note' mode, set the text that describes the beat number of the note being analyzed. 
      * 
-     * @param referenceLineNumber: the reference line number that the note falls within, or closest reference line number, counting from the left 
-     *                             and starting on reference line 1
-     * @param numberOfTotalReferenceLines: the total number of reference lines on the row of the sequencer that this note is on
+     * @param self: search for comment "a general note about the 'self' paramater" within this file for info on its use here
+     * @param noteXPosition: the x position of the note being moved. this is needed for calculating what reference line number we fall within,
+     *                       since the sequencer doesn't actually track this value for each note.
+     * @param sequencerRowIndex: the index of the sequencer row this note is on. will be used to determine that the note is on a legitimate row, 
+     *                           then to determine the total number of reference lines on that row.
      * @param hideValues: if this is set to true, the reference line number and total number of reference lines isn't relevant, so won't be shown.
      *                    for example, notes in the note bank don't have a relevant reference line number to show, nor do notes on sequencer rows 
      *                    with zero reference lines. also hide values if no note is being analyzed currently.
      */
-    setAnalyticsBarNotesModeReferenceLineNumberText(referenceLineNumber, totalNumberOfReferenceLines, hideValues=false){
-        if (hideValues) {
-            this.components.domElements.text.analyticsBarNoteModeReferenceLineNumber.innerHTML = "visual line: -"
+    setAnalyticsBarNotesModeReferenceLineNumberText(self, noteXPosition, sequencerRowIndex, hideValues=false){
+        if (hideValues || sequencerRowIndex < 0) {
+            self.components.domElements.text.analyticsBarNoteModeReferenceLineNumber.innerHTML = "visual line: -"
             return;
         }
-        this.components.domElements.text.analyticsBarNoteModeReferenceLineNumber.innerHTML = "visual line: " + referenceLineNumber + " of " + totalNumberOfReferenceLines
+        let totalNumberOfReferenceLines = self.sequencer.rows[sequencerRowIndex].getNumberOfReferenceLines()
+        let closestReferenceLineNumberToTheLeft = self.getIndexOfClosestSubdivisionLineToTheLeft(noteXPosition, totalNumberOfReferenceLines, self.referenceLinesShiftInPixelsPerRow[sequencerRowIndex])
+        self.components.domElements.text.analyticsBarNoteModeReferenceLineNumber.innerHTML = "visual line: " + (closestReferenceLineNumberToTheLeft + 1) + " of " + totalNumberOfReferenceLines
     }
 
     // for the analytics bar when in 'note' mode, set the text that describes the volume of the note being analyzed
