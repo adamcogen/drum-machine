@@ -2814,6 +2814,7 @@ class DrumMachineGui {
                 this.setAnalyticsBarNotesModeReferenceLineNumberText(this, circle.translation.x, circle.guiData.row)
                 this.setAnalyticsBarNotesModeVolumeText(this, circle.guiData.midiVelocity)
                 this.setAnalyticsBarNotesModeDistanceFromBeatLinesText(this, circle.translation.x, circle.guiData.row)
+                this.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(this, circle.translation.x, circle.guiData.row)
             }
         });
         // remove border from circle when mouse is no longer over it
@@ -2826,6 +2827,7 @@ class DrumMachineGui {
                 this.setAnalyticsBarNotesModeReferenceLineNumberText(this, -1, -1, true)
                 this.setAnalyticsBarNotesModeVolumeText(this, -1, true)
                 this.setAnalyticsBarNotesModeDistanceFromBeatLinesText(this, -1, -1, true)
+                this.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(this, -1, -1, true)
             }
         });
         // select circle (for moving) if we click it
@@ -3388,6 +3390,7 @@ class DrumMachineGui {
         self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.circleBeingMoved.translation.x, self.circleSelectionTracker.circleBeingMoved.guiData.row)
         self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
         self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, self.circleSelectionTracker.circleBeingMoved.translation.x, self.circleSelectionTracker.circleBeingMoved.guiData.row)
+        self.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, self.circleSelectionTracker.circleBeingMoved.translation.x, self.circleSelectionTracker.circleBeingMoved.guiData.row)
     }
 
     moveNotesAndChangeVolumesMouseMoveHandler(self, event){
@@ -3421,6 +3424,7 @@ class DrumMachineGui {
                 self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                 self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
                 self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
+                self.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
 
                 /**
                  * start by snapping the note into place if it is close to something
@@ -3457,6 +3461,7 @@ class DrumMachineGui {
                     self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
                     self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
                     self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, -1, -1, true)
+                    self.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, -1, -1, true)
                 }
                 // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
                 let sequencerLeftBoundary = self.configurations.sequencer.left - self.configurations.mouseEvents.notePlacementPadding
@@ -3501,6 +3506,7 @@ class DrumMachineGui {
                             self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                             self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
                             self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
+                            self.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                             break; // we found the row that the note will be placed on, so stop iterating thru rows early
                         }
                     }
@@ -3521,6 +3527,7 @@ class DrumMachineGui {
                         self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
                         self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
                         self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, -1, -1, true)
+                        self.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, -1, -1, true)
                     }
                 }
                 self.circleSelectionTracker.throwNoteAway = throwNoteAway;
@@ -3755,6 +3762,7 @@ class DrumMachineGui {
             self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
             self.setAnalyticsBarNotesModeVolumeText(self, -1, true)
             self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, -1, -1, true)
+            self.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, -1, -1, true)
 
             /**
              * next deal with changing note volume 
@@ -4407,11 +4415,16 @@ class DrumMachineGui {
                 distanceFromRightBeatAsPercent = 0
             }
             // now we can convert the distance value -- which has a unit of 'pixels' -- into milliseconds
-            let distanceFromLeftBeatAsPercentageOfFullLoop = distanceFromLeftBeatAsPercent / self.configurations.sequencer.width;
+            let distanceFromLeftBeatAsPercentageOfFullLoop = remainderOfNoteXPositionWithinSubdivisionLines / self.configurations.sequencer.width;
             distanceFromLeftBeatInMilliseconds = Math.round(distanceFromLeftBeatAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
-            let distanceFromRightBeatAsPercentageOfFullLoop = distanceFromRightBeatAsPercent / self.configurations.sequencer.width;
+            let distanceFromRightBeatAsPercentageOfFullLoop = (widthOfEachSubdivision - remainderOfNoteXPositionWithinSubdivisionLines) / self.configurations.sequencer.width
             distanceFromRightBeatInMilliseconds = Math.round(distanceFromRightBeatAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+            if (distanceFromLeftBeatInMilliseconds === 0 || distanceFromRightBeatInMilliseconds === 0) {
+                distanceFromLeftBeatInMilliseconds = 0
+                distanceFromRightBeatInMilliseconds = 0
+            }
         }
+        // update analytics bar text
         self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "+" + distanceFromLeftBeatAsPercent + "% / -" + distanceFromRightBeatAsPercent + "%"
         self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsMilliseconds.innerHTML = "+" + distanceFromLeftBeatInMilliseconds + "ms / -" + distanceFromRightBeatInMilliseconds + "ms"
     }
@@ -4424,24 +4437,46 @@ class DrumMachineGui {
      * Note that if a note falls directly on a reference line, the distance from left and the distance from right will both be described
      * as zero, since these values won't really be useful anyway and that seems like the least confusing way to handle that situation.
      * 
-     * It may later be determined that it's better to pass in some millisecond values only and calculate percentages using only those, we will see as we implement things.
-     * 
-     * @param distanceFromLeftLineAsPercent: how far the note being analyzed is from the nearest refernce line to its left, as a percentage of the distance between two reference lines.
-     *                                       if the note being analyzed is directly on a reference line, this will be descibed as zero.
-     * @param distanceFromRightLineAsPercent: how far the note being analyzed is from the nearest reference line to its right, as a percentage of the distance between two reference lines.
-     *                                        if the note being analyzed is directly on a reference line, this will be descibed as zero.
-     * @param distanceFromLeftLineInMilliseconds: how far the note being analyzed is from the nearest reference line to its left, as a number of milliseconds.
-     *                                            if the note being analyzed is directly on a reference line, this will be descibed as zero.
-     * @param distanceFromRightLineInMilliseconds: how far the note being analyzed is from the nearest reference line to its right, as a number of milliseconds.
-     *                                             if the note being analyzed is directly on a reference line, this will be descibed as zero.
+     * @param self: search for comment "a general note about the 'self' paramater" within this file for info on its use here
+     * @param noteXPosition: the x position of the note being moved. this is needed for calculating which reference line we fall within
+     *                       on an unquantized sequencer row, then will also be used to calculate how far the note actually is from those lines.
+     * @param sequencerRowIndex: the index of the sequencer row this note is on. will be used to determine that the note is on a legitimate row, 
+     *                           then to determine the total number of reference lines on that row.
      * @param hideValues: if set to true, don't show any values. for example if no note is currently being analyzed.
      */
-    setAnalyticsBarNotesModeDistanceFromReferenceLinesText(distanceFromLeftLineAsPercent, distanceFromRightLineAsPercent, distanceFromLeftLineInMilliseconds, distanceFromRightLineInMilliseconds, hideValues=false){
-        if (hideValues) {
+    setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, noteXPosition, sequencerRowIndex, hideValues=false){
+        if (hideValues || sequencerRowIndex < 0) {
             this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHTML = "-"
             this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHTML = "-"
             return;
         }
+        // notes can't be quantized to reference lines, so these initial values will always need to be overwritten
+        let distanceFromLeftLineAsPercent = -1
+        let distanceFromRightLineAsPercent = -1
+        let distanceFromLeftLineInMilliseconds = -1
+        let distanceFromRightLineInMilliseconds = -1
+        // figure out how far the note is from the nearest reference line to its left.
+        let numberOfReferenceLines = self.sequencer.rows[sequencerRowIndex].getNumberOfReferenceLines()
+        let remainderOfNoteXPositionWithinReferenceLines = self.getXDistanceFromClosestSubdivisionToTheLeft(noteXPosition, numberOfReferenceLines, self.referenceLinesShiftInPixelsPerRow[sequencerRowIndex])
+        // now we can convert this distance value -- which has a unit of 'pixels' -- into a percentage of the width of each reference line subdivision.
+        let widthOfEachReferenceLineSubdivision = self.configurations.sequencer.width / numberOfReferenceLines
+        let percentageWithinLineFromTheLeft = remainderOfNoteXPositionWithinReferenceLines / widthOfEachReferenceLineSubdivision
+        distanceFromLeftLineAsPercent = Math.round(percentageWithinLineFromTheLeft * 100)
+        distanceFromRightLineAsPercent = (100 - distanceFromLeftLineAsPercent)
+        if (distanceFromLeftLineAsPercent === 0 || distanceFromRightLineAsPercent === 0) {
+            distanceFromLeftLineAsPercent = 0
+            distanceFromRightLineAsPercent = 0
+        }
+        // now we can convert the distance value -- which has a unit of 'pixels' -- into milliseconds
+        let distanceFromLeftLineAsPercentageOfFullLoop = remainderOfNoteXPositionWithinReferenceLines / self.configurations.sequencer.width;
+        distanceFromLeftLineInMilliseconds = Math.round(distanceFromLeftLineAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+        let distanceFromRightLineAsPercentageOfFullLoop = (widthOfEachReferenceLineSubdivision - remainderOfNoteXPositionWithinReferenceLines) / self.configurations.sequencer.width;
+        distanceFromRightLineInMilliseconds = Math.round(distanceFromRightLineAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+        if (distanceFromLeftLineInMilliseconds === 0 || distanceFromRightLineInMilliseconds === 0) {
+            distanceFromLeftLineInMilliseconds = 0
+            distanceFromRightLineInMilliseconds = 0
+        }
+        // update analytics bar text
         this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHTML = "+" + distanceFromLeftLineAsPercent + "% / -" + distanceFromRightLineAsPercent + "%"
         this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHTML = "+" + distanceFromLeftLineInMilliseconds + "ms / -" + distanceFromRightLineInMilliseconds + "ms"
     }
