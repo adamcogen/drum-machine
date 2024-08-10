@@ -2236,6 +2236,34 @@ class DrumMachineGui {
     }
 
     /**
+     * This is used in calculating 'how far is an unquantized note from the nearest subdivision line to its left'?
+     * The unit returned is a number of pixels, specifying how far the note is from the subdivision to its left.
+     * It is calculated by figuring out the theoretical position of the leftmost subdivision line on the sequencer
+     * (account for shift), figuring out the width of each subdivision, then just calculating a remainder value.
+     * 
+     * For example, if the sequencer starts at x position '10', the row has a shift of '4', the subdivision width 
+     * is '5', and position of this note is 13, the theoretical start position of the leftmost subdivision is 9 
+     * (1 pixel before the start of the sequencer), and the note has a remainder of '4' within its current beat,
+     * so is 4 pixels away from the nearest subdivision line to its left.
+     */
+    getXDistanceFromClosestSubdivisionToTheLeft(mouseX, numberOfSubdivisions, shiftOffsetInPixels) {
+        // calculate the position of the theoretical leftmost subdivision in the row, without wrapping. 
+        // that means the position of subdivision 0 if the row isn't shifted, and subdivision -1 if it is shifted.
+        let sequencerLeftEdge = this.configurations.sequencer.left
+        let widthOfEachSubdivision = this.configurations.sequencer.width / numberOfSubdivisions
+        let shiftWithinOneSubdivision = shiftOffsetInPixels % widthOfEachSubdivision
+        let negativeShiftWithinOneSubdivision = shiftWithinOneSubdivision > 0 ? shiftWithinOneSubdivision - widthOfEachSubdivision : shiftWithinOneSubdivision
+        let theoreticalXPositionOfLeftmostSubdivisionLineWithoutWrapping = sequencerLeftEdge + negativeShiftWithinOneSubdivision
+        // now that we have the x position of the theoretical leftmost subdivision line, we can calculate where we 
+        // fall within our current subdivision lines as a remainder value. we don't even need to know what beat we're
+        // within here -- just a remainder based on the width of each subdivision and the position of the theoretical
+        // leftmost subdivision line will be sufficient.
+        let actualNoteXPositionRelativeToTheoreticalLeftmostSubdivisionPosition = mouseX - theoreticalXPositionOfLeftmostSubdivisionLineWithoutWrapping
+        let remainderOfNoteXPositionWithinSubdivisionLines = actualNoteXPositionRelativeToTheoreticalLeftmostSubdivisionPosition % widthOfEachSubdivision
+        return remainderOfNoteXPositionWithinSubdivisionLines
+    }
+
+    /**
      * General text input event listeners logic
      */
 
@@ -2785,6 +2813,7 @@ class DrumMachineGui {
                 this.setAnalyticsBarNotesModeBeatNumberText(this, circle.guiData.beat, circle.translation.x, circle.guiData.row)
                 this.setAnalyticsBarNotesModeReferenceLineNumberText(this, circle.translation.x, circle.guiData.row)
                 this.setAnalyticsBarNotesModeVolumeText(this, circle.guiData.midiVelocity)
+                this.setAnalyticsBarNotesModeDistanceFromBeatLinesText(this, circle.translation.x, circle.guiData.row)
             }
         });
         // remove border from circle when mouse is no longer over it
@@ -2796,6 +2825,7 @@ class DrumMachineGui {
                 this.setAnalyticsBarNotesModeBeatNumberText(this, -1, -1, -1, true)
                 this.setAnalyticsBarNotesModeReferenceLineNumberText(this, -1, -1, true)
                 this.setAnalyticsBarNotesModeVolumeText(this, -1, true)
+                this.setAnalyticsBarNotesModeDistanceFromBeatLinesText(this, -1, -1, true)
             }
         });
         // select circle (for moving) if we click it
@@ -3357,6 +3387,7 @@ class DrumMachineGui {
         self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.circleBeingMoved.translation.x, self.circleSelectionTracker.circleBeingMoved.guiData.row)
         self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.circleBeingMoved.translation.x, self.circleSelectionTracker.circleBeingMoved.guiData.row)
         self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
+        self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, self.circleSelectionTracker.circleBeingMoved.translation.x, self.circleSelectionTracker.circleBeingMoved.guiData.row)
     }
 
     moveNotesAndChangeVolumesMouseMoveHandler(self, event){
@@ -3389,6 +3420,7 @@ class DrumMachineGui {
                 self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                 self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                 self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
+                self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
 
                 /**
                  * start by snapping the note into place if it is close to something
@@ -3424,6 +3456,7 @@ class DrumMachineGui {
                     self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
                     self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
                     self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
+                    self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, -1, -1, true)
                 }
                 // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
                 let sequencerLeftBoundary = self.configurations.sequencer.left - self.configurations.mouseEvents.notePlacementPadding
@@ -3467,6 +3500,7 @@ class DrumMachineGui {
                             self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                             self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                             self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
+                            self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                             break; // we found the row that the note will be placed on, so stop iterating thru rows early
                         }
                     }
@@ -3486,6 +3520,7 @@ class DrumMachineGui {
                         self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
                         self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
                         self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
+                        self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, -1, -1, true)
                     }
                 }
                 self.circleSelectionTracker.throwNoteAway = throwNoteAway;
@@ -3719,6 +3754,7 @@ class DrumMachineGui {
             self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
             self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
             self.setAnalyticsBarNotesModeVolumeText(self, -1, true)
+            self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, -1, -1, true)
 
             /**
              * next deal with changing note volume 
@@ -4338,26 +4374,44 @@ class DrumMachineGui {
      * Note that if a note falls directly on a beat (such as when a row is quantized), the distance from left and the distance from right will both be described
      * as zero, since these values won't really be useful anyway and that seems like the least confusing way to handle that situation.
      * 
-     * It may later be determined that it's better to pass in some millisecond values only and calculate percentages using only those, we will see as we implement things.
-     * 
-     * @param distanceFromLeftBeatAsPercent: how far the note being analyzed is from the nearest beat to its left, as a percentage of a single beat length. 
-     *                                       if the note being analyzed is directly on the beat, this will be descibed as zero.
-     * @param distanceFromRightBeatAsPercent: how far the note being analyzed is from the nearest beat to its right, as a percentage of a single beat length. 
-     *                                        if the note being analyzed is directly on the beat, this will be descibed as zero.
-     * @param distanceFromLeftBeatInMilliseconds: how far the note being analyzed is from the nearest beat to its left, as a number of milliseconds.
-     *                                            if the note being analyzed is directly on the beat, this will be descibed as zero.
-     * @param distanceFromRightBeatInMilliseconds: how far the note being analyzed is from the nearest beat to its right, as a number of milliseconds.
-     *                                             if the note being analyzed is directly on the beat, this will be descibed as zero.
+     * @param self: search for comment "a general note about the 'self' paramater" within this file for info on its use here
+     * @param noteXPosition: the x position of the note being moved. this is needed for calculating what 'beat' we fall within
+     *                       on an unquantized sequencer row, since such rows don't actually track beat numbers for notes,
+     *                       then will also be used to calculate how far the note actually is from that beat.
+     * @param sequencerRowIndex: the index of the sequencer row this note is on. will be used to determine that the note is on a legitimate row, 
+     *                           then to determine the total number of beats on that row, and whether that row is quantized.
      * @param hideValues: if set to true, don't show any values. for example if no note is currently being analyzed.
      */
-    setAnalyticsBarNotesModeDistanceFromBeatLinesText(distanceFromLeftBeatAsPercent, distanceFromRightBeatAsPercent, distanceFromLeftBeatInMilliseconds, distanceFromRightBeatInMilliseconds, hideValues=false){
-        if (hideValues) {
-            this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "-"
-            this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsMilliseconds.innerHTML = "-"
+    setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, noteXPosition, sequencerRowIndex, hideValues=false){
+        if (hideValues || sequencerRowIndex < 0) {
+            self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "-"
+            self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsMilliseconds.innerHTML = "-"
             return;
         }
-        this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "+" + distanceFromLeftBeatAsPercent + "% / -" + distanceFromRightBeatAsPercent + "%"
-        this.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "+" + distanceFromLeftBeatInMilliseconds + "ms / -" + distanceFromRightBeatInMilliseconds + "ms"
+        // if the sequencer row is quantized, the distances will always be 0, so initialize them as 0 to start
+        let distanceFromLeftBeatAsPercent = 0
+        let distanceFromRightBeatAsPercent = 0
+        let distanceFromLeftBeatInMilliseconds = 0
+        let distanceFromRightBeatInMilliseconds = 0
+        if (!self.sequencer.rows[sequencerRowIndex].quantized) {
+            // figure out how far the note is from the nearest subdivision to its left.
+            let numberOfSubdivisions = self.sequencer.rows[sequencerRowIndex].getNumberOfSubdivisions()
+            let remainderOfNoteXPositionWithinSubdivisionLines = self.getXDistanceFromClosestSubdivisionToTheLeft(noteXPosition, numberOfSubdivisions, self.subdivisionLinesShiftInPixelsPerRow[sequencerRowIndex])
+            // now we can convert this distance value -- which has a unit of 'pixels' -- into a percentage of the width of each subdivision.
+            let widthOfEachSubdivision = self.configurations.sequencer.width / numberOfSubdivisions
+            let percentageWithinBeatFromTheLeft = remainderOfNoteXPositionWithinSubdivisionLines / widthOfEachSubdivision
+            distanceFromLeftBeatAsPercent = Math.round(percentageWithinBeatFromTheLeft * 100)
+            distanceFromRightBeatAsPercent = (100 - distanceFromLeftBeatAsPercent)
+            if (distanceFromLeftBeatAsPercent === 0 || distanceFromRightBeatAsPercent === 0) {
+                distanceFromLeftBeatAsPercent = 0
+                distanceFromRightBeatAsPercent = 0
+            }
+            // now we can convert the distance value -- which has a unit of 'pixels' -- into milliseconds
+            distanceFromLeftBeatInMilliseconds = -1
+            distanceFromRightBeatInMilliseconds = -1
+        }
+        self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "+" + distanceFromLeftBeatAsPercent + "% / -" + distanceFromRightBeatAsPercent + "%"
+        self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsMilliseconds.innerHTML = "+" + distanceFromLeftBeatInMilliseconds + "ms / -" + distanceFromRightBeatInMilliseconds + "ms"
     }
 
     /**
