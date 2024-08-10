@@ -754,6 +754,8 @@ class DrumMachineGui {
                 this.components.shapes.sequencerRowHighlightLines[rowIndex].linewidth = this.configurations.sequencerRowHighlightLines.hoverLineWidth;
             }
         }
+        // adjust analytics bar text
+        this.setAnalyticsBarToLinesMode()
     }
 
     initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines) {
@@ -2821,6 +2823,7 @@ class DrumMachineGui {
                 circle.linewidth = 2
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveNote
                 // adjust analytics bar 'note' mode text 
+                this.setAnalyticsBarToNoteMode()
                 this.setAnalyticsBarNotesModeBeatNumberText(this, circle.guiData.beat, circle.translation.x, circle.guiData.row)
                 this.setAnalyticsBarNotesModeReferenceLineNumberText(this, circle.translation.x, circle.guiData.row)
                 this.setAnalyticsBarNotesModeVolumeText(this, circle.guiData.midiVelocity)
@@ -2834,6 +2837,7 @@ class DrumMachineGui {
                 circle.stroke = 'transparent'
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
                 // adjust analytics bar 'note' mode text 
+                this.setAnalyticsBarToNoteMode()
                 this.setAnalyticsBarNotesModeBeatNumberText(this, -1, -1, -1, true)
                 this.setAnalyticsBarNotesModeReferenceLineNumberText(this, -1, -1, true)
                 this.setAnalyticsBarNotesModeVolumeText(this, -1, true)
@@ -3397,6 +3401,7 @@ class DrumMachineGui {
         self.circleSelectionTracker.circleBeingMoved.stroke = 'black'
         self.circleSelectionTracker.circleBeingMoved.linewidth = 2
         // adjust analytics bar 'note' mode text 
+        self.setAnalyticsBarToNoteMode()
         self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.circleBeingMoved.translation.x, self.circleSelectionTracker.circleBeingMoved.guiData.row)
         self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.circleBeingMoved.translation.x, self.circleSelectionTracker.circleBeingMoved.guiData.row)
         self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
@@ -3431,6 +3436,7 @@ class DrumMachineGui {
                 self.components.domElements.images.trashClosedIcon.style.display = 'block'
                 self.components.domElements.images.trashOpenIcon.style.display = 'none'
                 // adjust analytics bar 'note' mode text 
+                self.setAnalyticsBarToNoteMode()
                 self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                 self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                 self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
@@ -3468,6 +3474,7 @@ class DrumMachineGui {
                     self.components.domElements.images.trashOpenIcon.style.display = 'block'
                     self.components.shapes.noteTrashBinContainer.stroke = 'red'
                     // adjust analytics bar 'note' mode text 
+                    self.setAnalyticsBarToNoteMode()
                     self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
                     self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
                     self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
@@ -3513,6 +3520,7 @@ class DrumMachineGui {
                             self.circleSelectionTracker.lastRowSnappedTo = currentRowMouseIsOn
                             throwNoteAway = false
                             // adjust analytics bar 'note' mode text 
+                            self.setAnalyticsBarToNoteMode()
                             self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                             self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                             self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
@@ -3534,6 +3542,7 @@ class DrumMachineGui {
                         self.components.domElements.images.trashOpenIcon.style.display = 'block'
                         self.components.shapes.noteTrashBinContainer.stroke = 'red'
                         // adjust analytics bar 'note' mode text 
+                        self.setAnalyticsBarToNoteMode()
                         self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
                         self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
                         self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
@@ -3769,6 +3778,7 @@ class DrumMachineGui {
                 }
             }
             // adjust analytics bar 'note' mode text 
+            self.setAnalyticsBarToNoteMode()
             self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
             self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
             self.setAnalyticsBarNotesModeVolumeText(self, -1, true)
@@ -4458,8 +4468,8 @@ class DrumMachineGui {
      */
     setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, noteXPosition, sequencerRowIndex, hideValues=false){
         if (hideValues || sequencerRowIndex < 0) {
-            this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHTML = "-"
-            this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHTML = "-"
+            self.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHTML = "-"
+            self.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHTML = "-"
             return;
         }
         // notes can't be quantized to reference lines, so these initial values will always need to be overwritten
@@ -4490,8 +4500,36 @@ class DrumMachineGui {
             distanceFromRightLineInMilliseconds = 0
         }
         // update analytics bar text
-        this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHTML = "+" + distanceFromLeftLineAsPercent + "% / -" + distanceFromRightLineAsPercent + "%"
-        this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHTML = "|+" + distanceFromLeftLineInMilliseconds + "ms / -" + distanceFromRightLineInMilliseconds + "ms| of " + referenceLineSubdivisionsLengthMillis + "ms"
+        self.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHTML = "+" + distanceFromLeftLineAsPercent + "% / -" + distanceFromRightLineAsPercent + "%"
+        self.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHTML = "|+" + distanceFromLeftLineInMilliseconds + "ms / -" + distanceFromRightLineInMilliseconds + "ms| of " + referenceLineSubdivisionsLengthMillis + "ms"
+    }
+
+    setAnalyticsBarLinesModeBeatLineShiftText(self, hideValues=false){
+        // todo: implement this
+        if (hideValues) {
+            self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat line shift: -"
+            self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "-"
+            self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesPercent.innerHTML = "within visual lines: -"
+            self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesMilliseconds.innerHTML = "-"
+        }
+        self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat line shift: +0% / -0%"
+        self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "| +0ms / -0ms | of 0ms"
+        self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesPercent.innerHTML = "within visual lines: +0% / -0%"
+        self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesMilliseconds.innerHTML = "| +0ms / -0ms | of 0ms"
+    }
+
+    setAnalyticsBarLinesModeReferenceLineShiftText(self, hideValues=false){
+        // todo: implement this
+        if (hideValues) {
+            self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftPercent.innerHTML = "visual line shift: -"
+            self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftMilliseconds.innerHTML = "-"
+            self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftWithinBeatLinesPercent.innerHTML = "within beat lines: -"
+            self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftWithinBeatLinesMilliseconds.innerHTML = "-"
+        }
+        self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftPercent.innerHTML = "visual line shift: +0% / -0%"
+        self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftMilliseconds.innerHTML = "| +0ms / -0ms | of 0ms"
+        self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftWithinBeatLinesPercent.innerHTML = "within beat lines: +0% / -0%"
+        self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftWithinBeatLinesMilliseconds.innerHTML = "| +0ms / -0ms | of 0ms"
     }
 
     /**
