@@ -4401,12 +4401,13 @@ class DrumMachineGui {
         let distanceFromRightBeatAsPercent = 0
         let distanceFromLeftBeatInMilliseconds = 0
         let distanceFromRightBeatInMilliseconds = 0
+        let numberOfSubdivisions = self.sequencer.rows[sequencerRowIndex].getNumberOfSubdivisions()
+        let widthOfEachSubdivision = self.configurations.sequencer.width / numberOfSubdivisions
+        let subdivisionsLengthMillis = Math.round((widthOfEachSubdivision / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis)
         if (!self.sequencer.rows[sequencerRowIndex].quantized) {
             // figure out how far the note is from the nearest subdivision to its left.
-            let numberOfSubdivisions = self.sequencer.rows[sequencerRowIndex].getNumberOfSubdivisions()
             let remainderOfNoteXPositionWithinSubdivisionLines = self.getXDistanceFromClosestSubdivisionToTheLeft(noteXPosition, numberOfSubdivisions, self.subdivisionLinesShiftInPixelsPerRow[sequencerRowIndex])
             // now we can convert this distance value -- which has a unit of 'pixels' -- into a percentage of the width of each subdivision.
-            let widthOfEachSubdivision = self.configurations.sequencer.width / numberOfSubdivisions
             let percentageWithinBeatFromTheLeft = remainderOfNoteXPositionWithinSubdivisionLines / widthOfEachSubdivision
             distanceFromLeftBeatAsPercent = Math.round(percentageWithinBeatFromTheLeft * 100)
             distanceFromRightBeatAsPercent = (100 - distanceFromLeftBeatAsPercent)
@@ -4426,7 +4427,7 @@ class DrumMachineGui {
         }
         // update analytics bar text
         self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "+" + distanceFromLeftBeatAsPercent + "% / -" + distanceFromRightBeatAsPercent + "%"
-        self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsMilliseconds.innerHTML = "+" + distanceFromLeftBeatInMilliseconds + "ms / -" + distanceFromRightBeatInMilliseconds + "ms"
+        self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsMilliseconds.innerHTML = "|+" + distanceFromLeftBeatInMilliseconds + "ms / -" + distanceFromRightBeatInMilliseconds + "ms| of " + subdivisionsLengthMillis + "ms"
     }
 
     /**
@@ -4455,11 +4456,12 @@ class DrumMachineGui {
         let distanceFromRightLineAsPercent = -1
         let distanceFromLeftLineInMilliseconds = -1
         let distanceFromRightLineInMilliseconds = -1
-        // figure out how far the note is from the nearest reference line to its left.
         let numberOfReferenceLines = self.sequencer.rows[sequencerRowIndex].getNumberOfReferenceLines()
+        let widthOfEachReferenceLineSubdivision = self.configurations.sequencer.width / numberOfReferenceLines
+        let referenceLineSubdivisionsLengthMillis = Math.round((widthOfEachReferenceLineSubdivision / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis)
+        // figure out how far the note is from the nearest reference line to its left.
         let remainderOfNoteXPositionWithinReferenceLines = self.getXDistanceFromClosestSubdivisionToTheLeft(noteXPosition, numberOfReferenceLines, self.referenceLinesShiftInPixelsPerRow[sequencerRowIndex])
         // now we can convert this distance value -- which has a unit of 'pixels' -- into a percentage of the width of each reference line subdivision.
-        let widthOfEachReferenceLineSubdivision = self.configurations.sequencer.width / numberOfReferenceLines
         let percentageWithinLineFromTheLeft = remainderOfNoteXPositionWithinReferenceLines / widthOfEachReferenceLineSubdivision
         distanceFromLeftLineAsPercent = Math.round(percentageWithinLineFromTheLeft * 100)
         distanceFromRightLineAsPercent = (100 - distanceFromLeftLineAsPercent)
@@ -4478,7 +4480,7 @@ class DrumMachineGui {
         }
         // update analytics bar text
         this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHTML = "+" + distanceFromLeftLineAsPercent + "% / -" + distanceFromRightLineAsPercent + "%"
-        this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHTML = "+" + distanceFromLeftLineInMilliseconds + "ms / -" + distanceFromRightLineInMilliseconds + "ms"
+        this.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHTML = "|+" + distanceFromLeftLineInMilliseconds + "ms / -" + distanceFromRightLineInMilliseconds + "ms| of " + referenceLineSubdivisionsLengthMillis + "ms"
     }
 
     /**
