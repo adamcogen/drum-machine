@@ -4531,7 +4531,6 @@ class DrumMachineGui {
             return;
         }
         let beatLinesShiftInPixels = self.subdivisionLinesShiftInPixelsPerRow[sequencerRowIndex]
-        //let referenceLinesShiftInPixels = self.referenceLinesShiftInPixelsPerRow[sequencerRowIndex]
         let numberOfSubdivisions = self.sequencer.rows[sequencerRowIndex].getNumberOfSubdivisions()
         let widthOfEachSubdivisionInPixels = self.configurations.sequencer.width / numberOfSubdivisions
         let beatLineShiftInPixelsWithinEachSubdivision = beatLinesShiftInPixels % widthOfEachSubdivisionInPixels
@@ -4542,13 +4541,22 @@ class DrumMachineGui {
             beatLineShiftPercentFromLeft = 0
             beatLineShiftPercentFromRight = 0
         }
+        // convert to milliseconds
+        let beatShiftFromLeftAsPercentageOfFullLoop = beatLineShiftInPixelsWithinEachSubdivision / self.configurations.sequencer.width;
+        let beatShiftFromLeftInMilliseconds = Math.round(beatShiftFromLeftAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+        let beatShiftFromRightAsPercentageOfFullLoop = (widthOfEachSubdivisionInPixels - beatLineShiftInPixelsWithinEachSubdivision) / self.configurations.sequencer.width
+        let beatShiftFromRightInMilliseconds = Math.round(beatShiftFromRightAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+        if (beatShiftFromLeftInMilliseconds === 0 || beatShiftFromRightInMilliseconds === 0) {
+            beatShiftFromLeftInMilliseconds = 0
+            beatShiftFromRightInMilliseconds = 0
+        }
+        let beatLineSubdivisionsLengthMillis = Math.round((widthOfEachSubdivisionInPixels / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis)
+        // noting down a few variables to use later:
+        // let referenceLinesShiftInPixels = self.referenceLinesShiftInPixelsPerRow[sequencerRowIndex]
         // let numberOfReferenceLines = self.sequencer.rows[sequencerRowIndex].getNumberOfReferenceLines()
         // let widthOfEachReferenceLineSubdivision = self.configurations.sequencer.width / numberOfReferenceLines
-        // beatShiftInPixels = 0
-        // referenceShiftInPixels = 0
-        // calculate beat shift as percent
         self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat line shift: +" + beatLineShiftPercentFromLeft + "% / -" + beatLineShiftPercentFromRight + "%"
-        self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "| +0ms / -0ms | of 0ms"
+        self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "| +" + beatShiftFromLeftInMilliseconds + "ms / -" + beatShiftFromRightInMilliseconds + "ms | of " + beatLineSubdivisionsLengthMillis + "ms"
         self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesPercent.innerHTML = "within visual lines: +0% / -0%"
         self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesMilliseconds.innerHTML = "| +0ms / -0ms | of 0ms"
     }
