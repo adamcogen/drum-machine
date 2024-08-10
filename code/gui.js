@@ -937,9 +937,9 @@ class DrumMachineGui {
                     for (let shape of this.components.shapes.referenceHighlightLineLists[rowIndex]) {
                         shape.stroke = 'transparent'
                     }
+                    this.setAnalyticsBarLinesModeBeatLineShiftText(this, -1, true)
+                    this.setAnalyticsBarLinesModeReferenceLineShiftText(this, -1, true)
                 }
-                this.setAnalyticsBarLinesModeBeatLineShiftText(this, -1, true)
-                this.setAnalyticsBarLinesModeReferenceLineShiftText(this, -1, true)
             },
             "mousedown": (event) => {
                 let updateShiftRowToolButtonVisuals = false;
@@ -1085,9 +1085,9 @@ class DrumMachineGui {
                     this.multiShiftTracker.highlightedRow = null;
                     this.unhighlightAllShiftableObjects(rowIndex);
                     this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText;
+                    this.setAnalyticsBarLinesModeBeatLineShiftText(this, -1, true)
+                    this.setAnalyticsBarLinesModeReferenceLineShiftText(this, -1,  true)
                 }
-                this.setAnalyticsBarLinesModeBeatLineShiftText(this, -1, true)
-                this.setAnalyticsBarLinesModeReferenceLineShiftText(this, -1,  true)
             },
             "mousedown": (event) => {
                 // calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
@@ -1208,9 +1208,9 @@ class DrumMachineGui {
                     for (let circle of this.shiftToolTracker.noteCircles) {
                         circle.stroke = 'transparent'
                     }
+                    this.setAnalyticsBarLinesModeBeatLineShiftText(this, -1, true)
+                    this.setAnalyticsBarLinesModeReferenceLineShiftText(this, -1, true)
                 }
-                this.setAnalyticsBarLinesModeBeatLineShiftText(this, -1, true)
-                this.setAnalyticsBarLinesModeReferenceLineShiftText(this, -1, true)
             },
             "mousedown": (event) => {
                 let updateShiftRowToolButtonVisuals = false;
@@ -3256,6 +3256,9 @@ class DrumMachineGui {
         let shiftReferenceLines = this.shiftToolTracker.resourcesToShift.referenceLines;
         let rowIsQuantized = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized
         this.setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+        // update analytics bar text
+        self.setAnalyticsBarLinesModeBeatLineShiftText(this, self.shiftToolTracker.selectedRowIndex)
+        self.setAnalyticsBarLinesModeReferenceLineShiftText(this, self.shiftToolTracker.selectedRowIndex)
     }
 
     shiftSubdivisionsLogic(self, mouseMoveDistance) {
@@ -3849,6 +3852,9 @@ class DrumMachineGui {
         self.shiftToolTracker.selectedRowIndex = null
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
+        // update analytics bar text
+        self.setAnalyticsBarLinesModeBeatLineShiftText(this, -1, true)
+        self.setAnalyticsBarLinesModeReferenceLineShiftText(this, -1, true)
     }
 
 
