@@ -4407,8 +4407,10 @@ class DrumMachineGui {
                 distanceFromRightBeatAsPercent = 0
             }
             // now we can convert the distance value -- which has a unit of 'pixels' -- into milliseconds
-            distanceFromLeftBeatInMilliseconds = -1
-            distanceFromRightBeatInMilliseconds = -1
+            let distanceFromLeftBeatAsPercentageOfFullLoop = distanceFromLeftBeatAsPercent / self.configurations.sequencer.width;
+            distanceFromLeftBeatInMilliseconds = Math.round(distanceFromLeftBeatAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+            let distanceFromRightBeatAsPercentageOfFullLoop = distanceFromRightBeatAsPercent / self.configurations.sequencer.width;
+            distanceFromRightBeatInMilliseconds = Math.round(distanceFromRightBeatAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
         }
         self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "+" + distanceFromLeftBeatAsPercent + "% / -" + distanceFromRightBeatAsPercent + "%"
         self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsMilliseconds.innerHTML = "+" + distanceFromLeftBeatInMilliseconds + "ms / -" + distanceFromRightBeatInMilliseconds + "ms"
