@@ -185,6 +185,7 @@ class DrumMachineGui {
         if (!this.configurations.analyticsBar.show) {
             this.hideAnalyticsBar();
         }
+        this.setAnalyticsBarToLinesMode()
 
         this.refreshTwoJsCanvasSize()
     }
@@ -415,6 +416,7 @@ class DrumMachineGui {
                 examplePatterns: document.getElementById('example-pattern-selector'),
             },
             text: {
+                // analytics bar note mode text
                 analyticsBarNoteModeBeatNumber: document.getElementById('analytics-beat-number-text'),
                 analyticsBarNoteModeReferenceLineNumber: document.getElementById('analytics-reference-line-number-text'),
                 analyticsBarNoteModeVolume: document.getElementById('analytics-volume-text'),
@@ -422,6 +424,15 @@ class DrumMachineGui {
                 analyticsBarNoteModeDistanceFromBeatsMilliseconds: document.getElementById('analytics-distance-from-beats-milliseconds-text'),
                 analyticsBarNoteModeDistanceFromReferenceLinesPercent: document.getElementById('analytics-distance-from-reference-lines-percent-text'),
                 analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds: document.getElementById('analytics-distance-from-reference-lines-milliseconds-text'),
+                // analytics bar lines mode text
+                analyticsBarLinesModeBeatShiftPercent: document.getElementById('analytics-beat-shift-text-percent'),
+                analyticsBarLinesModeBeatShiftMilliseconds: document.getElementById('analytics-beat-shift-text-milliseconds'),
+                analyticsBarLinesModeBeatShiftWithinReferenceLinesPercent: document.getElementById('analytics-beat-shift-within-reference-lines-text-percent'),
+                analyticsBarLinesModeBeatShiftWithinReferenceLinesMilliseconds: document.getElementById('analytics-beat-shift-within-reference-lines-text-milliseconds'),
+                analyticsBarLinesModeReferenceLineShiftPercent: document.getElementById('analytics-reference-line-shift-text-percent'),
+                analyticsBarLinesModeReferenceLineShiftMilliseconds: document.getElementById('analytics-reference-line-shift-text-milliseconds'),
+                analyticsBarLinesModeReferenceLineShiftWithinBeatLinesPercent: document.getElementById('analytics-reference-lines-shift-within-beat-lines-text-percent'),
+                analyticsBarLinesModeReferenceLineShiftWithinBeatLinesMilliseconds: document.getElementById('analytics-reference-lines-shift-within-beat-lines-text-milliseconds'),
             }
         }
         return domElements;
