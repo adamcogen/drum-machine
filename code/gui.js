@@ -185,7 +185,7 @@ class DrumMachineGui {
         if (!this.configurations.analyticsBar.show) {
             this.hideAnalyticsBar();
         }
-        this.setAnalyticsBarToLinesMode()
+        this.setAnalyticsBarToNoteMode()
 
         this.refreshTwoJsCanvasSize()
     }
@@ -756,6 +756,8 @@ class DrumMachineGui {
         }
         // adjust analytics bar text
         this.setAnalyticsBarToLinesMode()
+        this.setAnalyticsBarLinesModeBeatLineShiftText(this)
+        this.setAnalyticsBarLinesModeReferenceLineShiftText(this)
     }
 
     initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines) {
@@ -936,6 +938,8 @@ class DrumMachineGui {
                         shape.stroke = 'transparent'
                     }
                 }
+                this.setAnalyticsBarLinesModeBeatLineShiftText(this, true)
+                this.setAnalyticsBarLinesModeReferenceLineShiftText(this, true)
             },
             "mousedown": (event) => {
                 let updateShiftRowToolButtonVisuals = false;
@@ -1082,6 +1086,8 @@ class DrumMachineGui {
                     this.unhighlightAllShiftableObjects(rowIndex);
                     this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText;
                 }
+                this.setAnalyticsBarLinesModeBeatLineShiftText(this, true)
+                this.setAnalyticsBarLinesModeReferenceLineShiftText(this, true)
             },
             "mousedown": (event) => {
                 // calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
@@ -1203,6 +1209,8 @@ class DrumMachineGui {
                         circle.stroke = 'transparent'
                     }
                 }
+                this.setAnalyticsBarLinesModeBeatLineShiftText(this, true)
+                this.setAnalyticsBarLinesModeReferenceLineShiftText(this, true)
             },
             "mousedown": (event) => {
                 let updateShiftRowToolButtonVisuals = false;
@@ -4504,6 +4512,7 @@ class DrumMachineGui {
         self.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHTML = "|+" + distanceFromLeftLineInMilliseconds + "ms / -" + distanceFromRightLineInMilliseconds + "ms| of " + referenceLineSubdivisionsLengthMillis + "ms"
     }
 
+    // add param: sequencerRowIndex
     setAnalyticsBarLinesModeBeatLineShiftText(self, hideValues=false){
         // todo: implement this
         if (hideValues) {
@@ -4511,8 +4520,22 @@ class DrumMachineGui {
             self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "-"
             self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesPercent.innerHTML = "within visual lines: -"
             self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesMilliseconds.innerHTML = "-"
+            return;
         }
-        self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat line shift: +0% / -0%"
+        let sequencerRowIndex = 0
+        // consolidate necessary variables
+        let beatLinesShiftInPixels = self.subdivisionLinesShiftInPixelsPerRow[sequencerRowIndex]
+        //let referenceLinesShiftInPixels = self.referenceLinesShiftInPixelsPerRow[sequencerRowIndex]
+        let numberOfSubdivisions = self.sequencer.rows[sequencerRowIndex].getNumberOfSubdivisions()
+        let widthOfEachSubdivisionInPixels = self.configurations.sequencer.width / numberOfSubdivisions
+        // convert to percent
+        let beatLineShiftPercent = Math.round((beatLinesShiftInPixels / widthOfEachSubdivisionInPixels) * 100)
+        // let numberOfReferenceLines = self.sequencer.rows[sequencerRowIndex].getNumberOfReferenceLines()
+        // let widthOfEachReferenceLineSubdivision = self.configurations.sequencer.width / numberOfReferenceLines
+        // beatShiftInPixels = 0
+        // referenceShiftInPixels = 0
+        // calculate beat shift as percent
+        self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat line shift: +" + beatLineShiftPercent + "% / -0%"
         self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "| +0ms / -0ms | of 0ms"
         self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesPercent.innerHTML = "within visual lines: +0% / -0%"
         self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesMilliseconds.innerHTML = "| +0ms / -0ms | of 0ms"
@@ -4525,6 +4548,7 @@ class DrumMachineGui {
             self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftMilliseconds.innerHTML = "-"
             self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftWithinBeatLinesPercent.innerHTML = "within beat lines: -"
             self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftWithinBeatLinesMilliseconds.innerHTML = "-"
+            return;
         }
         self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftPercent.innerHTML = "visual line shift: +0% / -0%"
         self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftMilliseconds.innerHTML = "| +0ms / -0ms | of 0ms"
