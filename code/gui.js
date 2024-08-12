@@ -4579,10 +4579,31 @@ class DrumMachineGui {
             self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftWithinBeatLinesMilliseconds.innerHTML = "-"
             return;
         }
-        self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftPercent.innerHTML = "visual line shift: +0% / -0%"
-        self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftMilliseconds.innerHTML = "| +0ms / -0ms | of 0ms"
-        self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftWithinBeatLinesPercent.innerHTML = "within beat lines: +0% / -0%"
-        self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftWithinBeatLinesMilliseconds.innerHTML = "| +0ms / -0ms | of 0ms"
+
+        // update text showing beat shift as percent and in milliseconds
+        let referenceLinesShiftInPixels = self.referenceLinesShiftInPixelsPerRow[sequencerRowIndex]
+        let numberOfReferenceLines = self.sequencer.rows[sequencerRowIndex].getNumberOfReferenceLines()
+        let widthOfEachReferenceLineSubdivision = self.configurations.sequencer.width / numberOfReferenceLines
+        let referenceLineShiftInPixelsWithinEachReferenceSubdivision = referenceLinesShiftInPixels % widthOfEachReferenceLineSubdivision
+        // convert to percent
+        let referenceLineShiftPercentFromLeft = Math.round((referenceLineShiftInPixelsWithinEachReferenceSubdivision / widthOfEachReferenceLineSubdivision) * 100)
+        let referenceLineShiftPercentFromRight = 100 - referenceLineShiftPercentFromLeft
+        if (referenceLineShiftPercentFromLeft === 0 || referenceLineShiftPercentFromRight === 0) {
+            referenceLineShiftPercentFromLeft = 0
+            referenceLineShiftPercentFromRight = 0
+        }
+        // convert to milliseconds
+        let referenceLineShiftFromLeftAsPercentageOfFullLoop = referenceLineShiftInPixelsWithinEachReferenceSubdivision / self.configurations.sequencer.width;
+        let referenceLineShiftFromLeftInMilliseconds = Math.round(referenceLineShiftFromLeftAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+        let referenceLineShiftFromRightAsPercentageOfFullLoop = (widthOfEachReferenceLineSubdivision - referenceLineShiftInPixelsWithinEachReferenceSubdivision) / self.configurations.sequencer.width
+        let referenceLineShiftFromRightInMilliseconds = Math.round(referenceLineShiftFromRightAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+        if (referenceLineShiftFromLeftInMilliseconds === 0 || referenceLineShiftFromRightInMilliseconds === 0) {
+            referenceLineShiftFromLeftInMilliseconds = 0
+            referenceLineShiftFromRightInMilliseconds = 0
+        }
+        let referenceLineSubdivisionsLengthMillis = Math.round((widthOfEachReferenceLineSubdivision / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis)
+        self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftPercent.innerHTML = "visual line shift: +" + referenceLineShiftPercentFromLeft + "% / -" + referenceLineShiftPercentFromRight + "%"
+        self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftMilliseconds.innerHTML = "| +" + referenceLineShiftFromLeftInMilliseconds + "ms / -" + referenceLineShiftFromRightInMilliseconds + "ms | of " + referenceLineSubdivisionsLengthMillis + "ms"
     }
 
     /**
