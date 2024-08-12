@@ -4232,7 +4232,7 @@ class DrumMachineGui {
 
     /**
      * we will hide buttons that don't need to be shown. for example, if there aren't any notes on a row,
-     * we don't need to show the volume adjuster, the 'shift notes only' 
+     * we don't need to show the volume adjuster, the 'shift notes only' button, etc.
      */
 
     refreshNoteAndShiftDependentButtonsForAllRows() {
@@ -4522,7 +4522,6 @@ class DrumMachineGui {
      * ....
      */
     setAnalyticsBarLinesModeBeatLineShiftText(self, sequencerRowIndex, hideValues=false){
-        // todo: implement this
         if (hideValues) {
             self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat line shift: -"
             self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "-"
@@ -4530,6 +4529,7 @@ class DrumMachineGui {
             self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesMilliseconds.innerHTML = "-"
             return;
         }
+        // update text showing beat shift as percent and in milliseconds
         let beatLinesShiftInPixels = self.subdivisionLinesShiftInPixelsPerRow[sequencerRowIndex]
         let numberOfSubdivisions = self.sequencer.rows[sequencerRowIndex].getNumberOfSubdivisions()
         let widthOfEachSubdivisionInPixels = self.configurations.sequencer.width / numberOfSubdivisions
@@ -4551,13 +4551,19 @@ class DrumMachineGui {
             beatShiftFromRightInMilliseconds = 0
         }
         let beatLineSubdivisionsLengthMillis = Math.round((widthOfEachSubdivisionInPixels / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis)
-        // noting down a few variables to use later:
-        // let referenceLinesShiftInPixels = self.referenceLinesShiftInPixelsPerRow[sequencerRowIndex]
-        // let numberOfReferenceLines = self.sequencer.rows[sequencerRowIndex].getNumberOfReferenceLines()
-        // let widthOfEachReferenceLineSubdivision = self.configurations.sequencer.width / numberOfReferenceLines
         self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat line shift: +" + beatLineShiftPercentFromLeft + "% / -" + beatLineShiftPercentFromRight + "%"
         self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "| +" + beatShiftFromLeftInMilliseconds + "ms / -" + beatShiftFromRightInMilliseconds + "ms | of " + beatLineSubdivisionsLengthMillis + "ms"
-        self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesPercent.innerHTML = "within visual lines: +0% / -0%"
+        // update text showing beat shift within reference lines, as percent and in milliseconds
+        // todo: implement this part
+        // noting down a few variables to use later:
+        let referenceLinesShiftInPixels = self.referenceLinesShiftInPixelsPerRow[sequencerRowIndex]
+        let numberOfReferenceLines = self.sequencer.rows[sequencerRowIndex].getNumberOfReferenceLines()
+        let widthOfEachReferenceLineSubdivision = self.configurations.sequencer.width / numberOfReferenceLines
+        let referenceLineShiftInPixelsWithinEachReferenceSubdivision = referenceLinesShiftInPixels % widthOfEachReferenceLineSubdivision
+        let beatShiftFromLeftWithinReferenceLinesInPixels = (beatLineShiftInPixelsWithinEachSubdivision - referenceLineShiftInPixelsWithinEachReferenceSubdivision) % widthOfEachReferenceLineSubdivision
+        let referenceLineShiftPercentFromLeft = Math.round((beatShiftFromLeftWithinReferenceLinesInPixels / widthOfEachReferenceLineSubdivision) * 100)
+        let referenceLineShiftPercentFromRight = 100 - referenceLineShiftPercentFromLeft
+        self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesPercent.innerHTML = "within visual lines: +" + referenceLineShiftPercentFromLeft + "% / -" + referenceLineShiftPercentFromRight + "%"
         self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesMilliseconds.innerHTML = "| +0ms / -0ms | of 0ms"
     }
 
