@@ -182,7 +182,8 @@ class DrumMachineGui {
         this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         this.mostRecentSavedUrlHash = window.location.hash.substring(1); // track the most recently saved URL hash (without its first character '#')
 
-        if (!this.configurations.analyticsBar.show) {
+        this.isAnalyticsBarShown = this.configurations.analyticsBar.show
+        if (!this.isAnalyticsBarShown) {
             this.hideAnalyticsBar();
         }
 
@@ -530,6 +531,10 @@ class DrumMachineGui {
                     let adjustAnalyticsBarText = true
                     let highlightSequencerRowLine = true
                     this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.highlightedRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
+                }
+                if (event.key === "Tab") {
+                    this.isAnalyticsBarShown ? this.hideAnalyticsBar() : this.showAnalyticsBar();
+                    this.isAnalyticsBarShown = !this.isAnalyticsBarShown
                 }
             },
             "keyup": (event) => {
