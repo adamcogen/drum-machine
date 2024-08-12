@@ -427,12 +427,8 @@ class DrumMachineGui {
                 // analytics bar lines mode text
                 analyticsBarLinesModeBeatShiftPercent: document.getElementById('analytics-beat-shift-text-percent'),
                 analyticsBarLinesModeBeatShiftMilliseconds: document.getElementById('analytics-beat-shift-text-milliseconds'),
-                analyticsBarLinesModeBeatShiftWithinReferenceLinesPercent: document.getElementById('analytics-beat-shift-within-reference-lines-text-percent'),
-                analyticsBarLinesModeBeatShiftWithinReferenceLinesMilliseconds: document.getElementById('analytics-beat-shift-within-reference-lines-text-milliseconds'),
                 analyticsBarLinesModeReferenceLineShiftPercent: document.getElementById('analytics-reference-line-shift-text-percent'),
                 analyticsBarLinesModeReferenceLineShiftMilliseconds: document.getElementById('analytics-reference-line-shift-text-milliseconds'),
-                analyticsBarLinesModeReferenceLineShiftWithinBeatLinesPercent: document.getElementById('analytics-reference-lines-shift-within-beat-lines-text-percent'),
-                analyticsBarLinesModeReferenceLineShiftWithinBeatLinesMilliseconds: document.getElementById('analytics-reference-lines-shift-within-beat-lines-text-milliseconds'),
             }
         }
         return domElements;
@@ -4525,8 +4521,6 @@ class DrumMachineGui {
         if (hideValues) {
             self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat line shift: -"
             self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "-"
-            self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesPercent.innerHTML = "within visual lines: -"
-            self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesMilliseconds.innerHTML = "-"
             return;
         }
         // update text showing beat shift as percent and in milliseconds
@@ -4553,33 +4547,17 @@ class DrumMachineGui {
         let beatLineSubdivisionsLengthMillis = Math.round((widthOfEachSubdivisionInPixels / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis)
         self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat line shift: +" + beatLineShiftPercentFromLeft + "% / -" + beatLineShiftPercentFromRight + "%"
         self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "| +" + beatShiftFromLeftInMilliseconds + "ms / -" + beatShiftFromRightInMilliseconds + "ms | of " + beatLineSubdivisionsLengthMillis + "ms"
-        // update text showing beat shift within reference lines, as percent and in milliseconds
-        // todo: implement this part
-        // noting down a few variables to use later:
-        let referenceLinesShiftInPixels = self.referenceLinesShiftInPixelsPerRow[sequencerRowIndex]
-        let numberOfReferenceLines = self.sequencer.rows[sequencerRowIndex].getNumberOfReferenceLines()
-        let widthOfEachReferenceLineSubdivision = self.configurations.sequencer.width / numberOfReferenceLines
-        let referenceLineShiftInPixelsWithinEachReferenceSubdivision = referenceLinesShiftInPixels % widthOfEachReferenceLineSubdivision
-        let beatShiftFromLeftWithinReferenceLinesInPixels = (beatLineShiftInPixelsWithinEachSubdivision - referenceLineShiftInPixelsWithinEachReferenceSubdivision) % widthOfEachReferenceLineSubdivision
-        let referenceLineShiftPercentFromLeft = Math.round((beatShiftFromLeftWithinReferenceLinesInPixels / widthOfEachReferenceLineSubdivision) * 100)
-        let referenceLineShiftPercentFromRight = 100 - referenceLineShiftPercentFromLeft
-        self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesPercent.innerHTML = "within visual lines: +" + referenceLineShiftPercentFromLeft + "% / -" + referenceLineShiftPercentFromRight + "%"
-        self.components.domElements.text.analyticsBarLinesModeBeatShiftWithinReferenceLinesMilliseconds.innerHTML = "| +0ms / -0ms | of 0ms"
     }
 
     /**
      * ...
      */
     setAnalyticsBarLinesModeReferenceLineShiftText(self, sequencerRowIndex, hideValues=false){
-        // todo: implement this
         if (hideValues) {
             self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftPercent.innerHTML = "visual line shift: -"
             self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftMilliseconds.innerHTML = "-"
-            self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftWithinBeatLinesPercent.innerHTML = "within beat lines: -"
-            self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftWithinBeatLinesMilliseconds.innerHTML = "-"
             return;
         }
-
         // update text showing beat shift as percent and in milliseconds
         let referenceLinesShiftInPixels = self.referenceLinesShiftInPixelsPerRow[sequencerRowIndex]
         let numberOfReferenceLines = self.sequencer.rows[sequencerRowIndex].getNumberOfReferenceLines()
