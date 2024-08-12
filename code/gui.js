@@ -185,7 +185,6 @@ class DrumMachineGui {
         if (!this.configurations.analyticsBar.show) {
             this.hideAnalyticsBar();
         }
-        this.setAnalyticsBarToNoteMode()
 
         this.refreshTwoJsCanvasSize()
     }
@@ -528,7 +527,9 @@ class DrumMachineGui {
                     this.shiftToolTracker.resourcesToShift.subdivisionLines = this.multiShiftTracker.shiftSubdivisionLines
                     this.shiftToolTracker.resourcesToShift.referenceLines = this.multiShiftTracker.shiftReferenceLines
                     this.unhighlightAllShiftableObjects(this.multiShiftTracker.highlightedRow)
-                    this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.highlightedRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, true)
+                    let adjustAnalyticsBarText = true
+                    let highlightSequencerRowLine = true
+                    this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.highlightedRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
                 }
             },
             "keyup": (event) => {
@@ -548,7 +549,9 @@ class DrumMachineGui {
                     this.shiftToolTracker.resourcesToShift.subdivisionLines = this.multiShiftTracker.shiftSubdivisionLines
                     this.shiftToolTracker.resourcesToShift.referenceLines = this.multiShiftTracker.shiftReferenceLines
                     this.unhighlightAllShiftableObjects(this.multiShiftTracker.highlightedRow)
-                    this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.highlightedRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, true)
+                    let adjustAnalyticsBarText = true
+                    let highlightSequencerRowLine = true
+                    this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.highlightedRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
                 }
             }
         }
@@ -714,7 +717,7 @@ class DrumMachineGui {
 
     // when we hover over a shiftable object, we should highlight it as necessary,
     // and also store and variables we will need to track if it gets clicked.
-    initializeShiftToolHoverVisualsAndVariables(rowIndex, highlightNotes, highlightSubdivisionLines, highlightReferenceLines, highlightSequencerRowLine=false) {
+    initializeShiftToolHoverVisualsAndVariables(rowIndex, highlightNotes, highlightSubdivisionLines, highlightReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText) {
         this.shiftToolTracker.highlightedRowIndex = rowIndex;
         this.shiftToolTracker.noteCircles = [];
         for (let circle of this.allDrawnCircles) {
@@ -750,10 +753,12 @@ class DrumMachineGui {
                 this.components.shapes.sequencerRowHighlightLines[rowIndex].linewidth = this.configurations.sequencerRowHighlightLines.hoverLineWidth;
             }
         }
-        // adjust analytics bar text
-        this.setAnalyticsBarToLinesMode()
-        this.setAnalyticsBarLinesModeBeatLineShiftText(this, rowIndex)
-        this.setAnalyticsBarLinesModeReferenceLineShiftText(this, rowIndex)
+        if (adjustAnalyticsBarText) { // this condition is false if this method is being called for the dedicated 'shift notes only' button
+            // adjust analytics bar text
+            this.setAnalyticsBarToLinesMode()
+            this.setAnalyticsBarLinesModeBeatLineShiftText(this, rowIndex)
+            this.setAnalyticsBarLinesModeReferenceLineShiftText(this, rowIndex)
+        }
     }
 
     initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines) {
@@ -924,7 +929,9 @@ class DrumMachineGui {
                     let shiftReferenceLines = true;
                     let rowIsQuantized = this.sequencer.rows[rowIndex].quantized
                     this.setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
-                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines)
+                    let highlightSequencerRowLine = false
+                    let adjustAnalyticsBarText = true
+                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
                 }
             },
             "mouseleave": () => {
@@ -933,6 +940,7 @@ class DrumMachineGui {
                     for (let shape of this.components.shapes.referenceHighlightLineLists[rowIndex]) {
                         shape.stroke = 'transparent'
                     }
+                    this.hideAllAnalyticsBarText()
                     this.setAnalyticsBarLinesModeBeatLineShiftText(this, -1, true)
                     this.setAnalyticsBarLinesModeReferenceLineShiftText(this, -1, true)
                 }
@@ -1067,12 +1075,13 @@ class DrumMachineGui {
                     let highlightSubdivisionLines = event.ctrlKey || this.multiShiftTracker.shiftSubdivisionLines
                     let highlightNotes = event.altKey || this.multiShiftTracker.shiftNotes || (highlightSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
                     let highlightReferenceLines = event.metaKey || this.multiShiftTracker.shiftReferenceLines;
-                    let highlightSequencerRowLine = true;
                     this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.multiShift;
                     this.shiftToolTracker.resourcesToShift.notes = highlightNotes
                     this.shiftToolTracker.resourcesToShift.subdivisionLines = highlightSubdivisionLines
                     this.shiftToolTracker.resourcesToShift.referenceLines = highlightReferenceLines
-                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, highlightNotes, highlightSubdivisionLines, highlightReferenceLines, highlightSequencerRowLine)
+                    let highlightSequencerRowLine = true;
+                    let adjustAnalyticsBarText = true
+                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, highlightNotes, highlightSubdivisionLines, highlightReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
                 }
             },
             "mouseleave": () => {
@@ -1081,6 +1090,7 @@ class DrumMachineGui {
                     this.multiShiftTracker.highlightedRow = null;
                     this.unhighlightAllShiftableObjects(rowIndex);
                     this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText;
+                    this.hideAllAnalyticsBarText()
                     this.setAnalyticsBarLinesModeBeatLineShiftText(this, -1, true)
                     this.setAnalyticsBarLinesModeReferenceLineShiftText(this, -1,  true)
                 }
@@ -1192,7 +1202,9 @@ class DrumMachineGui {
                     let shiftSubdivisionLines = true;
                     let shiftReferenceLines = false;
                     this.setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
-                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines)
+                    let highlightSequencerRowLine = false
+                    let adjustAnalyticsBarText = true
+                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
                 }
             },
             "mouseleave": () => {
@@ -1204,6 +1216,7 @@ class DrumMachineGui {
                     for (let circle of this.shiftToolTracker.noteCircles) {
                         circle.stroke = 'transparent'
                     }
+                    this.hideAllAnalyticsBarText()
                     this.setAnalyticsBarLinesModeBeatLineShiftText(this, -1, true)
                     this.setAnalyticsBarLinesModeReferenceLineShiftText(this, -1, true)
                 }
@@ -1523,7 +1536,9 @@ class DrumMachineGui {
             if (self.rowSelectionTracker.selectedRowIndex === null && self.circleSelectionTracker.circleBeingMoved === null && self.rowVolumeAdjustmentTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
                 circle.fill = self.configurations.buttonBehavior.buttonHoverColor
                 rowSelectionRectangle.stroke = self.configurations.buttonBehavior.buttonHoverColor
-                self.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines)
+                let highlightSequencerRowLine = false
+                let adjustAnalyticsBarText = false
+                self.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
             }
         }
     }
@@ -1593,7 +1608,9 @@ class DrumMachineGui {
             rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
             self.unhighlightAllShiftableObjects(rowIndex);
             if (this.multiShiftTracker.withinRow !== null) { // if multi-shift is still highlighted for a row, leave it highlighted
-                this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.withinRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, true)
+                let adjustAnalyticsBarText = true
+                let highlightSequencerRowLine = true
+                this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.withinRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
             }
         }
     }
@@ -2841,7 +2858,7 @@ class DrumMachineGui {
                 circle.stroke = 'transparent'
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
                 // adjust analytics bar 'note' mode text 
-                this.setAnalyticsBarToNoteMode()
+                this.hideAllAnalyticsBarText()
                 this.setAnalyticsBarNotesModeBeatNumberText(this, -1, -1, -1, true)
                 this.setAnalyticsBarNotesModeReferenceLineNumberText(this, -1, -1, true)
                 this.setAnalyticsBarNotesModeVolumeText(this, -1, true)
@@ -3785,7 +3802,7 @@ class DrumMachineGui {
                 }
             }
             // adjust analytics bar 'note' mode text 
-            self.setAnalyticsBarToNoteMode()
+            self.hideAllAnalyticsBarText()
             self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
             self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
             self.setAnalyticsBarNotesModeVolumeText(self, -1, true)
@@ -3849,6 +3866,7 @@ class DrumMachineGui {
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
         // update analytics bar text
+        self.hideAllAnalyticsBarText()
         self.setAnalyticsBarLinesModeBeatLineShiftText(this, -1, true)
         self.setAnalyticsBarLinesModeReferenceLineShiftText(this, -1, true)
     }
@@ -4345,6 +4363,11 @@ class DrumMachineGui {
         this.components.domElements.divs.analyticsBarLinesModeText.style.display = 'block'
     }
 
+    hideAllAnalyticsBarText(){
+        this.components.domElements.divs.analyticsBarNoteModeText.style.display = 'none'
+        this.components.domElements.divs.analyticsBarLinesModeText.style.display = 'none'
+    }
+
     /**
      * for the analytics bar when in 'note' mode, set the text that describes the beat number of the note being analyzed. 
      * 
@@ -4423,7 +4446,7 @@ class DrumMachineGui {
      */
     setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, noteXPosition, sequencerRowIndex, hideValues=false){
         if (hideValues || sequencerRowIndex < 0) {
-            self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "-"
+            self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "beat lines: -"
             self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsMilliseconds.innerHTML = "-"
             return;
         }
@@ -4457,7 +4480,7 @@ class DrumMachineGui {
             }
         }
         // update analytics bar text
-        self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "+" + distanceFromLeftBeatAsPercent + "% / -" + distanceFromRightBeatAsPercent + "%"
+        self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "beat lines: +" + distanceFromLeftBeatAsPercent + "% / -" + distanceFromRightBeatAsPercent + "%"
         self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsMilliseconds.innerHTML = "|+" + distanceFromLeftBeatInMilliseconds + "ms / -" + distanceFromRightBeatInMilliseconds + "ms| of " + subdivisionsLengthMillis + "ms"
     }
 
@@ -4478,7 +4501,7 @@ class DrumMachineGui {
      */
     setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, noteXPosition, sequencerRowIndex, hideValues=false){
         if (hideValues || sequencerRowIndex < 0) {
-            self.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHTML = "-"
+            self.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHTML = "visual lines: -"
             self.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHTML = "-"
             return;
         }
@@ -4510,7 +4533,7 @@ class DrumMachineGui {
             distanceFromRightLineInMilliseconds = 0
         }
         // update analytics bar text
-        self.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHTML = "+" + distanceFromLeftLineAsPercent + "% / -" + distanceFromRightLineAsPercent + "%"
+        self.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHTML = "visual lines: +" + distanceFromLeftLineAsPercent + "% / -" + distanceFromRightLineAsPercent + "%"
         self.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHTML = "|+" + distanceFromLeftLineInMilliseconds + "ms / -" + distanceFromRightLineInMilliseconds + "ms| of " + referenceLineSubdivisionsLengthMillis + "ms"
     }
 
@@ -4519,7 +4542,7 @@ class DrumMachineGui {
      */
     setAnalyticsBarLinesModeBeatLineShiftText(self, sequencerRowIndex, hideValues=false){
         if (hideValues) {
-            self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat line shift: -"
+            self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat lines: -"
             self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "-"
             return;
         }
@@ -4545,8 +4568,8 @@ class DrumMachineGui {
             beatShiftFromRightInMilliseconds = 0
         }
         let beatLineSubdivisionsLengthMillis = Math.round((widthOfEachSubdivisionInPixels / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis)
-        self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat line shift: +" + beatLineShiftPercentFromLeft + "% / -" + beatLineShiftPercentFromRight + "%"
-        self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "| +" + beatShiftFromLeftInMilliseconds + "ms / -" + beatShiftFromRightInMilliseconds + "ms | of " + beatLineSubdivisionsLengthMillis + "ms"
+        self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat lines: +" + beatLineShiftPercentFromLeft + "% / -" + beatLineShiftPercentFromRight + "%"
+        self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "|+" + beatShiftFromLeftInMilliseconds + "ms / -" + beatShiftFromRightInMilliseconds + "ms| of " + beatLineSubdivisionsLengthMillis + "ms"
     }
 
     /**
@@ -4554,7 +4577,7 @@ class DrumMachineGui {
      */
     setAnalyticsBarLinesModeReferenceLineShiftText(self, sequencerRowIndex, hideValues=false){
         if (hideValues) {
-            self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftPercent.innerHTML = "visual line shift: -"
+            self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftPercent.innerHTML = "visual lines: -"
             self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftMilliseconds.innerHTML = "-"
             return;
         }
@@ -4580,8 +4603,8 @@ class DrumMachineGui {
             referenceLineShiftFromRightInMilliseconds = 0
         }
         let referenceLineSubdivisionsLengthMillis = Math.round((widthOfEachReferenceLineSubdivision / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis)
-        self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftPercent.innerHTML = "visual line shift: +" + referenceLineShiftPercentFromLeft + "% / -" + referenceLineShiftPercentFromRight + "%"
-        self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftMilliseconds.innerHTML = "| +" + referenceLineShiftFromLeftInMilliseconds + "ms / -" + referenceLineShiftFromRightInMilliseconds + "ms | of " + referenceLineSubdivisionsLengthMillis + "ms"
+        self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftPercent.innerHTML = "visual lines: +" + referenceLineShiftPercentFromLeft + "% / -" + referenceLineShiftPercentFromRight + "%"
+        self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftMilliseconds.innerHTML = "|+" + referenceLineShiftFromLeftInMilliseconds + "ms / -" + referenceLineShiftFromRightInMilliseconds + "ms| of " + referenceLineSubdivisionsLengthMillis + "ms"
     }
 
     /**
