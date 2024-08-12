@@ -532,9 +532,12 @@ class DrumMachineGui {
                     let highlightSequencerRowLine = true
                     this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.highlightedRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
                 }
-                if (event.key === "Tab") {
+                if (event.key === "Tab") { // toggle analytics bar visibility
                     this.isAnalyticsBarShown ? this.hideAnalyticsBar() : this.showAnalyticsBar();
                     this.isAnalyticsBarShown = !this.isAnalyticsBarShown
+                }
+                if (event.key === "Shift") {
+                    // todo: turn on precision edit mode
                 }
             },
             "keyup": (event) => {
@@ -557,6 +560,9 @@ class DrumMachineGui {
                     let adjustAnalyticsBarText = true
                     let highlightSequencerRowLine = true
                     this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.highlightedRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
+                }
+                if (event.key === "Shift") {
+                    // todo: turn off precision edit mode
                 }
             }
         }
