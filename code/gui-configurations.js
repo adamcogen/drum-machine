@@ -23,7 +23,7 @@ function getGuiConfigurations(hideIcons=false) {
             show: false, // show the old (deprecated) shift tool menu. this menu is obsolete now because it's been replaced by a better user experience for the shift tool. i'm leaving it available here in case it ends up being useful somehow later.
         }, 
         analyticsBar: {
-            show: false, // whether to show the analytics menu by default
+            show: true, // whether to show the analytics menu by default
         },
         sequencerRowHighlightLines: {
             lineWidth: 8,

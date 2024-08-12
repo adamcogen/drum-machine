@@ -4538,7 +4538,8 @@ class DrumMachineGui {
     }
 
     /**
-     * ....
+     * for the analytics bar when in 'lines' mode, set the text that describes the 'beat shift' amount for the row being analyzed.
+     * display the shift amount as the percentage of one beat, and as a number of milliseconds.
      */
     setAnalyticsBarLinesModeBeatLineShiftText(self, sequencerRowIndex, hideValues=false){
         if (hideValues) {
@@ -4573,7 +4574,8 @@ class DrumMachineGui {
     }
 
     /**
-     * ...
+     * for the analytics bar when in 'lines' mode, set the text that describes the 'reference line shift' amount for the row being analyzed.
+     * display the shift amount as the percentage of one reference line "beat", and as a number of milliseconds.
      */
     setAnalyticsBarLinesModeReferenceLineShiftText(self, sequencerRowIndex, hideValues=false){
         if (hideValues) {
