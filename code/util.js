@@ -1,6 +1,6 @@
 /**
  * This file contains shared logic that is used throughout the drum machine and may not belong to a single particular other class or file.
- * I am implementing this as a class with static methods instead of a file with just a bunch of globally scoped functions, because I think 
+ * I am implementing this as a class with static methods instead of a file with just a bunch of globally scoped functions, because I think
  * including a class name when invoking these functions will make it easier to see right away where they are implemented.
  */
 
@@ -38,12 +38,12 @@ class Util {
     /**
      * Perform linear conversion on a number.
      * Convert a number within a range to the proportional number within a different range.
-     * Preconditions: 
+     * Preconditions:
      *  - no negative numbers allowed (they're just untested)
      *  - inputs are not validated yet, it is assumed that the original number and both ranges make sense
      */
     static calculateLinearConversion(originalNumber, originalMin, originalMax, newMin, newMax) {
-        // proposed procedure: 
+        // proposed procedure:
         // - convert the old range to 0 -> something
         //   3 in [1 to 5] becomes 2 in [0 to 4]
         //   (by subtracting old min from everything old)
@@ -92,10 +92,10 @@ class Util {
         return (secondsPerMinute * millisecondsPerSecond * numberOfBeatsPerLoop) / loopLengthInMillis
     }
 
-    
+
     // and here are some more conversion methods, to be used in the 'tap tempo' button logic
     // (to convert the time between each click into a beats-per-minute value and vice versa)
-    
+
     static convertBeatLengthInMillisToBeatsPerMinute(millisecondsPerBeat) {
         let millisecondsPerSecond = 1000
         let secondsPerMinute = 60
@@ -107,5 +107,28 @@ class Util {
         let millisecondsPerSecond = 1000
         let secondsPerMinute = 60
         return (secondsPerMinute * millisecondsPerSecond) / beatsPerMinute
+    }
+
+    static debounce(func, wait = 300) {
+        let timer;
+        return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            func.apply(this, args);
+        }, wait);
+        };
+    }
+
+    static throttle(func, limit = 200) {
+        var waiting = false;
+        return function () {
+        if (!waiting) {
+            func.apply(this, arguments);
+            waiting = true;
+            setTimeout(function () {
+            waiting = false;
+            }, limit);
+        }
+        };
     }
 }

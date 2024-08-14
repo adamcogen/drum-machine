@@ -1744,13 +1744,33 @@ class DrumMachineGui {
          * number. if something besides a valid number is entered, the value will just go back
          * to whatever it was before, and not make any change to the sequencer.
          */
+
+        const trigger = (input) => {
+            input.blur();
+            input.focus();
+        }
+        const throttledTrigger = Util.throttle(trigger, 500);
+        const debouncedTrigger = Util.debounce(trigger, 500);
+
         let shapesToAddEventListenersTo = [this.components.domElements.textInputs.loopLengthBpm]
         let eventHandlersHash = {
             "mouseenter": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.setBeatsPerMinute},
             "mouseleave": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText},
             "keypress": (event) => this.defaultKeypressEventListenerForTextInput(event, this.components.domElements.textInputs.loopLengthBpm, true),
-            "blur" : () => {
+            "keydown": ({ shiftKey, key, target }) => {
+                if (!shiftKey) return;
+                if (key !== 'ArrowUp' && key !== 'ArrowDown') return;
+
+                // only execute this next change
+                target.addEventListener("change", ({ target }) => {
+                    throttledTrigger(target);
+                    debouncedTrigger(target);
+
+                }, { once: true });
+            },
+            "blur": (event) => {
                 let newTextInputValue = this.components.domElements.textInputs.loopLengthBpm.value.trim() // remove whitespace from beginning and end of input then store it
+                console.log({ newTextInputValue });
                 if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
                     newTextInputValue = this.sequencer.tempoRepresentation.beatsPerMinute
                 }
@@ -2110,20 +2130,21 @@ class DrumMachineGui {
         }
         this.components.domElements.textInputs.subdivisionTextInputs = []
         for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
-            let textArea = document.createElement("textarea");
-            textArea.cols = "3"
-            textArea.rows = "1"
-            textArea.style.position = "absolute"
-            textArea.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.subdivisionLineTextInputs.topPaddingPerRow) + "px"
-            textArea.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.subdivisionLineTextInputs.leftPaddingPerRow) + "px"
-            textArea.style.borderColor = this.configurations.sequencer.color
-            textArea.value = this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
-            textArea.style.color = this.configurations.defaultFont.color // set font color
-            textArea.title = "Number of rhythmic grid lines"
-            this.components.domElements.divs.subdivisionTextInputs.appendChild(textArea);
+            let input = document.createElement("input");
+            input.setAttribute('type', 'number');
+            input.setAttribute('data-cols', '3');
+            input.setAttribute('min', 0);
+            input.style.position = "absolute";
+            input.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.subdivisionLineTextInputs.topPaddingPerRow) + "px"
+            input.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.subdivisionLineTextInputs.leftPaddingPerRow) + "px"
+            input.style.borderColor = this.configurations.sequencer.color
+            input.value = this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
+            input.style.color = this.configurations.defaultFont.color // set font color
+            input.title = "Number of rhythmic grid lines"
+            this.components.domElements.divs.subdivisionTextInputs.appendChild(input);
             // note for later: the opposite of appendChild is removeChild
-            this.components.domElements.textInputs.subdivisionTextInputs.push(textArea)
-            // textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
+            this.components.domElements.textInputs.subdivisionTextInputs.push(input);
+            // input.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
         }
     }
 
@@ -2147,24 +2168,25 @@ class DrumMachineGui {
         }
         this.components.domElements.textInputs.referenceLineTextInputs = []
         for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
-            let textArea = document.createElement("textarea");
-            textArea.cols = "3"
-            textArea.rows = "1"
-            textArea.style.position = "absolute"
-            textArea.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.referenceLineTextInputs.topPaddingPerRow) + "px"
-            textArea.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.referenceLineTextInputs.leftPaddingPerRow) + "px"
-            textArea.style.borderColor = this.configurations.referenceLines.color
-            textArea.value = this.sequencer.rows[rowIndex].getNumberOfReferenceLines()
+            let input = document.createElement("input");
+            input.setAttribute('data-cols', '3');
+            input.setAttribute('type', 'number');
+            input.setAttribute("min", '0');
+            input.style.position = "absolute";
+            input.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.referenceLineTextInputs.topPaddingPerRow) + "px"
+            input.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.referenceLineTextInputs.leftPaddingPerRow) + "px"
+            input.style.borderColor = this.configurations.referenceLines.color
+            input.value = this.sequencer.rows[rowIndex].getNumberOfReferenceLines()
             if (this.sequencer.rows[rowIndex].getNumberOfReferenceLines() === 0) {
-                textArea.style.color = this.configurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
+                input.style.color = this.configurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
             } else {
-                textArea.style.color = this.configurations.defaultFont.color // set font color
+                input.style.color = this.configurations.defaultFont.color; // set font color
             }
-            textArea.title = "Number of visual guide lines"
-            this.components.domElements.divs.subdivisionTextInputs.appendChild(textArea);
+            input.title = "Number of visual guide lines"
+            this.components.domElements.divs.subdivisionTextInputs.appendChild(input);
             // note for later: the opposite of appendChild is removeChild
-            this.components.domElements.textInputs.referenceLineTextInputs.push(textArea)
-            // textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
+            this.components.domElements.textInputs.referenceLineTextInputs.push(input);
+            // input.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
         }
     }
 
@@ -2312,14 +2334,15 @@ class DrumMachineGui {
      * General text input event listeners logic
      */
 
-    addDefaultKeypressEventListenerToTextInput(textarea, allowPeriods) {
-        textarea.addEventListener('keypress', (event) => this.defaultKeypressEventListenerForTextInput(event, textarea, allowPeriods))
+    addDefaultKeypressEventListenerToTextInput(input, allowPeriods) {
+        input.addEventListener("keyup", event => this.defaultKeypressEventListenerForTextInput(event, input, allowPeriods));
     }
 
-    defaultKeypressEventListenerForTextInput(event, textarea, allowPeriods) {
+    defaultKeypressEventListenerForTextInput(event, input, allowPeriods) {
+        console.log({ event });
         if (event.key === "Enter") {
             event.preventDefault()
-            textarea.blur() // apply the change to the text area if the user presses "enter"
+            input.blur() // apply the change to the text area if the user presses "enter"
         }
         let periodCheckPassed = (event.key === "." && allowPeriods) // if the character is a period, make this value 'true' if periods are allowed. otherwise false.
         if (isNaN(Number.parseInt(event.key)) && !periodCheckPassed) { // don't allow the user to enter things that aren't numbers (but allow periods if they're allowed)

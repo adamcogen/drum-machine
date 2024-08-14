@@ -32,21 +32,28 @@
                 -ms-user-select: none;
             }
 
-            textarea { /* format all textarea objects */
+            input[type="number"] {
                 font-size: 20px;
-                resize: none; /* switch to 'horizontal' to only allow for horizontal resizing */
-                vertical-align: middle;
                 background-color: transparent;
-                border-width: 3px;
-                /* border-color: transparent; */
-                -webkit-border-radius: 5px;
-                -moz-border-radius: 5px;
+                border: 3px solid transparent;
                 border-radius: 5px;
                 text-align: right;
                 font-weight: 500;
                 font-family: "Helvetica";
-                /* prevent text wrapping */
-                white-space: nowrap;
+                padding: 2px;
+            }
+
+            input[type="number"]::-webkit-outer-spin-button,
+            input[type="number"]::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+
+            input[type="number"][data-cols="4"] {
+                width: 3.725rem;
+            }
+            input[type="number"][data-cols="3"] {
+                width: 3rem;
             }
 
             #tempo-text-inputs-bpm { /* format the tempo-text-inputs div */
@@ -220,13 +227,13 @@
             <select id="example-pattern-selector"></select>
         </div>
         <div id="tempo-text-inputs-bpm">
-            <textarea id="text-input-loop-length-bpm" rows="1" cols="4"></textarea>
+            <input id="text-input-loop-length-bpm" type="number" min="0" data-cols="4"   />
         </div>
         <div id="tempo-text-inputs-milliseconds">
-            <textarea id="text-input-loop-length-millis" rows="1" cols="4"></textarea>
+            <input id="text-input-loop-length-millis" type="number" min="0" data-cols="4" />
         </div>
         <div id="tempo-text-inputs-beats-per-loop">
-            <textarea id="text-input-number-of-beats-in-loop" rows="1" cols="3"></textarea>
+            <input id="text-input-number-of-beats-in-loop" type="number" min="2" data-cols="3" />
         </div>
         <div id="subdivision-text-inputs"></div>
         <img src="./assets/icons/png/stop.png" id="pause-icon" draggable="false" title="Stop the sequencer"/>
