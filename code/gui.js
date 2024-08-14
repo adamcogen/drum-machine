@@ -2125,26 +2125,24 @@ class DrumMachineGui {
      */
 
     initializeSubdivisionTextInputsValuesAndStyles() {
-        for(let existingSubdivisionTextInput of this.components.domElements.textInputs.subdivisionTextInputs) {
-            this.components.domElements.divs.subdivisionTextInputs.removeChild(existingSubdivisionTextInput)
-        }
-        this.components.domElements.textInputs.subdivisionTextInputs = []
+        const { sequencer } = this.configurations;
+        const { topPaddingPerRow, leftPaddingPerRow } = this.configurations.subdivisionLineTextInputs;
+        
+        const inputAttrs = { type: "number", min: "0", className: "cols-3" };
+        const styles = { position: "absolute", left: `${sequencer.left + sequencer.width + leftPaddingPerRow}px`,
+          borderColor: sequencer.color, color: this.configurations.defaultFont.color };
+
+        $(this.components.domElements.textInputs.subdivisionTextInputs).remove();
+        this.components.domElements.textInputs.subdivisionTextInputs = [];
         for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
-            let input = document.createElement("input");
-            input.setAttribute('type', 'number');
-            input.setAttribute('data-cols', '3');
-            input.setAttribute('min', 0);
-            input.style.position = "absolute";
-            input.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.subdivisionLineTextInputs.topPaddingPerRow) + "px"
-            input.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.subdivisionLineTextInputs.leftPaddingPerRow) + "px"
-            input.style.borderColor = this.configurations.sequencer.color
-            input.value = this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
-            input.style.color = this.configurations.defaultFont.color // set font color
-            input.title = "Number of rhythmic grid lines"
+            const value = this.sequencer.rows[rowIndex].getNumberOfSubdivisions();
+            const top = `${sequencer.top + rowIndex * sequencer.spaceBetweenRows + topPaddingPerRow}px`;
+
+            const input = Object.assign(document.createElement("input"), { value, ...inputAttrs });
+            Object.assign(input.style, { top, ...styles });
+
             this.components.domElements.divs.subdivisionTextInputs.appendChild(input);
-            // note for later: the opposite of appendChild is removeChild
             this.components.domElements.textInputs.subdivisionTextInputs.push(input);
-            // input.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
         }
     }
 
@@ -2169,7 +2167,7 @@ class DrumMachineGui {
         this.components.domElements.textInputs.referenceLineTextInputs = []
         for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
             let input = document.createElement("input");
-            input.setAttribute('data-cols', '3');
+            input.setAttribute('class', 'cols-3');
             input.setAttribute('type', 'number');
             input.setAttribute("min", '0');
             input.style.position = "absolute";
