@@ -714,7 +714,8 @@ class DrumMachineGui {
         }
     }
 
-    initializeRowVolumeAdjustmentVariablesAndVisuals(rowIndex) {
+    initializeRowVolumeAdjustmentVariablesAndVisuals(event, rowIndex) {
+        event = this.adjustEventCoordinates(event)
         this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.changeRowVolume
         // save relevant info about whichever row is selected
         this.rowVolumeAdjustmentTracker.selectedRowIndex = rowIndex;
@@ -725,8 +726,10 @@ class DrumMachineGui {
         for (let circle of this.rowVolumeAdjustmentTracker.noteCircles) {
             this.rowVolumeAdjustmentTracker.noteCirclesStartingRadiuses.push(circle.guiData.radiusWhenUnplayed)
         }
-        this.rowVolumeAdjustmentTracker.rowHandleStartingPosition.x = this.components.shapes.volumeAdjusterRowHandles[rowIndex].translation.x
-        this.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y = this.components.shapes.volumeAdjusterRowHandles[rowIndex].translation.y
+        let mouseX = event.pageX
+        let mouseY = event.pageY
+        this.rowVolumeAdjustmentTracker.rowHandleStartingPosition.x = mouseX
+        this.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y = mouseY
         // update visuals
         let circle = this.components.shapes.volumeAdjusterRowHandles[rowIndex]
         circle.fill = this.configurations.volumeAdjusterRowHandles.selectedColor
@@ -1474,20 +1477,20 @@ class DrumMachineGui {
             });
             // when you hold your mouse down on the row handle circle, select that row.
             // we will de-select it later whenever you lift your mouse.
-            circle._renderer.elem.addEventListener('mousedown', () => {
-                this.changeRowVolumesMouseDownEventHandler(this, rowIndex);
+            circle._renderer.elem.addEventListener('mousedown', (event) => {
+                this.changeRowVolumesMouseDownEventHandler(this, event, rowIndex);
             });
             // the bulk of the actual 'mouseup' logic will be handled in the window's mouseup event,
             // because if we implement snap-into-place for sequencer rows, the row handle may not actually
             // be under our mouse when we lift our mouse to drop the row into place.
             // just putting the most basic functionality for visual effects here for now.
-            circle._renderer.elem.addEventListener('mouseup', () => {
-                this.changeRowVolumesMouseUpEventHandler(this, rowIndex);
+            circle._renderer.elem.addEventListener('mouseup', (event) => {
+                this.changeRowVolumesMouseUpEventHandler(this, event, rowIndex);
             });
         }
     }
 
-    changeRowVolumesMouseClickEventHandler(self, rowIndex) {
+    toggleRowMuted(self, rowIndex) {
         // todo: add icon updates here
         if (self.sequencer.rows[rowIndex].muted) {
             self.sequencer.rows[rowIndex].unmute()
@@ -1522,15 +1525,24 @@ class DrumMachineGui {
         }
     }
 
-    changeRowVolumesMouseDownEventHandler(self, rowIndex) {
+    changeRowVolumesMouseDownEventHandler(self, event, rowIndex) {
         if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.respondToEvents) {
             // save relevant info about whichever row is selected
-            self.initializeRowVolumeAdjustmentVariablesAndVisuals(rowIndex);
+            self.initializeRowVolumeAdjustmentVariablesAndVisuals(event, rowIndex);
         }
     }
 
-    changeRowVolumesMouseUpEventHandler(self, rowIndex) {
+    changeRowVolumesMouseUpEventHandler(self, event, rowIndex) {
+        event = self.adjustEventCoordinates(event)
         if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.respondToEvents) {
+            // if the mouse hasn't moved since the mousedown event, handle this as a click event
+            // let mouseX = event.pageX
+            // let mouseY = event.pageY
+            // let mouseHasMoved = (mouseX !== self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.x || mouseY !== self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y)
+            // if (mouseHasMoved) {
+            //     self.toggleRowMuted(self, rowIndex);
+            // }
+
             self.components.domElements.divs.bottomBarText.innerHTML = self.configurations.helpText.defaultText
             let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
@@ -4341,8 +4353,8 @@ class DrumMachineGui {
             this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex] = {
                 mouseenter: () => this.changeRowVolumesMouseEnterEventHandler(this, rowIndex),
                 mouseleave: () => this.changeRowVolumesMouseLeaveEventHandler(this, rowIndex),
-                mousedown: () => this.changeRowVolumesMouseDownEventHandler(this, rowIndex),
-                mouseup: () => this.changeRowVolumesMouseUpEventHandler(this, rowIndex),
+                mousedown: (event) => this.changeRowVolumesMouseDownEventHandler(this, event, rowIndex),
+                mouseup: (event) => this.changeRowVolumesMouseUpEventHandler(this, event, rowIndex),
             };
             changeRowVolumeIcon.addEventListener('mouseenter', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mouseenter']);
             changeRowVolumeIcon.addEventListener('mouseleave', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mouseleave']);
