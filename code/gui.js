@@ -1106,9 +1106,9 @@ class DrumMachineGui {
                     // calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
                     this.multiShiftTracker.highlightedRow = rowIndex;
                     this.components.shapes.sequencerRowHighlightLines[rowIndex].guiData.highlighted = true
-                    let highlightSubdivisionLines = event.ctrlKey || this.multiShiftTracker.shiftSubdivisionLines
-                    let highlightNotes = event.altKey || this.multiShiftTracker.shiftNotes || (highlightSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
-                    let highlightReferenceLines = event.metaKey || this.multiShiftTracker.shiftReferenceLines;
+                    let highlightSubdivisionLines = this.multiShiftTracker.shiftSubdivisionLines
+                    let highlightNotes = this.multiShiftTracker.shiftNotes || (highlightSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
+                    let highlightReferenceLines = this.multiShiftTracker.shiftReferenceLines;
                     this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.multiShift;
                     this.shiftToolTracker.resourcesToShift.notes = highlightNotes
                     this.shiftToolTracker.resourcesToShift.subdivisionLines = highlightSubdivisionLines
@@ -1134,9 +1134,9 @@ class DrumMachineGui {
             "mousedown": (event) => {
                 // calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
                 let updateShiftRowToolButtonVisuals = false;
-                let shiftSubdivisionLines = event.ctrlKey || this.multiShiftTracker.shiftSubdivisionLines
-                let shiftNotes = event.altKey || this.multiShiftTracker.shiftNotes || (shiftSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
-                let shiftReferenceLines = event.metaKey || this.multiShiftTracker.shiftReferenceLines;
+                let shiftSubdivisionLines = this.multiShiftTracker.shiftSubdivisionLines
+                let shiftNotes = this.multiShiftTracker.shiftNotes || (shiftSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
+                let shiftReferenceLines = this.multiShiftTracker.shiftReferenceLines;
                 this.initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowToolButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
                 let rowIsQuantized = this.sequencer.rows[this.shiftToolTracker.selectedRowIndex].quantized
                 this.setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
@@ -2890,9 +2890,9 @@ class DrumMachineGui {
                 let rowIndex = circle.guiData.row
                 if (rowIndex >= 0) { // don't allow shift for note bank notes (row index === -1)
                     this.multiShiftTracker.highlightedRow = rowIndex;
-                    let highlightSubdivisionLines = event.ctrlKey || this.multiShiftTracker.shiftSubdivisionLines
-                    let highlightNotes = event.altKey || this.multiShiftTracker.shiftNotes || (highlightSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
-                    let highlightReferenceLines = event.metaKey || this.multiShiftTracker.shiftReferenceLines;
+                    let highlightSubdivisionLines = this.multiShiftTracker.shiftSubdivisionLines
+                    let highlightNotes = this.multiShiftTracker.shiftNotes || (highlightSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
+                    let highlightReferenceLines = this.multiShiftTracker.shiftReferenceLines;
                     this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.multiShift;
                     this.shiftToolTracker.resourcesToShift.notes = highlightNotes
                     this.shiftToolTracker.resourcesToShift.subdivisionLines = highlightSubdivisionLines
@@ -2964,9 +2964,9 @@ class DrumMachineGui {
             let rowIndex = circle.guiData.row
             if (rowIndex >= 0) { // don't allow shift for note bank notes (row index === -1)
                 let updateShiftRowToolButtonVisuals = false;
-                let shiftSubdivisionLines = event.ctrlKey || this.multiShiftTracker.shiftSubdivisionLines
-                let shiftNotes = event.altKey || this.multiShiftTracker.shiftNotes || (shiftSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
-                let shiftReferenceLines = event.metaKey || this.multiShiftTracker.shiftReferenceLines;
+                let shiftSubdivisionLines = this.multiShiftTracker.shiftSubdivisionLines
+                let shiftNotes = this.multiShiftTracker.shiftNotes || (shiftSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
+                let shiftReferenceLines = this.multiShiftTracker.shiftReferenceLines;
                 this.initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowToolButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
             }
         });
