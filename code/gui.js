@@ -1536,12 +1536,12 @@ class DrumMachineGui {
         event = self.adjustEventCoordinates(event)
         if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.respondToEvents) {
             // if the mouse hasn't moved since the mousedown event, handle this as a click event
-            // let mouseX = event.pageX
-            // let mouseY = event.pageY
-            // let mouseHasMoved = (mouseX !== self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.x || mouseY !== self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y)
-            // if (mouseHasMoved) {
-            //     self.toggleRowMuted(self, rowIndex);
-            // }
+            let mouseX = event.pageX
+            let mouseY = event.pageY
+            let mouseHasMoved = (mouseX !== self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.x || mouseY !== self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y)
+            if (!mouseHasMoved) {
+                // self.toggleRowMuted(self, rowIndex);
+            }
 
             self.components.domElements.divs.bottomBarText.innerHTML = self.configurations.helpText.defaultText
             let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
