@@ -2125,14 +2125,14 @@ class DrumMachineGui {
         const { sequencer, defaultFont } = this.configurations;
         const { topPaddingPerRow, leftPaddingPerRow } = this.configurations.subdivisionLineTextInputs;
         
-        const inputAttrs = { type: "number", min: "0", className: "cols-3", title: "Number of rhythmic grid lines" };
+        const inputAttrs = { type: "number", min: "0", className: "cols-3", title: "Number of rhythmic grid lines", "" };
         const styles = { position: "absolute", left: `${sequencer.left + sequencer.width + leftPaddingPerRow}px`,
           borderColor: sequencer.color, color: defaultFont.color };
 
         $(this.components.domElements.textInputs.subdivisionTextInputs).remove();
         this.components.domElements.textInputs.subdivisionTextInputs = [];
         this.sequencer.rows.forEach((row, rowIndex) => {
-            const value = this.sequencer.rows[rowIndex].getNumberOfSubdivisions();
+            const value = row.getNumberOfSubdivisions();
             const top = `${sequencer.top + rowIndex * sequencer.spaceBetweenRows + topPaddingPerRow}px`;
 
             const input = Object.assign(document.createElement("input"), { value, ...inputAttrs });
@@ -2333,7 +2333,6 @@ class DrumMachineGui {
     }
 
     defaultKeypressEventListenerForTextInput(event, input, allowPeriods) {
-        // console.log({ event });
         if (event.key === "Enter") {
             event.preventDefault()
             input.blur() // apply the change to the text area if the user presses "enter"
