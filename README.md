@@ -42,7 +42,8 @@ Together these features let us create unique rhythms that are difficult (or some
   - BPM input mode includes a 'tap tempo' button
   - Millisecond loop length can be useful for making rhythmic transcriptions from an existing sound file
 - Load example sequencer patterns from the 'examples' dropdown.
-- Adjust the volume of each note using cntrl+click. The louder the note, the larger its circle will be on-screen.
+- Adjust the volume of each note using click+v. The louder the note, the larger its circle will be on-screen.
+- Press the tab key to toggle an analytics menu showing details about notes and sequencer rows
 
 ![Drum Machine](assets/images/screenshot-with-help-text-7_5_2023.png "Drum Machine")
 

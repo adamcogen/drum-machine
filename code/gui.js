@@ -516,13 +516,13 @@ class DrumMachineGui {
                     }
                 }
                 // handle key presses for multi-shift tool
-                if (event.ctrlKey) {
+                if (event.metaKey) {
                     this.multiShiftTracker.shiftSubdivisionLines = true;
                 }
                 if (event.altKey) {
                     this.multiShiftTracker.shiftNotes = true;
                 }
-                if (event.metaKey) {
+                if (event.ctrlKey) {
                     this.multiShiftTracker.shiftReferenceLines = true;
                 }
                 if (this.multiShiftTracker.highlightedRow !== null && this.shiftToolTracker.selectedRowIndex === null) {
@@ -552,13 +552,13 @@ class DrumMachineGui {
             },
             "keyup": (event) => {
                 // handle key ups for multi-shift tool
-                if (!event.ctrlKey) {
+                if (!event.metaKey) {
                     this.multiShiftTracker.shiftSubdivisionLines = false;
                 }
                 if (!event.altKey) {
                     this.multiShiftTracker.shiftNotes = false;
                 }
-                if (!event.metaKey) {
+                if (!event.ctrlKey) {
                     this.multiShiftTracker.shiftReferenceLines = false;
                 }
                 if (this.multiShiftTracker.highlightedRow !== null && this.shiftToolTracker.selectedRowIndex === null) {

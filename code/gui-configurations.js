@@ -488,7 +488,7 @@ function getGuiConfigurations(hideIcons=false) {
             selectLiveMidiOutputPort: "select live MIDI output port",
             selectDrumKit: "select drum kit to use for live audio output",
             selectExampleSequencerPattern: "load an example sequencer pattern",
-            multiShift: "click+drag to shift multiple types of objects at the same time. +ctrl for rhythmic grid lines; +alt for notes; +cmd for visual reference lines."
+            multiShift: "click+drag to shift multiple types of objects at the same time. +cmd for rhythmic grid lines; +alt for notes; +ctrl for visual reference lines."
         }
     }
 }
