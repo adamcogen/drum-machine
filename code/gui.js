@@ -187,6 +187,9 @@ class DrumMachineGui {
             this.hideAnalyticsBar();
         }
 
+        this.isPrecisionEditModeEnabled = false;
+        this.adjustNoteVolumeOnNoteClick = false;
+
         this.refreshTwoJsCanvasSize()
     }
 
@@ -528,16 +531,23 @@ class DrumMachineGui {
                     this.shiftToolTracker.resourcesToShift.subdivisionLines = this.multiShiftTracker.shiftSubdivisionLines
                     this.shiftToolTracker.resourcesToShift.referenceLines = this.multiShiftTracker.shiftReferenceLines
                     this.unhighlightAllShiftableObjects(this.multiShiftTracker.highlightedRow)
-                    let adjustAnalyticsBarText = true
                     let highlightSequencerRowLine = true
-                    this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.highlightedRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
+                    let lightHighlightSequencerRowLineOnHover = true
+                    let adjustAnalyticsBarText = false
+                    this.components.shapes.sequencerRowHighlightLines[this.multiShiftTracker.highlightedRow].guiData.highlighted = true
+                    this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.highlightedRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, highlightSequencerRowLine, lightHighlightSequencerRowLineOnHover, adjustAnalyticsBarText)
                 }
                 if (event.key === "Tab") { // toggle analytics bar visibility
                     this.isAnalyticsBarShown ? this.hideAnalyticsBar() : this.showAnalyticsBar();
                     this.isAnalyticsBarShown = !this.isAnalyticsBarShown
                 }
                 if (event.key === "Shift") {
-                    // todo: turn on precision edit mode
+                    this.isPrecisionEditModeEnabled = true;
+                }
+                if (event.key === "v") {
+                    // when this key is held down, clicking and dragging a note will adjust its volume instead of moving it.
+                    // for now we can use 'v' for 'volume'
+                    this.adjustNoteVolumeOnNoteClick = true;
                 }
             },
             "keyup": (event) => {
@@ -557,12 +567,17 @@ class DrumMachineGui {
                     this.shiftToolTracker.resourcesToShift.subdivisionLines = this.multiShiftTracker.shiftSubdivisionLines
                     this.shiftToolTracker.resourcesToShift.referenceLines = this.multiShiftTracker.shiftReferenceLines
                     this.unhighlightAllShiftableObjects(this.multiShiftTracker.highlightedRow)
-                    let adjustAnalyticsBarText = true
+                    let adjustAnalyticsBarText = false
                     let highlightSequencerRowLine = true
-                    this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.highlightedRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
+                    let lightHighlightSequencerRowLineOnHover = true
+                    this.components.shapes.sequencerRowHighlightLines[this.multiShiftTracker.highlightedRow].guiData.highlighted = false
+                    this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.highlightedRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, highlightSequencerRowLine, lightHighlightSequencerRowLineOnHover, adjustAnalyticsBarText)
                 }
                 if (event.key === "Shift") {
-                    // todo: turn off precision edit mode
+                    this.isPrecisionEditModeEnabled = false;
+                }
+                if (event.key === "v") {
+                    this.adjustNoteVolumeOnNoteClick = false;
                 }
             }
         }
@@ -728,7 +743,7 @@ class DrumMachineGui {
 
     // when we hover over a shiftable object, we should highlight it as necessary,
     // and also store and variables we will need to track if it gets clicked.
-    initializeShiftToolHoverVisualsAndVariables(rowIndex, highlightNotes, highlightSubdivisionLines, highlightReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText) {
+    initializeShiftToolHoverVisualsAndVariables(rowIndex, highlightNotes, highlightSubdivisionLines, highlightReferenceLines, highlightSequencerRowLine, lightHighlightSequencerRowLineOnHover, adjustAnalyticsBarText) {
         this.shiftToolTracker.highlightedRowIndex = rowIndex;
         this.shiftToolTracker.noteCircles = [];
         for (let circle of this.allDrawnCircles) {
@@ -752,18 +767,22 @@ class DrumMachineGui {
                 shape.stroke = this.configurations.subdivisionHighlightLines.color
             }
         }
+        
         // sequener row line
-        if (highlightSequencerRowLine) {
-            if (highlightNotes && (highlightReferenceLines || highlightSubdivisionLines)) {
-                // this will be used for the multi-shift tool: when you mouse over a sequencer row line, you will have the option
-                // to shift any combination of resources at the same time, by holding down different keys (alt, ctrl, and shift).
-                this.components.shapes.sequencerRowHighlightLines[rowIndex].stroke = this.configurations.sequencerRowHighlightLines.color
-                this.components.shapes.sequencerRowHighlightLines[rowIndex].linewidth = this.configurations.sequencerRowHighlightLines.lineWidth
-            } else {
-                this.components.shapes.sequencerRowHighlightLines[rowIndex].stroke = this.configurations.sequencerRowHighlightLines.hoverColor
-                this.components.shapes.sequencerRowHighlightLines[rowIndex].linewidth = this.configurations.sequencerRowHighlightLines.hoverLineWidth;
-            }
+        if (lightHighlightSequencerRowLineOnHover && this.components.shapes.sequencerRowHighlightLines[rowIndex].guiData.highlighted) { 
+            // this is for using the multi-shift tool on a sequencer row line. 
+            // the row line will give a light highlight when you mouse over it to indicate that you can interact with it.
+            this.components.shapes.sequencerRowHighlightLines[rowIndex].stroke = this.configurations.sequencerRowHighlightLines.hoverColor
+            this.components.shapes.sequencerRowHighlightLines[rowIndex].linewidth = this.configurations.sequencerRowHighlightLines.hoverLineWidth;
         }
+
+        if (highlightSequencerRowLine && highlightNotes && (highlightReferenceLines || highlightSubdivisionLines)) {
+            // this will be used for the multi-shift tool: when you mouse over a sequencer row line, you will have the option
+            // to shift any combination of resources at the same time, by holding down different keys (alt, ctrl, and shift).
+            this.components.shapes.sequencerRowHighlightLines[rowIndex].stroke = this.configurations.sequencerRowHighlightLines.color
+            this.components.shapes.sequencerRowHighlightLines[rowIndex].linewidth = this.configurations.sequencerRowHighlightLines.lineWidth
+        }
+
         if (adjustAnalyticsBarText) { // this condition is false if this method is being called for the dedicated 'shift notes only' button
             // adjust analytics bar text
             this.setAnalyticsBarToLinesMode()
@@ -813,7 +832,9 @@ class DrumMachineGui {
 
     unhighlightAllShiftableObjects(rowIndex) {
         for (let circle of this.shiftToolTracker.noteCircles) {
-            circle.stroke = 'transparent'
+            if (circle.guiData.highlighted === false) { // skip circles that the mouse is still hover over
+                circle.stroke = 'transparent'
+            }
         }
         for (let shape of this.components.shapes.subdivisionHighlightLineLists[rowIndex]) {
             shape.stroke = 'transparent'
@@ -941,8 +962,9 @@ class DrumMachineGui {
                     let rowIsQuantized = this.sequencer.rows[rowIndex].quantized
                     this.setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
                     let highlightSequencerRowLine = false
+                    let lightHighlightSequencerRowLineOnHover = false
                     let adjustAnalyticsBarText = true
-                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
+                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines, highlightSequencerRowLine, lightHighlightSequencerRowLineOnHover, adjustAnalyticsBarText)
                 }
             },
             "mouseleave": () => {
@@ -1083,6 +1105,7 @@ class DrumMachineGui {
                 if (this.noObjectsAreBeingMoved()) {
                     // calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
                     this.multiShiftTracker.highlightedRow = rowIndex;
+                    this.components.shapes.sequencerRowHighlightLines[rowIndex].guiData.highlighted = true
                     let highlightSubdivisionLines = event.ctrlKey || this.multiShiftTracker.shiftSubdivisionLines
                     let highlightNotes = event.altKey || this.multiShiftTracker.shiftNotes || (highlightSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
                     let highlightReferenceLines = event.metaKey || this.multiShiftTracker.shiftReferenceLines;
@@ -1091,14 +1114,16 @@ class DrumMachineGui {
                     this.shiftToolTracker.resourcesToShift.subdivisionLines = highlightSubdivisionLines
                     this.shiftToolTracker.resourcesToShift.referenceLines = highlightReferenceLines
                     let highlightSequencerRowLine = true;
+                    let lightHighlightSequencerRowLineOnHover = true;
                     let adjustAnalyticsBarText = true
-                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, highlightNotes, highlightSubdivisionLines, highlightReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
+                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, highlightNotes, highlightSubdivisionLines, highlightReferenceLines, highlightSequencerRowLine, lightHighlightSequencerRowLineOnHover, adjustAnalyticsBarText)
                 }
             },
             "mouseleave": () => {
                 this.multiShiftTracker.withinRow = null;
                 if (this.shiftToolTracker.selectedRowIndex === null) {
                     this.multiShiftTracker.highlightedRow = null;
+                    this.components.shapes.sequencerRowHighlightLines[rowIndex].guiData.highlighted = false
                     this.unhighlightAllShiftableObjects(rowIndex);
                     this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText;
                     this.hideAllAnalyticsBarText()
@@ -1120,6 +1145,8 @@ class DrumMachineGui {
                 this.multiShiftTracker.highlightedRow = rowIndex;
             }
         }
+        this.components.shapes.sequencerRowHighlightLines[rowIndex].guiData = {}
+        this.components.shapes.sequencerRowHighlightLines[rowIndex].guiData.highlighted = false
         this.addEventListenersWithoutDuplicates("sequencerRowLines" + rowIndex, shapesToAddEventListenersTo, eventHandlersHash);
     }
 
@@ -1214,8 +1241,9 @@ class DrumMachineGui {
                     let shiftReferenceLines = false;
                     this.setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
                     let highlightSequencerRowLine = false
+                    let lightHighlightSequencerRowLineOnHover = false
                     let adjustAnalyticsBarText = true
-                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
+                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines, highlightSequencerRowLine, lightHighlightSequencerRowLineOnHover, adjustAnalyticsBarText)
                 }
             },
             "mouseleave": () => {
@@ -1547,9 +1575,10 @@ class DrumMachineGui {
             if (self.rowSelectionTracker.selectedRowIndex === null && self.circleSelectionTracker.circleBeingMoved === null && self.rowVolumeAdjustmentTracker.selectedRowIndex === null) { // if a row is already selected (i.e being moved), don't do any of this
                 circle.fill = self.configurations.buttonBehavior.buttonHoverColor
                 rowSelectionRectangle.stroke = self.configurations.buttonBehavior.buttonHoverColor
-                let highlightSequencerRowLine = false
+                let highlightSequencerRowLine = true
+                let lightHighlightSequencerRowLineOnHover = true
                 let adjustAnalyticsBarText = false
-                self.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
+                self.initializeShiftToolHoverVisualsAndVariables(rowIndex, shiftNotes, shiftSubdivisionLines, shiftReferenceLines, highlightSequencerRowLine, lightHighlightSequencerRowLineOnHover, adjustAnalyticsBarText)
             }
         }
     }
@@ -1619,9 +1648,10 @@ class DrumMachineGui {
             rowSelectionRectangle.stroke = self.configurations.shiftToolRowHandles.unselectedColor
             self.unhighlightAllShiftableObjects(rowIndex);
             if (this.multiShiftTracker.withinRow !== null) { // if multi-shift is still highlighted for a row, leave it highlighted
-                let adjustAnalyticsBarText = true
                 let highlightSequencerRowLine = true
-                this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.withinRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, highlightSequencerRowLine, adjustAnalyticsBarText)
+                let lightHighlightSequencerRowLineOnHover = true
+                let adjustAnalyticsBarText = true
+                this.initializeShiftToolHoverVisualsAndVariables(this.multiShiftTracker.withinRow, this.multiShiftTracker.shiftNotes, this.multiShiftTracker.shiftSubdivisionLines, this.multiShiftTracker.shiftReferenceLines, highlightSequencerRowLine, lightHighlightSequencerRowLineOnHover, adjustAnalyticsBarText)
             }
         }
     }
@@ -2851,8 +2881,28 @@ class DrumMachineGui {
         // add border to circle on mouseover
         circle._renderer.elem.addEventListener('mouseenter', (event) => {
             if (this.shiftToolTracker.selectedRowIndex === null && this.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
+                circle.guiData.highlighted = true
                 circle.stroke = 'black'
                 circle.linewidth = 2
+
+                // allow multi-shift while moving notes
+                // calculate whether to move stuff based on which keys are being held down (alt, shift, ctrl)
+                let rowIndex = circle.guiData.row
+                if (rowIndex >= 0) { // don't allow shift for note bank notes (row index === -1)
+                    this.multiShiftTracker.highlightedRow = rowIndex;
+                    let highlightSubdivisionLines = event.ctrlKey || this.multiShiftTracker.shiftSubdivisionLines
+                    let highlightNotes = event.altKey || this.multiShiftTracker.shiftNotes || (highlightSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
+                    let highlightReferenceLines = event.metaKey || this.multiShiftTracker.shiftReferenceLines;
+                    this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.multiShift;
+                    this.shiftToolTracker.resourcesToShift.notes = highlightNotes
+                    this.shiftToolTracker.resourcesToShift.subdivisionLines = highlightSubdivisionLines
+                    this.shiftToolTracker.resourcesToShift.referenceLines = highlightReferenceLines
+                    let highlightSequencerRowLine = true;
+                    let lightHighlightSequencerRowLineOnHover = false
+                    let adjustAnalyticsBarText = false;
+                    this.initializeShiftToolHoverVisualsAndVariables(rowIndex, highlightNotes, highlightSubdivisionLines, highlightReferenceLines, highlightSequencerRowLine, lightHighlightSequencerRowLineOnHover, adjustAnalyticsBarText)
+                }
+
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveNote
                 // adjust analytics bar 'note' mode text 
                 this.setAnalyticsBarToNoteMode()
@@ -2866,8 +2916,17 @@ class DrumMachineGui {
         // remove border from circle when mouse is no longer over it
         circle._renderer.elem.addEventListener('mouseleave', (event) => {
             if (this.shiftToolTracker.selectedRowIndex === null && this.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
+                circle.guiData.highlighted = false
                 circle.stroke = 'transparent'
                 this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
+
+                // handle multi-shift
+                let rowIndex = circle.guiData.row
+                if (rowIndex >= 0){ // don't allow shift for note bank notes (row index === -1)
+                    this.multiShiftTracker.highlightedRow = null;
+                    this.unhighlightAllShiftableObjects(rowIndex);
+                }  
+            
                 // adjust analytics bar 'note' mode text 
                 this.hideAllAnalyticsBarText()
                 this.setAnalyticsBarNotesModeBeatNumberText(this, -1, -1, -1, true)
@@ -2900,6 +2959,16 @@ class DrumMachineGui {
             this.setNoteTrashBinVisibility(true);
             this.components.shapes.noteTrashBinContainer.stroke = 'transparent'
             this.sequencer.playDrumSampleNow(this.circleSelectionTracker.circleBeingMoved.guiData.sampleName, this.circleSelectionTracker.circleBeingMoved.guiData.volume, this.circleSelectionTracker.circleBeingMoved.guiData.midiNote, this.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
+
+            // also enable multi-shift when notes are selected if multi-shift keys are held down
+            let rowIndex = circle.guiData.row
+            if (rowIndex >= 0) { // don't allow shift for note bank notes (row index === -1)
+                let updateShiftRowToolButtonVisuals = false;
+                let shiftSubdivisionLines = event.ctrlKey || this.multiShiftTracker.shiftSubdivisionLines
+                let shiftNotes = event.altKey || this.multiShiftTracker.shiftNotes || (shiftSubdivisionLines && this.sequencer.rows[rowIndex].quantized);
+                let shiftReferenceLines = event.metaKey || this.multiShiftTracker.shiftReferenceLines;
+                this.initializeRowShiftToolVariablesAndVisuals(event, rowIndex, updateShiftRowToolButtonVisuals, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
+            }
         });
 
         // add info to the circle object that the gui uses to keep track of things
@@ -2912,6 +2981,7 @@ class DrumMachineGui {
         circle.guiData.midiVelocity = midiVelocity;
         circle.guiData.radiusWhenUnplayed = this.calculateCircleRadiusForVolume(volume);
         circle.guiData.midiNote = midiNote
+        circle.guiData.highlighted = false;
 
         // add circle to list of all drawn circles
         this.allDrawnCircles.push(circle)
@@ -3280,9 +3350,19 @@ class DrumMachineGui {
         let shiftReferenceLines = this.shiftToolTracker.resourcesToShift.referenceLines;
         let rowIsQuantized = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized
         this.setHelpTextForShiftTool(rowIsQuantized, shiftNotes, shiftSubdivisionLines, shiftReferenceLines);
-        // update analytics bar text
-        self.setAnalyticsBarLinesModeBeatLineShiftText(this, self.shiftToolTracker.selectedRowIndex)
-        self.setAnalyticsBarLinesModeReferenceLineShiftText(this, self.shiftToolTracker.selectedRowIndex)
+        if (self.circleSelectionTracker.circleBeingMoved) {
+            let noteRow = self.circleSelectionTracker.circleBeingMoved.guiData.row
+            let noteXPosition = self.circleSelectionTracker.circleBeingMoved.translation.x
+            let noteBeat = self.circleSelectionTracker.circleBeingMoved.guiData.beat
+            self.setAnalyticsBarNotesModeBeatNumberText(self, noteBeat, noteXPosition, noteRow)
+            self.setAnalyticsBarNotesModeReferenceLineNumberText(self, noteXPosition, noteRow)
+            self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
+            self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, noteXPosition, noteRow)
+            self.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, noteXPosition, noteRow)
+        } else {
+            self.setAnalyticsBarLinesModeBeatLineShiftText(this, self.shiftToolTracker.selectedRowIndex)
+            self.setAnalyticsBarLinesModeReferenceLineShiftText(this, self.shiftToolTracker.selectedRowIndex)
+        }
     }
 
     shiftSubdivisionsLogic(self, mouseMoveDistance) {
@@ -3317,66 +3397,74 @@ class DrumMachineGui {
         // we need to have some different logic here depending on whether the row is quantized or not.
         for (let noteCircleIndex = 0; noteCircleIndex < self.shiftToolTracker.noteCircles.length; noteCircleIndex++) {
             let currentNoteCircle = self.shiftToolTracker.noteCircles[noteCircleIndex];
-            let newNoteXPosition;
-            let newNoteBeatNumber;
-            if (self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].quantized) { // handle note shifting for when the row is quantized)
-                if (subdivisionLinesAreBeingShiftedToo) { 
-                    // if subdivision lines are being moved along with the notes, just move the notes along with those then figure out new beat numbers afterwards.
-                    let shiftInPixels = self.subdivisionLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex]
-                    let noteXPositionAdjustedForSequencerLeftEdge = (self.shiftToolTracker.noteCirclesStartingPositions[noteCircleIndex] - self.configurations.sequencer.left - mouseMoveDistance);
-                    if (noteXPositionAdjustedForSequencerLeftEdge < 0) { // wrap negative values back to the other end of the sequencer
-                        noteXPositionAdjustedForSequencerLeftEdge = self.configurations.sequencer.width + noteXPositionAdjustedForSequencerLeftEdge
-                    } else if (noteXPositionAdjustedForSequencerLeftEdge >= self.configurations.sequencer.width) { // wrap notes beyond the right edge of the sequencer back to the other side
-                        noteXPositionAdjustedForSequencerLeftEdge = noteXPositionAdjustedForSequencerLeftEdge % self.configurations.sequencer.width
-                    }
-                    newNoteXPosition = self.configurations.sequencer.left + noteXPositionAdjustedForSequencerLeftEdge
-                    let numberOfSubdivisionsInRow = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].getNumberOfSubdivisions();
-                    newNoteBeatNumber = self.getIndexOfClosestSubdivisionLine(newNoteXPosition, numberOfSubdivisionsInRow, shiftInPixels)
-                } else { 
-                    // if subdivision lines ARE NOT being moved, just check how many beats' distance we have moved the mouse, and base new beat quantizations on that.
-                    // that way we can guarantee that all notes will be shifted to a new beat number at the same time, even if there are irregularities in how floating
-                    // point precisision / rounding is handled between different beat numbers.
-                    let numberOfSubdivisionsInRow = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].getNumberOfSubdivisions();
-                    let widthOfEachBeatInPixels = self.configurations.sequencer.width / numberOfSubdivisionsInRow
-                    if (!referenceLinesAreBeingShiftedToo) {
-                        // if we get here, we know we're ONLY moving _quantized notes_. in that case, we can set a maximum mouse move distance
-                        // required to shift to the next beat, rather than always only relying on the actual width of each beat. this creates
-                        // a more responsive user experience if the beats are very wide.
-                        let maximumDistanceRequiredToShiftNotes = 50; //todo: move this into gui configurations file
-                        widthOfEachBeatInPixels = Math.min(maximumDistanceRequiredToShiftNotes, widthOfEachBeatInPixels);
-                    }
-                    let shiftInPixels = self.subdivisionLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex]
-                    let beatsMoved = -1 * (Math.round(mouseMoveDistance / widthOfEachBeatInPixels) % numberOfSubdivisionsInRow);
-                    let circleStartingBeat = self.shiftToolTracker.noteCirclesStartingBeats[noteCircleIndex]
-                    let startingBeatPlusBeatsMoved = circleStartingBeat + beatsMoved
-                    newNoteBeatNumber = startingBeatPlusBeatsMoved;
-                    if (newNoteBeatNumber < 0) {
-                        newNoteBeatNumber = newNoteBeatNumber + numberOfSubdivisionsInRow
-                    } else if (newNoteBeatNumber >= numberOfSubdivisionsInRow) {
-                        newNoteBeatNumber = newNoteBeatNumber % numberOfSubdivisionsInRow
-                    }
-                    newNoteXPosition = self.getXPositionOfSubdivisionLine(newNoteBeatNumber, numberOfSubdivisionsInRow, shiftInPixels)
-                }
-            } else { // handle note shifting for when the row is _not_ quantized 
-                let noteXPositionAdjustedForSequencerLeftEdge = (self.shiftToolTracker.noteCirclesStartingPositions[noteCircleIndex] - self.configurations.sequencer.left - mouseMoveDistance);
+            let sequencerRowIndexNoteIsOn = self.shiftToolTracker.selectedRowIndex;
+            let noteStartingXPosition = self.shiftToolTracker.noteCirclesStartingPositions[noteCircleIndex];
+            let noteStartingBeatNumber = self.shiftToolTracker.noteCirclesStartingBeats[noteCircleIndex];
+            self.shiftOneNoteLogic(self, mouseMoveDistance, subdivisionLinesAreBeingShiftedToo, referenceLinesAreBeingShiftedToo, currentNoteCircle, sequencerRowIndexNoteIsOn, noteStartingXPosition, noteStartingBeatNumber)
+        }
+    }
+
+    shiftOneNoteLogic(self, mouseMoveDistance, subdivisionLinesAreBeingShiftedToo, referenceLinesAreBeingShiftedToo, currentNoteCircleBeingShifted, sequencerRowIndexNoteIsOn, noteStartingXPosition, noteStartingBeatNumber) {
+        let currentNoteCircle = currentNoteCircleBeingShifted
+        let newNoteXPosition;
+        let newNoteBeatNumber;
+        if (self.sequencer.rows[sequencerRowIndexNoteIsOn].quantized) { // handle note shifting for when the row is quantized)
+            if (subdivisionLinesAreBeingShiftedToo) { 
+                // if subdivision lines are being moved along with the notes, just move the notes along with those then figure out new beat numbers afterwards.
+                let shiftInPixels = self.subdivisionLinesShiftInPixelsPerRow[sequencerRowIndexNoteIsOn]
+                let noteXPositionAdjustedForSequencerLeftEdge = (noteStartingXPosition - self.configurations.sequencer.left - mouseMoveDistance);
                 if (noteXPositionAdjustedForSequencerLeftEdge < 0) { // wrap negative values back to the other end of the sequencer
                     noteXPositionAdjustedForSequencerLeftEdge = self.configurations.sequencer.width + noteXPositionAdjustedForSequencerLeftEdge
                 } else if (noteXPositionAdjustedForSequencerLeftEdge >= self.configurations.sequencer.width) { // wrap notes beyond the right edge of the sequencer back to the other side
                     noteXPositionAdjustedForSequencerLeftEdge = noteXPositionAdjustedForSequencerLeftEdge % self.configurations.sequencer.width
                 }
                 newNoteXPosition = self.configurations.sequencer.left + noteXPositionAdjustedForSequencerLeftEdge
-                newNoteBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED;
+                let numberOfSubdivisionsInRow = self.sequencer.rows[sequencerRowIndexNoteIsOn].getNumberOfSubdivisions();
+                newNoteBeatNumber = self.getIndexOfClosestSubdivisionLine(newNoteXPosition, numberOfSubdivisionsInRow, shiftInPixels)
+            } else { 
+                // if subdivision lines ARE NOT being moved, just check how many beats' distance we have moved the mouse, and base new beat quantizations on that.
+                // that way we can guarantee that all notes will be shifted to a new beat number at the same time, even if there are irregularities in how floating
+                // point precisision / rounding is handled between different beat numbers.
+                let numberOfSubdivisionsInRow = self.sequencer.rows[sequencerRowIndexNoteIsOn].getNumberOfSubdivisions();
+                let widthOfEachBeatInPixels = self.configurations.sequencer.width / numberOfSubdivisionsInRow
+                if (!referenceLinesAreBeingShiftedToo) {
+                    // if we get here, we know we're ONLY moving _quantized notes_. in that case, we can set a maximum mouse move distance
+                    // required to shift to the next beat, rather than always only relying on the actual width of each beat. this creates
+                    // a more responsive user experience if the beats are very wide.
+                    let maximumDistanceRequiredToShiftNotes = 50; //todo: move this into gui configurations file
+                    widthOfEachBeatInPixels = Math.min(maximumDistanceRequiredToShiftNotes, widthOfEachBeatInPixels);
+                }
+                let shiftInPixels = self.subdivisionLinesShiftInPixelsPerRow[sequencerRowIndexNoteIsOn]
+                let beatsMoved = -1 * (Math.round(mouseMoveDistance / widthOfEachBeatInPixels) % numberOfSubdivisionsInRow);
+                let circleStartingBeat = noteStartingBeatNumber
+                let startingBeatPlusBeatsMoved = circleStartingBeat + beatsMoved
+                newNoteBeatNumber = startingBeatPlusBeatsMoved;
+                if (newNoteBeatNumber < 0) {
+                    newNoteBeatNumber = newNoteBeatNumber + numberOfSubdivisionsInRow
+                } else if (newNoteBeatNumber >= numberOfSubdivisionsInRow) {
+                    newNoteBeatNumber = newNoteBeatNumber % numberOfSubdivisionsInRow
+                }
+                newNoteXPosition = self.getXPositionOfSubdivisionLine(newNoteBeatNumber, numberOfSubdivisionsInRow, shiftInPixels)
             }
-            currentNoteCircle.translation.x = newNoteXPosition;
-            currentNoteCircle.guiData.beat = newNoteBeatNumber;
-            // replace the node in the sequencer data structure with an identical note that has the new priority (time) we have set the note to.
-            // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
-            let node = self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].removeNode(currentNoteCircle.guiData.label);
-            let newNodeTimestampMillis = self.sequencer.loopLengthInMillis * ((newNoteXPosition - self.configurations.sequencer.left) / self.configurations.sequencer.width)
-            node.priority = newNodeTimestampMillis;
-            node.data.beat = newNoteBeatNumber;
-            self.sequencer.rows[self.shiftToolTracker.selectedRowIndex].insertNode(node, currentNoteCircle.guiData.label);
+        } else { // handle note shifting for when the row is _not_ quantized 
+            let noteXPositionAdjustedForSequencerLeftEdge = (noteStartingXPosition - self.configurations.sequencer.left - mouseMoveDistance);
+            if (noteXPositionAdjustedForSequencerLeftEdge < 0) { // wrap negative values back to the other end of the sequencer
+                noteXPositionAdjustedForSequencerLeftEdge = self.configurations.sequencer.width + noteXPositionAdjustedForSequencerLeftEdge
+            } else if (noteXPositionAdjustedForSequencerLeftEdge >= self.configurations.sequencer.width) { // wrap notes beyond the right edge of the sequencer back to the other side
+                noteXPositionAdjustedForSequencerLeftEdge = noteXPositionAdjustedForSequencerLeftEdge % self.configurations.sequencer.width
+            }
+            newNoteXPosition = self.configurations.sequencer.left + noteXPositionAdjustedForSequencerLeftEdge
+            newNoteBeatNumber = Sequencer.NOTE_IS_NOT_QUANTIZED;
         }
+        currentNoteCircle.translation.x = newNoteXPosition;
+        currentNoteCircle.guiData.beat = newNoteBeatNumber;
+        // replace the node in the sequencer data structure with an identical note that has the new priority (time) we have set the note to.
+        // open question: should we wait until mouse up to actually update the sequencer data structure instead of doing it on mouse move?
+        let node = self.sequencer.rows[sequencerRowIndexNoteIsOn].removeNode(currentNoteCircle.guiData.label);
+        let newNodeTimestampMillis = self.sequencer.loopLengthInMillis * ((newNoteXPosition - self.configurations.sequencer.left) / self.configurations.sequencer.width)
+        node.priority = newNodeTimestampMillis;
+        node.data.beat = newNoteBeatNumber;
+        self.sequencer.rows[sequencerRowIndexNoteIsOn].insertNode(node, currentNoteCircle.guiData.label);
     }
 
     shiftReferenceLinesLogic(self, mouseMoveDistance) {
@@ -3450,26 +3538,30 @@ class DrumMachineGui {
             event = self.adjustEventCoordinates(event)
             let mouseX = event.pageX
             let mouseY = event.pageY
-            if (event.ctrlKey) {
-                // when the 'ctrl' key is being held while moving a note, change its volume instead of moving it.
-                self.adjustNoteVolumeMouseMoveLogic(self, mouseX, mouseY)
-            } else {
-                if (self.circleSelectionTracker.mostRecentMovementWasVolumeChange) {
-                    self.sequencer.playDrumSampleNow(self.circleSelectionTracker.circleBeingMoved.guiData.sampleName, self.circleSelectionTracker.circleBeingMoved.guiData.volume, self.circleSelectionTracker.circleBeingMoved.guiData.midiNote, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
+            let shiftingAnyResource = self.shiftToolTracker.resourcesToShift.notes || self.shiftToolTracker.resourcesToShift.subdivisionLines || self.shiftToolTracker.resourcesToShift.referenceLines
+            if (shiftingAnyResource) {
+                // there are two scenarios in which we don't need to move the selected note here:
+                //     1. if all notes on this row are being shifted
+                //     2. if this row is quantized and the subdivision lines are being shifted.
+                // in both of those scenarios, the normal 'shift' tool logic will move the selected note for us as is. if we are _not_ in one of those scenarios, we will need to move the selected note now.
+                let selectedNoteNeedsToBeMovedNow = !self.shiftToolTracker.resourcesToShift.notes && !(self.shiftToolTracker.resourcesToShift.subdivisionLines || self.circleSelectionTracker.circleBeingMoved.guiData.row.quantized)
+                if (selectedNoteNeedsToBeMovedNow) {
+                    let startingPositionOfNote = {
+                        x: self.circleSelectionTracker.circleBeingMoved.translation.x,
+                        y: self.circleSelectionTracker.circleBeingMoved.translation.y,
+                    }
+                    let mouseHasMoved = (mouseX !== startingPositionOfNote.x || mouseY !== startingPositionOfNote.y)
+                    if (mouseHasMoved) {
+                        let mouseMoveDistance = startingPositionOfNote.x - mouseX; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
+                        let subdivisionLinesAreBeingShiftedToo = self.shiftToolTracker.resourcesToShift.subdivisionLines
+                        let referenceLinesAreBeingShiftedToo = self.shiftToolTracker.resourcesToShift.referenceLines
+                        let currentNoteCircleBeingShifted = self.circleSelectionTracker.circleBeingMoved
+                        let sequencerRowIndexNoteIsOn = self.circleSelectionTracker.circleBeingMoved.guiData.row
+                        let noteStartingXPosition = startingPositionOfNote.x
+                        let noteStartingBeatNumber = self.circleSelectionTracker.circleBeingMoved.guiData.beat
+                        self.shiftOneNoteLogic(self, mouseMoveDistance, subdivisionLinesAreBeingShiftedToo, referenceLinesAreBeingShiftedToo, currentNoteCircleBeingShifted, sequencerRowIndexNoteIsOn, noteStartingXPosition, noteStartingBeatNumber)
+                    }
                 }
-                self.circleSelectionTracker.mostRecentMovementWasVolumeChange = false;
-                // store starting position of note before updating its position so we can determine whether it moved later
-                let startingPositionOfNote = {
-                    x: self.circleSelectionTracker.circleBeingMoved.translation.x,
-                    y: self.circleSelectionTracker.circleBeingMoved.translation.y,
-                }
-                // start with default note movement behavior, for when the note doesn't fall within range of the trash bin, a sequencer line, etc.
-                self.circleSelectionTracker.circleBeingMoved.translation.x = mouseX
-                self.circleSelectionTracker.circleBeingMoved.translation.y = mouseY
-                // update display
-                self.circleSelectionTracker.circleBeingMoved.stroke = "black"
-                self.components.domElements.images.trashClosedIcon.style.display = 'block'
-                self.components.domElements.images.trashOpenIcon.style.display = 'none'
                 // adjust analytics bar 'note' mode text 
                 self.setAnalyticsBarToNoteMode()
                 self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
@@ -3477,102 +3569,63 @@ class DrumMachineGui {
                 self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
                 self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                 self.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
-
-                /**
-                 * start by snapping the note into place if it is close to something
-                 */
-                let currentRowMouseIsOn = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW;
-                let currentBeatMouseIsOn = Sequencer.NOTE_IS_NOT_QUANTIZED;
-                let throwNoteAway = false
-                /**
-                 * adding stuff here for new 'snap to grid on move' behavior.
-                 * this will be the first part of making it so that notes being moved 'snap' into place when they are close to the trash bin or a sequencer line.
-                 * this will also be used for 'snapping' notes to subdivision lines (i.e. quantizing them) during placement onto quantized sequencer rows.
-                 * todo: add 'update sequence on move' behavior, so that the sequence will be constantly updated as notes are removed / moved around 
-                 * (i.e. the sequence will update in real time even before the note being moved is released).
-                 */
-                // check if the note is within range to be placed in the trash bin. if so, move the circle to the center of the trash bin.
-                let centerOfTrashBinX = self.configurations.noteTrashBin.left + (self.configurations.noteTrashBin.width / 2)
-                let centerOfTrashBinY = self.configurations.noteTrashBin.top + (self.configurations.noteTrashBin.height / 2)
-                let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= self.configurations.noteTrashBin.left - self.configurations.mouseEvents.notePlacementPadding) && (mouseX <= self.configurations.noteTrashBin.left + self.configurations.noteTrashBin.width + self.configurations.mouseEvents.notePlacementPadding)
-                let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= self.configurations.noteTrashBin.top - self.configurations.mouseEvents.notePlacementPadding) && (mouseY <= self.configurations.noteTrashBin.top + self.configurations.noteTrashBin.height + self.configurations.mouseEvents.notePlacementPadding)
-                self.components.shapes.noteTrashBinContainer.stroke = 'transparent'
-                if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
-                    self.circleSelectionTracker.circleBeingMoved.translation.x = centerOfTrashBinX
-                    self.circleSelectionTracker.circleBeingMoved.translation.y = centerOfTrashBinY
-                    // store circle selection info about what row we're on
-                    currentRowMouseIsOn = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
-                    throwNoteAway = true
-                    // update some visuals
-                    self.circleSelectionTracker.circleBeingMoved.stroke = "red"
-                    self.components.domElements.images.trashClosedIcon.style.display = 'none'
-                    self.components.domElements.images.trashOpenIcon.style.display = 'block'
-                    self.components.shapes.noteTrashBinContainer.stroke = 'red'
+            } else {
+                if (self.adjustNoteVolumeOnNoteClick) {
+                    // when the 'v' key is being held while moving a note, change its volume instead of moving it.
+                    // don't allow volume changes while shifting resources.
+                    self.adjustNoteVolumeMouseMoveLogic(self, mouseX, mouseY)
+                } else {
+                    if (self.circleSelectionTracker.mostRecentMovementWasVolumeChange) {
+                        self.sequencer.playDrumSampleNow(self.circleSelectionTracker.circleBeingMoved.guiData.sampleName, self.circleSelectionTracker.circleBeingMoved.guiData.volume, self.circleSelectionTracker.circleBeingMoved.guiData.midiNote, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
+                    }
+                    self.circleSelectionTracker.mostRecentMovementWasVolumeChange = false;
+                    // store starting position of note before updating its position so we can determine whether it moved later
+                    let startingPositionOfNote = {
+                        x: self.circleSelectionTracker.circleBeingMoved.translation.x,
+                        y: self.circleSelectionTracker.circleBeingMoved.translation.y,
+                    }
+                    // start with default note movement behavior, for when the note doesn't fall within range of the trash bin, a sequencer line, etc.
+                    self.circleSelectionTracker.circleBeingMoved.translation.x = mouseX
+                    self.circleSelectionTracker.circleBeingMoved.translation.y = mouseY
+                    // update display
+                    self.circleSelectionTracker.circleBeingMoved.stroke = "black"
+                    self.components.domElements.images.trashClosedIcon.style.display = 'block'
+                    self.components.domElements.images.trashOpenIcon.style.display = 'none'
                     // adjust analytics bar 'note' mode text 
                     self.setAnalyticsBarToNoteMode()
-                    self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
-                    self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
+                    self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
+                    self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
                     self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
-                    self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, -1, -1, true)
-                    self.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, -1, -1, true)
-                }
-                // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
-                let sequencerLeftBoundary = self.configurations.sequencer.left - self.configurations.mouseEvents.notePlacementPadding
-                let sequencerRightBoundary = (self.configurations.sequencer.left + self.configurations.sequencer.width) + self.configurations.mouseEvents.notePlacementPadding
-                let sequencerTopBoundary = self.configurations.sequencer.top - self.configurations.mouseEvents.notePlacementPadding
-                let sequencerBottomBoundary = self.configurations.sequencer.top + ((self.sequencer.numberOfRows - 1) * self.configurations.sequencer.spaceBetweenRows) + self.configurations.mouseEvents.notePlacementPadding
-                let withinHorizonalBoundaryOfSequencer = (mouseX >= sequencerLeftBoundary) && (mouseX <= sequencerRightBoundary)
-                let withinVerticalBoundaryOfSequencer = (mouseY >= sequencerTopBoundary) && (mouseY <= sequencerBottomBoundary)
-                if (withinHorizonalBoundaryOfSequencer && withinVerticalBoundaryOfSequencer) {
-                    // if we get here, we know the circle is within the vertical and horizontal boundaries of the sequencer.
-                    // next we want to do a more fine-grained calculation, for whether it is in range to be placed onto one of the sequencer lines.
-                    for(let rowIndex = 0; rowIndex < self.sequencer.numberOfRows; rowIndex++) {
-                        let rowActualVerticalLocation = self.configurations.sequencer.top + (rowIndex * self.configurations.sequencer.spaceBetweenRows)
-                        let rowActualLeftBound = self.configurations.sequencer.left
-                        let rowActualRightBound = self.configurations.sequencer.left + self.configurations.sequencer.width
-                        let rowTopLimit = rowActualVerticalLocation - self.configurations.mouseEvents.notePlacementPadding
-                        let rowBottomLimit = rowActualVerticalLocation + self.configurations.mouseEvents.notePlacementPadding
-                        let rowLeftLimit = rowActualLeftBound - self.configurations.mouseEvents.notePlacementPadding
-                        let rowRightLimit = rowActualRightBound + self.configurations.mouseEvents.notePlacementPadding
-                        if (mouseX >= rowLeftLimit && mouseX <= rowRightLimit && mouseY >= rowTopLimit && mouseY <= rowBottomLimit) {
-                            // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
-                            if (self.sequencer.rows[rowIndex].quantized === true) {
-                                // determine which subdivision we are closest to
-                                currentBeatMouseIsOn = self.getIndexOfClosestSubdivisionLine(mouseX, self.sequencer.rows[rowIndex].getNumberOfSubdivisions(), self.subdivisionLinesShiftInPixelsPerRow[rowIndex])
-                                self.circleSelectionTracker.lastBeatSnappedTo = currentBeatMouseIsOn;
-                                self.circleSelectionTracker.circleBeingMoved.translation.x = self.getXPositionOfSubdivisionLine(currentBeatMouseIsOn, self.sequencer.rows[rowIndex].getNumberOfSubdivisions(), self.subdivisionLinesShiftInPixelsPerRow[rowIndex])
-                                self.circleSelectionTracker.lastPositionSnappedTo.x = self.circleSelectionTracker.circleBeingMoved.translation.x
-                            } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
-                                self.circleSelectionTracker.circleBeingMoved.translation.x = Util.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
-                                self.circleSelectionTracker.lastPositionSnappedTo.x = self.circleSelectionTracker.circleBeingMoved.translation.x
-                                currentBeatMouseIsOn = Sequencer.NOTE_IS_NOT_QUANTIZED
-                                self.circleSelectionTracker.lastBeatSnappedTo = currentBeatMouseIsOn;
-                            }
-                            // quantization has a more complicated effect on x position than y. y position will always just be on line, so always just put it there.
-                            self.circleSelectionTracker.circleBeingMoved.translation.y = rowActualVerticalLocation;
-                            self.circleSelectionTracker.lastPositionSnappedTo.y = self.circleSelectionTracker.circleBeingMoved.translation.y
-                            currentRowMouseIsOn = rowIndex // set 'new row' to whichever row we collided with / 'snapped' to
-                            self.circleSelectionTracker.lastRowSnappedTo = currentRowMouseIsOn
-                            throwNoteAway = false
-                            // adjust analytics bar 'note' mode text 
-                            self.setAnalyticsBarToNoteMode()
-                            self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
-                            self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
-                            self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
-                            self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
-                            self.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
-                            break; // we found the row that the note will be placed on, so stop iterating thru rows early
-                        }
-                    }
-                } else {
-                    // new secondary trash bin logic: if the note is far enough away from the sequencer, we will throw it out
-                    let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - self.configurations.mouseEvents.throwNoteAwaySidesPadding) || (mouseX >= sequencerRightBoundary + self.configurations.mouseEvents.throwNoteAwaySidesPadding)
-                    let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - self.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + self.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding)
-                    if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
-                        self.circleSelectionTracker.circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
+                    self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
+                    self.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
+    
+                    /**
+                     * start by snapping the note into place if it is close to something
+                     */
+                    let currentRowMouseIsOn = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW;
+                    let currentBeatMouseIsOn = Sequencer.NOTE_IS_NOT_QUANTIZED;
+                    let throwNoteAway = false
+                    /**
+                     * adding stuff here for new 'snap to grid on move' behavior.
+                     * this will be the first part of making it so that notes being moved 'snap' into place when they are close to the trash bin or a sequencer line.
+                     * this will also be used for 'snapping' notes to subdivision lines (i.e. quantizing them) during placement onto quantized sequencer rows.
+                     * todo: add 'update sequence on move' behavior, so that the sequence will be constantly updated as notes are removed / moved around 
+                     * (i.e. the sequence will update in real time even before the note being moved is released).
+                     */
+                    // check if the note is within range to be placed in the trash bin. if so, move the circle to the center of the trash bin.
+                    let centerOfTrashBinX = self.configurations.noteTrashBin.left + (self.configurations.noteTrashBin.width / 2)
+                    let centerOfTrashBinY = self.configurations.noteTrashBin.top + (self.configurations.noteTrashBin.height / 2)
+                    let withinHorizontalBoundaryOfNoteTrashBin = (mouseX >= self.configurations.noteTrashBin.left - self.configurations.mouseEvents.notePlacementPadding) && (mouseX <= self.configurations.noteTrashBin.left + self.configurations.noteTrashBin.width + self.configurations.mouseEvents.notePlacementPadding)
+                    let withinVerticalBoundaryOfNoteTrashBin = (mouseY >= self.configurations.noteTrashBin.top - self.configurations.mouseEvents.notePlacementPadding) && (mouseY <= self.configurations.noteTrashBin.top + self.configurations.noteTrashBin.height + self.configurations.mouseEvents.notePlacementPadding)
+                    self.components.shapes.noteTrashBinContainer.stroke = 'transparent'
+                    if (withinHorizontalBoundaryOfNoteTrashBin && withinVerticalBoundaryOfNoteTrashBin) {
+                        self.circleSelectionTracker.circleBeingMoved.translation.x = centerOfTrashBinX
+                        self.circleSelectionTracker.circleBeingMoved.translation.y = centerOfTrashBinY
+                        // store circle selection info about what row we're on
                         currentRowMouseIsOn = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
                         throwNoteAway = true
-                        // update visuals
+                        // update some visuals
+                        self.circleSelectionTracker.circleBeingMoved.stroke = "red"
                         self.components.domElements.images.trashClosedIcon.style.display = 'none'
                         self.components.domElements.images.trashOpenIcon.style.display = 'block'
                         self.components.shapes.noteTrashBinContainer.stroke = 'red'
@@ -3584,52 +3637,121 @@ class DrumMachineGui {
                         self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, -1, -1, true)
                         self.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, -1, -1, true)
                     }
-                }
-                self.circleSelectionTracker.throwNoteAway = throwNoteAway;
-                /**
-                 * we are done snapping the note into place. next, change its sequencer row if we need to based on what we previously calculated and stored
-                 */
-                let node = self.circleSelectionTracker.nodeIfNotStoredInSequencerRow
-                // remove the moved note from its old sequencer row if necessary. todo: consider changing this logic to just update node's priority if it isn't switching rows.)
-                let noteWasPreviouslySomewhereElse = (startingPositionOfNote.x !== self.circleSelectionTracker.circleBeingMoved.translation.x || startingPositionOfNote.y !== self.circleSelectionTracker.circleBeingMoved.translation.y)
-                let noteWasPreviouslyInSequencerRow = self.circleSelectionTracker.currentRowNodeIsStoredIn >= 0
-                if (noteWasPreviouslySomewhereElse && noteWasPreviouslyInSequencerRow) { // -2 is the 'row' given to notes that are in the note bank. if old row is < 0, we don't need to remove it from any sequencer row.
-                    node = self.sequencer.rows[self.circleSelectionTracker.currentRowNodeIsStoredIn].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
-                    self.circleSelectionTracker.nodeIfNotStoredInSequencerRow = node
-                    self.refreshNoteDependentButtonsForRow(self.circleSelectionTracker.currentRowNodeIsStoredIn) // hide any buttons that should no longer be shown for the row
-                    self.circleSelectionTracker.currentRowNodeIsStoredIn = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW;
-                    self.circleSelectionTracker.currentBeatNodeIsStoredAt = Sequencer.NOTE_IS_NOT_QUANTIZED
-                }
-                // add the moved note to its new sequencer row if necessary
-                let noteIsBeingAddedToSequencerRow = currentRowMouseIsOn >= 0
-                let newNodeTimestampMillis;
-                if (noteWasPreviouslySomewhereElse && noteIsBeingAddedToSequencerRow) {
-                    // convert the note's new y position into a sequencer timestamp, and set the node's 'priority' to its new timestamp
-                    newNodeTimestampMillis = self.sequencer.loopLengthInMillis * ((self.circleSelectionTracker.circleBeingMoved.translation.x - self.configurations.sequencer.left) / self.configurations.sequencer.width)
-                    if (node === null) { // this should just mean the circle was pulled from the note bank, so we need to create a node for it
-                        if (self.circleSelectionTracker.currentRowNodeIsStoredIn >= 0) { // should be an unreachable case, just checking for safety
-                            throw "unexpected case: node was null but 'currentRowNodeIsStoredIn' was not < 0. currentRowNodeIsStoredIn: " + self.circleSelectionTracker.currentRowNodeIsStoredIn + ". node: " + node + "."
+                    // check if the note is in range to be placed onto a sequencer row. if so, determine which row, and move the circle onto the line where it would be placed
+                    let sequencerLeftBoundary = self.configurations.sequencer.left - self.configurations.mouseEvents.notePlacementPadding
+                    let sequencerRightBoundary = (self.configurations.sequencer.left + self.configurations.sequencer.width) + self.configurations.mouseEvents.notePlacementPadding
+                    let sequencerTopBoundary = self.configurations.sequencer.top - self.configurations.mouseEvents.notePlacementPadding
+                    let sequencerBottomBoundary = self.configurations.sequencer.top + ((self.sequencer.numberOfRows - 1) * self.configurations.sequencer.spaceBetweenRows) + self.configurations.mouseEvents.notePlacementPadding
+                    let withinHorizonalBoundaryOfSequencer = (mouseX >= sequencerLeftBoundary) && (mouseX <= sequencerRightBoundary)
+                    let withinVerticalBoundaryOfSequencer = (mouseY >= sequencerTopBoundary) && (mouseY <= sequencerBottomBoundary)
+                    if (withinHorizonalBoundaryOfSequencer && withinVerticalBoundaryOfSequencer) {
+                        // if we get here, we know the circle is within the vertical and horizontal boundaries of the sequencer.
+                        // next we want to do a more fine-grained calculation, for whether it is in range to be placed onto one of the sequencer lines.
+                        for(let rowIndex = 0; rowIndex < self.sequencer.numberOfRows; rowIndex++) {
+                            let rowActualVerticalLocation = self.configurations.sequencer.top + (rowIndex * self.configurations.sequencer.spaceBetweenRows)
+                            let rowActualLeftBound = self.configurations.sequencer.left
+                            let rowActualRightBound = self.configurations.sequencer.left + self.configurations.sequencer.width
+                            let rowTopLimit = rowActualVerticalLocation - self.configurations.mouseEvents.notePlacementPadding
+                            let rowBottomLimit = rowActualVerticalLocation + self.configurations.mouseEvents.notePlacementPadding
+                            let rowLeftLimit = rowActualLeftBound - self.configurations.mouseEvents.notePlacementPadding
+                            let rowRightLimit = rowActualRightBound + self.configurations.mouseEvents.notePlacementPadding
+                            if (mouseX >= rowLeftLimit && mouseX <= rowRightLimit && mouseY >= rowTopLimit && mouseY <= rowBottomLimit) {
+                                // correct the padding so the circle falls precisely on an actual sequencer line once mouse is released
+                                if (self.sequencer.rows[rowIndex].quantized === true) {
+                                    // determine which subdivision we are closest to
+                                    currentBeatMouseIsOn = self.getIndexOfClosestSubdivisionLine(mouseX, self.sequencer.rows[rowIndex].getNumberOfSubdivisions(), self.subdivisionLinesShiftInPixelsPerRow[rowIndex])
+                                    self.circleSelectionTracker.lastBeatSnappedTo = currentBeatMouseIsOn;
+                                    self.circleSelectionTracker.circleBeingMoved.translation.x = self.getXPositionOfSubdivisionLine(currentBeatMouseIsOn, self.sequencer.rows[rowIndex].getNumberOfSubdivisions(), self.subdivisionLinesShiftInPixelsPerRow[rowIndex])
+                                    self.circleSelectionTracker.lastPositionSnappedTo.x = self.circleSelectionTracker.circleBeingMoved.translation.x
+                                } else { // don't worry about quantizing, just make sure the note falls on the sequencer line
+                                    self.circleSelectionTracker.circleBeingMoved.translation.x = Util.confineNumberToBounds(mouseX, rowActualLeftBound, rowActualRightBound)
+                                    self.circleSelectionTracker.lastPositionSnappedTo.x = self.circleSelectionTracker.circleBeingMoved.translation.x
+                                    currentBeatMouseIsOn = Sequencer.NOTE_IS_NOT_QUANTIZED
+                                    self.circleSelectionTracker.lastBeatSnappedTo = currentBeatMouseIsOn;
+                                }
+                                // quantization has a more complicated effect on x position than y. y position will always just be on line, so always just put it there.
+                                self.circleSelectionTracker.circleBeingMoved.translation.y = rowActualVerticalLocation;
+                                self.circleSelectionTracker.lastPositionSnappedTo.y = self.circleSelectionTracker.circleBeingMoved.translation.y
+                                currentRowMouseIsOn = rowIndex // set 'new row' to whichever row we collided with / 'snapped' to
+                                self.circleSelectionTracker.lastRowSnappedTo = currentRowMouseIsOn
+                                throwNoteAway = false
+                                // adjust analytics bar 'note' mode text 
+                                self.setAnalyticsBarToNoteMode()
+                                self.setAnalyticsBarNotesModeBeatNumberText(self, self.circleSelectionTracker.circleBeingMoved.guiData.beat, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
+                                self.setAnalyticsBarNotesModeReferenceLineNumberText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
+                                self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
+                                self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
+                                self.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, self.circleSelectionTracker.lastPositionSnappedTo.x, self.circleSelectionTracker.lastRowSnappedTo)
+                                break; // we found the row that the note will be placed on, so stop iterating thru rows early
+                            }
                         }
-                        // create a new node for the sample that this note bank circle was for. note bank circles have a sample in their GUI data, 
-                        // but no real node that can be added to the drum sequencer's data structure, so we need to create one.
-                        node = self.sampleBankNodeGenerator.createNewNodeForSample(self.circleSelectionTracker.circleBeingMoved.guiData.sampleName)
-                        self.circleSelectionTracker.circleBeingMoved.guiData.label = node.label // the newly generated node will also have a real generated ID (label), use that
-                        self.drawNoteBankCircleForSample(self.circleSelectionTracker.circleBeingMoved.guiData.sampleName) // if the note was taken from the sound bank, refill the sound bank
+                    } else {
+                        // new secondary trash bin logic: if the note is far enough away from the sequencer, we will throw it out
+                        let withinHorizontalRangeToBeThrownAway = (mouseX <= sequencerLeftBoundary - self.configurations.mouseEvents.throwNoteAwaySidesPadding) || (mouseX >= sequencerRightBoundary + self.configurations.mouseEvents.throwNoteAwaySidesPadding)
+                        let withinVerticalRangeToBeThrownAway = (mouseY <= sequencerTopBoundary - self.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding) || (mouseY >= sequencerBottomBoundary + self.configurations.mouseEvents.throwNoteAwayTopAndBottomPadding)
+                        if (withinVerticalRangeToBeThrownAway || withinHorizontalRangeToBeThrownAway) {
+                            self.circleSelectionTracker.circleBeingMoved.stroke = "red" // make the note's outline red so it's clear it will be thrown out
+                            currentRowMouseIsOn = DrumMachineGui.NOTE_ROW_NUMBER_FOR_TRASH_BIN
+                            throwNoteAway = true
+                            // update visuals
+                            self.components.domElements.images.trashClosedIcon.style.display = 'none'
+                            self.components.domElements.images.trashOpenIcon.style.display = 'block'
+                            self.components.shapes.noteTrashBinContainer.stroke = 'red'
+                            // adjust analytics bar 'note' mode text 
+                            self.setAnalyticsBarToNoteMode()
+                            self.setAnalyticsBarNotesModeBeatNumberText(self, -1, -1, -1, true)
+                            self.setAnalyticsBarNotesModeReferenceLineNumberText(self, -1, -1, true)
+                            self.setAnalyticsBarNotesModeVolumeText(self, self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity)
+                            self.setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, -1, -1, true)
+                            self.setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, -1, -1, true)
+                        }
                     }
-                    node.priority = newNodeTimestampMillis
-                    // add the moved note to its new sequencer row
-                    self.sequencer.rows[currentRowMouseIsOn].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
-                    node.data.beat = currentBeatMouseIsOn
-                    node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
-                    node.data.midiVelocity = self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity;
-                    node.data.midiNote = self.circleSelectionTracker.circleBeingMoved.guiData.midiNote;
-                    self.circleSelectionTracker.circleBeingMoved.guiData.beat = currentBeatMouseIsOn
-                    self.refreshNoteDependentButtonsForRow(currentRowMouseIsOn) // show any buttons that should now be shown for the row
-                    self.circleSelectionTracker.currentRowNodeIsStoredIn = currentRowMouseIsOn
-                    self.circleSelectionTracker.currentBeatNodeIsStoredAt = currentBeatMouseIsOn
+                    self.circleSelectionTracker.throwNoteAway = throwNoteAway;
+                    /**
+                     * we are done snapping the note into place. next, change its sequencer row if we need to based on what we previously calculated and stored
+                     */
+                    let node = self.circleSelectionTracker.nodeIfNotStoredInSequencerRow
+                    // remove the moved note from its old sequencer row if necessary. todo: consider changing this logic to just update node's priority if it isn't switching rows.)
+                    let noteWasPreviouslySomewhereElse = (startingPositionOfNote.x !== self.circleSelectionTracker.circleBeingMoved.translation.x || startingPositionOfNote.y !== self.circleSelectionTracker.circleBeingMoved.translation.y)
+                    let noteWasPreviouslyInSequencerRow = self.circleSelectionTracker.currentRowNodeIsStoredIn >= 0
+                    if (noteWasPreviouslySomewhereElse && noteWasPreviouslyInSequencerRow) { // -2 is the 'row' given to notes that are in the note bank. if old row is < 0, we don't need to remove it from any sequencer row.
+                        node = self.sequencer.rows[self.circleSelectionTracker.currentRowNodeIsStoredIn].removeNode(self.circleSelectionTracker.circleBeingMoved.guiData.label)
+                        self.circleSelectionTracker.nodeIfNotStoredInSequencerRow = node
+                        self.refreshNoteDependentButtonsForRow(self.circleSelectionTracker.currentRowNodeIsStoredIn) // hide any buttons that should no longer be shown for the row
+                        self.circleSelectionTracker.currentRowNodeIsStoredIn = DrumMachineGui.NOTE_ROW_NUMBER_FOR_NOT_IN_ANY_ROW;
+                        self.circleSelectionTracker.currentBeatNodeIsStoredAt = Sequencer.NOTE_IS_NOT_QUANTIZED
+                    }
+                    // add the moved note to its new sequencer row if necessary
+                    let noteIsBeingAddedToSequencerRow = currentRowMouseIsOn >= 0
+                    let newNodeTimestampMillis;
+                    if (noteWasPreviouslySomewhereElse && noteIsBeingAddedToSequencerRow) {
+                        // convert the note's new y position into a sequencer timestamp, and set the node's 'priority' to its new timestamp
+                        newNodeTimestampMillis = self.sequencer.loopLengthInMillis * ((self.circleSelectionTracker.circleBeingMoved.translation.x - self.configurations.sequencer.left) / self.configurations.sequencer.width)
+                        if (node === null) { // this should just mean the circle was pulled from the note bank, so we need to create a node for it
+                            if (self.circleSelectionTracker.currentRowNodeIsStoredIn >= 0) { // should be an unreachable case, just checking for safety
+                                throw "unexpected case: node was null but 'currentRowNodeIsStoredIn' was not < 0. currentRowNodeIsStoredIn: " + self.circleSelectionTracker.currentRowNodeIsStoredIn + ". node: " + node + "."
+                            }
+                            // create a new node for the sample that this note bank circle was for. note bank circles have a sample in their GUI data, 
+                            // but no real node that can be added to the drum sequencer's data structure, so we need to create one.
+                            node = self.sampleBankNodeGenerator.createNewNodeForSample(self.circleSelectionTracker.circleBeingMoved.guiData.sampleName)
+                            self.circleSelectionTracker.circleBeingMoved.guiData.label = node.label // the newly generated node will also have a real generated ID (label), use that
+                            self.drawNoteBankCircleForSample(self.circleSelectionTracker.circleBeingMoved.guiData.sampleName) // if the note was taken from the sound bank, refill the sound bank
+                        }
+                        node.priority = newNodeTimestampMillis
+                        // add the moved note to its new sequencer row
+                        self.sequencer.rows[currentRowMouseIsOn].insertNode(node, self.circleSelectionTracker.circleBeingMoved.guiData.label)
+                        node.data.beat = currentBeatMouseIsOn
+                        node.data.volume = self.circleSelectionTracker.circleBeingMoved.guiData.volume;
+                        node.data.midiVelocity = self.circleSelectionTracker.circleBeingMoved.guiData.midiVelocity;
+                        node.data.midiNote = self.circleSelectionTracker.circleBeingMoved.guiData.midiNote;
+                        self.circleSelectionTracker.circleBeingMoved.guiData.beat = currentBeatMouseIsOn
+                        self.refreshNoteDependentButtonsForRow(currentRowMouseIsOn) // show any buttons that should now be shown for the row
+                        self.circleSelectionTracker.currentRowNodeIsStoredIn = currentRowMouseIsOn
+                        self.circleSelectionTracker.currentBeatNodeIsStoredAt = currentBeatMouseIsOn
+                    }
                 }
+                this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveNote
             }
-            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.moveNote
         }
         if (self.rowVolumeAdjustmentTracker.selectedRowIndex !== null) { // handle mousemove events when adjusting note volumes for a row
             self.rowVolumeAdjustmentWindowMouseMoveHandler(self, event)

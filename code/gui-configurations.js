@@ -452,7 +452,7 @@ function getGuiConfigurations(hideIcons=false) {
         },
         helpText: {
             defaultText: "", // "share this beat by copying and pasting the URL from the address bar. undo and redo changes using your browser's back and forward buttons.",
-            moveNote: "click and drag to move note. ctrl+click and drag up and down to change note volume",
+            moveNote: "click and drag to move note. click+v and drag up and down to change note volume",
             addRow: "add another row to the sequencer",
             play: "play the sequencer",
             stop: "stop the sequencer",
