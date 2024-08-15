@@ -255,6 +255,7 @@ class Sequencer {
 
     scheduleNotesForCurrentTime(nextNoteToSchedule, sequencerRowIndex, currentTime, currentTimeWithinCurrentLoop, actualStartTimeOfCurrentLoop) {
         let numberOfLoopsSoFar = Math.floor(currentTime / this.loopLengthInMillis) // mostly used to make sure we don't schedule the same note twice. this number doesn't account for pauses, but i think that's fine. todo: make sure that's fine
+        let sequencerRowIsMuted = this.rows[sequencerRowIndex].muted
 
         /**
          * At the end of the loop sequence, the look-ahead window may wrap back around to the beginning of the loop.
@@ -280,7 +281,11 @@ class Sequencer {
             if (nextNoteToSchedule.priority >= currentTimeWithinCurrentLoop && numberOfLoopsSoFar > nextNoteToSchedule.data.lastScheduledOnIteration) {
                 nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFar // record the last iteration that the note was played on to avoid duplicate scheduling within the same iteration. 
                 // we are marking the notes as played before before actually scheduling them since scheduling could take longer, and we want them marked as played as quickly as possible to prevent any accidental duplicates.
-                this.scheduleDrumSample(actualStartTimeOfCurrentLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName, nextNoteToSchedule.data.volume, nextNoteToSchedule.data.midiNote, nextNoteToSchedule.data.midiVelocity)
+                if (!sequencerRowIsMuted) {
+                    // only schedule notes if the sequencer row isn't muted.
+                    // we could probably handle muted rows higher up the stack, but this way we don't have to worry about the note scheduler losing its place when a row is muted / unmuted while the sequencer is playing.
+                    this.scheduleDrumSample(actualStartTimeOfCurrentLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName, nextNoteToSchedule.data.volume, nextNoteToSchedule.data.midiNote, nextNoteToSchedule.data.midiVelocity)
+                }
             }
             nextNoteToSchedule = nextNoteToSchedule.next
         }
@@ -296,7 +301,11 @@ class Sequencer {
                 // keep iterating through notes and scheduling them as long as they are within the timeframe to schedule notes for
                 if (numberOfLoopsSoFarPlusOne > nextNoteToSchedule.data.lastScheduledOnIteration) {
                     nextNoteToSchedule.data.lastScheduledOnIteration = numberOfLoopsSoFarPlusOne // we are scheduling these for the end of the scheduling time window after it has wrapped to the beginning of the loop, so use an incremented iteration count
-                    this.scheduleDrumSample(actualStartTimeOfNextLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName, nextNoteToSchedule.data.volume, nextNoteToSchedule.data.midiNote, nextNoteToSchedule.data.midiVelocity)
+                    if (!sequencerRowIsMuted) { 
+                        // only schedule notes if the sequencer row isn't muted.
+                        // we could probably handle muted rows higher up the stack, but this way we don't have to worry about the note scheduler losing its place when a row is muted / unmuted while the sequencer is playing.
+                        this.scheduleDrumSample(actualStartTimeOfNextLoop + nextNoteToSchedule.priority, nextNoteToSchedule.data.sampleName, nextNoteToSchedule.data.volume, nextNoteToSchedule.data.midiNote, nextNoteToSchedule.data.midiVelocity)
+                    }
                 }
                 nextNoteToSchedule = nextNoteToSchedule.next
             }
@@ -447,6 +456,7 @@ class SequencerRow {
         this.referenceLines = 0
         this.referenceLineShiftInMilliseconds = 0;
         this.subdivisionLineShiftInMilliseconds = 0;
+        this.muted = false;
     }
 
     // serialize the sequencer row so that it can be recreated later. this method is 'private' (starts with _) and there is no corresponding deserialize
@@ -728,5 +738,13 @@ class SequencerRow {
             currentNode = currentNode.next
         }
         this.loopLengthInMillis = newLoopLengthInMillis
+    }
+
+    mute() {
+        this.muted = true
+    }
+
+    unmute() {
+        this.muted = false
     }
 }

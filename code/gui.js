@@ -1487,6 +1487,15 @@ class DrumMachineGui {
         }
     }
 
+    changeRowVolumesMouseClickEventHandler(self, rowIndex) {
+        // todo: add icon updates here
+        if (self.sequencer.rows[rowIndex].muted) {
+            self.sequencer.rows[rowIndex].unmute()
+        } else {
+            self.sequencer.rows[rowIndex].mute()
+        }
+    }
+
     changeRowVolumesMouseEnterEventHandler(self, rowIndex) {
         if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.respondToEvents) {
             self.components.domElements.divs.bottomBarText.innerHTML = self.configurations.helpText.changeRowVolume
