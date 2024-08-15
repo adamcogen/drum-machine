@@ -4488,7 +4488,7 @@ class DrumMachineGui {
      *                    also hide values if no note is being analyzed currently.
      */
     setAnalyticsBarNotesModeBeatNumberText(self, beatNumber, noteXPosition, sequencerRowIndex, hideValues=false){
-        if (hideValues || sequencerRowIndex < 0) {
+        if (hideValues || sequencerRowIndex < 0 || self.sequencer.rows[sequencerRowIndex].getNumberOfSubdivisions() === 0) {
             self.components.domElements.text.analyticsBarNoteModeBeatNumber.innerHTML = "beat line: -"
             return;
         }
@@ -4515,7 +4515,7 @@ class DrumMachineGui {
      *                    with zero reference lines. also hide values if no note is being analyzed currently.
      */
     setAnalyticsBarNotesModeReferenceLineNumberText(self, noteXPosition, sequencerRowIndex, hideValues=false){
-        if (hideValues || sequencerRowIndex < 0) {
+        if (hideValues || sequencerRowIndex < 0 || self.sequencer.rows[sequencerRowIndex].getNumberOfReferenceLines() === 0) {
             self.components.domElements.text.analyticsBarNoteModeReferenceLineNumber.innerHTML = "visual line: -"
             return;
         }
@@ -4549,7 +4549,7 @@ class DrumMachineGui {
      * @param hideValues: if set to true, don't show any values. for example if no note is currently being analyzed.
      */
     setAnalyticsBarNotesModeDistanceFromBeatLinesText(self, noteXPosition, sequencerRowIndex, hideValues=false){
-        if (hideValues || sequencerRowIndex < 0) {
+        if (hideValues || sequencerRowIndex < 0 || self.sequencer.rows[sequencerRowIndex].getNumberOfSubdivisions() === 0) {
             self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsPercent.innerHTML = "beat lines: -"
             self.components.domElements.text.analyticsBarNoteModeDistanceFromBeatsMilliseconds.innerHTML = "-"
             return;
@@ -4604,7 +4604,7 @@ class DrumMachineGui {
      * @param hideValues: if set to true, don't show any values. for example if no note is currently being analyzed.
      */
     setAnalyticsBarNotesModeDistanceFromReferenceLinesText(self, noteXPosition, sequencerRowIndex, hideValues=false){
-        if (hideValues || sequencerRowIndex < 0) {
+        if (hideValues || sequencerRowIndex < 0 || self.sequencer.rows[sequencerRowIndex].getNumberOfReferenceLines() === 0) {
             self.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesPercent.innerHTML = "visual lines: -"
             self.components.domElements.text.analyticsBarNoteModeDistanceFromReferenceLinesMilliseconds.innerHTML = "-"
             return;
@@ -4646,7 +4646,7 @@ class DrumMachineGui {
      * display the shift amount as the percentage of one beat, and as a number of milliseconds.
      */
     setAnalyticsBarLinesModeBeatLineShiftText(self, sequencerRowIndex, hideValues=false){
-        if (hideValues) {
+        if (hideValues || sequencerRowIndex < 0 || self.sequencer.rows[sequencerRowIndex].getNumberOfSubdivisions() === 0) {
             self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat lines: -"
             self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "-"
             return;
@@ -4682,7 +4682,7 @@ class DrumMachineGui {
      * display the shift amount as the percentage of one reference line "beat", and as a number of milliseconds.
      */
     setAnalyticsBarLinesModeReferenceLineShiftText(self, sequencerRowIndex, hideValues=false){
-        if (hideValues) {
+        if (hideValues || sequencerRowIndex < 0 || self.sequencer.rows[sequencerRowIndex].getNumberOfReferenceLines() === 0) {
             self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftPercent.innerHTML = "visual lines: -"
             self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftMilliseconds.innerHTML = "-"
             return;
