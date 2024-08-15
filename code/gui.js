@@ -3485,6 +3485,9 @@ class DrumMachineGui {
         // store values in relevant places
         let shiftInPixels = self.shiftToolTracker.referenceLinesStartingShiftInPixels - mouseMoveDistance; 
         shiftInPixels = shiftInPixels % self.configurations.sequencer.width; // shift values repeat when they get to the end of the sequencer, so use modular math to reduce them
+        if (shiftInPixels < 0) { // convert negative shift values to equivalent positive ones, so that calculations with them always use a positive number later
+            shiftInPixels = shiftInPixels + self.configurations.sequencer.width
+        }
         self.referenceLinesShiftInPixelsPerRow[self.shiftToolTracker.selectedRowIndex] = shiftInPixels;
         // convert the new shift value to milliseconds, and store that to the sequencer. 
         let shiftAsPercentageOfFullLoop = shiftInPixels / self.configurations.sequencer.width;
@@ -3535,7 +3538,7 @@ class DrumMachineGui {
     moveNotesAndChangeVolumesMouseMoveHandler(self, event){
         let shiftingAnyResource = self.shiftToolTracker.resourcesToShift.notes || self.shiftToolTracker.resourcesToShift.subdivisionLines || self.shiftToolTracker.resourcesToShift.referenceLines
         // clicking on a circle sets 'circleBeingMoved' to it. circle being moved will follow mouse movements (i.e. click-drag).
-        if (self.circleSelectionTracker.circleBeingMoved !== null && !shiftingAnyResource) { // handle mousemove events when a note is selected
+        if (self.circleSelectionTracker.circleBeingMoved !== null && !shiftingAnyResource) { // handle mousemove events when a note is selected.
             event = self.adjustEventCoordinates(event)
             let mouseX = event.pageX
             let mouseY = event.pageY
