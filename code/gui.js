@@ -402,6 +402,7 @@ class DrumMachineGui {
                 shiftRowIcon: document.getElementById('shift-row-icon'),
                 moveRowIcon: document.getElementById('move-row-icon'),
                 changeRowVolumesIcon: document.getElementById('change-row-volumes-icon'),
+                changeRowVolumesIconMuted: document.getElementById('change-row-volumes-icon-muted'),
             },
             iconLists: {
                 clearRowIcons: [], // list of icons for "clear row" buttons, one per sequencer row
@@ -412,6 +413,7 @@ class DrumMachineGui {
                 shiftRowIcons: [], // list of icons for the button to use the 'shift' tool on each row (one per sequencer row)
                 moveRowIcons: [], // list of icons for the button to move (rearrange) rows (one per sequencer row)
                 changeRowVolumesIcons: [], // list of icons for the button to change all note volumes a each row (one per sequencer row)
+                changeRowVolumesIconsMuted: [], // list of icons for the button to change all note volumes for each row (one per sequencer row). these ones are shown when a row is muted.
             },
             selectors: {
                 midiOutput: document.getElementById('midi-output-selector'),
@@ -688,6 +690,7 @@ class DrumMachineGui {
             this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.shiftRowIcons[rowIndex]);
         }
         this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.changeRowVolumesIcons[rowIndex]);
+        this.rowSelectionTracker.domElements.push(this.components.domElements.iconLists.changeRowVolumesIconsMuted[rowIndex]);
         this.rowSelectionTracker.domElementsOriginalPositions = [];
         for (let domElement of this.rowSelectionTracker.domElements) {
             this.rowSelectionTracker.domElementsOriginalPositions.push({
@@ -716,7 +719,11 @@ class DrumMachineGui {
 
     initializeRowVolumeAdjustmentVariablesAndVisuals(event, rowIndex) {
         event = this.adjustEventCoordinates(event)
-        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.changeRowVolume
+        if (this.sequencer.rows[rowIndex].muted) {
+            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.changeRowVolumeMuted
+        } else {
+            this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.changeRowVolume
+        }
         // save relevant info about whichever row is selected
         this.rowVolumeAdjustmentTracker.selectedRowIndex = rowIndex;
         // save a list of all the note circles that are associated with the selected row. we are saving this list so that we can 
@@ -1501,7 +1508,11 @@ class DrumMachineGui {
 
     changeRowVolumesMouseEnterEventHandler(self, rowIndex) {
         if (self.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.respondToEvents) {
-            self.components.domElements.divs.bottomBarText.innerHTML = self.configurations.helpText.changeRowVolume
+            if (self.sequencer.rows[rowIndex].muted) {
+                self.components.domElements.divs.bottomBarText.innerHTML = self.configurations.helpText.changeRowVolumeMuted
+            } else {
+                self.components.domElements.divs.bottomBarText.innerHTML = self.configurations.helpText.changeRowVolume
+            }
             let circle = self.components.shapes.volumeAdjusterRowHandles[rowIndex];
             let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[rowIndex]
             if (self.shiftToolTracker.selectedRowIndex === null && self.rowVolumeAdjustmentTracker.selectedRowIndex === null && self.circleSelectionTracker.circleBeingMoved === null) { // if a row is already selected (i.e being moved), don't do any of this
@@ -1540,7 +1551,7 @@ class DrumMachineGui {
             let mouseY = event.pageY
             let mouseHasMoved = (mouseX !== self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.x || mouseY !== self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y)
             if (!mouseHasMoved) {
-                // self.toggleRowMuted(self, rowIndex);
+                self.toggleRowMuted(self, rowIndex);
             }
 
             self.components.domElements.divs.bottomBarText.innerHTML = self.configurations.helpText.defaultText
@@ -2890,10 +2901,13 @@ class DrumMachineGui {
     // create a new circle (i.e. note) on the screen, with the specified x and y position. color is determined by sample name. 
     // values given for sample name, label, and row number are stored in the circle object to help the GUI keep track of things.
     // add the newly created circle to the list of all drawn cricles.
-    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume, midiNote, midiVelocity) {
+    drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume, midiNote, midiVelocity, translucent) {
         // initialize the new circle and set its colors
         let circle = this.two.makeCircle(xPosition, yPosition, this.configurations.notes.circleRadiusUsedForNoteBankSpacing)
         circle.fill = this.samples[sampleName].color
+        if (translucent) { // notes that are muted (such as on muted sequencer rows) will be drawn as translucent
+            circle.fill += "88"
+        }
         circle.stroke = 'transparent'
 
         // add mouse events to the new circle
@@ -3031,7 +3045,8 @@ class DrumMachineGui {
          * bank circle is taken fom the note bank and placed onto a real row.
          */
         let label = (indexOfSampleInNoteBank + 1) * -1 // see block comment above for info about '-1' here
-        this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, Sequencer.NOTE_IS_NOT_QUANTIZED, volume, midiNote, midiVelocity)
+        let muted = false
+        this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, Sequencer.NOTE_IS_NOT_QUANTIZED, volume, midiNote, midiVelocity, muted)
     }
 
     drawAllNoteBankCircles(){
@@ -3063,7 +3078,8 @@ class DrumMachineGui {
                     midiVelocity = this.convertWebAudioVolumeIntoMidiVelocity(volume)
                     noteToDraw.data.midiVelocity = midiVelocity
                 }
-                this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume, midiNote, midiVelocity)
+                let muted = this.sequencer.rows[sequencerRowIndex].muted
+                this.drawNewNoteCircle(xPosition, yPosition, sampleName, label, row, beat, volume, midiNote, midiVelocity, muted)
                 noteToDraw = noteToDraw.next
             }
         }
@@ -3330,7 +3346,11 @@ class DrumMachineGui {
         circle.fill = self.configurations.volumeAdjusterRowHandles.selectedColor
         let rowSelectionRectangle = self.components.shapes.sequencerRowSelectionRectangles[self.rowVolumeAdjustmentTracker.selectedRowIndex]
         rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.selectedColor
-        this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.changeRowVolume
+        if (self.sequencer.rows[self.rowVolumeAdjustmentTracker.selectedRowIndex].muted) {
+            self.components.domElements.divs.bottomBarText.innerHTML = self.configurations.helpText.changeRowVolumeMuted
+        } else {
+            self.components.domElements.divs.bottomBarText.innerHTML = self.configurations.helpText.changeRowVolume
+        }
     }
 
     // this method is very messy. my top priority was to get it working, and not worry about duplicated code or using the most perfect straightforward logic flow.
@@ -4330,9 +4350,22 @@ class DrumMachineGui {
             icon.remove();
         }
         this.components.domElements.iconLists.changeRowVolumesIcons = [];
+        for (let icon of this.components.domElements.iconLists.changeRowVolumesIconsMuted) {
+            icon.remove();
+        }
+        this.components.domElements.iconLists.changeRowVolumesIconsMuted = [];
         for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
             // make copies of the original image so that we can freely throw them away or add more
             let changeRowVolumeIcon = this.components.domElements.images.changeRowVolumesIcon.cloneNode();
+            let changeRowVolumeIconMuted = this.components.domElements.images.changeRowVolumesIconMuted.cloneNode();
+            // show and hide the muted / unmuted icons depending on the state of each sequencer row
+            if (this.sequencer.rows[rowIndex].muted) {
+                changeRowVolumeIconMuted.style.display = 'block'
+                changeRowVolumeIcon.style.display = 'none'
+            } else {
+                changeRowVolumeIconMuted.style.display = 'none'
+                changeRowVolumeIcon.style.display = 'block'
+            }
             // put each icon into the right place, resize it, etc.
             let changeRowVolumeIconVerticalPosition = this.configurations.sequencer.top + (this.configurations.sequencer.spaceBetweenRows * rowIndex) + this.configurations.volumeAdjusterRowHandles.topPadding + this.configurations.volumeAdjusterRowHandles.icon.topPaddingPerRow;
             let changeRowVolumeIconHorizontalPosition = this.configurations.sequencer.left + this.configurations.volumeAdjusterRowHandles.leftPadding + this.configurations.volumeAdjusterRowHandles.icon.leftPaddingPerRow;
@@ -4340,6 +4373,11 @@ class DrumMachineGui {
             changeRowVolumeIcon.style.height = "" + this.configurations.volumeAdjusterRowHandles.icon.height + "px"
             changeRowVolumeIcon.style.left = "" + changeRowVolumeIconHorizontalPosition + "px"
             changeRowVolumeIcon.style.top = "" + changeRowVolumeIconVerticalPosition + "px"
+            changeRowVolumeIconMuted.style.width = "" + this.configurations.volumeAdjusterRowHandles.icon.width + "px"
+            changeRowVolumeIconMuted.style.height = "" + this.configurations.volumeAdjusterRowHandles.icon.height + "px"
+            changeRowVolumeIconMuted.style.left = "" + changeRowVolumeIconHorizontalPosition + "px"
+            changeRowVolumeIconMuted.style.top = "" + changeRowVolumeIconVerticalPosition + "px"
+            // row volume icons (for when row is unmuted)
             // add event listeners to our icon
             if (this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex] !== null && this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex] !== undefined) {
                 // remove event listeners if they've already been added to avoid duplicates.
@@ -4363,10 +4401,34 @@ class DrumMachineGui {
             // add the icons to the dom and to our list that tracks these icons
             this.components.domElements.iconLists.changeRowVolumesIcons.push(changeRowVolumeIcon)
             this.components.domElements.divs.newIcons.appendChild(changeRowVolumeIcon)
-            changeRowVolumeIcon.style.display = 'block';
+            // row volume icons (for when row is muted)
+            // add event listeners to our icon (muted)
+            if (this.eventHandlerFunctions["changeRowVolumesIconMuted" + rowIndex] !== null && this.eventHandlerFunctions["changeRowVolumesIconMuted" + rowIndex] !== undefined) {
+                // remove event listeners if they've already been added to avoid duplicates.
+                // for this one we will make each event type its own hash item, since we have multiple types.
+                changeRowVolumeIcon.removeEventListener('mouseenter', this.eventHandlerFunctions["changeRowVolumesIconMuted" + rowIndex]['mouseenter'] );
+                changeRowVolumeIcon.removeEventListener('mouseleave', this.eventHandlerFunctions["changeRowVolumesIconMuted" + rowIndex]['mouseleave'] );
+                changeRowVolumeIcon.removeEventListener('mousedown', this.eventHandlerFunctions["changeRowVolumesIconMuted" + rowIndex]['mousedown'] );
+                changeRowVolumeIcon.removeEventListener('mouseup', this.eventHandlerFunctions["changeRowVolumesIconMuted" + rowIndex]['mouseup'] );
+            }
+            // create and add new click listeners. store a reference to the newly created click listener, so that we can remove it later if we need to
+            this.eventHandlerFunctions["changeRowVolumesIconMuted" + rowIndex] = {
+                mouseenter: () => this.changeRowVolumesMouseEnterEventHandler(this, rowIndex),
+                mouseleave: () => this.changeRowVolumesMouseLeaveEventHandler(this, rowIndex),
+                mousedown: (event) => this.changeRowVolumesMouseDownEventHandler(this, event, rowIndex),
+                mouseup: (event) => this.changeRowVolumesMouseUpEventHandler(this, event, rowIndex),
+            };
+            changeRowVolumeIconMuted.addEventListener('mouseenter', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mouseenter']);
+            changeRowVolumeIconMuted.addEventListener('mouseleave', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mouseleave']);
+            changeRowVolumeIconMuted.addEventListener('mousedown', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mousedown']);
+            changeRowVolumeIconMuted.addEventListener('mouseup', this.eventHandlerFunctions["changeRowVolumesIcon" + rowIndex]['mouseup']);
+            // add the icons to the dom and to our list that tracks these icons
+            this.components.domElements.iconLists.changeRowVolumesIconsMuted.push(changeRowVolumeIconMuted)
+            this.components.domElements.divs.newIcons.appendChild(changeRowVolumeIconMuted)
         }
         // hide the original image. we won't touch it so we can delete and re-add our clones as much as we want to
         this.components.domElements.images.changeRowVolumesIcon.style.display = 'none'
+        this.components.domElements.images.changeRowVolumesIconMuted.style.display = 'none'
     }
 
     /**
@@ -4391,6 +4453,7 @@ class DrumMachineGui {
             this.components.shapes.volumeAdjusterRowHandles[rowIndex].stroke = 'transparent';
             // next do 'change row volumes' button icon
             this.components.domElements.iconLists.changeRowVolumesIcons[rowIndex].style.display = 'none'
+            this.components.domElements.iconLists.changeRowVolumesIconsMuted[rowIndex].style.display = 'none'
             // 'delete all notes for row' button shape
             this.components.shapes.clearNotesForRowButtonShapes[rowIndex].guiData.respondToEvents = false;
             this.components.shapes.clearNotesForRowButtonShapes[rowIndex].stroke = 'transparent';
@@ -4409,8 +4472,14 @@ class DrumMachineGui {
             // start with 'change row volumes' button shape
             this.components.shapes.volumeAdjusterRowHandles[rowIndex].guiData.respondToEvents = true;
             this.components.shapes.volumeAdjusterRowHandles[rowIndex].stroke = this.configurations.volumeAdjusterRowHandles.selectedColor;
-            // next do 'change row volumes' button icon
-            this.components.domElements.iconLists.changeRowVolumesIcons[rowIndex].style.display = 'block'
+            // next do 'change row volumes' button icons. show and hide the muted / unmuted icons depending on the state of each sequencer row
+            if (this.sequencer.rows[rowIndex].muted) {
+                this.components.domElements.iconLists.changeRowVolumesIconsMuted[rowIndex].style.display = 'block'
+                this.components.domElements.iconLists.changeRowVolumesIcons[rowIndex].style.display = 'none'
+            } else {
+                this.components.domElements.iconLists.changeRowVolumesIconsMuted[rowIndex].style.display = 'none'
+                this.components.domElements.iconLists.changeRowVolumesIcons[rowIndex].style.display = 'block'
+            }
             // 'delete all notes for row' button shape
             this.components.shapes.clearNotesForRowButtonShapes[rowIndex].guiData.respondToEvents = true;
             this.components.shapes.clearNotesForRowButtonShapes[rowIndex].stroke = 'black';
