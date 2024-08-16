@@ -371,6 +371,7 @@ class DrumMachineGui {
                 analyticsBar: document.getElementById('analytics-bar'),
                 analyticsBarNoteModeText: document.getElementById('analytics-bar-notes-mode-text-div'),
                 analyticsBarLinesModeText: document.getElementById('analytics-bar-lines-mode-text-div'),
+                analyticsBarVolumesModeText: document.getElementById('analytics-bar-volumes-mode-text-div'),
 
             },
             textInputs: {
@@ -434,6 +435,10 @@ class DrumMachineGui {
                 analyticsBarLinesModeBeatShiftMilliseconds: document.getElementById('analytics-beat-shift-text-milliseconds'),
                 analyticsBarLinesModeReferenceLineShiftPercent: document.getElementById('analytics-reference-line-shift-text-percent'),
                 analyticsBarLinesModeReferenceLineShiftMilliseconds: document.getElementById('analytics-reference-line-shift-text-milliseconds'),
+                // analytics bar volumes mode text
+                analyticsBarVolumesModeMinimumVolumeForRowText: document.getElementById('analytics-minimum-volume-for-row-text'),
+                analyticsBarVolumesModeMaximumVolumeForRowText: document.getElementById('analytics-maximum-volume-for-row-text'),
+                analyticsBarVolumesModeIsRowMutedText: document.getElementById('analytics-is-row-muted-text'),
             }
         }
         return domElements;

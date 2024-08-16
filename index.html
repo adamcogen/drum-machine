@@ -189,6 +189,29 @@
                 position: fixed;
                 left: 970px;
             }
+            #analytics-bar-volumes-mode-text-div {
+                font-size: 15px;
+                font-family: "Courier New";
+                color: black;
+                display: none;
+            }
+            #analytics-bar-volumes-mode-column-1-text {
+                /* the height and padding here are set so that we can use the left edge of this div to draw a black line on the analytics menu */
+                border-left: 1px solid black;
+                height: 100px;
+                position: fixed;
+                left: 270px;
+                padding-left: 50px;
+            }
+            #analytics-bar-volumes-mode-column-2-text {
+                /* border: 1px solid black; */
+                position: fixed;
+                left: 350px;
+            }
+            #analytics-bar-volumes-mode-column-3-text {
+                position: fixed;
+                left: 550px;
+            }
         </style>
 
     </head>
@@ -283,6 +306,18 @@
                 <div id="analytics-bar-lines-mode-column-3-text">
                     <p id="analytics-reference-line-shift-text-percent">visual lines: -</p>
                     <p id="analytics-reference-line-shift-text-milliseconds">-</p>
+                </div>
+            </div>
+            <div id="analytics-bar-volumes-mode-text-div">
+                <div id="analytics-bar-volumes-mode-column-1-text">
+                    <p>volume:</p>
+                </div>
+                <div id="analytics-bar-volumes-mode-column-2-text">
+                    <p id="analytics-minimum-volume-for-row-text">minimum volume for row: -</p>
+                    <p id="analytics-maximum-volume-for-row-text">maximum volume for row: -</p>
+                </div>
+                <div id="analytics-bar-volumes-mode-column-3-text">
+                    <p id="analytics-is-row-muted-text">is row muted: -</p>
                 </div>
             </div>
         </div>
