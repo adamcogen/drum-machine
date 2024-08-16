@@ -1524,6 +1524,8 @@ class DrumMachineGui {
                 circle.fill = self.configurations.buttonBehavior.buttonHoverColor
                 rowSelectionRectangle.stroke = self.configurations.buttonBehavior.buttonHoverColor
                 self.initializeRowVolumeAdjustmentHoverVariablesAndVisuals(rowIndex);
+                self.setAnalyticsBarToVolumesMode()
+                self.setAnalyticsBarVolumesModeText(self, rowIndex)
             }
         }
     }
@@ -1537,6 +1539,8 @@ class DrumMachineGui {
             rowSelectionRectangle.stroke = 'transparent'
             if (self.shiftToolTracker.selectedRowIndex === null && self.rowVolumeAdjustmentTracker.selectedRowIndex === null) {
                 self.unhighlightNoteCirclesForRowVolumeAdjustment();
+                self.hideAllAnalyticsBarText()
+                self.setAnalyticsBarVolumesModeText(self, -1, true)
             }
         }
     }
@@ -1565,6 +1569,8 @@ class DrumMachineGui {
             circle.fill = self.configurations.volumeAdjusterRowHandles.unselectedColor
             rowSelectionRectangle.stroke = self.configurations.volumeAdjusterRowHandles.unselectedColor
             self.unhighlightNoteCirclesForRowVolumeAdjustment();
+            self.hideAllAnalyticsBarText()
+            self.setAnalyticsBarVolumesModeText(self, -1, true)
         }
     }
 
@@ -3356,6 +3362,8 @@ class DrumMachineGui {
         } else {
             self.components.domElements.divs.bottomBarText.innerHTML = self.configurations.helpText.changeRowVolume
         }
+        self.setAnalyticsBarToVolumesMode()
+        self.setAnalyticsBarVolumesModeText(self, self.rowVolumeAdjustmentTracker.selectedRowIndex)
     }
 
     // this method is very messy. my top priority was to get it working, and not worry about duplicated code or using the most perfect straightforward logic flow.
@@ -3889,6 +3897,8 @@ class DrumMachineGui {
     rowVolumeAdjustmentWindowMouseUpHandler(self, event) {
         self.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText
         self.rowVolumeAdjustmentTracker.selectedRowIndex = null
+        self.hideAllAnalyticsBarText()
+        self.setAnalyticsBarVolumesModeText(self, -1, true)
         self.redrawSequencer();
         self.saveCurrentSequencerStateToUrlHash();
     }
@@ -4825,15 +4835,15 @@ class DrumMachineGui {
      */
     setAnalyticsBarVolumesModeText(self, sequencerRowIndex, hidedValues=false) {
         if (hidedValues || sequencerRowIndex < 0) {
-            self.components.domElements.text.analyticsBarVolumesModeMinimumVolumeForRowText.innerHTML = "minimum volume for row: -"
-            self.components.domElements.text.analyticsBarVolumesModeMaximumVolumeForRowText.innerHTML = "maximum volume for row: -"
+            self.components.domElements.text.analyticsBarVolumesModeMinimumVolumeForRowText.innerHTML = "minimum on row: -"
+            self.components.domElements.text.analyticsBarVolumesModeMaximumVolumeForRowText.innerHTML = "maximum on row: -"
             self.components.domElements.text.analyticsBarVolumesModeIsRowMutedText.innerHTML = "is row muted: -"
         }
         let minimumNoteVolumeForRow = 0;
         let maximumNoteVolumeForRow = 0;
         let isRowMuted = false;
-        self.components.domElements.text.analyticsBarVolumesModeMinimumVolumeForRowText.innerHTML = "minimum volume for row: " + minimumNoteVolumeForRow
-        self.components.domElements.text.analyticsBarVolumesModeMaximumVolumeForRowText.innerHTML = "maximum volume for row: " + maximumNoteVolumeForRow
+        self.components.domElements.text.analyticsBarVolumesModeMinimumVolumeForRowText.innerHTML = "minimum on row: " + minimumNoteVolumeForRow
+        self.components.domElements.text.analyticsBarVolumesModeMaximumVolumeForRowText.innerHTML = "maximum on row: " + maximumNoteVolumeForRow
         self.components.domElements.text.analyticsBarVolumesModeIsRowMutedText.innerHTML = "is row muted: " + isRowMuted
     }
 
