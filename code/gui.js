@@ -4553,6 +4553,7 @@ class DrumMachineGui {
     setAnalyticsBarToNoteMode(){
         this.components.domElements.divs.analyticsBarNoteModeText.style.display = 'block'
         this.components.domElements.divs.analyticsBarLinesModeText.style.display = 'none'
+        this.components.domElements.divs.analyticsBarVolumesModeText.style.display = 'none'
     }
 
     // set the analytics bar to 'lines' mode, where it will show text giving information about the beat 
@@ -4560,11 +4561,21 @@ class DrumMachineGui {
     setAnalyticsBarToLinesMode(){
         this.components.domElements.divs.analyticsBarNoteModeText.style.display = 'none'
         this.components.domElements.divs.analyticsBarLinesModeText.style.display = 'block'
+        this.components.domElements.divs.analyticsBarVolumesModeText.style.display = 'none'
+    }
+
+    // set the analytics bar to 'volumes' mode, where it will show text giving information about the highest 
+    // and lowest volume for the notes on a particular sequencer row 
+    setAnalyticsBarToVolumesMode(){
+        this.components.domElements.divs.analyticsBarNoteModeText.style.display = 'none'
+        this.components.domElements.divs.analyticsBarLinesModeText.style.display = 'none'
+        this.components.domElements.divs.analyticsBarVolumesModeText.style.display = 'block'
     }
 
     hideAllAnalyticsBarText(){
         this.components.domElements.divs.analyticsBarNoteModeText.style.display = 'none'
         this.components.domElements.divs.analyticsBarLinesModeText.style.display = 'none'
+        this.components.domElements.divs.analyticsBarVolumesModeText.style.display = 'none'
     }
 
     /**
@@ -4806,6 +4817,24 @@ class DrumMachineGui {
         let referenceLineSubdivisionsLengthMillis = Math.round((widthOfEachReferenceLineSubdivision / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis)
         self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftPercent.innerHTML = "visual lines: +" + referenceLineShiftPercentFromLeft + "% / -" + referenceLineShiftPercentFromRight + "%"
         self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftMilliseconds.innerHTML = "|+" + referenceLineShiftFromLeftInMilliseconds + "ms / -" + referenceLineShiftFromRightInMilliseconds + "ms| of " + referenceLineSubdivisionsLengthMillis + "ms"
+    }
+
+    /**
+     * for the analytics bar in 'volumes' mode, set the text that describes the minimum and maximum volume
+     * of the notes that are on a given row, and whether the row is muted or not
+     */
+    setAnalyticsBarVolumesModeText(self, sequencerRowIndex, hidedValues=false) {
+        if (hidedValues || sequencerRowIndex < 0) {
+            self.components.domElements.text.analyticsBarVolumesModeMinimumVolumeForRowText.innerHTML = "minimum volume for row: -"
+            self.components.domElements.text.analyticsBarVolumesModeMaximumVolumeForRowText.innerHTML = "maximum volume for row: -"
+            self.components.domElements.text.analyticsBarVolumesModeIsRowMutedText.innerHTML = "is row muted: -"
+        }
+        let minimumNoteVolumeForRow = 0;
+        let maximumNoteVolumeForRow = 0;
+        let isRowMuted = false;
+        self.components.domElements.text.analyticsBarVolumesModeMinimumVolumeForRowText.innerHTML = "minimum volume for row: " + minimumNoteVolumeForRow
+        self.components.domElements.text.analyticsBarVolumesModeMaximumVolumeForRowText.innerHTML = "maximum volume for row: " + maximumNoteVolumeForRow
+        self.components.domElements.text.analyticsBarVolumesModeIsRowMutedText.innerHTML = "is row muted: " + isRowMuted
     }
 
     /**
