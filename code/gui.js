@@ -4833,17 +4833,26 @@ class DrumMachineGui {
      * for the analytics bar in 'volumes' mode, set the text that describes the minimum and maximum volume
      * of the notes that are on a given row, and whether the row is muted or not
      */
-    setAnalyticsBarVolumesModeText(self, sequencerRowIndex, hidedValues=false) {
-        if (hidedValues || sequencerRowIndex < 0) {
+    setAnalyticsBarVolumesModeText(self, sequencerRowIndex, hideValues=false) {
+        if (hideValues || sequencerRowIndex < 0 || self.sequencer.rows[sequencerRowIndex]._notesList.head === null || self.sequencer.rows[sequencerRowIndex]._notesList.head === undefined) {
             self.components.domElements.text.analyticsBarVolumesModeMinimumVolumeForRowText.innerHTML = "minimum on row: -"
             self.components.domElements.text.analyticsBarVolumesModeMaximumVolumeForRowText.innerHTML = "maximum on row: -"
             self.components.domElements.text.analyticsBarVolumesModeIsRowMutedText.innerHTML = "is row muted: -"
+            return;
         }
-        let minimumNoteVolumeForRow = 0;
-        let maximumNoteVolumeForRow = 0;
-        let isRowMuted = false;
-        self.components.domElements.text.analyticsBarVolumesModeMinimumVolumeForRowText.innerHTML = "minimum on row: " + minimumNoteVolumeForRow
-        self.components.domElements.text.analyticsBarVolumesModeMaximumVolumeForRowText.innerHTML = "maximum on row: " + maximumNoteVolumeForRow
+        // a note on efficiency: if constantly calculating this value is too slow, we could store it somewhere once
+        // whenever we make changes to a row, then just retrieve it here instead of calculating it over and over
+        let minimumVolumeSoFar = self.configurations.midi.velocity.maximumVelocity
+        let maximumVolumeSoFar = self.configurations.midi.velocity.minimumVelocity
+        let noteToCheck = self.sequencer.rows[sequencerRowIndex]._notesList.head
+        while (noteToCheck !== null) {
+            minimumVolumeSoFar = Math.min(noteToCheck.data.midiVelocity, minimumVolumeSoFar);
+            maximumVolumeSoFar = Math.max(noteToCheck.data.midiVelocity, maximumVolumeSoFar);
+            noteToCheck = noteToCheck.next
+        }
+        let isRowMuted = self.sequencer.rows[sequencerRowIndex].muted ? "yes" : "no"
+        self.components.domElements.text.analyticsBarVolumesModeMinimumVolumeForRowText.innerHTML = "minimum on row: " + minimumVolumeSoFar
+        self.components.domElements.text.analyticsBarVolumesModeMaximumVolumeForRowText.innerHTML = "maximum on row: " + maximumVolumeSoFar
         self.components.domElements.text.analyticsBarVolumesModeIsRowMutedText.innerHTML = "is row muted: " + isRowMuted
     }
 
