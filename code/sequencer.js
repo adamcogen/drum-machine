@@ -414,6 +414,8 @@ class Sequencer {
             this.setNumberOfReferenceLinesForRow(deserializedRowObject.referenceLines, rowIndex);
             this.setReferenceLineShiftMillisecondsForRow(referenceLinesShift, rowIndex);
             this.setSubdivisionLineShiftMillisecondsForRow(subdivisionLinesShift, rowIndex);
+            let muted = deserializedRowObject.muted ? true : false; // definition is formatted this way for backwards compatability
+            this.setMutedForRow(muted, rowIndex);
             for (let deserializedNote of deserializedRowObject.notes) {
                 let sequencerNode = sampleBankNodeGenerator.createNewNodeForSample(deserializedNote.sample)
                 if (quantizeRow) {
@@ -442,6 +444,10 @@ class Sequencer {
     // of drum sounds) while the sequencer is running, e.g. using a 'select drum kit' dropdown.
     setSamples(samples) {
         this.samples = samples;
+    }
+
+    setMutedForRow(muted, rowIndex) {
+        muted ? this.rows[rowIndex].mute() : this.rows[rowIndex].unmute()
     }
 }
 
@@ -483,6 +489,7 @@ class SequencerRow {
         }
         return JSON.stringify({
             "quantized": this.quantized,
+            "muted": this.muted,
             "subdivisions": this.subdivisions,
             "referenceLines": this.referenceLines,
             "referenceLinesShift": this.referenceLineShiftInMilliseconds,
