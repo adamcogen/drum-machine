@@ -556,6 +556,11 @@ class DrumMachineGui {
                     // for now we can use 'v' for 'volume'
                     this.adjustNoteVolumeOnNoteClick = true;
                 }
+                if (event.key === "V") {
+                    // when this key is held down, clicking and dragging a note will adjust its volume instead of moving it.
+                    // for now we can use 'v' for 'volume'
+                    this.adjustNoteVolumeOnNoteClick = true;
+                }
             },
             "keyup": (event) => {
                 // handle key ups for multi-shift tool
@@ -584,6 +589,9 @@ class DrumMachineGui {
                     this.isPrecisionEditModeEnabled = false;
                 }
                 if (event.key === "v") {
+                    this.adjustNoteVolumeOnNoteClick = false;
+                }
+                if (event.key === "V") {
                     this.adjustNoteVolumeOnNoteClick = false;
                 }
             }
@@ -3000,6 +3008,10 @@ class DrumMachineGui {
             this.circleSelectionTracker.currentRowNodeIsStoredIn = circle.guiData.row;
             this.circleSelectionTracker.currentBeatNodeIsStoredAt = circle.guiData.beat;
             this.circleSelectionTracker.throwNoteAway = false;
+            this.circleSelectionTracker.startingPosition = {
+                x: this.circleSelectionTracker.circleBeingMoved.translation.x,
+                y: this.circleSelectionTracker.circleBeingMoved.translation.y,
+            }
 
             // todo: make notes being moved a little bit transparent (just while they're being moved, so we can see what's behind them)
             this.setNoteTrashBinVisibility(true);
@@ -3333,6 +3345,9 @@ class DrumMachineGui {
         if (mouseHasMoved) {
             let mouseMoveDistance = self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
             let volumeAdjustmentAmount = mouseMoveDistance / self.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
+            if (this.isPrecisionEditModeEnabled) {
+                volumeAdjustmentAmount *= self.configurations.precisionEditMode.changeNoteVolumesRateMultiplier
+            }
             // iterate through every note in the row that we're adjusting volumes for. we already saved these to a list when we selected the row
             for (let noteCircleIndex = 0; noteCircleIndex < self.rowVolumeAdjustmentTracker.noteCircles.length; noteCircleIndex++) {
                 let currentNoteCircle = self.rowVolumeAdjustmentTracker.noteCircles[noteCircleIndex];
@@ -3554,6 +3569,9 @@ class DrumMachineGui {
         if (mouseHasMoved) {
             self.circleSelectionTracker.mostRecentMovementWasVolumeChange = true;
             let mouseMoveDistance = self.circleSelectionTracker.circleBeingMoved.translation.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
+            if (this.isPrecisionEditModeEnabled) {
+                mouseMoveDistance *= self.configurations.precisionEditMode.changeNoteVolumesRateMultiplier
+            }
             let volumeAdjustmentAmount = mouseMoveDistance / self.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
             // set the note being changed to have the right new radius on the GUI. confine the new radius to the minimum and maximum radius allowed.
             self.circleSelectionTracker.circleBeingMoved.radius = Util.confineNumberToBounds(self.circleSelectionTracker.startingRadius + volumeAdjustmentAmount, self.configurations.notes.volumes.minimumCircleRadius, self.configurations.notes.volumes.maximumCircleRadius);
@@ -3611,6 +3629,15 @@ class DrumMachineGui {
                     y: self.circleSelectionTracker.circleBeingMoved.translation.y,
                 }
                 // start with default note movement behavior, for when the note doesn't fall within range of the trash bin, a sequencer line, etc.
+                if (this.isPrecisionEditModeEnabled) {
+                    let adjustedXMoveDistance = (mouseX - self.circleSelectionTracker.startingPosition.x) * self.configurations.precisionEditMode.moveNotesRateMultiplier
+                    let adjustedYMoveDistance = (mouseY - self.circleSelectionTracker.startingPosition.y) * self.configurations.precisionEditMode.moveNotesRateMultiplier
+                    mouseX = self.circleSelectionTracker.startingPosition.x + adjustedXMoveDistance
+                    mouseY = self.circleSelectionTracker.startingPosition.y + adjustedYMoveDistance
+                } else {
+                    self.circleSelectionTracker.startingPosition.x = mouseX
+                    self.circleSelectionTracker.startingPosition.y = mouseY
+                }
                 self.circleSelectionTracker.circleBeingMoved.translation.x = mouseX
                 self.circleSelectionTracker.circleBeingMoved.translation.y = mouseY
                 // update display

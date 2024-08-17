@@ -451,8 +451,8 @@ function getGuiConfigurations(hideIcons=false) {
             extraHeightPadding: 100,
         },
         precisionEditMode: {
-            moveNotesRateMultiplier: .1,
-            changeNoteVolumesRateMultiplier: .1,
+            moveNotesRateMultiplier: .25,
+            changeNoteVolumesRateMultiplier: .25,
             moveRowsRateMultiplier: 1,
             shiftToolRateMultiplier: .1,
             analyticsBarNumberOfDecimalsToShow: 2,
