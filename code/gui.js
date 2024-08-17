@@ -4724,23 +4724,24 @@ class DrumMachineGui {
         let distanceFromRightBeatInMilliseconds = 0
         let numberOfSubdivisions = self.sequencer.rows[sequencerRowIndex].getNumberOfSubdivisions()
         let widthOfEachSubdivision = self.configurations.sequencer.width / numberOfSubdivisions
-        let subdivisionsLengthMillis = Math.round((widthOfEachSubdivision / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis)
+        let decimalPlacesToShow = self.isPrecisionEditModeEnabled ? self.configurations.precisionEditMode.analyticsBarNumberOfDecimalsToShow : 0
+        let subdivisionsLengthMillis = Util.roundNumberToNDecimalPlaces((widthOfEachSubdivision / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis, decimalPlacesToShow)
         if (!self.sequencer.rows[sequencerRowIndex].quantized) {
             // figure out how far the note is from the nearest subdivision to its left.
             let remainderOfNoteXPositionWithinSubdivisionLines = self.getXDistanceFromClosestSubdivisionToTheLeft(noteXPosition, numberOfSubdivisions, self.subdivisionLinesShiftInPixelsPerRow[sequencerRowIndex])
             // now we can convert this distance value -- which has a unit of 'pixels' -- into a percentage of the width of each subdivision.
             let percentageWithinBeatFromTheLeft = remainderOfNoteXPositionWithinSubdivisionLines / widthOfEachSubdivision
-            distanceFromLeftBeatAsPercent = Math.round(percentageWithinBeatFromTheLeft * 100)
-            distanceFromRightBeatAsPercent = (100 - distanceFromLeftBeatAsPercent)
+            distanceFromLeftBeatAsPercent = Util.roundNumberToNDecimalPlaces(percentageWithinBeatFromTheLeft * 100, decimalPlacesToShow)
+            distanceFromRightBeatAsPercent = Util.roundNumberToNDecimalPlaces(100 - distanceFromLeftBeatAsPercent, decimalPlacesToShow)
             if (distanceFromLeftBeatAsPercent === 0 || distanceFromRightBeatAsPercent === 0) {
                 distanceFromLeftBeatAsPercent = 0
                 distanceFromRightBeatAsPercent = 0
             }
             // now we can convert the distance value -- which has a unit of 'pixels' -- into milliseconds
             let distanceFromLeftBeatAsPercentageOfFullLoop = remainderOfNoteXPositionWithinSubdivisionLines / self.configurations.sequencer.width;
-            distanceFromLeftBeatInMilliseconds = Math.round(distanceFromLeftBeatAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+            distanceFromLeftBeatInMilliseconds = Util.roundNumberToNDecimalPlaces(distanceFromLeftBeatAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis, decimalPlacesToShow);
             let distanceFromRightBeatAsPercentageOfFullLoop = (widthOfEachSubdivision - remainderOfNoteXPositionWithinSubdivisionLines) / self.configurations.sequencer.width
-            distanceFromRightBeatInMilliseconds = Math.round(distanceFromRightBeatAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+            distanceFromRightBeatInMilliseconds = Util.roundNumberToNDecimalPlaces(distanceFromRightBeatAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis, decimalPlacesToShow);
             if (distanceFromLeftBeatInMilliseconds === 0 || distanceFromRightBeatInMilliseconds === 0) {
                 distanceFromLeftBeatInMilliseconds = 0
                 distanceFromRightBeatInMilliseconds = 0
@@ -4779,22 +4780,23 @@ class DrumMachineGui {
         let distanceFromRightLineInMilliseconds = -1
         let numberOfReferenceLines = self.sequencer.rows[sequencerRowIndex].getNumberOfReferenceLines()
         let widthOfEachReferenceLineSubdivision = self.configurations.sequencer.width / numberOfReferenceLines
-        let referenceLineSubdivisionsLengthMillis = Math.round((widthOfEachReferenceLineSubdivision / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis)
+        let decimalPlacesToShow = self.isPrecisionEditModeEnabled ? self.configurations.precisionEditMode.analyticsBarNumberOfDecimalsToShow : 0
+        let referenceLineSubdivisionsLengthMillis = Util.roundNumberToNDecimalPlaces((widthOfEachReferenceLineSubdivision / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis, decimalPlacesToShow)
         // figure out how far the note is from the nearest reference line to its left.
         let remainderOfNoteXPositionWithinReferenceLines = self.getXDistanceFromClosestSubdivisionToTheLeft(noteXPosition, numberOfReferenceLines, self.referenceLinesShiftInPixelsPerRow[sequencerRowIndex])
         // now we can convert this distance value -- which has a unit of 'pixels' -- into a percentage of the width of each reference line subdivision.
         let percentageWithinLineFromTheLeft = remainderOfNoteXPositionWithinReferenceLines / widthOfEachReferenceLineSubdivision
-        distanceFromLeftLineAsPercent = Math.round(percentageWithinLineFromTheLeft * 100)
-        distanceFromRightLineAsPercent = (100 - distanceFromLeftLineAsPercent)
+        distanceFromLeftLineAsPercent = Util.roundNumberToNDecimalPlaces(percentageWithinLineFromTheLeft * 100, decimalPlacesToShow)
+        distanceFromRightLineAsPercent = Util.roundNumberToNDecimalPlaces(100 - distanceFromLeftLineAsPercent, decimalPlacesToShow)
         if (distanceFromLeftLineAsPercent === 0 || distanceFromRightLineAsPercent === 0) {
             distanceFromLeftLineAsPercent = 0
             distanceFromRightLineAsPercent = 0
         }
         // now we can convert the distance value -- which has a unit of 'pixels' -- into milliseconds
         let distanceFromLeftLineAsPercentageOfFullLoop = remainderOfNoteXPositionWithinReferenceLines / self.configurations.sequencer.width;
-        distanceFromLeftLineInMilliseconds = Math.round(distanceFromLeftLineAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
-        let distanceFromRightLineAsPercentageOfFullLoop = (widthOfEachReferenceLineSubdivision - remainderOfNoteXPositionWithinReferenceLines) / self.configurations.sequencer.width;
-        distanceFromRightLineInMilliseconds = Math.round(distanceFromRightLineAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+        distanceFromLeftLineInMilliseconds = Util.roundNumberToNDecimalPlaces(distanceFromLeftLineAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis, decimalPlacesToShow);
+        let distanceFromRightLineAsPercentageOfFullLoop = (widthOfEachReferenceLineSubdivision - remainderOfNoteXPositionWithinReferenceLines) / self.configurations.sequencer.width
+        distanceFromRightLineInMilliseconds = Util.roundNumberToNDecimalPlaces(distanceFromRightLineAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis, decimalPlacesToShow);
         if (distanceFromLeftLineInMilliseconds === 0 || distanceFromRightLineInMilliseconds === 0) {
             distanceFromLeftLineInMilliseconds = 0
             distanceFromRightLineInMilliseconds = 0
@@ -4820,22 +4822,23 @@ class DrumMachineGui {
         let widthOfEachSubdivisionInPixels = self.configurations.sequencer.width / numberOfSubdivisions
         let beatLineShiftInPixelsWithinEachSubdivision = beatLinesShiftInPixels % widthOfEachSubdivisionInPixels
         // convert to percent
-        let beatLineShiftPercentFromLeft = Math.round((beatLineShiftInPixelsWithinEachSubdivision / widthOfEachSubdivisionInPixels) * 100)
-        let beatLineShiftPercentFromRight = 100 - beatLineShiftPercentFromLeft
+        let decimalPlacesToShow = self.isPrecisionEditModeEnabled ? self.configurations.precisionEditMode.analyticsBarNumberOfDecimalsToShow : 0
+        let beatLineShiftPercentFromLeft = Util.roundNumberToNDecimalPlaces((beatLineShiftInPixelsWithinEachSubdivision / widthOfEachSubdivisionInPixels) * 100, decimalPlacesToShow)
+        let beatLineShiftPercentFromRight = Util.roundNumberToNDecimalPlaces(100 - beatLineShiftPercentFromLeft, decimalPlacesToShow)
         if (beatLineShiftPercentFromLeft === 0 || beatLineShiftPercentFromRight === 0) {
             beatLineShiftPercentFromLeft = 0
             beatLineShiftPercentFromRight = 0
         }
         // convert to milliseconds
         let beatShiftFromLeftAsPercentageOfFullLoop = beatLineShiftInPixelsWithinEachSubdivision / self.configurations.sequencer.width;
-        let beatShiftFromLeftInMilliseconds = Math.round(beatShiftFromLeftAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+        let beatShiftFromLeftInMilliseconds = Util.roundNumberToNDecimalPlaces(beatShiftFromLeftAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis, decimalPlacesToShow);
         let beatShiftFromRightAsPercentageOfFullLoop = (widthOfEachSubdivisionInPixels - beatLineShiftInPixelsWithinEachSubdivision) / self.configurations.sequencer.width
-        let beatShiftFromRightInMilliseconds = Math.round(beatShiftFromRightAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+        let beatShiftFromRightInMilliseconds = Util.roundNumberToNDecimalPlaces(beatShiftFromRightAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis, decimalPlacesToShow);
         if (beatShiftFromLeftInMilliseconds === 0 || beatShiftFromRightInMilliseconds === 0) {
             beatShiftFromLeftInMilliseconds = 0
             beatShiftFromRightInMilliseconds = 0
         }
-        let beatLineSubdivisionsLengthMillis = Math.round((widthOfEachSubdivisionInPixels / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis)
+        let beatLineSubdivisionsLengthMillis = Util.roundNumberToNDecimalPlaces((widthOfEachSubdivisionInPixels / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis, decimalPlacesToShow)
         self.components.domElements.text.analyticsBarLinesModeBeatShiftPercent.innerHTML = "beat lines: +" + beatLineShiftPercentFromLeft + "% / -" + beatLineShiftPercentFromRight + "%"
         self.components.domElements.text.analyticsBarLinesModeBeatShiftMilliseconds.innerHTML = "|+" + beatShiftFromLeftInMilliseconds + "ms / -" + beatShiftFromRightInMilliseconds + "ms| of " + beatLineSubdivisionsLengthMillis + "ms"
     }
@@ -4856,22 +4859,23 @@ class DrumMachineGui {
         let widthOfEachReferenceLineSubdivision = self.configurations.sequencer.width / numberOfReferenceLines
         let referenceLineShiftInPixelsWithinEachReferenceSubdivision = referenceLinesShiftInPixels % widthOfEachReferenceLineSubdivision
         // convert to percent
-        let referenceLineShiftPercentFromLeft = Math.round((referenceLineShiftInPixelsWithinEachReferenceSubdivision / widthOfEachReferenceLineSubdivision) * 100)
-        let referenceLineShiftPercentFromRight = 100 - referenceLineShiftPercentFromLeft
+        let decimalPlacesToShow = self.isPrecisionEditModeEnabled ? self.configurations.precisionEditMode.analyticsBarNumberOfDecimalsToShow : 0
+        let referenceLineShiftPercentFromLeft = Util.roundNumberToNDecimalPlaces((referenceLineShiftInPixelsWithinEachReferenceSubdivision / widthOfEachReferenceLineSubdivision) * 100, decimalPlacesToShow)
+        let referenceLineShiftPercentFromRight = Util.roundNumberToNDecimalPlaces(100 - referenceLineShiftPercentFromLeft, decimalPlacesToShow)
         if (referenceLineShiftPercentFromLeft === 0 || referenceLineShiftPercentFromRight === 0) {
             referenceLineShiftPercentFromLeft = 0
             referenceLineShiftPercentFromRight = 0
         }
         // convert to milliseconds
         let referenceLineShiftFromLeftAsPercentageOfFullLoop = referenceLineShiftInPixelsWithinEachReferenceSubdivision / self.configurations.sequencer.width;
-        let referenceLineShiftFromLeftInMilliseconds = Math.round(referenceLineShiftFromLeftAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+        let referenceLineShiftFromLeftInMilliseconds = Util.roundNumberToNDecimalPlaces(referenceLineShiftFromLeftAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis, decimalPlacesToShow);
         let referenceLineShiftFromRightAsPercentageOfFullLoop = (widthOfEachReferenceLineSubdivision - referenceLineShiftInPixelsWithinEachReferenceSubdivision) / self.configurations.sequencer.width
-        let referenceLineShiftFromRightInMilliseconds = Math.round(referenceLineShiftFromRightAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis);
+        let referenceLineShiftFromRightInMilliseconds = Util.roundNumberToNDecimalPlaces(referenceLineShiftFromRightAsPercentageOfFullLoop * self.sequencer.loopLengthInMillis, decimalPlacesToShow);
         if (referenceLineShiftFromLeftInMilliseconds === 0 || referenceLineShiftFromRightInMilliseconds === 0) {
             referenceLineShiftFromLeftInMilliseconds = 0
             referenceLineShiftFromRightInMilliseconds = 0
         }
-        let referenceLineSubdivisionsLengthMillis = Math.round((widthOfEachReferenceLineSubdivision / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis)
+        let referenceLineSubdivisionsLengthMillis = Util.roundNumberToNDecimalPlaces((widthOfEachReferenceLineSubdivision / self.configurations.sequencer.width) * self.sequencer.loopLengthInMillis, decimalPlacesToShow)
         self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftPercent.innerHTML = "visual lines: +" + referenceLineShiftPercentFromLeft + "% / -" + referenceLineShiftPercentFromRight + "%"
         self.components.domElements.text.analyticsBarLinesModeReferenceLineShiftMilliseconds.innerHTML = "|+" + referenceLineShiftFromLeftInMilliseconds + "ms / -" + referenceLineShiftFromRightInMilliseconds + "ms| of " + referenceLineSubdivisionsLengthMillis + "ms"
     }

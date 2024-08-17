@@ -104,6 +104,7 @@ window.onload = () => {
     // run any miscellaneous unit tests needed before starting main update loop
     Util.testConfineNumberToBounds();
     Util.testCalculateLinearConversion();
+    Util.testRoundNumberToNDecimalPlaces();
 
     // start main recursive update loop, where all drum machine state updates will happen
     _setUpAnimationCompatabilityShim();

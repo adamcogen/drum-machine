@@ -108,4 +108,27 @@ class Util {
         let secondsPerMinute = 60
         return (secondsPerMinute * millisecondsPerSecond) / beatsPerMinute
     }
+
+    static roundNumberToNDecimalPlaces(number, digits) {
+        let multiplier = Math.pow(10, digits)
+        let rounded = Math.round(number * multiplier) / multiplier
+        return parseFloat(rounded.toFixed(digits))
+    }
+
+    static testRoundNumberToNDecimalPlaces(){
+        // test rounding positive numbers
+        this.assertEquals(1, this.roundNumberToNDecimalPlaces(1.2345, 0), "Round positive number to 0 decimal places");
+        this.assertEquals(1.2, this.roundNumberToNDecimalPlaces(1.2345, 1), "Round positive number to 1 decimal place");
+        this.assertEquals(1.23, this.roundNumberToNDecimalPlaces(1.2345, 2), "Round positive number to 2 decimal places");
+        this.assertEquals(1.235, this.roundNumberToNDecimalPlaces(1.2345, 3), "Round positive number to 3 decimal places");
+        this.assertEquals(1.2345, this.roundNumberToNDecimalPlaces(1.2345, 4), "Round positive number to 4 decimal places");
+        // test rounding negative numbers
+        this.assertEquals(-1, this.roundNumberToNDecimalPlaces(-1.2345, 0), "Round positive number to 0 decimal places");
+        this.assertEquals(-1.2, this.roundNumberToNDecimalPlaces(-1.2345, 1), "Round positive number to 1 decimal place");
+        this.assertEquals(-1.23, this.roundNumberToNDecimalPlaces(-1.2345, 2), "Round positive number to 2 decimal places");
+        this.assertEquals(-1.234, this.roundNumberToNDecimalPlaces(-1.2345, 3), "Round positive number to 3 decimal places");
+        this.assertEquals(-1.2345, this.roundNumberToNDecimalPlaces(-1.2345, 4), "Round positive number to 4 decimal places");
+        // test rounding bigger numbers
+        this.assertEquals(-15.23, this.roundNumberToNDecimalPlaces(-15.23, 2), "Round larger negative number to 2 decimal places");
+    }
 }
