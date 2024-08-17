@@ -454,7 +454,7 @@ function getGuiConfigurations(hideIcons=false) {
             moveNotesRateMultiplier: .25,
             changeNoteVolumesRateMultiplier: .25,
             shiftToolRateMultiplier: .25,
-            analyticsBarNumberOfDecimalsToShow: 2,
+            analyticsBarNumberOfDecimalsToShow: 1,
         },
         helpText: {
             defaultText: "", // "share this beat by copying and pasting the URL from the address bar. undo and redo changes using your browser's back and forward buttons.",
