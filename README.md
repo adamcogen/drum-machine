@@ -44,6 +44,7 @@ Together these features let us create unique rhythms that are difficult (or some
 - Load example sequencer patterns from the 'examples' dropdown.
 - Adjust the volume of each note using click+v. The louder the note, the larger its circle will be on-screen.
 - Press the tab key to toggle an analytics menu showing details about notes and sequencer rows
+- Hold the shift key while click-dragging to make edits with higher precision
 
 ![Drum Machine](assets/images/screenshot-with-help-text-7_5_2023.png "Drum Machine")
 
