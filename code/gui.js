@@ -1817,13 +1817,30 @@ class DrumMachineGui {
          * number. if something besides a valid number is entered, the value will just go back
          * to whatever it was before, and not make any change to the sequencer.
          */
+
+
+        const throttledDebouncedFocusBlur = Util.throttleAndDebounce(input => [input.blur, input.focus].map(fn => fn.call(input)), 200);
+
         let shapesToAddEventListenersTo = [this.components.domElements.textInputs.loopLengthBpm]
         let eventHandlersHash = {
             "mouseenter": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.setBeatsPerMinute},
             "mouseleave": () => {this.components.domElements.divs.bottomBarText.innerHTML = this.configurations.helpText.defaultText},
             "keypress": (event) => this.defaultKeypressEventListenerForTextInput(event, this.components.domElements.textInputs.loopLengthBpm, true),
-            "blur" : () => {
+            "keydown": ({ shiftKey, key, target }) => {
+                if (!shiftKey) return;
+                if (key !== 'ArrowUp' && key !== 'ArrowDown') return;
+
+                // arrow up or down is being triggered; the next change event
+                // will include the incremented value, so on that next change trigger the focus then blur
+                // using a debounced and throttled function that guarentees the focus then blur
+                // is only executed ONCE every 200ms (or 200ms after the value stops changing)
+                //    - this all because frequently calling that bpm update in
+                //      such quick succession results in a weird audio effect
+                target.addEventListener("change", ({ target }) => throttledDebouncedFocusBlur(target), { once: true });
+            },
+            "blur": (_event) => {
                 let newTextInputValue = this.components.domElements.textInputs.loopLengthBpm.value.trim() // remove whitespace from beginning and end of input then store it
+
                 if (newTextInputValue === "" || isNaN(newTextInputValue)) { // check if new input is a real number. if not, switch input box back to whatever value it had before.
                     newTextInputValue = this.sequencer.tempoRepresentation.beatsPerMinute
                 }
@@ -2178,26 +2195,25 @@ class DrumMachineGui {
      */
 
     initializeSubdivisionTextInputsValuesAndStyles() {
-        for(let existingSubdivisionTextInput of this.components.domElements.textInputs.subdivisionTextInputs) {
-            this.components.domElements.divs.subdivisionTextInputs.removeChild(existingSubdivisionTextInput)
-        }
-        this.components.domElements.textInputs.subdivisionTextInputs = []
-        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
-            let textArea = document.createElement("textarea");
-            textArea.cols = "3"
-            textArea.rows = "1"
-            textArea.style.position = "absolute"
-            textArea.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.subdivisionLineTextInputs.topPaddingPerRow) + "px"
-            textArea.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.subdivisionLineTextInputs.leftPaddingPerRow) + "px"
-            textArea.style.borderColor = this.configurations.sequencer.color
-            textArea.value = this.sequencer.rows[rowIndex].getNumberOfSubdivisions()
-            textArea.style.color = this.configurations.defaultFont.color // set font color
-            textArea.title = "Number of rhythmic grid lines"
-            this.components.domElements.divs.subdivisionTextInputs.appendChild(textArea);
-            // note for later: the opposite of appendChild is removeChild
-            this.components.domElements.textInputs.subdivisionTextInputs.push(textArea)
-            // textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
-        }
+        const { sequencer, defaultFont } = this.configurations;
+        const { topPaddingPerRow, leftPaddingPerRow } = this.configurations.subdivisionLineTextInputs;
+        
+        const inputAttrs = { type: "number", min: "0", className: "cols-3", title: "Number of rhythmic grid lines", "" };
+        const styles = { position: "absolute", left: `${sequencer.left + sequencer.width + leftPaddingPerRow}px`,
+          borderColor: sequencer.color, color: defaultFont.color };
+
+        $(this.components.domElements.textInputs.subdivisionTextInputs).remove();
+        this.components.domElements.textInputs.subdivisionTextInputs = [];
+        this.sequencer.rows.forEach((row, rowIndex) => {
+            const value = row.getNumberOfSubdivisions();
+            const top = `${sequencer.top + rowIndex * sequencer.spaceBetweenRows + topPaddingPerRow}px`;
+
+            const input = Object.assign(document.createElement("input"), { value, ...inputAttrs });
+            Object.assign(input.style, { top, ...styles });
+
+            this.components.domElements.divs.subdivisionTextInputs.appendChild(input);
+            this.components.domElements.textInputs.subdivisionTextInputs.push(input);
+        });
     }
 
     updateNumberOfSubdivisionsForRow(newNumberOfSubdivisions, rowIndex) {
@@ -2215,30 +2231,30 @@ class DrumMachineGui {
      * 'set number of reference lines for row' text inputs
      */
     initializeReferenceLineTextInputsValuesAndStyles() {
-        for(let existingTextInput of this.components.domElements.textInputs.referenceLineTextInputs) {
-            this.components.domElements.divs.subdivisionTextInputs.removeChild(existingTextInput)
-        }
-        this.components.domElements.textInputs.referenceLineTextInputs = []
-        for (let rowIndex = 0; rowIndex < this.sequencer.rows.length; rowIndex++) {
-            let textArea = document.createElement("textarea");
-            textArea.cols = "3"
-            textArea.rows = "1"
-            textArea.style.position = "absolute"
-            textArea.style.top = "" + (this.configurations.sequencer.top + (rowIndex * this.configurations.sequencer.spaceBetweenRows) + this.configurations.referenceLineTextInputs.topPaddingPerRow) + "px"
-            textArea.style.left = "" + (this.configurations.sequencer.left + this.configurations.sequencer.width + this.configurations.referenceLineTextInputs.leftPaddingPerRow) + "px"
-            textArea.style.borderColor = this.configurations.referenceLines.color
-            textArea.value = this.sequencer.rows[rowIndex].getNumberOfReferenceLines()
-            if (this.sequencer.rows[rowIndex].getNumberOfReferenceLines() === 0) {
-                textArea.style.color = this.configurations.referenceLines.color // set font color to lighter if the value is 0 to (try) reduce visual clutter
-            } else {
-                textArea.style.color = this.configurations.defaultFont.color // set font color
-            }
-            textArea.title = "Number of visual guide lines"
-            this.components.domElements.divs.subdivisionTextInputs.appendChild(textArea);
-            // note for later: the opposite of appendChild is removeChild
-            this.components.domElements.textInputs.referenceLineTextInputs.push(textArea)
-            // textArea.disabled = "true" // todo: get rid of this line once the subdivision text inputs are functioning
-        }
+        const { sequencer, referenceLineTextInputs, referenceLines, defaultFont } = this.configurations;
+        const { topPaddingPerRow, leftPaddingPerRow } = this.configurations.subdivisionLineTextInputs;
+
+        const inputAttrs = { type: "number", min: "0", className: "cols-3", title: "Number of visual guide lines" };
+        const styles = {
+          position: "absolute",
+          left: `${sequencer.left + sequencer.width + referenceLineTextInputs.leftPaddingPerRow}px`,
+          borderColor: referenceLines.color
+        };
+
+        $(this.components.domElements.textInputs.referenceLineTextInputs).remove();
+        this.components.domElements.textInputs.referenceLineTextInputs = [];
+        
+        this.sequencer.rows.forEach((row, rowIndex) => {
+            const value = row.getNumberOfReferenceLines();
+            const top = `${sequencer.top + rowIndex * sequencer.spaceBetweenRows + referenceLineTextInputs.topPaddingPerRow}px`;
+            const color = value === 0 ? referenceLines.color : defaultFont.color;
+
+            const input = Object.assign(document.createElement("input"), { value, ...inputAttrs });
+            Object.assign(input.style, { top, color, ...styles });
+
+            this.components.domElements.divs.subdivisionTextInputs.appendChild(input);
+            this.components.domElements.textInputs.referenceLineTextInputs.push(input);
+        });
     }
 
     updateNumberOfReferenceLinesForRow(newNumberOfReferenceLines, rowIndex) {
@@ -2385,14 +2401,14 @@ class DrumMachineGui {
      * General text input event listeners logic
      */
 
-    addDefaultKeypressEventListenerToTextInput(textarea, allowPeriods) {
-        textarea.addEventListener('keypress', (event) => this.defaultKeypressEventListenerForTextInput(event, textarea, allowPeriods))
+    addDefaultKeypressEventListenerToTextInput(input, allowPeriods) {
+        input.addEventListener("keyup", event => this.defaultKeypressEventListenerForTextInput(event, input, allowPeriods));
     }
 
-    defaultKeypressEventListenerForTextInput(event, textarea, allowPeriods) {
+    defaultKeypressEventListenerForTextInput(event, input, allowPeriods) {
         if (event.key === "Enter") {
             event.preventDefault()
-            textarea.blur() // apply the change to the text area if the user presses "enter"
+            input.blur() // apply the change to the text area if the user presses "enter"
         }
         let periodCheckPassed = (event.key === "." && allowPeriods) // if the character is a period, make this value 'true' if periods are allowed. otherwise false.
         if (isNaN(Number.parseInt(event.key)) && !periodCheckPassed) { // don't allow the user to enter things that aren't numbers (but allow periods if they're allowed)

@@ -108,4 +108,30 @@ class Util {
         let secondsPerMinute = 60
         return (secondsPerMinute * millisecondsPerSecond) / beatsPerMinute
     }
+
+    // returns function that is only called once within a specific timeframe
+    static debounce(func, wait = 200) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    // returns function limits how often it can be called in a given period of time
+    static throttle(func, limit = 200) {
+        let waiting = false;
+        return (...args) => {
+            if (waiting) return;
+
+            func.apply(this, args);
+            waiting = true;
+            setTimeout(() => { waiting = false; }, limit);
+        };
+    }
+
+    static throttleAndDebounce(func, time = 200) {
+      const toCall = [this.throttle(func, time), this.debounce(func, time)];
+      return (...args) => toCall.map(fn => fn(...args));
+    }
 }
