@@ -67,6 +67,10 @@ class DrumMachineGui {
             currentRowNodeIsStoredIn: null,
             currentBeatNodeIsStoredAt: null,
             throwNoteAway: false,
+            startingPositionForPrecisionEditMode: {
+                x: null,
+                y: null,
+            }
         }
 
         this.rowSelectionTracker = { // todo: rename this to make it more clear that this variable is only for row movement, not all types of selection. not refactoring yet to keep diff clean.
@@ -116,7 +120,12 @@ class DrumMachineGui {
             mouseStartingPosition: {
                 x: null,
                 y: null,
-            }
+            },
+            startingPositionForPrecisionEditMode: {
+                x: null,
+                y: null,
+            },
+            mouseMoveDistanceBeforePrecisionEdits: 0,
         }
 
         this.multiShiftTracker = {
@@ -843,6 +852,9 @@ class DrumMachineGui {
         event = this.adjustEventCoordinates(event)
         this.shiftToolTracker.mouseStartingPosition.x = event.pageX
         this.shiftToolTracker.mouseStartingPosition.y = event.pageY
+        this.shiftToolTracker.startingPositionForPrecisionEditMode.x = event.pageX
+        this.shiftToolTracker.startingPositionForPrecisionEditMode.y = event.pageY
+        this.shiftToolTracker.mouseMoveDistanceBeforePrecisionEdits = 0
         if (updateShiftRowButtonVisuals) {
             // update visuals
             let circle = this.components.shapes.shiftToolRowHandles[rowIndex]
@@ -3008,7 +3020,7 @@ class DrumMachineGui {
             this.circleSelectionTracker.currentRowNodeIsStoredIn = circle.guiData.row;
             this.circleSelectionTracker.currentBeatNodeIsStoredAt = circle.guiData.beat;
             this.circleSelectionTracker.throwNoteAway = false;
-            this.circleSelectionTracker.startingPosition = {
+            this.circleSelectionTracker.startingPositionForPrecisionEditMode = {
                 x: this.circleSelectionTracker.circleBeingMoved.translation.x,
                 y: this.circleSelectionTracker.circleBeingMoved.translation.y,
             }
@@ -3345,7 +3357,7 @@ class DrumMachineGui {
         if (mouseHasMoved) {
             let mouseMoveDistance = self.rowVolumeAdjustmentTracker.rowHandleStartingPosition.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
             let volumeAdjustmentAmount = mouseMoveDistance / self.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
-            if (this.isPrecisionEditModeEnabled) {
+            if (self.isPrecisionEditModeEnabled) {
                 volumeAdjustmentAmount *= self.configurations.precisionEditMode.changeNoteVolumesRateMultiplier
             }
             // iterate through every note in the row that we're adjusting volumes for. we already saved these to a list when we selected the row
@@ -3394,6 +3406,14 @@ class DrumMachineGui {
         let mouseHasMoved = (mouseX !== self.shiftToolTracker.mouseStartingPosition.x || mouseY !== self.shiftToolTracker.mouseStartingPosition.y)
         if (mouseHasMoved) {
             let mouseMoveDistance = self.shiftToolTracker.mouseStartingPosition.x - mouseX; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
+            if (self.isPrecisionEditModeEnabled) {
+                let mouseMoveDistanceDuringPrecisionEdits = (self.shiftToolTracker.startingPositionForPrecisionEditMode.x - mouseX) * self.configurations.precisionEditMode.shiftToolRateMultiplier
+                mouseMoveDistance = mouseMoveDistanceDuringPrecisionEdits + self.shiftToolTracker.mouseMoveDistanceBeforePrecisionEdits
+            } else {
+                self.shiftToolTracker.mouseMoveDistanceBeforePrecisionEdits = mouseMoveDistance
+                self.shiftToolTracker.startingPositionForPrecisionEditMode.x = mouseX
+                self.shiftToolTracker.startingPositionForPrecisionEditMode.y = mouseY
+            }
             if (self.shiftToolTracker.resourcesToShift.subdivisionLines) { // adjust subdivision lines first, because if we move those, the way we move quantized notes also need to change.
                 this.shiftSubdivisionsLogic(self, mouseMoveDistance);
             }
@@ -3569,7 +3589,7 @@ class DrumMachineGui {
         if (mouseHasMoved) {
             self.circleSelectionTracker.mostRecentMovementWasVolumeChange = true;
             let mouseMoveDistance = self.circleSelectionTracker.circleBeingMoved.translation.y - mouseY; // calculate how far the mouse has moved. only look at one axis of change for now. if that seems weird it can be changed later.
-            if (this.isPrecisionEditModeEnabled) {
+            if (self.isPrecisionEditModeEnabled) {
                 mouseMoveDistance *= self.configurations.precisionEditMode.changeNoteVolumesRateMultiplier
             }
             let volumeAdjustmentAmount = mouseMoveDistance / self.configurations.notes.volumes.volumeAdjustmentSensitivityDivider;
@@ -3629,14 +3649,14 @@ class DrumMachineGui {
                     y: self.circleSelectionTracker.circleBeingMoved.translation.y,
                 }
                 // start with default note movement behavior, for when the note doesn't fall within range of the trash bin, a sequencer line, etc.
-                if (this.isPrecisionEditModeEnabled) {
-                    let adjustedXMoveDistance = (mouseX - self.circleSelectionTracker.startingPosition.x) * self.configurations.precisionEditMode.moveNotesRateMultiplier
-                    let adjustedYMoveDistance = (mouseY - self.circleSelectionTracker.startingPosition.y) * self.configurations.precisionEditMode.moveNotesRateMultiplier
-                    mouseX = self.circleSelectionTracker.startingPosition.x + adjustedXMoveDistance
-                    mouseY = self.circleSelectionTracker.startingPosition.y + adjustedYMoveDistance
+                if (self.isPrecisionEditModeEnabled) {
+                    let adjustedXMoveDistance = (mouseX - self.circleSelectionTracker.startingPositionForPrecisionEditMode.x) * self.configurations.precisionEditMode.moveNotesRateMultiplier
+                    let adjustedYMoveDistance = (mouseY - self.circleSelectionTracker.startingPositionForPrecisionEditMode.y) * self.configurations.precisionEditMode.moveNotesRateMultiplier
+                    mouseX = self.circleSelectionTracker.startingPositionForPrecisionEditMode.x + adjustedXMoveDistance
+                    mouseY = self.circleSelectionTracker.startingPositionForPrecisionEditMode.y + adjustedYMoveDistance
                 } else {
-                    self.circleSelectionTracker.startingPosition.x = mouseX
-                    self.circleSelectionTracker.startingPosition.y = mouseY
+                    self.circleSelectionTracker.startingPositionForPrecisionEditMode.x = mouseX
+                    self.circleSelectionTracker.startingPositionForPrecisionEditMode.y = mouseY
                 }
                 self.circleSelectionTracker.circleBeingMoved.translation.x = mouseX
                 self.circleSelectionTracker.circleBeingMoved.translation.y = mouseY

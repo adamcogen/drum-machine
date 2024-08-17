@@ -453,8 +453,7 @@ function getGuiConfigurations(hideIcons=false) {
         precisionEditMode: {
             moveNotesRateMultiplier: .25,
             changeNoteVolumesRateMultiplier: .25,
-            moveRowsRateMultiplier: 1,
-            shiftToolRateMultiplier: .1,
+            shiftToolRateMultiplier: .25,
             analyticsBarNumberOfDecimalsToShow: 2,
         },
         helpText: {
